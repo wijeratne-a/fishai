@@ -1,0 +1,109 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://fishai.local/schemas/FarmOperationalOutcome.schema.json",
+  "title": "FarmOperationalOutcome",
+  "description": "Permissioned oyster/shellfish farm operational outcome. Default privacy PRIVATE. Not a food-safety or legal-harvest determination. Official closures belong in OfficialClosureOrAdvisory. Fixture/schema only.",
+  "allOf": [
+    { "$ref": "./_ObservationKernel.schema.json" },
+    {
+      "type": "object",
+      "required": [
+        "entity_type",
+        "farm_id",
+        "growing_area_id",
+        "outcome_type",
+        "severity"
+      ],
+      "properties": {
+        "entity_type": { "const": "FarmOperationalOutcome" },
+        "farm_id": {
+          "type": "string",
+          "description": "Opaque internal id. Never a public farm name in PUBLIC materializations."
+        },
+        "lease_id_internal": { "type": ["string", "null"] },
+        "growing_area_id": {
+          "type": "string",
+          "description": "WA DOH growing area or equivalent official unit."
+        },
+        "outcome_type": {
+          "type": "string",
+          "enum": [
+            "stress_event",
+            "mortality_band",
+            "work_window_disruption",
+            "gear_loss",
+            "fouling",
+            "growth_observation",
+            "harvest_timing",
+            "other"
+          ]
+        },
+        "severity": {
+          "type": "string",
+          "enum": ["none", "low", "medium", "high"]
+        },
+        "action_taken": { "type": ["string", "null"] },
+        "related_sensor_event_ids": {
+          "type": "array",
+          "items": { "type": "string", "format": "uuid" }
+        },
+        "is_food_safety_claim": {
+          "type": "boolean",
+          "const": false,
+          "description": "Must remain false. Models do not authorize harvest."
+        },
+        "privacy_tier": {
+          "type": "string",
+          "enum": ["RESTRICTED", "PRIVATE", "NEVER_PUBLISH"]
+        }
+      }
+    }
+  ],
+  "examples": [
+    {
+      "event_id": "01800000-0000-7000-8000-000000000020",
+      "entity_type": "FarmOperationalOutcome",
+      "source_id": "partner.oyster.fixture",
+      "source_record_id": "fixture-ops-0001",
+      "source_dataset_version": "fixture-0",
+      "source_owner": "FIXTURE_NOT_A_FARM",
+      "ingestion_run_id": "01800000-0000-7000-8000-000000000099",
+      "observed_at_utc": "2026-09-17T15:00:00Z",
+      "published_at_utc": "2026-09-17T16:00:00Z",
+      "ingested_at_utc": "2026-09-18T04:00:00Z",
+      "revised_at_utc": "2026-09-17T16:00:00Z",
+      "latitude": null,
+      "longitude": null,
+      "geometry_precision": "official_unit",
+      "spatial_cell_id": "8828d52b2dfffff",
+      "h3_res": 8,
+      "spatial_cell_id_public": "8728d52b2ffffff",
+      "official_unit_id": "WA_DOH_GROWING_AREA:FIXTURE",
+      "official_unit_type": "wa_doh_growing_area",
+      "species_taxon_id": "urn:lsid:marinespecies.org:taxname:836033",
+      "scientific_name_at_source": "Crassostrea gigas",
+      "accepted_scientific_name": "Magallana gigas",
+      "taxonomic_authority": "WoRMS",
+      "measurement_type": "work_window_disruption",
+      "farm_id": "farm_internal_fixture_01",
+      "lease_id_internal": null,
+      "growing_area_id": "WA_DOH_GROWING_AREA:FIXTURE",
+      "outcome_type": "work_window_disruption",
+      "severity": "medium",
+      "action_taken": "delayed tumbling 24h",
+      "is_food_safety_claim": false,
+      "observation_confidence": "medium",
+      "quality_flags": ["PRIVACY_STRIPPED"],
+      "evidence_tier": "T2_operational",
+      "prediction_contract_category": "D",
+      "license": "LicenseRef-Partner-DUA",
+      "privacy_tier": "PRIVATE",
+      "data_rights_status": "APPROVED_PARTNER_CONSENT",
+      "raw_payload_reference": "s3://fishai-dev/raw/partner.oyster.fixture/run-099/payload.json",
+      "transformation_version": "0.0.0-design",
+      "transform_hash": "sha256:fixture",
+      "source_checksum": "sha256:fixture",
+      "notes": "Synthetic schema example. Not a harvest authorization."
+    }
+  ]
+}

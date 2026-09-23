@@ -1,0 +1,90 @@
+%% FishAI v1 geospatial architecture — 2026-09-18
+%% Wedge UNRESOLVED. One pipeline binds later via wedge_id + AOI.
+%% No global lake, no hardware, no production ingest in this design pass.
+
+flowchart TB
+  subgraph operators [Operators and partners]
+    Farm["Oyster farm partner<br/>WA growing area"]
+    Charter["Charter captain partner<br/>CA/OR salmon area"]
+    Lobster["Lobster operator partner<br/>GOM stat area"]
+    Human["Human operator<br/>rights gate + alerts"]
+  end
+
+  subgraph publicSrc [Public sources — rights-approved only]
+    Env["SST / chl / waves / tides<br/>CMEMS · NOAA · NDBC"]
+    Official["Official polygons and advisories<br/>WA DOH · PFMC · NEFSC/GARFO"]
+    Taxon["WoRMS Aphia lookup cache<br/>not full DB dump"]
+  end
+
+  subgraph ingest [Python jobs on a laptop or small VM]
+    Gate{"Rights status in<br/>SourceMetadata?"}
+    Acquire["Acquire: official API/file<br/>rate limits · checksum"]
+    RawStore["L0 immutable object store<br/>MinIO local / R2 or S3 pilot"]
+    Profile["Profile: schema CRS time<br/>nulls AOI taxonomy"]
+    Norm["Normalize: UTC SI H3<br/>WoRMS kernel fields"]
+    Validate["Validate: pandera tests<br/>flag do not silent-drop"]
+    Quarantine["Quarantine parquet<br/>quality_flags set"]
+  end
+
+  subgraph lake [Bounded object store — not a global lake]
+    L1["L1 GeoParquet<br/>partition source / year / privacy_tier"]
+    L1r["L1 rasters<br/>COG · NetCDF/Zarr native grids"]
+    L2["L2 feature snapshots<br/>immutable parquet"]
+    L3["L3 predictions<br/>append-only"]
+    L4["L4 outcomes<br/>PRIVATE by default"]
+  end
+
+  subgraph warehouse [Warehouse]
+    Lite["SQLite local catalog"]
+    PG["Postgres+PostGIS when first<br/>partner data arrives · RLS"]
+    Meta["source_metadata · partner_metadata<br/>agreements · source_health<br/>forecast index · sensitive rules"]
+  end
+
+  subgraph asof [As-of / replay]
+    Cutoff["Join published_at_utc <= issued_at_utc"]
+    Snap["Lock feature_snapshot_id<br/>model_version · code hash"]
+    Explain["Explain forecast X on date Y<br/>from snapshot not live tables"]
+    Retro["retrospective_corrected<br/>explicit flag only"]
+  end
+
+  subgraph product [Minimum lovable output]
+    Brief["Email / PDF / SMS brief<br/>coarsened cells + disclaimers"]
+    Form["30-second outcome form"]
+  end
+
+  Farm -->|DUA + PRIVATE outcomes| Gate
+  Charter -->|DUA + PRIVATE outcomes| Gate
+  Lobster -->|DUA + PRIVATE outcomes| Gate
+  publicSrc --> Gate
+  Human -->|approve / reject / pause| Gate
+  Gate -->|not approved| Quarantine
+  Gate -->|approved class| Acquire
+  Acquire --> RawStore
+  RawStore --> Profile --> Norm --> Validate
+  Validate -->|fail| Quarantine
+  Validate -->|pass| L1
+  Validate --> L1r
+  L1 --> Lite
+  L1 --> PG
+  Lite --> Meta
+  PG --> Meta
+  L1 --> Cutoff
+  L1r --> Cutoff
+  Cutoff --> Snap --> L2 --> L3
+  L3 --> Brief
+  Brief --> Form --> L4
+  L4 --> Snap
+  L3 --> Explain
+  Snap --> Retro
+  L3 --> Meta
+
+  subgraph outage [Source outage — never silent]
+    Log["Log + source_health"]
+    Fallback["Activate secondary / fallback"]
+    Conf["Reduce confidence"]
+    Miss["Expose missing-data notice"]
+    Alert["Alert operator"]
+  end
+
+  Validate -.-> Log
+  Log --> Fallback --> Conf --> Miss --> Alert --> Human

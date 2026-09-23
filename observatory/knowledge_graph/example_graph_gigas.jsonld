@@ -1,0 +1,5295 @@
+{
+  "@context": {
+    "@vocab": "urn:fishai:observatory:kg:ontology#",
+    "kg": "urn:fishai:observatory:kg:",
+    "xsd": "http://www.w3.org/2001/XMLSchema#",
+    "worms_aphiaid": {
+      "@type": "xsd:integer"
+    },
+    "valid_aphiaid": {
+      "@type": "xsd:integer"
+    },
+    "taxon_aphiaid": {
+      "@type": "xsd:integer"
+    },
+    "customer_claim_eligible": {
+      "@type": "xsd:boolean"
+    },
+    "last_updated": {
+      "@type": "xsd:date"
+    },
+    "access_date": {
+      "@type": "xsd:date"
+    },
+    "subject": {
+      "@type": "@id"
+    },
+    "object": {
+      "@type": "@id"
+    }
+  },
+  "@id": "urn:fishai:observatory:kg:graph/example-gigas-w1-2026-09-18",
+  "@type": "KnowledgeGraphFixture",
+  "name": "Pacific oyster W1 Willapa fixture (schema only)",
+  "created": "2026-09-18",
+  "privacy_policy": "observatory/sensitive_location_policy.md",
+  "emiv_binding": "observatory/emiv/ v0.1-draft; engine_id_crosswalk.md",
+  "causal_enum_binding": "proposed in ontology.md \u00a78; observatory/causal_ecology/ absent 2026-09-18",
+  "notes": "No OBIS/GBIF dumps. No NEVER_PUBLISH coordinates. Farm is PRIVATE with no performance. SoundToxins is a HAB constraint, not an ops label. WDOH is a regulatory node, not a stress label.",
+  "fixture_stats": {
+    "node_count": 95,
+    "edge_count": 127,
+    "graph_item_count": 222,
+    "nodes_by_type": {
+      "AquacultureFarm": 1,
+      "DataSource": 6,
+      "DepthZone": 4,
+      "Disease": 1,
+      "EnvironmentalVariable": 12,
+      "Fishery": 1,
+      "Forecast": 1,
+      "Habitat": 4,
+      "HumanPressure": 3,
+      "Hypothesis": 2,
+      "LifeStage": 4,
+      "Model": 5,
+      "Observation": 3,
+      "OceanRegion": 4,
+      "Parasite": 1,
+      "Predator": 1,
+      "Prey": 1,
+      "ProtectedArea": 1,
+      "Publication": 5,
+      "RegulatoryConstraint": 3,
+      "Sensor": 4,
+      "Species": 8,
+      "StockPopulation": 3,
+      "Survey": 3,
+      "Tag": 1,
+      "Taxon": 1,
+      "ToleranceRange": 4,
+      "TransferConstraint": 7,
+      "ValidationResult": 1
+    },
+    "edges_by_predicate": {
+      "ASSOCIATED_WITH": 5,
+      "AVOIDS": 2,
+      "CITED_IN": 4,
+      "COMPETES_WITH": 1,
+      "CONFLICTS_WITH": 1,
+      "CONSTRAINED_BY": 5,
+      "CULTURED_IN": 4,
+      "FORBIDDEN_TRANSFER": 8,
+      "HAS_CONFIDENCE": 1,
+      "HAS_LIFE_STAGE": 4,
+      "HAS_SYNONYM": 1,
+      "HAS_TOLERANCE": 4,
+      "HOSTS_DISEASE": 1,
+      "HOSTS_PARASITE": 1,
+      "IRRELEVANT_EMIV": 10,
+      "ISSUED_FOR": 3,
+      "MEASURES": 8,
+      "MODELED_BY": 4,
+      "OBSERVED_BY": 4,
+      "OBSERVED_IN": 3,
+      "OCCURS_IN": 7,
+      "PARTITION_OF": 3,
+      "PREFERS_DEPTH": 4,
+      "PRESSURED_BY": 3,
+      "PREYED_ON_BY": 1,
+      "PREYS_ON": 1,
+      "RELEVANT_EMIV": 12,
+      "SAMPLED_BY": 3,
+      "SOURCED_FROM": 6,
+      "SUPPORTS": 2,
+      "TAGGED_BY": 1,
+      "USES_EMIV": 8,
+      "VALIDATED_AGAINST": 2
+    },
+    "nodes_by_privacy_tier": {
+      "PRIVATE": 2,
+      "PUBLIC": 93
+    },
+    "never_publish_public_nodes": 0,
+    "private_farm_nodes": 1
+  },
+  "@graph": [
+    {
+      "@id": "urn:fishai:observatory:kg:species/worms-836033",
+      "@type": "Species",
+      "last_updated": "2026-09-18",
+      "worms_aphiaid": 836033,
+      "lsid": "urn:lsid:marinespecies.org:taxname:836033",
+      "scientific_name_accepted": "Magallana gigas",
+      "scientific_authority": "(Thunberg, 1793)",
+      "worms_status": "accepted",
+      "common_names": [
+        "Pacific oyster",
+        "Pacific cupped oyster",
+        "Japanese oyster"
+      ],
+      "environment_flags": [
+        "marine",
+        "brackish"
+      ],
+      "introduction_status": "introduced_in_washington_1920s",
+      "access_date": "2026-09-18",
+      "support_tier_ceiling": "T2",
+      "notes": "Industry/WA agencies often still say Crassostrea gigas. Portuguese oyster is Magallana angulata, not a synonym.",
+      "privacy_tier": "PUBLIC"
+    },
+    {
+      "@id": "urn:fishai:observatory:kg:species/worms-1039387",
+      "@type": "Species",
+      "last_updated": "2026-09-18",
+      "worms_aphiaid": 1039387,
+      "lsid": "urn:lsid:marinespecies.org:taxname:1039387",
+      "scientific_name_accepted": "Magallana angulata",
+      "scientific_authority": "(Lamarck, 1819)",
+      "worms_status": "accepted",
+      "common_names": [
+        "Portuguese oyster"
+      ],
+      "access_date": "2026-09-18",
+      "notes": "Disambiguation only. Never synonymize with M. gigas.",
+      "privacy_tier": "PUBLIC"
+    },
+    {
+      "@id": "urn:fishai:observatory:kg:species/worms-542155",
+      "@type": "Species",
+      "last_updated": "2026-09-18",
+      "worms_aphiaid": 542155,
+      "lsid": "urn:lsid:marinespecies.org:taxname:542155",
+      "scientific_name_accepted": "Ostrea lurida",
+      "scientific_authority": "P. P. Carpenter, 1864",
+      "worms_status": "accepted",
+      "common_names": [
+        "Olympia oyster",
+        "native oyster"
+      ],
+      "access_date": "2026-09-18",
+      "notes": "Native WA oyster. 2021 heatwave mortality differed from M. gigas. Not a synonym.",
+      "privacy_tier": "PUBLIC"
+    },
+    {
+      "@id": "urn:fishai:observatory:kg:species/worms-158075",
+      "@type": "Species",
+      "last_updated": "2026-09-18",
+      "worms_aphiaid": 158075,
+      "lsid": "urn:lsid:marinespecies.org:taxname:158075",
+      "scientific_name_accepted": "Oncorhynchus tshawytscha",
+      "scientific_authority": "(Walbaum, 1792)",
+      "worms_status": "accepted",
+      "common_names": [
+        "Chinook salmon",
+        "king salmon"
+      ],
+      "access_date": "2026-09-18",
+      "support_tier_ceiling": "T2",
+      "notes": "Transfer-block contrast. Listed ESU locations are NEVER_PUBLISH and are not nodes.",
+      "privacy_tier": "PUBLIC"
+    },
+    {
+      "@id": "urn:fishai:observatory:kg:species/worms-156134",
+      "@type": "Species",
+      "last_updated": "2026-09-18",
+      "worms_aphiaid": 156134,
+      "lsid": "urn:lsid:marinespecies.org:taxname:156134",
+      "scientific_name_accepted": "Homarus americanus",
+      "scientific_authority": "H. Milne Edwards, 1837",
+      "worms_status": "accepted",
+      "common_names": [
+        "American lobster"
+      ],
+      "access_date": "2026-09-18",
+      "support_tier_ceiling": "T2",
+      "notes": "Transfer-block contrast. Trap GPS NEVER_PUBLISH. SNE hypoxia is not a GOM next-trip driver.",
+      "privacy_tier": "PUBLIC"
+    },
+    {
+      "@id": "urn:fishai:observatory:kg:species/worms-160585",
+      "@type": "Species",
+      "last_updated": "2026-09-18",
+      "worms_aphiaid": 160585,
+      "lsid": "urn:lsid:marinespecies.org:taxname:160585",
+      "scientific_name_accepted": "Heterosigma akashiwo",
+      "worms_status": "accepted",
+      "access_date": "2026-09-18",
+      "notes": "HAB taxon that can reduce feeding / stress the oyster (animal), distinct from NSSP PSP lists.",
+      "privacy_tier": "PUBLIC"
+    },
+    {
+      "@id": "urn:fishai:observatory:kg:species/worms-231873",
+      "@type": "Species",
+      "last_updated": "2026-09-18",
+      "worms_aphiaid": 231873,
+      "lsid": "urn:lsid:marinespecies.org:taxname:231873",
+      "scientific_name_accepted": "Alexandrium catenella",
+      "worms_status": "accepted",
+      "access_date": "2026-09-18",
+      "notes": "PSP harvest-toxin taxon. SoundToxins counts are a regulatory constraint, not an ops-stress label.",
+      "privacy_tier": "PUBLIC"
+    },
+    {
+      "@id": "urn:fishai:observatory:kg:species/worms-110321",
+      "@type": "Species",
+      "last_updated": "2026-09-18",
+      "worms_aphiaid": 110321,
+      "lsid": "urn:lsid:marinespecies.org:taxname:110321",
+      "scientific_name_accepted": "Protoceratium reticulatum",
+      "worms_status": "accepted",
+      "access_date": "2026-09-18",
+      "notes": "Yessotoxins; mixed animal-stress vs harvest. Keep split.",
+      "privacy_tier": "PUBLIC"
+    },
+    {
+      "@id": "urn:fishai:observatory:kg:taxon/worms-140656",
+      "@type": "Taxon",
+      "last_updated": "2026-09-18",
+      "worms_aphiaid": 140656,
+      "lsid": "urn:lsid:marinespecies.org:taxname:140656",
+      "scientific_name": "Crassostrea gigas",
+      "scientific_authority": "(Thunberg, 1793)",
+      "worms_status": "superseded combination",
+      "valid_aphiaid": 836033,
+      "access_date": "2026-09-18",
+      "notes": "Required synonym for FAO/WA farm joins. No separate support tier.",
+      "privacy_tier": "PUBLIC"
+    },
+    {
+      "@id": "urn:fishai:observatory:kg:stock/gigas-wa-introduced-farmed",
+      "@type": "StockPopulation",
+      "last_updated": "2026-09-18",
+      "population_unit": "observatory:wa_introduced_farmed_Magallana_gigas",
+      "unit_type": "aquaculture_introduced",
+      "notes": "Not a wild stock assessment unit. Ploidy/pedigree are private farm attributes, not extra AphiaIDs.",
+      "privacy_tier": "PUBLIC"
+    },
+    {
+      "@id": "urn:fishai:observatory:kg:stock/chinook-caor-ocean-mixed",
+      "@type": "StockPopulation",
+      "last_updated": "2026-09-18",
+      "population_unit": "observatory:caor_ocean_mixed_Chinook",
+      "unit_type": "mixed_ocean_fishery",
+      "listed_units_named_without_geometry": [
+        "California Coastal Chinook ESU",
+        "Sacramento River winter-run ESU"
+      ],
+      "geometry_policy": "NEVER_PUBLISH",
+      "notes": "Named listed ESUs may co-occur. Do not emit holding-pool or river-mouth GPS.",
+      "privacy_tier": "PUBLIC"
+    },
+    {
+      "@id": "urn:fishai:observatory:kg:stock/lobster-gom-gbk",
+      "@type": "StockPopulation",
+      "last_updated": "2026-09-18",
+      "population_unit": "ASMFC:GOM_GBK",
+      "unit_type": "biological_stock",
+      "notes": "Coarse stock identity only. No statistical-area trap clusters.",
+      "privacy_tier": "PUBLIC"
+    },
+    {
+      "@id": "urn:fishai:observatory:kg:life_stage/farmed_growout",
+      "@type": "LifeStage",
+      "last_updated": "2026-09-18",
+      "code": "farmed_growout",
+      "label": "Planted spat through market adults on gear or bottom",
+      "privacy_tier": "PUBLIC"
+    },
+    {
+      "@id": "urn:fishai:observatory:kg:life_stage/larva",
+      "@type": "LifeStage",
+      "last_updated": "2026-09-18",
+      "code": "larva",
+      "label": "Planktonic veliger; OA bottleneck; out of 72h farm-ops decision",
+      "privacy_tier": "PUBLIC"
+    },
+    {
+      "@id": "urn:fishai:observatory:kg:life_stage/ocean_immature_adult",
+      "@type": "LifeStage",
+      "last_updated": "2026-09-18",
+      "code": "ocean_immature_adult",
+      "label": "Legal-size ocean-phase Chinook; charter target",
+      "privacy_tier": "PUBLIC"
+    },
+    {
+      "@id": "urn:fishai:observatory:kg:life_stage/legal_benthic_adult",
+      "@type": "LifeStage",
+      "last_updated": "2026-09-18",
+      "code": "legal_benthic_adult",
+      "label": "Legal-size Homarus entering traps",
+      "privacy_tier": "PUBLIC"
+    },
+    {
+      "@id": "urn:fishai:observatory:kg:habitat/willapa-intertidal-bag",
+      "@type": "Habitat",
+      "last_updated": "2026-09-18",
+      "habitat_class": "intertidal_culture",
+      "culture_methods": [
+        "bag",
+        "longline",
+        "tumble_bag"
+      ],
+      "notes": "Aerial heat \u00d7 daytime emersion.",
+      "privacy_tier": "PUBLIC"
+    },
+    {
+      "@id": "urn:fishai:observatory:kg:habitat/willapa-subtidal-offbottom",
+      "@type": "Habitat",
+      "last_updated": "2026-09-18",
+      "habitat_class": "subtidal_culture",
+      "culture_methods": [
+        "raft",
+        "off_bottom"
+      ],
+      "notes": "Water-column heat, DO, HAB; less aerial heat.",
+      "privacy_tier": "PUBLIC"
+    },
+    {
+      "@id": "urn:fishai:observatory:kg:habitat/willapa-bottom-culture",
+      "@type": "Habitat",
+      "last_updated": "2026-09-18",
+      "habitat_class": "bottom_culture",
+      "notes": "Willapa fattening-line growth is seasonal, not 72h mortality, except heat/hypoxia/storm events.",
+      "privacy_tier": "PUBLIC"
+    },
+    {
+      "@id": "urn:fishai:observatory:kg:habitat/caor-shelf-pelagic",
+      "@type": "Habitat",
+      "last_updated": "2026-09-18",
+      "habitat_class": "shelf_pelagic",
+      "notes": "Chinook troll/mooch habitat. Not oyster bags.",
+      "privacy_tier": "PUBLIC"
+    },
+    {
+      "@id": "urn:fishai:observatory:kg:region/willapa-bay",
+      "@type": "OceanRegion",
+      "last_updated": "2026-09-18",
+      "name": "Willapa Bay",
+      "jurisdiction": "US-WA-Pacific-County",
+      "official_unit_examples": [
+        "WA_DOH_GROWING_AREA:Willapa-Nahcotta-fixture"
+      ],
+      "grain": "estuary",
+      "privacy_tier": "PUBLIC"
+    },
+    {
+      "@id": "urn:fishai:observatory:kg:region/hood-canal",
+      "@type": "OceanRegion",
+      "last_updated": "2026-09-18",
+      "name": "Hood Canal",
+      "jurisdiction": "US-WA",
+      "grain": "sub_basin",
+      "notes": "Stratified hypoxia contrast. Do not pool with Willapa without basin id.",
+      "privacy_tier": "PUBLIC"
+    },
+    {
+      "@id": "urn:fishai:observatory:kg:region/caor-shelf",
+      "@type": "OceanRegion",
+      "last_updated": "2026-09-18",
+      "name": "CA/OR ocean shelf south of Cape Falcon (coarse)",
+      "grain": "management_area",
+      "notes": "No waypoint layer. Open/closed is regulatory.",
+      "privacy_tier": "PUBLIC"
+    },
+    {
+      "@id": "urn:fishai:observatory:kg:region/gom-inshore-coarse",
+      "@type": "OceanRegion",
+      "last_updated": "2026-09-18",
+      "name": "Gulf of Maine inshore (coarse)",
+      "grain": "stock",
+      "notes": "No NMFS statistical-area trap GPS.",
+      "privacy_tier": "PUBLIC"
+    },
+    {
+      "@id": "urn:fishai:observatory:kg:depth/INTERTIDAL_AIR",
+      "@type": "DepthZone",
+      "last_updated": "2026-09-18",
+      "depth_bin_id": "INTERTIDAL_AIR",
+      "label": "Emersed intertidal; air temperature is the thermal medium",
+      "privacy_tier": "PUBLIC"
+    },
+    {
+      "@id": "urn:fishai:observatory:kg:depth/SURFACE_0_5",
+      "@type": "DepthZone",
+      "last_updated": "2026-09-18",
+      "depth_bin_id": "SURFACE_0_5",
+      "label": "Surface 0\u20135 m water",
+      "privacy_tier": "PUBLIC"
+    },
+    {
+      "@id": "urn:fishai:observatory:kg:depth/SUBTIDAL_BOTTOM",
+      "@type": "DepthZone",
+      "last_updated": "2026-09-18",
+      "depth_bin_id": "SUBTIDAL_BOTTOM",
+      "label": "Subtidal / bottom culture water",
+      "privacy_tier": "PUBLIC"
+    },
+    {
+      "@id": "urn:fishai:observatory:kg:depth/SHELF_THERMAL_BAND",
+      "@type": "DepthZone",
+      "last_updated": "2026-09-18",
+      "depth_bin_id": "SHELF_THERMAL_BAND",
+      "label": "Shelf water where adult Chinook occupy ~8\u201312C by changing depth",
+      "privacy_tier": "PUBLIC"
+    },
+    {
+      "@id": "urn:fishai:observatory:kg:emiv/air_temperature",
+      "@type": "EnvironmentalVariable",
+      "last_updated": "2026-09-18",
+      "emiv_id": "EMIV-PHY-ATEMP-001",
+      "label": "Air temperature",
+      "unit": "K or degC",
+      "binding": "registry_v0.1-draft",
+      "privacy_tier": "PUBLIC"
+    },
+    {
+      "@id": "urn:fishai:observatory:kg:emiv/emersion_duration",
+      "@type": "EnvironmentalVariable",
+      "last_updated": "2026-09-18",
+      "emiv_id": "EMIV-PHY-EMERS-001",
+      "label": "Tidal emersion duration / tide stage",
+      "unit": "h",
+      "binding": "registry_v0.1-draft",
+      "privacy_tier": "PUBLIC"
+    },
+    {
+      "@id": "urn:fishai:observatory:kg:emiv/water_temperature",
+      "@type": "EnvironmentalVariable",
+      "last_updated": "2026-09-18",
+      "emiv_id": "EMIV-PHY-WTEMP-001",
+      "label": "In situ water temperature",
+      "unit": "degC",
+      "binding": "registry_v0.1-draft",
+      "privacy_tier": "PUBLIC"
+    },
+    {
+      "@id": "urn:fishai:observatory:kg:emiv/dissolved_oxygen",
+      "@type": "EnvironmentalVariable",
+      "last_updated": "2026-09-18",
+      "emiv_id": "EMIV-BGC-DOXY-001",
+      "label": "Dissolved oxygen",
+      "unit": "mg L-1",
+      "binding": "registry_v0.1-draft",
+      "privacy_tier": "PUBLIC"
+    },
+    {
+      "@id": "urn:fishai:observatory:kg:emiv/salinity",
+      "@type": "EnvironmentalVariable",
+      "last_updated": "2026-09-18",
+      "emiv_id": "EMIV-PHY-SALIN-001",
+      "label": "Practical salinity",
+      "unit": "1",
+      "binding": "registry_v0.1-draft",
+      "privacy_tier": "PUBLIC"
+    },
+    {
+      "@id": "urn:fishai:observatory:kg:emiv/wind_wave",
+      "@type": "EnvironmentalVariable",
+      "last_updated": "2026-09-18",
+      "emiv_id": "EMIV-PHY-WIND-001|EMIV-PHY-WAVE-001",
+      "label": "Wind, waves, storm disruption",
+      "unit": "mixed",
+      "binding": "registry_v0.1-draft",
+      "privacy_tier": "PUBLIC"
+    },
+    {
+      "@id": "urn:fishai:observatory:kg:emiv/satellite_sst",
+      "@type": "EnvironmentalVariable",
+      "last_updated": "2026-09-18",
+      "emiv_id": "EMIV-PHY-SST-001",
+      "label": "Satellite skin sea-surface temperature",
+      "unit": "degC",
+      "binding": "registry_v0.1-draft",
+      "privacy_tier": "PUBLIC"
+    },
+    {
+      "@id": "urn:fishai:observatory:kg:emiv/chlorophyll_a",
+      "@type": "EnvironmentalVariable",
+      "last_updated": "2026-09-18",
+      "emiv_id": "EMIV-BGC-CHL-001",
+      "label": "Chlorophyll-a",
+      "unit": "mg m-3",
+      "binding": "registry_v0.1-draft",
+      "privacy_tier": "PUBLIC"
+    },
+    {
+      "@id": "urn:fishai:observatory:kg:emiv/omega_aragonite",
+      "@type": "EnvironmentalVariable",
+      "last_updated": "2026-09-18",
+      "emiv_id": "EMIV-BGC-OMEGA-001",
+      "label": "Aragonite saturation state / pH family",
+      "unit": "1",
+      "binding": "registry_v0.1-draft",
+      "privacy_tier": "PUBLIC"
+    },
+    {
+      "@id": "urn:fishai:observatory:kg:emiv/fecal_coliform",
+      "@type": "EnvironmentalVariable",
+      "last_updated": "2026-09-18",
+      "emiv_id": "EMIV-BGC-FECAL-001",
+      "label": "NSSP fecal indicator",
+      "unit": "CFU or MPN",
+      "binding": "registry_v0.1-draft",
+      "privacy_tier": "PUBLIC"
+    },
+    {
+      "@id": "urn:fishai:observatory:kg:emiv/bottom_temperature",
+      "@type": "EnvironmentalVariable",
+      "last_updated": "2026-09-18",
+      "emiv_id": "EMIV-PHY-WTEMP-003",
+      "label": "Benthic / bottom temperature",
+      "unit": "degC",
+      "binding": "registry_v0.1-draft",
+      "privacy_tier": "PUBLIC"
+    },
+    {
+      "@id": "urn:fishai:observatory:kg:emiv/hab_cell_density_animal_stress",
+      "@type": "EnvironmentalVariable",
+      "last_updated": "2026-09-18",
+      "emiv_id": "EMIV-ECO-HAB-001",
+      "label": "Named HAB cells that affect the animal (not the eater)",
+      "unit": "cells L-1",
+      "binding": "registry_v0.1-draft",
+      "privacy_tier": "PUBLIC"
+    },
+    {
+      "@id": "urn:fishai:observatory:kg:tolerance/gigas-air-heat-intertidal",
+      "@type": "ToleranceRange",
+      "last_updated": "2026-09-18",
+      "emiv_id": "EMIV-PHY-ATEMP-001",
+      "taxon": 836033,
+      "notes": "No bag-level lethal threshold shipped. 2021 heat dome \u00d7 lowest tides is the event analogue (Raymond et al. 2022).",
+      "privacy_tier": "PUBLIC"
+    },
+    {
+      "@id": "urn:fishai:observatory:kg:tolerance/gigas-salinity-euryhaline",
+      "@type": "ToleranceRange",
+      "last_updated": "2026-09-18",
+      "emiv_id": "EMIV-PHY-SALIN-001",
+      "taxon": 836033,
+      "range_note": "Culture often 10\u201335; optimum often cited ~20\u201325 (FAO). Acute runoff is multi-stressor.",
+      "privacy_tier": "PUBLIC"
+    },
+    {
+      "@id": "urn:fishai:observatory:kg:tolerance/gigas-do-culture-floor",
+      "@type": "ToleranceRange",
+      "last_updated": "2026-09-18",
+      "emiv_id": "EMIV-BGC-DOXY-001",
+      "taxon": 836033,
+      "range_note": "FAO culture sheet DO >2 mg L-1 is a floor, not a no-effect level.",
+      "privacy_tier": "PUBLIC"
+    },
+    {
+      "@id": "urn:fishai:observatory:kg:tolerance/chinook-8-12C",
+      "@type": "ToleranceRange",
+      "last_updated": "2026-09-18",
+      "emiv_id": "EMIV-PHY-WTEMP-001",
+      "taxon": 158075,
+      "range_note": "Archival tags: persistent 8\u201312C; depth adjusts when SST warms (Hinke et al. 2005).",
+      "privacy_tier": "PUBLIC"
+    },
+    {
+      "@id": "urn:fishai:observatory:kg:prey/estuarine-seston-phytoplankton",
+      "@type": "Prey",
+      "last_updated": "2026-09-18",
+      "label": "Estuarine seston / phytoplankton",
+      "notes": "Food for growth/condition (Willapa fattening line). Not a 72h mortality driver unless crash/HAB.",
+      "privacy_tier": "PUBLIC"
+    },
+    {
+      "@id": "urn:fishai:observatory:kg:predator/guild-intertidal-crabs-drills",
+      "@type": "Predator",
+      "last_updated": "2026-09-18",
+      "label": "Intertidal crab / drill guild",
+      "notes": "Not a first-order 24\u201372h Willapa ops-stress driver in marine_domain. No site GPS.",
+      "privacy_tier": "PUBLIC"
+    },
+    {
+      "@id": "urn:fishai:observatory:kg:disease/OsHV-1",
+      "@type": "Disease",
+      "last_updated": "2026-09-18",
+      "label": "Ostreid herpesvirus 1",
+      "notes": "Causal where present (CA). Not detected at tested OR/WA sentinel sites in 2020 (Dumbauld et al. 2023).",
+      "privacy_tier": "PUBLIC"
+    },
+    {
+      "@id": "urn:fishai:observatory:kg:parasite/not-asserted-willapa-72h",
+      "@type": "Parasite",
+      "last_updated": "2026-09-18",
+      "label": "No parasite asserted as Willapa 72h ops-stress driver",
+      "notes": "Placeholder for missing-knowledge queries. Do not invent a Willapa parasite load.",
+      "privacy_tier": "PUBLIC"
+    },
+    {
+      "@id": "urn:fishai:observatory:kg:survey/soundtoxins",
+      "@type": "Survey",
+      "last_updated": "2026-09-18",
+      "name": "SoundToxins",
+      "url": "https://soundtoxins.org/about.html",
+      "role": "HAB cell monitoring; split animal-stress taxa from NSSP harvest toxins",
+      "privacy_tier": "PUBLIC"
+    },
+    {
+      "@id": "urn:fishai:observatory:kg:survey/nanoos-nvs-shellfish",
+      "@type": "Survey",
+      "last_updated": "2026-09-18",
+      "name": "NANOOS NVS Shellfish Growers",
+      "url": "https://nvs.nanoos.org/ShellfishGrowers",
+      "role": "In situ T/S/DO/chl/turbidity; sparse vs leases; stronger Hood Canal than Willapa",
+      "privacy_tier": "PUBLIC"
+    },
+    {
+      "@id": "urn:fishai:observatory:kg:survey/wsg-rapid-response-2021",
+      "@type": "Survey",
+      "last_updated": "2026-09-18",
+      "name": "Washington Sea Grant Rapid Response Network",
+      "url": "https://waseagrant.uw.edu/our-programs/seafood-fisheries-aquaculture/aquaculture/rapid-response-network/",
+      "role": "2021 heat-dome grower event narrative",
+      "privacy_tier": "PUBLIC"
+    },
+    {
+      "@id": "urn:fishai:observatory:kg:observation/raymond-2021-heat-dome",
+      "@type": "Observation",
+      "last_updated": "2026-09-18",
+      "label": "2021 PNW heat dome intertidal mortality (Salish Sea assessment)",
+      "output_class": "SURVEY_DERIVED",
+      "notes": "Raymond et al. 2022 maps Salish Sea intertidal effects. Not a Willapa lease pin layer. Pacific oysters more affected than Olympia oysters.",
+      "privacy_tier": "PUBLIC"
+    },
+    {
+      "@id": "urn:fishai:observatory:kg:observation/cheney-2000-ps-summer-mortality",
+      "@type": "Observation",
+      "last_updated": "2026-09-18",
+      "label": "1998 Puget Sound summer mortality multi-stressor",
+      "output_class": "LITERATURE_SYNTHESIS",
+      "notes": "High temperature, neap tides, low oxygen \u2014 Puget Sound, not Willapa.",
+      "privacy_tier": "PUBLIC"
+    },
+    {
+      "@id": "urn:fishai:observatory:kg:observation/dumbould-2020-oshv1-or-wa-sentinel",
+      "@type": "Observation",
+      "last_updated": "2026-09-18",
+      "label": "OsHV-1 not detected at tested OR/WA sentinel sites 2020",
+      "output_class": "SURVEY_DERIVED",
+      "privacy_tier": "PUBLIC"
+    },
+    {
+      "@id": "urn:fishai:observatory:kg:sensor/coops-tide-willapa-class",
+      "@type": "Sensor",
+      "last_updated": "2026-09-18",
+      "network": "NOAA CO-OPS",
+      "measures_hint": "water_level \u2192 emersion",
+      "notes": "Official tide predictions. Station class, not a farm GPS.",
+      "privacy_tier": "PUBLIC"
+    },
+    {
+      "@id": "urn:fishai:observatory:kg:sensor/nws-air-forecast",
+      "@type": "Sensor",
+      "last_updated": "2026-09-18",
+      "network": "NWS",
+      "measures_hint": "air_temperature, wind",
+      "notes": "Airport/buoy air T is not intertidal microclimate.",
+      "privacy_tier": "PUBLIC"
+    },
+    {
+      "@id": "urn:fishai:observatory:kg:sensor/nanoos-grower-network",
+      "@type": "Sensor",
+      "last_updated": "2026-09-18",
+      "network": "NANOOS",
+      "measures_hint": "T, S, DO, chl, turbidity",
+      "notes": "Coverage uneven; Willapa sparser than Hood Canal/ORCA.",
+      "privacy_tier": "PUBLIC"
+    },
+    {
+      "@id": "urn:fishai:observatory:kg:sensor/farm-logger-private",
+      "@type": "Sensor",
+      "last_updated": "2026-09-18",
+      "network": "partner_fixture",
+      "privacy_tier": "PRIVATE",
+      "measures_hint": "lease water T / DO if present",
+      "notes": "No coordinates. No neighbor attribution. Existence only."
+    },
+    {
+      "@id": "urn:fishai:observatory:kg:tag/hinke-archival-chinook-program",
+      "@type": "Tag",
+      "last_updated": "2026-09-18",
+      "label": "Published Chinook archival-tag program (Hinke et al.)",
+      "privacy_tier": "PUBLIC",
+      "notes": "Citation of methods/results only. No individual tracks, no current positions."
+    },
+    {
+      "@id": "urn:fishai:observatory:kg:model/b4-gigas-air-tide-stress",
+      "@type": "Model",
+      "last_updated": "2026-09-18",
+      "model_type": "expert_rule_B4",
+      "taxon_aphiaid": 836033,
+      "life_stage": "farmed_growout",
+      "decision_applicability": "gigas_wa_72h_ops_stress",
+      "prediction_contract_category": "D",
+      "support_tier_ceiling": "T1",
+      "emiv_allowlist": [
+        "EMIV-PHY-ATEMP-001",
+        "EMIV-PHY-EMERS-001",
+        "EMIV-PHY-WTEMP-001",
+        "EMIV-BGC-DOXY-001",
+        "EMIV-PHY-SALIN-001",
+        "EMIV-PHY-WIND-001|EMIV-PHY-WAVE-001"
+      ],
+      "status": "HYPOTHETICAL_RESEARCH",
+      "notes": "Not a customer-facing model. Not harvest legality.",
+      "privacy_tier": "PUBLIC"
+    },
+    {
+      "@id": "urn:fishai:observatory:kg:model/chinook-sst-encounter",
+      "@type": "Model",
+      "last_updated": "2026-09-18",
+      "model_type": "sst_habitat_encounter",
+      "taxon_aphiaid": 158075,
+      "life_stage": "ocean_immature_adult",
+      "decision_applicability": "chinook_caor_24h_encounter",
+      "prediction_contract_category": "D",
+      "emiv_allowlist": [
+        "EMIV-PHY-SST-001"
+      ],
+      "status": "REJECTED_AS_STANDALONE",
+      "notes": "SST is a surface proxy; fish may go deeper. Forbidden as abundance. Forbidden transfer onto oyster bags.",
+      "privacy_tier": "PUBLIC"
+    },
+    {
+      "@id": "urn:fishai:observatory:kg:model/gigas-oa-larval",
+      "@type": "Model",
+      "last_updated": "2026-09-18",
+      "model_type": "carbonate_larval_survival",
+      "taxon_aphiaid": 836033,
+      "life_stage": "larva",
+      "decision_applicability": "not_a_decision",
+      "emiv_allowlist": [
+        "EMIV-BGC-OMEGA-001"
+      ],
+      "status": "WRONG_STAGE_FOR_W1",
+      "notes": "2009 WA seed crisis. Do not headline for 72h market bags.",
+      "privacy_tier": "PUBLIC"
+    },
+    {
+      "@id": "urn:fishai:observatory:kg:model/doh-class-as-stress",
+      "@type": "Model",
+      "last_updated": "2026-09-18",
+      "model_type": "rejected_wrong_target",
+      "taxon_aphiaid": 836033,
+      "decision_applicability": "gigas_wa_72h_ops_stress",
+      "status": "REJECTED",
+      "notes": "NSSP growing-area class is harvest legality, not animal stress.",
+      "privacy_tier": "PUBLIC"
+    },
+    {
+      "@id": "urn:fishai:observatory:kg:model/hood-canal-hypoxia-as-willapa",
+      "@type": "Model",
+      "last_updated": "2026-09-18",
+      "model_type": "rejected_wrong_geography",
+      "taxon_aphiaid": 836033,
+      "decision_applicability": "gigas_wa_72h_ops_stress",
+      "status": "REJECTED",
+      "notes": "Hood Canal stratified hypoxia is not a Willapa well-mixed estuary model.",
+      "privacy_tier": "PUBLIC"
+    },
+    {
+      "@id": "urn:fishai:observatory:kg:publication/raymond-2022",
+      "@type": "Publication",
+      "last_updated": "2026-09-18",
+      "citation": "Raymond et al. 2022 Ecology",
+      "doi": "10.1002/ecy.3798",
+      "privacy_tier": "PUBLIC"
+    },
+    {
+      "@id": "urn:fishai:observatory:kg:publication/cheney-2000",
+      "@type": "Publication",
+      "last_updated": "2026-09-18",
+      "citation": "Cheney, Macdonald, Elston 2000 J. Shellfish Res. 19:353\u2013359",
+      "privacy_tier": "PUBLIC"
+    },
+    {
+      "@id": "urn:fishai:observatory:kg:publication/hinke-2005",
+      "@type": "Publication",
+      "last_updated": "2026-09-18",
+      "citation": "Hinke et al. 2005 MEPS 304:207\u2013220",
+      "doi": "10.3354/meps304207",
+      "privacy_tier": "PUBLIC"
+    },
+    {
+      "@id": "urn:fishai:observatory:kg:publication/fao-gigas",
+      "@type": "Publication",
+      "last_updated": "2026-09-18",
+      "citation": "FAO cultured species fact sheet Crassostrea gigas / Pacific cupped oyster",
+      "url": "https://www.fao.org/fishery/docs/CDrom/aquaculture/I1129m/file/en/en_pacificcuppedoyster.htm",
+      "privacy_tier": "PUBLIC"
+    },
+    {
+      "@id": "urn:fishai:observatory:kg:publication/dumbould-2023",
+      "@type": "Publication",
+      "last_updated": "2026-09-18",
+      "citation": "Dumbauld et al. 2023 Dis. Aquat. Org. (OsHV-1 sentinels)",
+      "doi": "10.3354/dao03868",
+      "privacy_tier": "PUBLIC"
+    },
+    {
+      "@id": "urn:fishai:observatory:kg:source/worms",
+      "@type": "DataSource",
+      "last_updated": "2026-09-18",
+      "name": "WoRMS",
+      "url": "https://www.marinespecies.org/",
+      "doi": "10.14284/170",
+      "privacy_tier": "PUBLIC"
+    },
+    {
+      "@id": "urn:fishai:observatory:kg:source/noaa-fisheries-pacific-oyster",
+      "@type": "DataSource",
+      "last_updated": "2026-09-18",
+      "name": "NOAA Fisheries Pacific oyster",
+      "url": "https://www.fisheries.noaa.gov/species/pacific-oyster",
+      "privacy_tier": "PUBLIC"
+    },
+    {
+      "@id": "urn:fishai:observatory:kg:source/wa-doh-growing-areas",
+      "@type": "DataSource",
+      "last_updated": "2026-09-18",
+      "name": "Washington State Department of Health growing areas",
+      "url": "https://doh.wa.gov/community-and-environment/shellfish/growing-areas",
+      "privacy_tier": "PUBLIC"
+    },
+    {
+      "@id": "urn:fishai:observatory:kg:source/soundtoxins",
+      "@type": "DataSource",
+      "last_updated": "2026-09-18",
+      "name": "SoundToxins",
+      "url": "https://soundtoxins.org/about.html",
+      "privacy_tier": "PUBLIC"
+    },
+    {
+      "@id": "urn:fishai:observatory:kg:source/nanoos",
+      "@type": "DataSource",
+      "last_updated": "2026-09-18",
+      "name": "NANOOS",
+      "url": "https://www.nanoos.org/",
+      "privacy_tier": "PUBLIC"
+    },
+    {
+      "@id": "urn:fishai:observatory:kg:source/coops",
+      "@type": "DataSource",
+      "last_updated": "2026-09-18",
+      "name": "NOAA CO-OPS",
+      "url": "https://tidesandcurrents.noaa.gov/",
+      "privacy_tier": "PUBLIC"
+    },
+    {
+      "@id": "urn:fishai:observatory:kg:fishery/wdfw-willapa-oyster-reserves",
+      "@type": "Fishery",
+      "last_updated": "2026-09-18",
+      "name": "WDFW Willapa oyster reserves",
+      "notes": "Managed naturalized set/seed. Not the 72h farm-stress label. No reserve GPS densification.",
+      "privacy_tier": "PUBLIC"
+    },
+    {
+      "@id": "urn:fishai:observatory:kg:farm/W1_FIXTURE_PRIVATE_LEASE_ZONE_B",
+      "@type": "AquacultureFarm",
+      "last_updated": "2026-09-18",
+      "privacy_tier": "PRIVATE",
+      "partner_id": "FIXTURE_ONLY_NOT_A_REAL_FARM",
+      "culture_method_class": "intertidal_bag_or_longline",
+      "tidal_setting": "intertidal",
+      "official_growing_area_id": "WA_DOH_GROWING_AREA:Willapa-Nahcotta-fixture",
+      "notes": "PRIVATE fixture. No yield, mortality, genetics, prices, lease corners, or neighbor ids."
+    },
+    {
+      "@id": "urn:fishai:observatory:kg:protected_area/willapa-nwr",
+      "@type": "ProtectedArea",
+      "last_updated": "2026-09-18",
+      "name": "Willapa National Wildlife Refuge",
+      "authority": "USFWS",
+      "geometry_policy": "PUBLIC_AS_AUTHORITY_PUBLISHES",
+      "notes": "Link official outline only. Do not add unpublished remnant beds.",
+      "privacy_tier": "PUBLIC"
+    },
+    {
+      "@id": "urn:fishai:observatory:kg:regulatory/WA_DOH_GROWING_AREA-Willapa-Nahcotta-fixture",
+      "@type": "RegulatoryConstraint",
+      "last_updated": "2026-09-18",
+      "official_unit_id": "WA_DOH_GROWING_AREA:Willapa-Nahcotta-fixture",
+      "authority": "Washington State Department of Health",
+      "regulates": "NSSP commercial harvest classification / sanitary survey geography",
+      "notes": "Spatial frame and harvest legality. NOT an oyster physiological-stress label. Fixture id; not a live classification.",
+      "privacy_tier": "PUBLIC"
+    },
+    {
+      "@id": "urn:fishai:observatory:kg:regulatory/nssp-harvest-classification",
+      "@type": "RegulatoryConstraint",
+      "last_updated": "2026-09-18",
+      "authority": "NSSP / ISSC / FDA + state",
+      "regulates": "Approved / Conditionally Approved / Restricted / Prohibited harvest",
+      "privacy_tier": "PUBLIC"
+    },
+    {
+      "@id": "urn:fishai:observatory:kg:regulatory/vp-postharvest-controls",
+      "@type": "RegulatoryConstraint",
+      "last_updated": "2026-09-18",
+      "authority": "WA DOH / NSSP Vibrio controls",
+      "regulates": "Vibrio parahaemolyticus post-harvest / consumer safety",
+      "notes": "Out of W1 ops-stress wedge. Display-only if ever shown, never mixed into ops score.",
+      "privacy_tier": "PUBLIC"
+    },
+    {
+      "@id": "urn:fishai:observatory:kg:pressure/atmospheric-heat-dome",
+      "@type": "HumanPressure",
+      "last_updated": "2026-09-18",
+      "label": "Atmospheric heat extreme / heat dome",
+      "notes": "Climate extreme; 2021 analogue.",
+      "privacy_tier": "PUBLIC"
+    },
+    {
+      "@id": "urn:fishai:observatory:kg:pressure/handling-crowding",
+      "@type": "HumanPressure",
+      "last_updated": "2026-09-18",
+      "label": "Handling and crowding during already-stressful conditions",
+      "notes": "Operator-controlled. PRIVATE if attributed to a farm event.",
+      "privacy_tier": "PUBLIC"
+    },
+    {
+      "@id": "urn:fishai:observatory:kg:pressure/freshwater-runoff",
+      "@type": "HumanPressure",
+      "last_updated": "2026-09-18",
+      "label": "Watershed freshwater pulse / flood",
+      "notes": "Salinity, TSS, contaminants; multi-stressor.",
+      "privacy_tier": "PUBLIC"
+    },
+    {
+      "@id": "urn:fishai:observatory:kg:forecast/synthetic-osi72-2026-09-18",
+      "@type": "Forecast",
+      "last_updated": "2026-09-18",
+      "forecast_id": "01800000-0000-7000-8000-000000000031",
+      "target_definition": "72h operational stress / disruption indicator (Category D), not harvest legality",
+      "official_unit_id": "WA_DOH_GROWING_AREA:Willapa-Nahcotta-fixture",
+      "depth_bin_id": "INTERTIDAL_AIR",
+      "status": "HYPOTHETICAL_RESEARCH",
+      "customer_claim_eligible": false,
+      "notes": "Matches API specification synthetic example. Not a live nowcast.",
+      "privacy_tier": "PUBLIC"
+    },
+    {
+      "@id": "urn:fishai:observatory:kg:validation/osi72-protocol-only",
+      "@type": "ValidationResult",
+      "last_updated": "2026-09-18",
+      "split_name": "none",
+      "status": "PROTOCOL_ONLY",
+      "beats_baseline": null,
+      "notes": "No prospective test has been run. NOT READY FOR USE as a customer model.",
+      "privacy_tier": "PUBLIC"
+    },
+    {
+      "@id": "urn:fishai:observatory:kg:hypothesis/H-air-tide-primary-intertidal",
+      "@type": "Hypothesis",
+      "last_updated": "2026-09-18",
+      "label": "H1: Air temperature \u00d7 daytime emersion dominates 24\u201372h intertidal bag stress",
+      "privacy_tier": "PUBLIC"
+    },
+    {
+      "@id": "urn:fishai:observatory:kg:hypothesis/H-hypoxia-primary-subtidal",
+      "@type": "Hypothesis",
+      "last_updated": "2026-09-18",
+      "label": "H2: Dissolved oxygen (neap \u00d7 heat) dominates subtidal / stratified-basin stress",
+      "privacy_tier": "PUBLIC"
+    },
+    {
+      "@id": "urn:fishai:observatory:kg:constraint/block-chinook-sst-to-gigas-bags",
+      "@type": "TransferConstraint",
+      "last_updated": "2026-09-18",
+      "rule": "FORBIDDEN_TRANSFER",
+      "from_model": "model/chinook-sst-encounter",
+      "to_taxon": 836033,
+      "to_life_stage": "farmed_growout",
+      "to_habitat": "oyster bags / Willapa culture",
+      "reason": "Taxon, stage, depth, habitat, decision, and EMIV set all mismatch. SST encounter \u2260 aerial heat \u00d7 tide ops-stress.",
+      "privacy_tier": "PUBLIC"
+    },
+    {
+      "@id": "urn:fishai:observatory:kg:constraint/block-oa-larva-to-adult-bags",
+      "@type": "TransferConstraint",
+      "last_updated": "2026-09-18",
+      "rule": "FORBIDDEN_TRANSFER",
+      "reason": "WRONG_STAGE: \u03a9_aragonite larval calcification \u2260 72h farmed adult mortality.",
+      "privacy_tier": "PUBLIC"
+    },
+    {
+      "@id": "urn:fishai:observatory:kg:constraint/block-doh-as-stress",
+      "@type": "TransferConstraint",
+      "last_updated": "2026-09-18",
+      "rule": "FORBIDDEN_TRANSFER",
+      "reason": "WRONG_TARGET: NSSP/WDOH class is harvest legality, not animal stress.",
+      "privacy_tier": "PUBLIC"
+    },
+    {
+      "@id": "urn:fishai:observatory:kg:constraint/block-oshv1-ca-to-willapa",
+      "@type": "TransferConstraint",
+      "last_updated": "2026-09-18",
+      "rule": "FORBIDDEN_TRANSFER",
+      "reason": "WRONG_GEOGRAPHY: OsHV-1 CA timing not a Willapa 72h driver without local PCR.",
+      "privacy_tier": "PUBLIC"
+    },
+    {
+      "@id": "urn:fishai:observatory:kg:constraint/block-hood-canal-do-to-willapa",
+      "@type": "TransferConstraint",
+      "last_updated": "2026-09-18",
+      "rule": "FORBIDDEN_TRANSFER",
+      "reason": "WRONG_GEOGRAPHY: Hood Canal hypoxia model is not Willapa.",
+      "privacy_tier": "PUBLIC"
+    },
+    {
+      "@id": "urn:fishai:observatory:kg:constraint/block-sne-hypoxia-to-gom-lobster",
+      "@type": "TransferConstraint",
+      "last_updated": "2026-09-18",
+      "rule": "FORBIDDEN_TRANSFER",
+      "reason": "WRONG_GEOGRAPHY: LIS/SNE hypoxia is not GOM next-trip CPUE.",
+      "privacy_tier": "PUBLIC"
+    },
+    {
+      "@id": "urn:fishai:observatory:kg:constraint/block-alexandrium-soundtoxins-as-ops-label",
+      "@type": "TransferConstraint",
+      "last_updated": "2026-09-18",
+      "rule": "FORBIDDEN_TRANSFER",
+      "reason": "SoundToxins Alexandrium counts constrain harvest (NSSP), not the ops-stress score.",
+      "privacy_tier": "PUBLIC"
+    },
+    {
+      "@id": "urn:fishai:observatory:kg:edge/e001",
+      "@type": "KnowledgeEdge",
+      "predicate": "HAS_SYNONYM",
+      "subject": {
+        "@id": "urn:fishai:observatory:kg:species/worms-836033"
+      },
+      "object": {
+        "@id": "urn:fishai:observatory:kg:taxon/worms-140656"
+      },
+      "evidence_type": "OFFICIAL_REGULATORY",
+      "source": "urn:fishai:observatory:kg:source/worms",
+      "citation": "WoRMS Aphia 140656 superseded combination of 836033 (access 2026-09-18)",
+      "confidence": "high",
+      "date_range": {
+        "start": null,
+        "end": "2026-09-18",
+        "precision": "year"
+      },
+      "geographic_applicability": {
+        "region_id": null,
+        "grain": "unbounded_do_not_use",
+        "geometry_policy": "NONE",
+        "notes": "Taxonomy only"
+      },
+      "life_stage_applicability": [
+        "unspecified_mixed"
+      ],
+      "causal_status": "NOT_APPLICABLE",
+      "review_status": "DOMAIN_REVIEWED",
+      "last_updated": "2026-09-18"
+    },
+    {
+      "@id": "urn:fishai:observatory:kg:edge/e002",
+      "@type": "KnowledgeEdge",
+      "predicate": "HAS_LIFE_STAGE",
+      "subject": {
+        "@id": "urn:fishai:observatory:kg:species/worms-836033"
+      },
+      "object": {
+        "@id": "urn:fishai:observatory:kg:life_stage/farmed_growout"
+      },
+      "evidence_type": "LITERATURE_SYNTHESIS",
+      "source": "urn:fishai:observatory:kg:source/noaa-fisheries-pacific-oyster",
+      "citation": "NOAA Fisheries Pacific oyster species page (updated 2026-04-13); FAO culture sheet",
+      "confidence": "high",
+      "date_range": {
+        "start": "1793",
+        "end": "2026-09-18",
+        "precision": "multi_year"
+      },
+      "geographic_applicability": {
+        "region_id": "urn:fishai:observatory:kg:region/willapa-bay",
+        "grain": "estuary",
+        "geometry_policy": "PUBLIC",
+        "notes": "Named estuary; no lease corners"
+      },
+      "life_stage_applicability": [
+        "farmed_growout"
+      ],
+      "causal_status": "MECHANISTIC_CAUSAL",
+      "review_status": "EDITOR_DRAFT",
+      "last_updated": "2026-09-18"
+    },
+    {
+      "@id": "urn:fishai:observatory:kg:edge/e003",
+      "@type": "KnowledgeEdge",
+      "predicate": "HAS_LIFE_STAGE",
+      "subject": {
+        "@id": "urn:fishai:observatory:kg:species/worms-836033"
+      },
+      "object": {
+        "@id": "urn:fishai:observatory:kg:life_stage/larva"
+      },
+      "evidence_type": "LITERATURE_SYNTHESIS",
+      "source": "urn:fishai:observatory:kg:source/noaa-fisheries-pacific-oyster",
+      "citation": "NOAA Fisheries Pacific oyster species page (updated 2026-04-13); FAO culture sheet",
+      "confidence": "high",
+      "date_range": {
+        "start": "1793",
+        "end": "2026-09-18",
+        "precision": "multi_year"
+      },
+      "geographic_applicability": {
+        "region_id": "urn:fishai:observatory:kg:region/willapa-bay",
+        "grain": "estuary",
+        "geometry_policy": "PUBLIC",
+        "notes": "Named estuary; no lease corners"
+      },
+      "life_stage_applicability": [
+        "larva"
+      ],
+      "causal_status": "MECHANISTIC_CAUSAL",
+      "review_status": "EDITOR_DRAFT",
+      "last_updated": "2026-09-18"
+    },
+    {
+      "@id": "urn:fishai:observatory:kg:edge/e004",
+      "@type": "KnowledgeEdge",
+      "predicate": "HAS_LIFE_STAGE",
+      "subject": {
+        "@id": "urn:fishai:observatory:kg:species/worms-158075"
+      },
+      "object": {
+        "@id": "urn:fishai:observatory:kg:life_stage/ocean_immature_adult"
+      },
+      "evidence_type": "LITERATURE_SYNTHESIS",
+      "source": "https://www.fisheries.noaa.gov/species/chinook-salmon",
+      "citation": "NOAA Fisheries Chinook salmon",
+      "confidence": "high",
+      "date_range": {
+        "start": null,
+        "end": "2026-09-18",
+        "precision": "multi_year"
+      },
+      "geographic_applicability": {
+        "region_id": "urn:fishai:observatory:kg:region/caor-shelf",
+        "grain": "management_area",
+        "geometry_policy": "COARSENED",
+        "notes": "No ESU or waypoint geometry"
+      },
+      "life_stage_applicability": [
+        "ocean_immature_adult"
+      ],
+      "causal_status": "MECHANISTIC_CAUSAL",
+      "review_status": "EDITOR_DRAFT",
+      "last_updated": "2026-09-18"
+    },
+    {
+      "@id": "urn:fishai:observatory:kg:edge/e005",
+      "@type": "KnowledgeEdge",
+      "predicate": "HAS_LIFE_STAGE",
+      "subject": {
+        "@id": "urn:fishai:observatory:kg:species/worms-156134"
+      },
+      "object": {
+        "@id": "urn:fishai:observatory:kg:life_stage/legal_benthic_adult"
+      },
+      "evidence_type": "LITERATURE_SYNTHESIS",
+      "source": "https://www.fisheries.noaa.gov/species/american-lobster",
+      "citation": "NOAA Fisheries American lobster",
+      "confidence": "high",
+      "date_range": {
+        "start": null,
+        "end": "2026-09-18",
+        "precision": "multi_year"
+      },
+      "geographic_applicability": {
+        "region_id": "urn:fishai:observatory:kg:region/gom-inshore-coarse",
+        "grain": "stock",
+        "geometry_policy": "COARSENED",
+        "notes": "No trap GPS"
+      },
+      "life_stage_applicability": [
+        "legal_benthic_adult"
+      ],
+      "causal_status": "MECHANISTIC_CAUSAL",
+      "review_status": "EDITOR_DRAFT",
+      "last_updated": "2026-09-18"
+    },
+    {
+      "@id": "urn:fishai:observatory:kg:edge/e006",
+      "@type": "KnowledgeEdge",
+      "predicate": "PARTITION_OF",
+      "subject": {
+        "@id": "urn:fishai:observatory:kg:stock/gigas-wa-introduced-farmed"
+      },
+      "object": {
+        "@id": "urn:fishai:observatory:kg:species/worms-836033"
+      },
+      "evidence_type": "LITERATURE_SYNTHESIS",
+      "source": "urn:fishai:observatory:kg:source/noaa-fisheries-pacific-oyster",
+      "citation": "NOAA: introduced from Japan in the 1920s by Washington Department of Fisheries",
+      "confidence": "high",
+      "date_range": {
+        "start": "1920",
+        "end": "2026-09-18",
+        "precision": "multi_year"
+      },
+      "geographic_applicability": {
+        "region_id": "urn:fishai:observatory:kg:region/willapa-bay",
+        "grain": "estuary",
+        "geometry_policy": "PUBLIC",
+        "notes": "Named estuary; no lease corners"
+      },
+      "life_stage_applicability": [
+        "farmed_growout"
+      ],
+      "causal_status": "NOT_APPLICABLE",
+      "review_status": "EDITOR_DRAFT",
+      "last_updated": "2026-09-18"
+    },
+    {
+      "@id": "urn:fishai:observatory:kg:edge/e007",
+      "@type": "KnowledgeEdge",
+      "predicate": "PARTITION_OF",
+      "subject": {
+        "@id": "urn:fishai:observatory:kg:stock/chinook-caor-ocean-mixed"
+      },
+      "object": {
+        "@id": "urn:fishai:observatory:kg:species/worms-158075"
+      },
+      "evidence_type": "OFFICIAL_REGULATORY",
+      "source": "https://www.pcouncil.org/salmon-management-documents/",
+      "citation": "PFMC mixed-stock ocean fishery; listed ESUs unnamed as geometry",
+      "confidence": "high",
+      "date_range": {
+        "start": null,
+        "end": "2026-09-18",
+        "precision": "year"
+      },
+      "geographic_applicability": {
+        "region_id": "urn:fishai:observatory:kg:region/caor-shelf",
+        "grain": "management_area",
+        "geometry_policy": "COARSENED",
+        "notes": "No ESU or waypoint geometry"
+      },
+      "life_stage_applicability": [
+        "ocean_immature_adult"
+      ],
+      "causal_status": "NOT_APPLICABLE",
+      "review_status": "EDITOR_DRAFT",
+      "last_updated": "2026-09-18",
+      "notes": "Stock mix is a management fact. Not a hotspot map."
+    },
+    {
+      "@id": "urn:fishai:observatory:kg:edge/e008",
+      "@type": "KnowledgeEdge",
+      "predicate": "PARTITION_OF",
+      "subject": {
+        "@id": "urn:fishai:observatory:kg:stock/lobster-gom-gbk"
+      },
+      "object": {
+        "@id": "urn:fishai:observatory:kg:species/worms-156134"
+      },
+      "evidence_type": "OFFICIAL_REGULATORY",
+      "source": "https://asmfc.org/species/american-lobster/",
+      "citation": "ASMFC GOM/GBK stock identity",
+      "confidence": "high",
+      "date_range": {
+        "start": null,
+        "end": "2026-09-18",
+        "precision": "year"
+      },
+      "geographic_applicability": {
+        "region_id": "urn:fishai:observatory:kg:region/gom-inshore-coarse",
+        "grain": "stock",
+        "geometry_policy": "COARSENED",
+        "notes": "No trap GPS"
+      },
+      "life_stage_applicability": [
+        "legal_benthic_adult"
+      ],
+      "causal_status": "NOT_APPLICABLE",
+      "review_status": "EDITOR_DRAFT",
+      "last_updated": "2026-09-18"
+    },
+    {
+      "@id": "urn:fishai:observatory:kg:edge/e009",
+      "@type": "KnowledgeEdge",
+      "predicate": "OCCURS_IN",
+      "subject": {
+        "@id": "urn:fishai:observatory:kg:species/worms-836033"
+      },
+      "object": {
+        "@id": "urn:fishai:observatory:kg:region/willapa-bay"
+      },
+      "evidence_type": "LITERATURE_SYNTHESIS",
+      "source": "urn:fishai:observatory:kg:source/noaa-fisheries-pacific-oyster",
+      "citation": "NOAA Fisheries Pacific oyster; WA DNR aquaculture leasing context",
+      "confidence": "high",
+      "date_range": {
+        "start": "1920",
+        "end": "2026-09-18",
+        "precision": "multi_year"
+      },
+      "geographic_applicability": {
+        "region_id": "urn:fishai:observatory:kg:region/willapa-bay",
+        "grain": "estuary",
+        "geometry_policy": "PUBLIC",
+        "notes": "Named estuary; no lease corners"
+      },
+      "life_stage_applicability": [
+        "farmed_growout"
+      ],
+      "causal_status": "MECHANISTIC_CAUSAL",
+      "review_status": "EDITOR_DRAFT",
+      "last_updated": "2026-09-18",
+      "decision_applicability": "gigas_wa_72h_ops_stress",
+      "prediction_contract_category": "D",
+      "notes": "Introduced culture distribution fact, not abundance."
+    },
+    {
+      "@id": "urn:fishai:observatory:kg:edge/e010",
+      "@type": "KnowledgeEdge",
+      "predicate": "OCCURS_IN",
+      "subject": {
+        "@id": "urn:fishai:observatory:kg:species/worms-542155"
+      },
+      "object": {
+        "@id": "urn:fishai:observatory:kg:region/willapa-bay"
+      },
+      "evidence_type": "LITERATURE_SYNTHESIS",
+      "source": "urn:fishai:observatory:kg:source/noaa-fisheries-pacific-oyster",
+      "citation": "Native Olympia oyster in WA estuaries including Willapa context",
+      "confidence": "medium",
+      "date_range": {
+        "start": null,
+        "end": "2026-09-18",
+        "precision": "multi_year"
+      },
+      "geographic_applicability": {
+        "region_id": "urn:fishai:observatory:kg:region/willapa-bay",
+        "grain": "estuary",
+        "geometry_policy": "PUBLIC",
+        "notes": "Named estuary; no lease corners"
+      },
+      "life_stage_applicability": [
+        "adult"
+      ],
+      "causal_status": "ASSOCIATIVE",
+      "review_status": "EDITOR_DRAFT",
+      "last_updated": "2026-09-18",
+      "notes": "Do not pool 2021 mortality with M. gigas."
+    },
+    {
+      "@id": "urn:fishai:observatory:kg:edge/e011",
+      "@type": "KnowledgeEdge",
+      "predicate": "OCCURS_IN",
+      "subject": {
+        "@id": "urn:fishai:observatory:kg:stock/chinook-caor-ocean-mixed"
+      },
+      "object": {
+        "@id": "urn:fishai:observatory:kg:region/caor-shelf"
+      },
+      "evidence_type": "SURVEY_DERIVED",
+      "source": "https://www.pcouncil.org/documents/2026/02/review-of-2025-ocean-salmon-fisheries.pdf/",
+      "citation": "PFMC Review of 2025 Ocean Salmon Fisheries",
+      "confidence": "high",
+      "date_range": {
+        "start": "1979",
+        "end": "2026",
+        "precision": "year"
+      },
+      "geographic_applicability": {
+        "region_id": "urn:fishai:observatory:kg:region/caor-shelf",
+        "grain": "management_area",
+        "geometry_policy": "COARSENED",
+        "notes": "No ESU or waypoint geometry"
+      },
+      "life_stage_applicability": [
+        "ocean_immature_adult"
+      ],
+      "causal_status": "ASSOCIATIVE",
+      "review_status": "EDITOR_DRAFT",
+      "last_updated": "2026-09-18",
+      "decision_applicability": "chinook_caor_24h_encounter"
+    },
+    {
+      "@id": "urn:fishai:observatory:kg:edge/e012",
+      "@type": "KnowledgeEdge",
+      "predicate": "OCCURS_IN",
+      "subject": {
+        "@id": "urn:fishai:observatory:kg:stock/lobster-gom-gbk"
+      },
+      "object": {
+        "@id": "urn:fishai:observatory:kg:region/gom-inshore-coarse"
+      },
+      "evidence_type": "SURVEY_DERIVED",
+      "source": "https://asmfc.org/species/american-lobster/",
+      "citation": "ASMFC lobster stock geography (coarse)",
+      "confidence": "high",
+      "date_range": {
+        "start": null,
+        "end": "2026-09-18",
+        "precision": "year"
+      },
+      "geographic_applicability": {
+        "region_id": "urn:fishai:observatory:kg:region/gom-inshore-coarse",
+        "grain": "stock",
+        "geometry_policy": "COARSENED",
+        "notes": "No trap GPS"
+      },
+      "life_stage_applicability": [
+        "legal_benthic_adult"
+      ],
+      "causal_status": "ASSOCIATIVE",
+      "review_status": "EDITOR_DRAFT",
+      "last_updated": "2026-09-18",
+      "decision_applicability": "lobster_gom_next_trip_cpue"
+    },
+    {
+      "@id": "urn:fishai:observatory:kg:edge/e013",
+      "@type": "KnowledgeEdge",
+      "predicate": "CULTURED_IN",
+      "subject": {
+        "@id": "urn:fishai:observatory:kg:stock/gigas-wa-introduced-farmed"
+      },
+      "object": {
+        "@id": "urn:fishai:observatory:kg:habitat/willapa-intertidal-bag"
+      },
+      "evidence_type": "LITERATURE_SYNTHESIS",
+      "source": "urn:fishai:observatory:kg:source/noaa-fisheries-pacific-oyster",
+      "citation": "NOAA / FAO culture methods; marine_domain C1 culture-method stratification",
+      "confidence": "high",
+      "date_range": {
+        "start": null,
+        "end": "2026-09-18",
+        "precision": "year"
+      },
+      "geographic_applicability": {
+        "region_id": "urn:fishai:observatory:kg:region/willapa-bay",
+        "grain": "estuary",
+        "geometry_policy": "PUBLIC",
+        "notes": "Named estuary; no lease corners"
+      },
+      "life_stage_applicability": [
+        "farmed_growout"
+      ],
+      "causal_status": "MECHANISTIC_CAUSAL",
+      "review_status": "EDITOR_DRAFT",
+      "last_updated": "2026-09-18",
+      "decision_applicability": "gigas_wa_72h_ops_stress"
+    },
+    {
+      "@id": "urn:fishai:observatory:kg:edge/e014",
+      "@type": "KnowledgeEdge",
+      "predicate": "CULTURED_IN",
+      "subject": {
+        "@id": "urn:fishai:observatory:kg:stock/gigas-wa-introduced-farmed"
+      },
+      "object": {
+        "@id": "urn:fishai:observatory:kg:habitat/willapa-subtidal-offbottom"
+      },
+      "evidence_type": "LITERATURE_SYNTHESIS",
+      "source": "urn:fishai:observatory:kg:source/noaa-fisheries-pacific-oyster",
+      "citation": "NOAA / FAO culture methods; marine_domain C1 culture-method stratification",
+      "confidence": "high",
+      "date_range": {
+        "start": null,
+        "end": "2026-09-18",
+        "precision": "year"
+      },
+      "geographic_applicability": {
+        "region_id": "urn:fishai:observatory:kg:region/willapa-bay",
+        "grain": "estuary",
+        "geometry_policy": "PUBLIC",
+        "notes": "Named estuary; no lease corners"
+      },
+      "life_stage_applicability": [
+        "farmed_growout"
+      ],
+      "causal_status": "MECHANISTIC_CAUSAL",
+      "review_status": "EDITOR_DRAFT",
+      "last_updated": "2026-09-18",
+      "decision_applicability": "gigas_wa_72h_ops_stress"
+    },
+    {
+      "@id": "urn:fishai:observatory:kg:edge/e015",
+      "@type": "KnowledgeEdge",
+      "predicate": "CULTURED_IN",
+      "subject": {
+        "@id": "urn:fishai:observatory:kg:stock/gigas-wa-introduced-farmed"
+      },
+      "object": {
+        "@id": "urn:fishai:observatory:kg:habitat/willapa-bottom-culture"
+      },
+      "evidence_type": "LITERATURE_SYNTHESIS",
+      "source": "urn:fishai:observatory:kg:source/noaa-fisheries-pacific-oyster",
+      "citation": "NOAA / FAO culture methods; marine_domain C1 culture-method stratification",
+      "confidence": "high",
+      "date_range": {
+        "start": null,
+        "end": "2026-09-18",
+        "precision": "year"
+      },
+      "geographic_applicability": {
+        "region_id": "urn:fishai:observatory:kg:region/willapa-bay",
+        "grain": "estuary",
+        "geometry_policy": "PUBLIC",
+        "notes": "Named estuary; no lease corners"
+      },
+      "life_stage_applicability": [
+        "farmed_growout"
+      ],
+      "causal_status": "MECHANISTIC_CAUSAL",
+      "review_status": "EDITOR_DRAFT",
+      "last_updated": "2026-09-18",
+      "decision_applicability": "gigas_wa_72h_ops_stress"
+    },
+    {
+      "@id": "urn:fishai:observatory:kg:edge/e016",
+      "@type": "KnowledgeEdge",
+      "predicate": "PREFERS_DEPTH",
+      "subject": {
+        "@id": "urn:fishai:observatory:kg:habitat/willapa-intertidal-bag"
+      },
+      "object": {
+        "@id": "urn:fishai:observatory:kg:depth/INTERTIDAL_AIR"
+      },
+      "evidence_type": "LITERATURE_SYNTHESIS",
+      "source": "urn:fishai:observatory:kg:publication/raymond-2022",
+      "citation": "Raymond et al. 2022; emersion is the exposure pathway",
+      "confidence": "high",
+      "date_range": {
+        "start": null,
+        "end": "2026-09-18",
+        "precision": "multi_year"
+      },
+      "geographic_applicability": {
+        "region_id": "urn:fishai:observatory:kg:region/willapa-bay",
+        "grain": "estuary",
+        "geometry_policy": "PUBLIC",
+        "notes": "Named estuary; no lease corners"
+      },
+      "life_stage_applicability": [
+        "farmed_growout"
+      ],
+      "causal_status": "MECHANISTIC_CAUSAL",
+      "review_status": "EDITOR_DRAFT",
+      "last_updated": "2026-09-18",
+      "decision_applicability": "gigas_wa_72h_ops_stress"
+    },
+    {
+      "@id": "urn:fishai:observatory:kg:edge/e017",
+      "@type": "KnowledgeEdge",
+      "predicate": "PREFERS_DEPTH",
+      "subject": {
+        "@id": "urn:fishai:observatory:kg:habitat/willapa-subtidal-offbottom"
+      },
+      "object": {
+        "@id": "urn:fishai:observatory:kg:depth/SUBTIDAL_BOTTOM"
+      },
+      "evidence_type": "LITERATURE_SYNTHESIS",
+      "source": "urn:fishai:observatory:kg:source/noaa-fisheries-pacific-oyster",
+      "citation": "Subtidal/raft culture remains submerged; water-column heat and DO",
+      "confidence": "high",
+      "date_range": {
+        "start": null,
+        "end": "2026-09-18",
+        "precision": "multi_year"
+      },
+      "geographic_applicability": {
+        "region_id": "urn:fishai:observatory:kg:region/willapa-bay",
+        "grain": "estuary",
+        "geometry_policy": "PUBLIC",
+        "notes": "Named estuary; no lease corners"
+      },
+      "life_stage_applicability": [
+        "farmed_growout"
+      ],
+      "causal_status": "MECHANISTIC_CAUSAL",
+      "review_status": "EDITOR_DRAFT",
+      "last_updated": "2026-09-18",
+      "decision_applicability": "gigas_wa_72h_ops_stress"
+    },
+    {
+      "@id": "urn:fishai:observatory:kg:edge/e018",
+      "@type": "KnowledgeEdge",
+      "predicate": "PREFERS_DEPTH",
+      "subject": {
+        "@id": "urn:fishai:observatory:kg:habitat/willapa-bottom-culture"
+      },
+      "object": {
+        "@id": "urn:fishai:observatory:kg:depth/SUBTIDAL_BOTTOM"
+      },
+      "evidence_type": "LITERATURE_SYNTHESIS",
+      "source": "urn:fishai:observatory:kg:source/noaa-fisheries-pacific-oyster",
+      "citation": "Bottom culture in Willapa; seasonal food gradient vs event mortality",
+      "confidence": "medium",
+      "date_range": {
+        "start": null,
+        "end": "2026-09-18",
+        "precision": "multi_year"
+      },
+      "geographic_applicability": {
+        "region_id": "urn:fishai:observatory:kg:region/willapa-bay",
+        "grain": "estuary",
+        "geometry_policy": "PUBLIC",
+        "notes": "Named estuary; no lease corners"
+      },
+      "life_stage_applicability": [
+        "farmed_growout"
+      ],
+      "causal_status": "MECHANISTIC_CAUSAL",
+      "review_status": "EDITOR_DRAFT",
+      "last_updated": "2026-09-18",
+      "decision_applicability": "gigas_wa_72h_ops_stress"
+    },
+    {
+      "@id": "urn:fishai:observatory:kg:edge/e019",
+      "@type": "KnowledgeEdge",
+      "predicate": "PREFERS_DEPTH",
+      "subject": {
+        "@id": "urn:fishai:observatory:kg:species/worms-158075"
+      },
+      "object": {
+        "@id": "urn:fishai:observatory:kg:depth/SHELF_THERMAL_BAND"
+      },
+      "evidence_type": "TAG_TELEMETRY_DERIVED",
+      "source": "urn:fishai:observatory:kg:publication/hinke-2005",
+      "citation": "Hinke et al. 2005 MEPS 304: adults occupy 8\u201312C by changing depth",
+      "confidence": "high",
+      "date_range": {
+        "start": "2002",
+        "end": "2005",
+        "precision": "year"
+      },
+      "geographic_applicability": {
+        "region_id": "urn:fishai:observatory:kg:region/caor-shelf",
+        "grain": "management_area",
+        "geometry_policy": "COARSENED",
+        "notes": "No ESU or waypoint geometry"
+      },
+      "life_stage_applicability": [
+        "ocean_immature_adult"
+      ],
+      "causal_status": "MECHANISTIC_CAUSAL",
+      "review_status": "EDITOR_DRAFT",
+      "last_updated": "2026-09-18",
+      "decision_applicability": "chinook_caor_24h_encounter"
+    },
+    {
+      "@id": "urn:fishai:observatory:kg:edge/e020",
+      "@type": "KnowledgeEdge",
+      "predicate": "RELEVANT_EMIV",
+      "subject": {
+        "@id": "urn:fishai:observatory:kg:species/worms-836033"
+      },
+      "object": {
+        "@id": "urn:fishai:observatory:kg:emiv/air_temperature"
+      },
+      "evidence_type": "LITERATURE_SYNTHESIS",
+      "source": "urn:fishai:observatory:kg:publication/raymond-2022",
+      "citation": "Air T during emersion; 2021 heat dome \u00d7 lowest tides",
+      "confidence": "high",
+      "date_range": {
+        "start": null,
+        "end": "2026-09-18",
+        "precision": "multi_year"
+      },
+      "geographic_applicability": {
+        "region_id": "urn:fishai:observatory:kg:region/willapa-bay",
+        "grain": "estuary",
+        "geometry_policy": "PUBLIC",
+        "notes": "Named estuary; no lease corners"
+      },
+      "life_stage_applicability": [
+        "farmed_growout"
+      ],
+      "causal_status": "MECHANISTIC_CAUSAL",
+      "review_status": "EDITOR_DRAFT",
+      "last_updated": "2026-09-18",
+      "decision_applicability": "gigas_wa_72h_ops_stress",
+      "prediction_contract_category": "D",
+      "emiv_id": "EMIV-PHY-ATEMP-001",
+      "notes": "Air T during emersion; 2021 heat dome \u00d7 lowest tides"
+    },
+    {
+      "@id": "urn:fishai:observatory:kg:edge/e021",
+      "@type": "KnowledgeEdge",
+      "predicate": "RELEVANT_EMIV",
+      "subject": {
+        "@id": "urn:fishai:observatory:kg:species/worms-836033"
+      },
+      "object": {
+        "@id": "urn:fishai:observatory:kg:emiv/emersion_duration"
+      },
+      "evidence_type": "LITERATURE_SYNTHESIS",
+      "source": "urn:fishai:observatory:kg:publication/raymond-2022",
+      "citation": "Tide controls hours of air exposure and neap flushing",
+      "confidence": "high",
+      "date_range": {
+        "start": null,
+        "end": "2026-09-18",
+        "precision": "multi_year"
+      },
+      "geographic_applicability": {
+        "region_id": "urn:fishai:observatory:kg:region/willapa-bay",
+        "grain": "estuary",
+        "geometry_policy": "PUBLIC",
+        "notes": "Named estuary; no lease corners"
+      },
+      "life_stage_applicability": [
+        "farmed_growout"
+      ],
+      "causal_status": "MECHANISTIC_CAUSAL",
+      "review_status": "EDITOR_DRAFT",
+      "last_updated": "2026-09-18",
+      "decision_applicability": "gigas_wa_72h_ops_stress",
+      "prediction_contract_category": "D",
+      "emiv_id": "EMIV-PHY-EMERS-001",
+      "notes": "Tide controls hours of air exposure and neap flushing"
+    },
+    {
+      "@id": "urn:fishai:observatory:kg:edge/e022",
+      "@type": "KnowledgeEdge",
+      "predicate": "RELEVANT_EMIV",
+      "subject": {
+        "@id": "urn:fishai:observatory:kg:species/worms-836033"
+      },
+      "object": {
+        "@id": "urn:fishai:observatory:kg:emiv/water_temperature"
+      },
+      "evidence_type": "LITERATURE_SYNTHESIS",
+      "source": "urn:fishai:observatory:kg:source/noaa-fisheries-pacific-oyster",
+      "citation": "Metabolism, summer mortality co-factor; NANOOS >64F/>24h concern note",
+      "confidence": "high",
+      "date_range": {
+        "start": null,
+        "end": "2026-09-18",
+        "precision": "multi_year"
+      },
+      "geographic_applicability": {
+        "region_id": "urn:fishai:observatory:kg:region/willapa-bay",
+        "grain": "estuary",
+        "geometry_policy": "PUBLIC",
+        "notes": "Named estuary; no lease corners"
+      },
+      "life_stage_applicability": [
+        "farmed_growout"
+      ],
+      "causal_status": "MECHANISTIC_CAUSAL",
+      "review_status": "EDITOR_DRAFT",
+      "last_updated": "2026-09-18",
+      "decision_applicability": "gigas_wa_72h_ops_stress",
+      "prediction_contract_category": "D",
+      "emiv_id": "EMIV-PHY-WTEMP-001",
+      "notes": "Metabolism, summer mortality co-factor; NANOOS >64F/>24h concern note"
+    },
+    {
+      "@id": "urn:fishai:observatory:kg:edge/e023",
+      "@type": "KnowledgeEdge",
+      "predicate": "RELEVANT_EMIV",
+      "subject": {
+        "@id": "urn:fishai:observatory:kg:species/worms-836033"
+      },
+      "object": {
+        "@id": "urn:fishai:observatory:kg:emiv/dissolved_oxygen"
+      },
+      "evidence_type": "LITERATURE_SYNTHESIS",
+      "source": "urn:fishai:observatory:kg:source/noaa-fisheries-pacific-oyster",
+      "citation": "Hypoxia co-stressor (Cheney et al. 2000 Puget Sound). Willapa local series often missing.",
+      "confidence": "high",
+      "date_range": {
+        "start": null,
+        "end": "2026-09-18",
+        "precision": "multi_year"
+      },
+      "geographic_applicability": {
+        "region_id": "urn:fishai:observatory:kg:region/willapa-bay",
+        "grain": "estuary",
+        "geometry_policy": "PUBLIC",
+        "notes": "Named estuary; no lease corners"
+      },
+      "life_stage_applicability": [
+        "farmed_growout"
+      ],
+      "causal_status": "MECHANISTIC_CAUSAL",
+      "review_status": "EDITOR_DRAFT",
+      "last_updated": "2026-09-18",
+      "decision_applicability": "gigas_wa_72h_ops_stress",
+      "prediction_contract_category": "D",
+      "emiv_id": "EMIV-BGC-DOXY-001",
+      "notes": "Hypoxia co-stressor (Cheney et al. 2000 Puget Sound). Willapa local series often missing."
+    },
+    {
+      "@id": "urn:fishai:observatory:kg:edge/e024",
+      "@type": "KnowledgeEdge",
+      "predicate": "RELEVANT_EMIV",
+      "subject": {
+        "@id": "urn:fishai:observatory:kg:species/worms-836033"
+      },
+      "object": {
+        "@id": "urn:fishai:observatory:kg:emiv/salinity"
+      },
+      "evidence_type": "LITERATURE_SYNTHESIS",
+      "source": "urn:fishai:observatory:kg:source/noaa-fisheries-pacific-oyster",
+      "citation": "Euryhaline; acute freshwater pulses are multi-stressor",
+      "confidence": "medium",
+      "date_range": {
+        "start": null,
+        "end": "2026-09-18",
+        "precision": "multi_year"
+      },
+      "geographic_applicability": {
+        "region_id": "urn:fishai:observatory:kg:region/willapa-bay",
+        "grain": "estuary",
+        "geometry_policy": "PUBLIC",
+        "notes": "Named estuary; no lease corners"
+      },
+      "life_stage_applicability": [
+        "farmed_growout"
+      ],
+      "causal_status": "MECHANISTIC_CAUSAL",
+      "review_status": "EDITOR_DRAFT",
+      "last_updated": "2026-09-18",
+      "decision_applicability": "gigas_wa_72h_ops_stress",
+      "prediction_contract_category": "D",
+      "emiv_id": "EMIV-PHY-SALIN-001",
+      "notes": "Euryhaline; acute freshwater pulses are multi-stressor"
+    },
+    {
+      "@id": "urn:fishai:observatory:kg:edge/e025",
+      "@type": "KnowledgeEdge",
+      "predicate": "RELEVANT_EMIV",
+      "subject": {
+        "@id": "urn:fishai:observatory:kg:species/worms-836033"
+      },
+      "object": {
+        "@id": "urn:fishai:observatory:kg:emiv/wind_wave"
+      },
+      "evidence_type": "LITERATURE_SYNTHESIS",
+      "source": "urn:fishai:observatory:kg:source/noaa-fisheries-pacific-oyster",
+      "citation": "Gear loss / workability disruption, not physiology",
+      "confidence": "medium",
+      "date_range": {
+        "start": null,
+        "end": "2026-09-18",
+        "precision": "multi_year"
+      },
+      "geographic_applicability": {
+        "region_id": "urn:fishai:observatory:kg:region/willapa-bay",
+        "grain": "estuary",
+        "geometry_policy": "PUBLIC",
+        "notes": "Named estuary; no lease corners"
+      },
+      "life_stage_applicability": [
+        "farmed_growout"
+      ],
+      "causal_status": "MECHANISTIC_CAUSAL",
+      "review_status": "EDITOR_DRAFT",
+      "last_updated": "2026-09-18",
+      "decision_applicability": "gigas_wa_72h_ops_stress",
+      "prediction_contract_category": "D",
+      "emiv_id": "EMIV-PHY-WIND-001|EMIV-PHY-WAVE-001",
+      "notes": "Gear loss / workability disruption, not physiology"
+    },
+    {
+      "@id": "urn:fishai:observatory:kg:edge/e026",
+      "@type": "KnowledgeEdge",
+      "predicate": "RELEVANT_EMIV",
+      "subject": {
+        "@id": "urn:fishai:observatory:kg:species/worms-836033"
+      },
+      "object": {
+        "@id": "urn:fishai:observatory:kg:emiv/hab_cell_density_animal_stress"
+      },
+      "evidence_type": "LITERATURE_SYNTHESIS",
+      "source": "urn:fishai:observatory:kg:source/noaa-fisheries-pacific-oyster",
+      "citation": "Named taxa only (Heterosigma, Protoceratium). Conditional include_in_v1.",
+      "confidence": "medium",
+      "date_range": {
+        "start": null,
+        "end": "2026-09-18",
+        "precision": "multi_year"
+      },
+      "geographic_applicability": {
+        "region_id": "urn:fishai:observatory:kg:region/willapa-bay",
+        "grain": "estuary",
+        "geometry_policy": "PUBLIC",
+        "notes": "Named estuary; no lease corners"
+      },
+      "life_stage_applicability": [
+        "farmed_growout"
+      ],
+      "causal_status": "MECHANISTIC_CAUSAL",
+      "review_status": "EDITOR_DRAFT",
+      "last_updated": "2026-09-18",
+      "decision_applicability": "gigas_wa_72h_ops_stress",
+      "prediction_contract_category": "D",
+      "emiv_id": "EMIV-ECO-HAB-001",
+      "notes": "Named taxa only (Heterosigma, Protoceratium). Conditional include_in_v1."
+    },
+    {
+      "@id": "urn:fishai:observatory:kg:edge/e027",
+      "@type": "KnowledgeEdge",
+      "predicate": "RELEVANT_EMIV",
+      "subject": {
+        "@id": "urn:fishai:observatory:kg:species/worms-836033"
+      },
+      "object": {
+        "@id": "urn:fishai:observatory:kg:emiv/omega_aragonite"
+      },
+      "evidence_type": "LITERATURE_SYNTHESIS",
+      "source": "urn:fishai:observatory:kg:source/noaa-fisheries-pacific-oyster",
+      "citation": "OA / \u03a9_aragonite first-order for larvae (2009 seed crisis), not 72h adults",
+      "confidence": "high",
+      "date_range": {
+        "start": "2009",
+        "end": "2026-09-18",
+        "precision": "year"
+      },
+      "geographic_applicability": {
+        "region_id": "urn:fishai:observatory:kg:region/willapa-bay",
+        "grain": "estuary",
+        "geometry_policy": "PUBLIC",
+        "notes": "Named estuary; no lease corners"
+      },
+      "life_stage_applicability": [
+        "larva"
+      ],
+      "causal_status": "MECHANISTIC_CAUSAL",
+      "review_status": "EDITOR_DRAFT",
+      "last_updated": "2026-09-18",
+      "decision_applicability": "not_a_decision",
+      "emiv_id": "EMIV-BGC-OMEGA-001"
+    },
+    {
+      "@id": "urn:fishai:observatory:kg:edge/e028",
+      "@type": "KnowledgeEdge",
+      "predicate": "IRRELEVANT_EMIV",
+      "subject": {
+        "@id": "urn:fishai:observatory:kg:species/worms-836033"
+      },
+      "object": {
+        "@id": "urn:fishai:observatory:kg:emiv/satellite_sst"
+      },
+      "evidence_type": "LITERATURE_SYNTHESIS",
+      "source": "urn:fishai:observatory:kg:source/noaa-fisheries-pacific-oyster",
+      "citation": "SST is a skin proxy; misses aerial heat, emersion, and stratified bottom water; never abundance",
+      "confidence": "high",
+      "date_range": {
+        "start": null,
+        "end": "2026-09-18",
+        "precision": "year"
+      },
+      "geographic_applicability": {
+        "region_id": "urn:fishai:observatory:kg:region/willapa-bay",
+        "grain": "estuary",
+        "geometry_policy": "PUBLIC",
+        "notes": "Named estuary; no lease corners"
+      },
+      "life_stage_applicability": [
+        "farmed_growout"
+      ],
+      "causal_status": "PROXY",
+      "review_status": "EDITOR_DRAFT",
+      "last_updated": "2026-09-18",
+      "decision_applicability": "gigas_wa_72h_ops_stress",
+      "prediction_contract_category": "E",
+      "emiv_id": "EMIV-PHY-SST-001"
+    },
+    {
+      "@id": "urn:fishai:observatory:kg:edge/e029",
+      "@type": "KnowledgeEdge",
+      "predicate": "IRRELEVANT_EMIV",
+      "subject": {
+        "@id": "urn:fishai:observatory:kg:species/worms-836033"
+      },
+      "object": {
+        "@id": "urn:fishai:observatory:kg:emiv/chlorophyll_a"
+      },
+      "evidence_type": "LITERATURE_SYNTHESIS",
+      "source": "https://pmc.ncbi.nlm.nih.gov/articles/PMC7809371/",
+      "citation": "Willapa fattening-line / growth; weak as 72h mortality unless HAB crash; never abundance",
+      "confidence": "medium",
+      "date_range": {
+        "start": null,
+        "end": "2026-09-18",
+        "precision": "year"
+      },
+      "geographic_applicability": {
+        "region_id": "urn:fishai:observatory:kg:region/willapa-bay",
+        "grain": "estuary",
+        "geometry_policy": "PUBLIC",
+        "notes": "Named estuary; no lease corners"
+      },
+      "life_stage_applicability": [
+        "farmed_growout"
+      ],
+      "causal_status": "PROXY",
+      "review_status": "EDITOR_DRAFT",
+      "last_updated": "2026-09-18",
+      "decision_applicability": "gigas_wa_72h_ops_stress",
+      "prediction_contract_category": "E",
+      "emiv_id": "EMIV-BGC-CHL-001"
+    },
+    {
+      "@id": "urn:fishai:observatory:kg:edge/e030",
+      "@type": "KnowledgeEdge",
+      "predicate": "IRRELEVANT_EMIV",
+      "subject": {
+        "@id": "urn:fishai:observatory:kg:species/worms-836033"
+      },
+      "object": {
+        "@id": "urn:fishai:observatory:kg:emiv/fecal_coliform"
+      },
+      "evidence_type": "OFFICIAL_REGULATORY",
+      "source": "urn:fishai:observatory:kg:source/wa-doh-growing-areas",
+      "citation": "NSSP fecal coliform / growing-area class is harvest legality, not oyster stress",
+      "confidence": "high",
+      "date_range": {
+        "start": null,
+        "end": "2026-09-18",
+        "precision": "year"
+      },
+      "geographic_applicability": {
+        "region_id": "urn:fishai:observatory:kg:regulatory/WA_DOH_GROWING_AREA-Willapa-Nahcotta-fixture",
+        "grain": "official_growing_area",
+        "geometry_policy": "PUBLIC"
+      },
+      "life_stage_applicability": [
+        "farmed_growout"
+      ],
+      "causal_status": "WRONG_TARGET",
+      "review_status": "DOMAIN_REVIEWED",
+      "last_updated": "2026-09-18",
+      "decision_applicability": "regulatory_display_only",
+      "prediction_contract_category": "none",
+      "emiv_id": "EMIV-BGC-FECAL-001"
+    },
+    {
+      "@id": "urn:fishai:observatory:kg:edge/e031",
+      "@type": "KnowledgeEdge",
+      "predicate": "IRRELEVANT_EMIV",
+      "subject": {
+        "@id": "urn:fishai:observatory:kg:species/worms-836033"
+      },
+      "object": {
+        "@id": "urn:fishai:observatory:kg:emiv/omega_aragonite"
+      },
+      "evidence_type": "LITERATURE_SYNTHESIS",
+      "source": "urn:fishai:observatory:kg:source/noaa-fisheries-pacific-oyster",
+      "citation": "Wrong stage for farmed_growout 72h ops-stress",
+      "confidence": "high",
+      "date_range": {
+        "start": null,
+        "end": "2026-09-18",
+        "precision": "year"
+      },
+      "geographic_applicability": {
+        "region_id": "urn:fishai:observatory:kg:region/willapa-bay",
+        "grain": "estuary",
+        "geometry_policy": "PUBLIC",
+        "notes": "Named estuary; no lease corners"
+      },
+      "life_stage_applicability": [
+        "farmed_growout"
+      ],
+      "causal_status": "WRONG_STAGE",
+      "review_status": "DOMAIN_REVIEWED",
+      "last_updated": "2026-09-18",
+      "decision_applicability": "gigas_wa_72h_ops_stress",
+      "emiv_id": "EMIV-BGC-OMEGA-001"
+    },
+    {
+      "@id": "urn:fishai:observatory:kg:edge/e032",
+      "@type": "KnowledgeEdge",
+      "predicate": "IRRELEVANT_EMIV",
+      "subject": {
+        "@id": "urn:fishai:observatory:kg:species/worms-836033"
+      },
+      "object": {
+        "@id": "urn:fishai:observatory:kg:emiv/bottom_temperature"
+      },
+      "evidence_type": "LITERATURE_SYNTHESIS",
+      "source": "urn:fishai:observatory:kg:source/noaa-fisheries-pacific-oyster",
+      "citation": "Bottom T is the lobster catchability covariate, not intertidal aerial heat",
+      "confidence": "medium",
+      "date_range": {
+        "start": null,
+        "end": "2026-09-18",
+        "precision": "year"
+      },
+      "geographic_applicability": {
+        "region_id": "urn:fishai:observatory:kg:region/willapa-bay",
+        "grain": "estuary",
+        "geometry_policy": "PUBLIC",
+        "notes": "Named estuary; no lease corners"
+      },
+      "life_stage_applicability": [
+        "farmed_growout"
+      ],
+      "causal_status": "NOT_APPLICABLE",
+      "review_status": "EDITOR_DRAFT",
+      "last_updated": "2026-09-18",
+      "decision_applicability": "gigas_wa_72h_ops_stress",
+      "emiv_id": "EMIV-PHY-WTEMP-003"
+    },
+    {
+      "@id": "urn:fishai:observatory:kg:edge/e033",
+      "@type": "KnowledgeEdge",
+      "predicate": "RELEVANT_EMIV",
+      "subject": {
+        "@id": "urn:fishai:observatory:kg:species/worms-158075"
+      },
+      "object": {
+        "@id": "urn:fishai:observatory:kg:emiv/satellite_sst"
+      },
+      "evidence_type": "TAG_TELEMETRY_DERIVED",
+      "source": "urn:fishai:observatory:kg:publication/hinke-2005",
+      "citation": "SST is a surface PROXY for 8\u201312C habitat; fish may be deeper; never abundance",
+      "confidence": "high",
+      "date_range": {
+        "start": "2004",
+        "end": "2005",
+        "precision": "year"
+      },
+      "geographic_applicability": {
+        "region_id": "urn:fishai:observatory:kg:region/caor-shelf",
+        "grain": "management_area",
+        "geometry_policy": "COARSENED",
+        "notes": "No ESU or waypoint geometry"
+      },
+      "life_stage_applicability": [
+        "ocean_immature_adult"
+      ],
+      "causal_status": "PROXY",
+      "review_status": "EDITOR_DRAFT",
+      "last_updated": "2026-09-18",
+      "decision_applicability": "chinook_caor_24h_encounter",
+      "prediction_contract_category": "E",
+      "emiv_id": "EMIV-PHY-SST-001"
+    },
+    {
+      "@id": "urn:fishai:observatory:kg:edge/e034",
+      "@type": "KnowledgeEdge",
+      "predicate": "RELEVANT_EMIV",
+      "subject": {
+        "@id": "urn:fishai:observatory:kg:species/worms-158075"
+      },
+      "object": {
+        "@id": "urn:fishai:observatory:kg:emiv/water_temperature"
+      },
+      "evidence_type": "TAG_TELEMETRY_DERIVED",
+      "source": "urn:fishai:observatory:kg:publication/hinke-2005",
+      "citation": "Subsurface / depth-aware temperature of the 8\u201312C band",
+      "confidence": "high",
+      "date_range": {
+        "start": "2004",
+        "end": "2005",
+        "precision": "year"
+      },
+      "geographic_applicability": {
+        "region_id": "urn:fishai:observatory:kg:region/caor-shelf",
+        "grain": "management_area",
+        "geometry_policy": "COARSENED",
+        "notes": "No ESU or waypoint geometry"
+      },
+      "life_stage_applicability": [
+        "ocean_immature_adult"
+      ],
+      "causal_status": "MECHANISTIC_CAUSAL",
+      "review_status": "EDITOR_DRAFT",
+      "last_updated": "2026-09-18",
+      "decision_applicability": "chinook_caor_24h_encounter",
+      "prediction_contract_category": "D",
+      "emiv_id": "EMIV-PHY-WTEMP-001"
+    },
+    {
+      "@id": "urn:fishai:observatory:kg:edge/e035",
+      "@type": "KnowledgeEdge",
+      "predicate": "RELEVANT_EMIV",
+      "subject": {
+        "@id": "urn:fishai:observatory:kg:species/worms-158075"
+      },
+      "object": {
+        "@id": "urn:fishai:observatory:kg:emiv/wind_wave"
+      },
+      "evidence_type": "LITERATURE_SYNTHESIS",
+      "source": "https://www.dfw.state.or.us/mrp/salmon/docs/Wk_36_2026_Sport_Salmon_Estimates.pdf",
+      "citation": "Wind/swell determine whether charters leave port (realized encounter)",
+      "confidence": "high",
+      "date_range": {
+        "start": null,
+        "end": "2026-09-18",
+        "precision": "year"
+      },
+      "geographic_applicability": {
+        "region_id": "urn:fishai:observatory:kg:region/caor-shelf",
+        "grain": "management_area",
+        "geometry_policy": "COARSENED",
+        "notes": "No ESU or waypoint geometry"
+      },
+      "life_stage_applicability": [
+        "ocean_immature_adult"
+      ],
+      "causal_status": "CONFOUNDER",
+      "review_status": "EDITOR_DRAFT",
+      "last_updated": "2026-09-18",
+      "decision_applicability": "chinook_caor_24h_encounter",
+      "prediction_contract_category": "D",
+      "emiv_id": "EMIV-PHY-WIND-001|EMIV-PHY-WAVE-001"
+    },
+    {
+      "@id": "urn:fishai:observatory:kg:edge/e036",
+      "@type": "KnowledgeEdge",
+      "predicate": "IRRELEVANT_EMIV",
+      "subject": {
+        "@id": "urn:fishai:observatory:kg:species/worms-158075"
+      },
+      "object": {
+        "@id": "urn:fishai:observatory:kg:emiv/chlorophyll_a"
+      },
+      "evidence_type": "LITERATURE_SYNTHESIS",
+      "source": "https://onlinelibrary.wiley.com/doi/10.1111/fog.12141",
+      "citation": "Juvenile nearshore chl-habitat papers are WRONG_STAGE for adult charter encounter; never abundance",
+      "confidence": "high",
+      "date_range": {
+        "start": null,
+        "end": "2026-09-18",
+        "precision": "year"
+      },
+      "geographic_applicability": {
+        "region_id": "urn:fishai:observatory:kg:region/caor-shelf",
+        "grain": "management_area",
+        "geometry_policy": "COARSENED",
+        "notes": "No ESU or waypoint geometry"
+      },
+      "life_stage_applicability": [
+        "ocean_immature_adult"
+      ],
+      "causal_status": "WRONG_STAGE",
+      "review_status": "DOMAIN_REVIEWED",
+      "last_updated": "2026-09-18",
+      "decision_applicability": "chinook_caor_24h_encounter",
+      "prediction_contract_category": "E",
+      "emiv_id": "EMIV-BGC-CHL-001"
+    },
+    {
+      "@id": "urn:fishai:observatory:kg:edge/e037",
+      "@type": "KnowledgeEdge",
+      "predicate": "IRRELEVANT_EMIV",
+      "subject": {
+        "@id": "urn:fishai:observatory:kg:species/worms-158075"
+      },
+      "object": {
+        "@id": "urn:fishai:observatory:kg:emiv/air_temperature"
+      },
+      "evidence_type": "LITERATURE_SYNTHESIS",
+      "source": "urn:fishai:observatory:kg:publication/hinke-2005",
+      "citation": "Aerial temperature is not the Chinook ocean-encounter medium",
+      "confidence": "high",
+      "date_range": {
+        "start": null,
+        "end": "2026-09-18",
+        "precision": "year"
+      },
+      "geographic_applicability": {
+        "region_id": "urn:fishai:observatory:kg:region/caor-shelf",
+        "grain": "management_area",
+        "geometry_policy": "COARSENED",
+        "notes": "No ESU or waypoint geometry"
+      },
+      "life_stage_applicability": [
+        "ocean_immature_adult"
+      ],
+      "causal_status": "NOT_APPLICABLE",
+      "review_status": "EDITOR_DRAFT",
+      "last_updated": "2026-09-18",
+      "decision_applicability": "chinook_caor_24h_encounter",
+      "emiv_id": "EMIV-PHY-ATEMP-001"
+    },
+    {
+      "@id": "urn:fishai:observatory:kg:edge/e038",
+      "@type": "KnowledgeEdge",
+      "predicate": "IRRELEVANT_EMIV",
+      "subject": {
+        "@id": "urn:fishai:observatory:kg:species/worms-158075"
+      },
+      "object": {
+        "@id": "urn:fishai:observatory:kg:emiv/emersion_duration"
+      },
+      "evidence_type": "LITERATURE_SYNTHESIS",
+      "source": "urn:fishai:observatory:kg:publication/hinke-2005",
+      "citation": "Tidal emersion is not a CA/OR offshore troll mechanism",
+      "confidence": "high",
+      "date_range": {
+        "start": null,
+        "end": "2026-09-18",
+        "precision": "year"
+      },
+      "geographic_applicability": {
+        "region_id": "urn:fishai:observatory:kg:region/caor-shelf",
+        "grain": "management_area",
+        "geometry_policy": "COARSENED",
+        "notes": "No ESU or waypoint geometry"
+      },
+      "life_stage_applicability": [
+        "ocean_immature_adult"
+      ],
+      "causal_status": "NOT_APPLICABLE",
+      "review_status": "EDITOR_DRAFT",
+      "last_updated": "2026-09-18",
+      "decision_applicability": "chinook_caor_24h_encounter",
+      "emiv_id": "EMIV-PHY-EMERS-001"
+    },
+    {
+      "@id": "urn:fishai:observatory:kg:edge/e039",
+      "@type": "KnowledgeEdge",
+      "predicate": "RELEVANT_EMIV",
+      "subject": {
+        "@id": "urn:fishai:observatory:kg:species/worms-156134"
+      },
+      "object": {
+        "@id": "urn:fishai:observatory:kg:emiv/bottom_temperature"
+      },
+      "evidence_type": "LITERATURE_SYNTHESIS",
+      "source": "https://asmfc.org/wp-content/uploads/2025/11/AmericanLobsterStockAssmtOverview_Oct2025.pdf",
+      "citation": "Bottom T drives activity, appetite, molt phenology, catchability; not abundance",
+      "confidence": "high",
+      "date_range": {
+        "start": null,
+        "end": "2025",
+        "precision": "year"
+      },
+      "geographic_applicability": {
+        "region_id": "urn:fishai:observatory:kg:region/gom-inshore-coarse",
+        "grain": "stock",
+        "geometry_policy": "COARSENED",
+        "notes": "No trap GPS"
+      },
+      "life_stage_applicability": [
+        "legal_benthic_adult"
+      ],
+      "causal_status": "MECHANISTIC_CAUSAL",
+      "review_status": "EDITOR_DRAFT",
+      "last_updated": "2026-09-18",
+      "decision_applicability": "lobster_gom_next_trip_cpue",
+      "prediction_contract_category": "C",
+      "emiv_id": "EMIV-PHY-WTEMP-003"
+    },
+    {
+      "@id": "urn:fishai:observatory:kg:edge/e040",
+      "@type": "KnowledgeEdge",
+      "predicate": "IRRELEVANT_EMIV",
+      "subject": {
+        "@id": "urn:fishai:observatory:kg:species/worms-156134"
+      },
+      "object": {
+        "@id": "urn:fishai:observatory:kg:emiv/satellite_sst"
+      },
+      "evidence_type": "LITERATURE_SYNTHESIS",
+      "source": "https://asmfc.org/wp-content/uploads/2025/11/AmLobsterBenchmarkAssessment_PeerReviewReport_Oct2025_web.pdf",
+      "citation": "ASMFC 2025 peer review: satellite SST is a poor substitute for bottom T; never abundance",
+      "confidence": "high",
+      "date_range": {
+        "start": null,
+        "end": "2025",
+        "precision": "year"
+      },
+      "geographic_applicability": {
+        "region_id": "urn:fishai:observatory:kg:region/gom-inshore-coarse",
+        "grain": "stock",
+        "geometry_policy": "COARSENED",
+        "notes": "No trap GPS"
+      },
+      "life_stage_applicability": [
+        "legal_benthic_adult"
+      ],
+      "causal_status": "PROXY",
+      "review_status": "DOMAIN_REVIEWED",
+      "last_updated": "2026-09-18",
+      "decision_applicability": "lobster_gom_next_trip_cpue",
+      "prediction_contract_category": "E",
+      "emiv_id": "EMIV-PHY-SST-001"
+    },
+    {
+      "@id": "urn:fishai:observatory:kg:edge/e041",
+      "@type": "KnowledgeEdge",
+      "predicate": "IRRELEVANT_EMIV",
+      "subject": {
+        "@id": "urn:fishai:observatory:kg:species/worms-156134"
+      },
+      "object": {
+        "@id": "urn:fishai:observatory:kg:emiv/dissolved_oxygen"
+      },
+      "evidence_type": "LITERATURE_SYNTHESIS",
+      "source": "https://www.fisheries.noaa.gov/species/american-lobster",
+      "citation": "SNE/LIS hypoxia die-offs are WRONG_GEOGRAPHY for GOM next-trip CPUE",
+      "confidence": "high",
+      "date_range": {
+        "start": "1999",
+        "end": "2026-09-18",
+        "precision": "multi_year"
+      },
+      "geographic_applicability": {
+        "region_id": "urn:fishai:observatory:kg:region/gom-inshore-coarse",
+        "grain": "stock",
+        "geometry_policy": "COARSENED",
+        "notes": "No trap GPS"
+      },
+      "life_stage_applicability": [
+        "legal_benthic_adult"
+      ],
+      "causal_status": "WRONG_GEOGRAPHY",
+      "review_status": "DOMAIN_REVIEWED",
+      "last_updated": "2026-09-18",
+      "decision_applicability": "lobster_gom_next_trip_cpue",
+      "emiv_id": "EMIV-BGC-DOXY-001"
+    },
+    {
+      "@id": "urn:fishai:observatory:kg:edge/e042",
+      "@type": "KnowledgeEdge",
+      "predicate": "HAS_TOLERANCE",
+      "subject": {
+        "@id": "urn:fishai:observatory:kg:species/worms-836033"
+      },
+      "object": {
+        "@id": "urn:fishai:observatory:kg:tolerance/gigas-air-heat-intertidal"
+      },
+      "evidence_type": "SURVEY_DERIVED",
+      "source": "urn:fishai:observatory:kg:publication/raymond-2022",
+      "citation": "Raymond et al. 2022 Ecology https://doi.org/10.1002/ecy.3798",
+      "confidence": "high",
+      "date_range": {
+        "start": "2021-06-26",
+        "end": "2021-06-28",
+        "precision": "day"
+      },
+      "geographic_applicability": {
+        "region_id": "urn:fishai:observatory:kg:region/willapa-bay",
+        "grain": "estuary",
+        "geometry_policy": "PUBLIC",
+        "notes": "Named estuary; no lease corners"
+      },
+      "life_stage_applicability": [
+        "farmed_growout"
+      ],
+      "causal_status": "MECHANISTIC_CAUSAL",
+      "review_status": "EDITOR_DRAFT",
+      "last_updated": "2026-09-18",
+      "decision_applicability": "gigas_wa_72h_ops_stress",
+      "notes": "Event analogue, not a calibrated lethal curve for Willapa bags."
+    },
+    {
+      "@id": "urn:fishai:observatory:kg:edge/e043",
+      "@type": "KnowledgeEdge",
+      "predicate": "HAS_TOLERANCE",
+      "subject": {
+        "@id": "urn:fishai:observatory:kg:species/worms-836033"
+      },
+      "object": {
+        "@id": "urn:fishai:observatory:kg:tolerance/gigas-salinity-euryhaline"
+      },
+      "evidence_type": "LITERATURE_SYNTHESIS",
+      "source": "urn:fishai:observatory:kg:publication/fao-gigas",
+      "citation": "FAO cultured Pacific cupped oyster envelope",
+      "confidence": "medium",
+      "date_range": {
+        "start": null,
+        "end": "2026-09-18",
+        "precision": "multi_year"
+      },
+      "geographic_applicability": {
+        "region_id": "urn:fishai:observatory:kg:region/willapa-bay",
+        "grain": "estuary",
+        "geometry_policy": "PUBLIC",
+        "notes": "Named estuary; no lease corners"
+      },
+      "life_stage_applicability": [
+        "farmed_growout",
+        "larva"
+      ],
+      "causal_status": "MECHANISTIC_CAUSAL",
+      "review_status": "EDITOR_DRAFT",
+      "last_updated": "2026-09-18"
+    },
+    {
+      "@id": "urn:fishai:observatory:kg:edge/e044",
+      "@type": "KnowledgeEdge",
+      "predicate": "HAS_TOLERANCE",
+      "subject": {
+        "@id": "urn:fishai:observatory:kg:species/worms-836033"
+      },
+      "object": {
+        "@id": "urn:fishai:observatory:kg:tolerance/gigas-do-culture-floor"
+      },
+      "evidence_type": "LITERATURE_SYNTHESIS",
+      "source": "urn:fishai:observatory:kg:publication/fao-gigas",
+      "citation": "FAO DO >2 mg L-1 culture minimum \u2014 floor, not no-effect",
+      "confidence": "medium",
+      "date_range": {
+        "start": null,
+        "end": "2026-09-18",
+        "precision": "multi_year"
+      },
+      "geographic_applicability": {
+        "region_id": "urn:fishai:observatory:kg:region/willapa-bay",
+        "grain": "estuary",
+        "geometry_policy": "PUBLIC",
+        "notes": "Named estuary; no lease corners"
+      },
+      "life_stage_applicability": [
+        "farmed_growout"
+      ],
+      "causal_status": "MECHANISTIC_CAUSAL",
+      "review_status": "EDITOR_DRAFT",
+      "last_updated": "2026-09-18"
+    },
+    {
+      "@id": "urn:fishai:observatory:kg:edge/e045",
+      "@type": "KnowledgeEdge",
+      "predicate": "HAS_TOLERANCE",
+      "subject": {
+        "@id": "urn:fishai:observatory:kg:species/worms-158075"
+      },
+      "object": {
+        "@id": "urn:fishai:observatory:kg:tolerance/chinook-8-12C"
+      },
+      "evidence_type": "TAG_TELEMETRY_DERIVED",
+      "source": "urn:fishai:observatory:kg:publication/hinke-2005",
+      "citation": "Hinke et al. 2005 MEPS 304:207\u2013220",
+      "confidence": "high",
+      "date_range": {
+        "start": "2002",
+        "end": "2005",
+        "precision": "year"
+      },
+      "geographic_applicability": {
+        "region_id": "urn:fishai:observatory:kg:region/caor-shelf",
+        "grain": "management_area",
+        "geometry_policy": "COARSENED",
+        "notes": "No ESU or waypoint geometry"
+      },
+      "life_stage_applicability": [
+        "ocean_immature_adult"
+      ],
+      "causal_status": "MECHANISTIC_CAUSAL",
+      "review_status": "EDITOR_DRAFT",
+      "last_updated": "2026-09-18",
+      "decision_applicability": "chinook_caor_24h_encounter"
+    },
+    {
+      "@id": "urn:fishai:observatory:kg:edge/e046",
+      "@type": "KnowledgeEdge",
+      "predicate": "PREYS_ON",
+      "subject": {
+        "@id": "urn:fishai:observatory:kg:species/worms-836033"
+      },
+      "object": {
+        "@id": "urn:fishai:observatory:kg:prey/estuarine-seston-phytoplankton"
+      },
+      "evidence_type": "LITERATURE_SYNTHESIS",
+      "source": "https://pmc.ncbi.nlm.nih.gov/articles/PMC7809371/",
+      "citation": "Seston/phytoplankton food for growth; WRONG_TIMESCALE for 72h mortality unless crash",
+      "confidence": "medium",
+      "date_range": {
+        "start": null,
+        "end": "2026-09-18",
+        "precision": "year"
+      },
+      "geographic_applicability": {
+        "region_id": "urn:fishai:observatory:kg:region/willapa-bay",
+        "grain": "estuary",
+        "geometry_policy": "PUBLIC",
+        "notes": "Named estuary; no lease corners"
+      },
+      "life_stage_applicability": [
+        "farmed_growout"
+      ],
+      "causal_status": "WRONG_TIMESCALE",
+      "review_status": "EDITOR_DRAFT",
+      "last_updated": "2026-09-18",
+      "decision_applicability": "gigas_wa_72h_ops_stress",
+      "notes": "Keep as growth prior, not ops-stress feature."
+    },
+    {
+      "@id": "urn:fishai:observatory:kg:edge/e047",
+      "@type": "KnowledgeEdge",
+      "predicate": "PREYED_ON_BY",
+      "subject": {
+        "@id": "urn:fishai:observatory:kg:species/worms-836033"
+      },
+      "object": {
+        "@id": "urn:fishai:observatory:kg:predator/guild-intertidal-crabs-drills"
+      },
+      "evidence_type": "LITERATURE_SYNTHESIS",
+      "source": "urn:fishai:observatory:kg:source/noaa-fisheries-pacific-oyster",
+      "citation": "General culture notes; not identified as 24\u201372h Willapa driver in marine_domain",
+      "confidence": "low",
+      "date_range": {
+        "start": null,
+        "end": "2026-09-18",
+        "precision": "unknown"
+      },
+      "geographic_applicability": {
+        "region_id": "urn:fishai:observatory:kg:region/willapa-bay",
+        "grain": "estuary",
+        "geometry_policy": "PUBLIC",
+        "notes": "Named estuary; no lease corners"
+      },
+      "life_stage_applicability": [
+        "farmed_growout"
+      ],
+      "causal_status": "UNKNOWN",
+      "review_status": "EDITOR_DRAFT",
+      "last_updated": "2026-09-18",
+      "decision_applicability": "gigas_wa_72h_ops_stress"
+    },
+    {
+      "@id": "urn:fishai:observatory:kg:edge/e048",
+      "@type": "KnowledgeEdge",
+      "predicate": "HOSTS_DISEASE",
+      "subject": {
+        "@id": "urn:fishai:observatory:kg:species/worms-836033"
+      },
+      "object": {
+        "@id": "urn:fishai:observatory:kg:disease/OsHV-1"
+      },
+      "evidence_type": "SURVEY_DERIVED",
+      "source": "urn:fishai:observatory:kg:publication/dumbould-2023",
+      "citation": "Dumbauld et al. 2023 DAO: not detected at tested OR/WA sites in 2020; causal where present (CA)",
+      "confidence": "medium",
+      "date_range": {
+        "start": "2020",
+        "end": "2023",
+        "precision": "year"
+      },
+      "geographic_applicability": {
+        "region_id": "urn:fishai:observatory:kg:region/willapa-bay",
+        "grain": "estuary",
+        "geometry_policy": "PUBLIC",
+        "notes": "Named estuary; no lease corners"
+      },
+      "life_stage_applicability": [
+        "farmed_growout",
+        "spat"
+      ],
+      "causal_status": "WRONG_GEOGRAPHY",
+      "review_status": "EDITOR_DRAFT",
+      "last_updated": "2026-09-18",
+      "decision_applicability": "gigas_wa_72h_ops_stress",
+      "notes": "Do not import CA/Mediterranean outbreak timing into Willapa."
+    },
+    {
+      "@id": "urn:fishai:observatory:kg:edge/e049",
+      "@type": "KnowledgeEdge",
+      "predicate": "HOSTS_PARASITE",
+      "subject": {
+        "@id": "urn:fishai:observatory:kg:species/worms-836033"
+      },
+      "object": {
+        "@id": "urn:fishai:observatory:kg:parasite/not-asserted-willapa-72h"
+      },
+      "evidence_type": "HYPOTHETICAL_RESEARCH",
+      "source": "urn:fishai:observatory:kg:source/noaa-fisheries-pacific-oyster",
+      "citation": "No parasite asserted as a Willapa 72h ops-stress driver in marine_domain dossier",
+      "confidence": "none",
+      "date_range": {
+        "start": null,
+        "end": "2026-09-18",
+        "precision": "unknown"
+      },
+      "geographic_applicability": {
+        "region_id": "urn:fishai:observatory:kg:region/willapa-bay",
+        "grain": "estuary",
+        "geometry_policy": "PUBLIC",
+        "notes": "Named estuary; no lease corners"
+      },
+      "life_stage_applicability": [
+        "farmed_growout"
+      ],
+      "causal_status": "UNKNOWN",
+      "review_status": "UNREVIEWED",
+      "last_updated": "2026-09-18",
+      "decision_applicability": "gigas_wa_72h_ops_stress"
+    },
+    {
+      "@id": "urn:fishai:observatory:kg:edge/e050",
+      "@type": "KnowledgeEdge",
+      "predicate": "AVOIDS",
+      "subject": {
+        "@id": "urn:fishai:observatory:kg:species/worms-836033"
+      },
+      "object": {
+        "@id": "urn:fishai:observatory:kg:emiv/air_temperature"
+      },
+      "evidence_type": "SURVEY_DERIVED",
+      "source": "urn:fishai:observatory:kg:publication/raymond-2022",
+      "citation": "Intertidal gigas cannot avoid aerial heat while emersed; mortality when heat \u00d7 lowest tides coincide",
+      "confidence": "high",
+      "date_range": {
+        "start": "2021-06-26",
+        "end": "2021-06-28",
+        "precision": "day"
+      },
+      "geographic_applicability": {
+        "region_id": "urn:fishai:observatory:kg:region/willapa-bay",
+        "grain": "estuary",
+        "geometry_policy": "PUBLIC",
+        "notes": "Named estuary; no lease corners"
+      },
+      "life_stage_applicability": [
+        "farmed_growout"
+      ],
+      "causal_status": "MECHANISTIC_CAUSAL",
+      "review_status": "EDITOR_DRAFT",
+      "last_updated": "2026-09-18",
+      "decision_applicability": "gigas_wa_72h_ops_stress",
+      "emiv_id": "EMIV-PHY-ATEMP-001",
+      "notes": "Sessile: AVOIDS is physiological limit, not behavioral relocation."
+    },
+    {
+      "@id": "urn:fishai:observatory:kg:edge/e051",
+      "@type": "KnowledgeEdge",
+      "predicate": "AVOIDS",
+      "subject": {
+        "@id": "urn:fishai:observatory:kg:species/worms-158075"
+      },
+      "object": {
+        "@id": "urn:fishai:observatory:kg:emiv/satellite_sst"
+      },
+      "evidence_type": "TAG_TELEMETRY_DERIVED",
+      "source": "urn:fishai:observatory:kg:publication/hinke-2005",
+      "citation": "Adults leave warm surface by going deeper \u2014 SST-only maps can invert encounter",
+      "confidence": "high",
+      "date_range": {
+        "start": "2003-08",
+        "end": "2003-08",
+        "precision": "month"
+      },
+      "geographic_applicability": {
+        "region_id": "urn:fishai:observatory:kg:region/caor-shelf",
+        "grain": "management_area",
+        "geometry_policy": "COARSENED",
+        "notes": "No ESU or waypoint geometry"
+      },
+      "life_stage_applicability": [
+        "ocean_immature_adult"
+      ],
+      "causal_status": "MECHANISTIC_CAUSAL",
+      "review_status": "EDITOR_DRAFT",
+      "last_updated": "2026-09-18",
+      "decision_applicability": "chinook_caor_24h_encounter",
+      "emiv_id": "EMIV-PHY-SST-001"
+    },
+    {
+      "@id": "urn:fishai:observatory:kg:edge/e052",
+      "@type": "KnowledgeEdge",
+      "predicate": "ASSOCIATED_WITH",
+      "subject": {
+        "@id": "urn:fishai:observatory:kg:species/worms-160585"
+      },
+      "object": {
+        "@id": "urn:fishai:observatory:kg:emiv/hab_cell_density_animal_stress"
+      },
+      "evidence_type": "LITERATURE_SYNTHESIS",
+      "source": "urn:fishai:observatory:kg:source/soundtoxins",
+      "citation": "SoundToxins / WDFW 2019 notes: Heterosigma can reduce feeding / stress the animal",
+      "confidence": "medium",
+      "date_range": {
+        "start": null,
+        "end": "2026-09-18",
+        "precision": "year"
+      },
+      "geographic_applicability": {
+        "region_id": "urn:fishai:observatory:kg:region/willapa-bay",
+        "grain": "estuary",
+        "geometry_policy": "PUBLIC",
+        "notes": "Named estuary; no lease corners"
+      },
+      "life_stage_applicability": [
+        "farmed_growout"
+      ],
+      "causal_status": "MECHANISTIC_CAUSAL",
+      "review_status": "EDITOR_DRAFT",
+      "last_updated": "2026-09-18",
+      "decision_applicability": "gigas_wa_72h_ops_stress",
+      "emiv_id": "EMIV-ECO-HAB-001"
+    },
+    {
+      "@id": "urn:fishai:observatory:kg:edge/e053",
+      "@type": "KnowledgeEdge",
+      "predicate": "ASSOCIATED_WITH",
+      "subject": {
+        "@id": "urn:fishai:observatory:kg:species/worms-110321"
+      },
+      "object": {
+        "@id": "urn:fishai:observatory:kg:emiv/hab_cell_density_animal_stress"
+      },
+      "evidence_type": "LITERATURE_SYNTHESIS",
+      "source": "https://wdfw.medium.com/whats-been-causing-mass-shellfish-die-offs-around-puget-sound-1ada7071a242",
+      "citation": "WDFW 2019 die-off note hypothesized Protoceratium / yessotoxins among multi-stressors",
+      "confidence": "low",
+      "date_range": {
+        "start": "2018",
+        "end": "2019",
+        "precision": "year"
+      },
+      "geographic_applicability": {
+        "region_id": "urn:fishai:observatory:kg:region/hood-canal",
+        "grain": "sub_basin",
+        "geometry_policy": "PUBLIC",
+        "notes": "Puget Sound / Hood Canal contrast; not Willapa"
+      },
+      "life_stage_applicability": [
+        "farmed_growout"
+      ],
+      "causal_status": "HYPOTHETICAL",
+      "review_status": "CONFLICT_OPEN",
+      "last_updated": "2026-09-18",
+      "decision_applicability": "gigas_wa_72h_ops_stress",
+      "emiv_id": "EMIV-ECO-HAB-001",
+      "notes": "Puget Sound event geography; do not treat as confirmed Willapa 72h cause."
+    },
+    {
+      "@id": "urn:fishai:observatory:kg:edge/e054",
+      "@type": "KnowledgeEdge",
+      "predicate": "CONSTRAINED_BY",
+      "subject": {
+        "@id": "urn:fishai:observatory:kg:species/worms-231873"
+      },
+      "object": {
+        "@id": "urn:fishai:observatory:kg:regulatory/nssp-harvest-classification"
+      },
+      "evidence_type": "OFFICIAL_REGULATORY",
+      "source": "urn:fishai:observatory:kg:source/soundtoxins",
+      "citation": "Alexandrium PSP toxins are NSSP harvest closures, not oyster physiological-stress scores",
+      "confidence": "high",
+      "date_range": {
+        "start": null,
+        "end": "2026-09-18",
+        "precision": "year"
+      },
+      "geographic_applicability": {
+        "region_id": "urn:fishai:observatory:kg:region/willapa-bay",
+        "grain": "official_growing_area",
+        "geometry_policy": "PUBLIC"
+      },
+      "life_stage_applicability": [
+        "farmed_growout"
+      ],
+      "causal_status": "WRONG_TARGET",
+      "review_status": "DOMAIN_REVIEWED",
+      "last_updated": "2026-09-18",
+      "decision_applicability": "regulatory_display_only"
+    },
+    {
+      "@id": "urn:fishai:observatory:kg:edge/e055",
+      "@type": "KnowledgeEdge",
+      "predicate": "SAMPLED_BY",
+      "subject": {
+        "@id": "urn:fishai:observatory:kg:species/worms-160585"
+      },
+      "object": {
+        "@id": "urn:fishai:observatory:kg:survey/soundtoxins"
+      },
+      "evidence_type": "OFFICIAL_REGULATORY",
+      "source": "urn:fishai:observatory:kg:source/soundtoxins",
+      "citation": "SoundToxins HAB cell monitoring",
+      "confidence": "high",
+      "date_range": {
+        "start": null,
+        "end": "2026-09-18",
+        "precision": "year"
+      },
+      "geographic_applicability": {
+        "region_id": "urn:fishai:observatory:kg:region/willapa-bay",
+        "grain": "estuary",
+        "geometry_policy": "PUBLIC",
+        "notes": "Named estuary; no lease corners"
+      },
+      "life_stage_applicability": [
+        "bloom_or_aggregation"
+      ],
+      "causal_status": "ASSOCIATIVE",
+      "review_status": "EDITOR_DRAFT",
+      "last_updated": "2026-09-18"
+    },
+    {
+      "@id": "urn:fishai:observatory:kg:edge/e056",
+      "@type": "KnowledgeEdge",
+      "predicate": "SAMPLED_BY",
+      "subject": {
+        "@id": "urn:fishai:observatory:kg:species/worms-231873"
+      },
+      "object": {
+        "@id": "urn:fishai:observatory:kg:survey/soundtoxins"
+      },
+      "evidence_type": "OFFICIAL_REGULATORY",
+      "source": "urn:fishai:observatory:kg:source/soundtoxins",
+      "citation": "SoundToxins HAB cell monitoring (harvest-toxin taxa)",
+      "confidence": "high",
+      "date_range": {
+        "start": null,
+        "end": "2026-09-18",
+        "precision": "year"
+      },
+      "geographic_applicability": {
+        "region_id": "urn:fishai:observatory:kg:region/willapa-bay",
+        "grain": "estuary",
+        "geometry_policy": "PUBLIC",
+        "notes": "Named estuary; no lease corners"
+      },
+      "life_stage_applicability": [
+        "bloom_or_aggregation"
+      ],
+      "causal_status": "ASSOCIATIVE",
+      "review_status": "EDITOR_DRAFT",
+      "last_updated": "2026-09-18"
+    },
+    {
+      "@id": "urn:fishai:observatory:kg:edge/e057",
+      "@type": "KnowledgeEdge",
+      "predicate": "SAMPLED_BY",
+      "subject": {
+        "@id": "urn:fishai:observatory:kg:species/worms-110321"
+      },
+      "object": {
+        "@id": "urn:fishai:observatory:kg:survey/soundtoxins"
+      },
+      "evidence_type": "OFFICIAL_REGULATORY",
+      "source": "urn:fishai:observatory:kg:source/soundtoxins",
+      "citation": "SoundToxins HAB cell monitoring",
+      "confidence": "medium",
+      "date_range": {
+        "start": null,
+        "end": "2026-09-18",
+        "precision": "year"
+      },
+      "geographic_applicability": {
+        "region_id": "urn:fishai:observatory:kg:region/willapa-bay",
+        "grain": "estuary",
+        "geometry_policy": "PUBLIC",
+        "notes": "Named estuary; no lease corners"
+      },
+      "life_stage_applicability": [
+        "bloom_or_aggregation"
+      ],
+      "causal_status": "ASSOCIATIVE",
+      "review_status": "EDITOR_DRAFT",
+      "last_updated": "2026-09-18"
+    },
+    {
+      "@id": "urn:fishai:observatory:kg:edge/e058",
+      "@type": "KnowledgeEdge",
+      "predicate": "SOURCED_FROM",
+      "subject": {
+        "@id": "urn:fishai:observatory:kg:survey/soundtoxins"
+      },
+      "object": {
+        "@id": "urn:fishai:observatory:kg:source/soundtoxins"
+      },
+      "evidence_type": "OFFICIAL_REGULATORY",
+      "source": "urn:fishai:observatory:kg:source/soundtoxins",
+      "citation": "https://soundtoxins.org/about.html access 2026-09-18",
+      "confidence": "high",
+      "date_range": {
+        "start": null,
+        "end": "2026-09-18",
+        "precision": "year"
+      },
+      "geographic_applicability": {
+        "region_id": "urn:fishai:observatory:kg:region/willapa-bay",
+        "grain": "estuary",
+        "geometry_policy": "PUBLIC",
+        "notes": "Named estuary; no lease corners"
+      },
+      "life_stage_applicability": [
+        "unspecified_mixed"
+      ],
+      "causal_status": "NOT_APPLICABLE",
+      "review_status": "EDITOR_DRAFT",
+      "last_updated": "2026-09-18"
+    },
+    {
+      "@id": "urn:fishai:observatory:kg:edge/e059",
+      "@type": "KnowledgeEdge",
+      "predicate": "CONSTRAINED_BY",
+      "subject": {
+        "@id": "urn:fishai:observatory:kg:stock/gigas-wa-introduced-farmed"
+      },
+      "object": {
+        "@id": "urn:fishai:observatory:kg:regulatory/WA_DOH_GROWING_AREA-Willapa-Nahcotta-fixture"
+      },
+      "evidence_type": "OFFICIAL_REGULATORY",
+      "source": "urn:fishai:observatory:kg:source/wa-doh-growing-areas",
+      "citation": "WA DOH commercial growing areas locate farms and authorize harvest; they do not measure stress",
+      "confidence": "high",
+      "date_range": {
+        "start": null,
+        "end": "2026-09-18",
+        "precision": "year"
+      },
+      "geographic_applicability": {
+        "region_id": "urn:fishai:observatory:kg:regulatory/WA_DOH_GROWING_AREA-Willapa-Nahcotta-fixture",
+        "grain": "official_growing_area",
+        "geometry_policy": "PUBLIC"
+      },
+      "life_stage_applicability": [
+        "farmed_growout"
+      ],
+      "causal_status": "WRONG_TARGET",
+      "review_status": "DOMAIN_REVIEWED",
+      "last_updated": "2026-09-18",
+      "decision_applicability": "regulatory_display_only",
+      "notes": "Allowed as geography frame. Forbidden as ops-stress label."
+    },
+    {
+      "@id": "urn:fishai:observatory:kg:edge/e060",
+      "@type": "KnowledgeEdge",
+      "predicate": "CONSTRAINED_BY",
+      "subject": {
+        "@id": "urn:fishai:observatory:kg:stock/gigas-wa-introduced-farmed"
+      },
+      "object": {
+        "@id": "urn:fishai:observatory:kg:regulatory/nssp-harvest-classification"
+      },
+      "evidence_type": "OFFICIAL_REGULATORY",
+      "source": "urn:fishai:observatory:kg:source/wa-doh-growing-areas",
+      "citation": "NSSP classification (Approved/Conditional/Restricted/Prohibited)",
+      "confidence": "high",
+      "date_range": {
+        "start": null,
+        "end": "2026-09-18",
+        "precision": "year"
+      },
+      "geographic_applicability": {
+        "region_id": "urn:fishai:observatory:kg:region/willapa-bay",
+        "grain": "official_growing_area",
+        "geometry_policy": "PUBLIC"
+      },
+      "life_stage_applicability": [
+        "farmed_growout"
+      ],
+      "causal_status": "WRONG_TARGET",
+      "review_status": "EDITOR_DRAFT",
+      "last_updated": "2026-09-18",
+      "decision_applicability": "regulatory_display_only"
+    },
+    {
+      "@id": "urn:fishai:observatory:kg:edge/e061",
+      "@type": "KnowledgeEdge",
+      "predicate": "CONSTRAINED_BY",
+      "subject": {
+        "@id": "urn:fishai:observatory:kg:stock/gigas-wa-introduced-farmed"
+      },
+      "object": {
+        "@id": "urn:fishai:observatory:kg:regulatory/vp-postharvest-controls"
+      },
+      "evidence_type": "OFFICIAL_REGULATORY",
+      "source": "urn:fishai:observatory:kg:source/wa-doh-growing-areas",
+      "citation": "Vp post-harvest controls are consumer food-safety; out of W1 ops-stress wedge",
+      "confidence": "high",
+      "date_range": {
+        "start": null,
+        "end": "2026-09-18",
+        "precision": "year"
+      },
+      "geographic_applicability": {
+        "region_id": "urn:fishai:observatory:kg:region/willapa-bay",
+        "grain": "official_growing_area",
+        "geometry_policy": "PUBLIC"
+      },
+      "life_stage_applicability": [
+        "farmed_growout"
+      ],
+      "causal_status": "WRONG_TARGET",
+      "review_status": "EDITOR_DRAFT",
+      "last_updated": "2026-09-18",
+      "decision_applicability": "regulatory_display_only"
+    },
+    {
+      "@id": "urn:fishai:observatory:kg:edge/e062",
+      "@type": "KnowledgeEdge",
+      "predicate": "SOURCED_FROM",
+      "subject": {
+        "@id": "urn:fishai:observatory:kg:regulatory/WA_DOH_GROWING_AREA-Willapa-Nahcotta-fixture"
+      },
+      "object": {
+        "@id": "urn:fishai:observatory:kg:source/wa-doh-growing-areas"
+      },
+      "evidence_type": "OFFICIAL_REGULATORY",
+      "source": "urn:fishai:observatory:kg:source/wa-doh-growing-areas",
+      "citation": "https://doh.wa.gov/community-and-environment/shellfish/growing-areas",
+      "confidence": "high",
+      "date_range": {
+        "start": null,
+        "end": "2026-09-18",
+        "precision": "year"
+      },
+      "geographic_applicability": {
+        "region_id": "urn:fishai:observatory:kg:region/willapa-bay",
+        "grain": "official_growing_area",
+        "geometry_policy": "PUBLIC"
+      },
+      "life_stage_applicability": [
+        "unspecified_mixed"
+      ],
+      "causal_status": "NOT_APPLICABLE",
+      "review_status": "EDITOR_DRAFT",
+      "last_updated": "2026-09-18"
+    },
+    {
+      "@id": "urn:fishai:observatory:kg:edge/e063",
+      "@type": "KnowledgeEdge",
+      "predicate": "OCCURS_IN",
+      "subject": {
+        "@id": "urn:fishai:observatory:kg:farm/W1_FIXTURE_PRIVATE_LEASE_ZONE_B"
+      },
+      "object": {
+        "@id": "urn:fishai:observatory:kg:region/willapa-bay"
+      },
+      "evidence_type": "HYPOTHETICAL_RESEARCH",
+      "source": "fixture",
+      "citation": "Synthetic PRIVATE farm fixture for W1 analog. Not a real lease.",
+      "confidence": "none",
+      "date_range": {
+        "start": "2026-09-18",
+        "end": "2026-09-18",
+        "precision": "day"
+      },
+      "geographic_applicability": {
+        "region_id": "urn:fishai:observatory:kg:region/willapa-bay",
+        "grain": "lease_private",
+        "geometry_policy": "PRIVATE",
+        "notes": "No corners"
+      },
+      "life_stage_applicability": [
+        "farmed_growout"
+      ],
+      "causal_status": "NOT_APPLICABLE",
+      "review_status": "EDITOR_DRAFT",
+      "last_updated": "2026-09-18",
+      "privacy_tier": "PRIVATE",
+      "decision_applicability": "gigas_wa_72h_ops_stress"
+    },
+    {
+      "@id": "urn:fishai:observatory:kg:edge/e064",
+      "@type": "KnowledgeEdge",
+      "predicate": "CULTURED_IN",
+      "subject": {
+        "@id": "urn:fishai:observatory:kg:farm/W1_FIXTURE_PRIVATE_LEASE_ZONE_B"
+      },
+      "object": {
+        "@id": "urn:fishai:observatory:kg:habitat/willapa-intertidal-bag"
+      },
+      "evidence_type": "HYPOTHETICAL_RESEARCH",
+      "source": "fixture",
+      "citation": "Fixture culture-method class only",
+      "confidence": "none",
+      "date_range": {
+        "start": "2026-09-18",
+        "end": "2026-09-18",
+        "precision": "day"
+      },
+      "geographic_applicability": {
+        "region_id": "urn:fishai:observatory:kg:region/willapa-bay",
+        "grain": "lease_private",
+        "geometry_policy": "PRIVATE"
+      },
+      "life_stage_applicability": [
+        "farmed_growout"
+      ],
+      "causal_status": "MECHANISTIC_CAUSAL",
+      "review_status": "EDITOR_DRAFT",
+      "last_updated": "2026-09-18",
+      "privacy_tier": "PRIVATE",
+      "decision_applicability": "gigas_wa_72h_ops_stress"
+    },
+    {
+      "@id": "urn:fishai:observatory:kg:edge/e065",
+      "@type": "KnowledgeEdge",
+      "predicate": "ASSOCIATED_WITH",
+      "subject": {
+        "@id": "urn:fishai:observatory:kg:farm/W1_FIXTURE_PRIVATE_LEASE_ZONE_B"
+      },
+      "object": {
+        "@id": "urn:fishai:observatory:kg:stock/gigas-wa-introduced-farmed"
+      },
+      "evidence_type": "HYPOTHETICAL_RESEARCH",
+      "source": "fixture",
+      "citation": "Fixture plants M. gigas",
+      "confidence": "none",
+      "date_range": {
+        "start": "2026-09-18",
+        "end": "2026-09-18",
+        "precision": "day"
+      },
+      "geographic_applicability": {
+        "region_id": "urn:fishai:observatory:kg:region/willapa-bay",
+        "grain": "lease_private",
+        "geometry_policy": "PRIVATE"
+      },
+      "life_stage_applicability": [
+        "farmed_growout"
+      ],
+      "causal_status": "NOT_APPLICABLE",
+      "review_status": "EDITOR_DRAFT",
+      "last_updated": "2026-09-18",
+      "privacy_tier": "PRIVATE"
+    },
+    {
+      "@id": "urn:fishai:observatory:kg:edge/e066",
+      "@type": "KnowledgeEdge",
+      "predicate": "CONSTRAINED_BY",
+      "subject": {
+        "@id": "urn:fishai:observatory:kg:farm/W1_FIXTURE_PRIVATE_LEASE_ZONE_B"
+      },
+      "object": {
+        "@id": "urn:fishai:observatory:kg:regulatory/WA_DOH_GROWING_AREA-Willapa-Nahcotta-fixture"
+      },
+      "evidence_type": "OFFICIAL_REGULATORY",
+      "source": "urn:fishai:observatory:kg:source/wa-doh-growing-areas",
+      "citation": "Growing-area name may be shown; farm identity remains PRIVATE",
+      "confidence": "high",
+      "date_range": {
+        "start": "2026-09-18",
+        "end": "2026-09-18",
+        "precision": "day"
+      },
+      "geographic_applicability": {
+        "region_id": "urn:fishai:observatory:kg:regulatory/WA_DOH_GROWING_AREA-Willapa-Nahcotta-fixture",
+        "grain": "official_growing_area",
+        "geometry_policy": "PUBLIC"
+      },
+      "life_stage_applicability": [
+        "farmed_growout"
+      ],
+      "causal_status": "WRONG_TARGET",
+      "review_status": "EDITOR_DRAFT",
+      "last_updated": "2026-09-18",
+      "privacy_tier": "PRIVATE",
+      "decision_applicability": "regulatory_display_only"
+    },
+    {
+      "@id": "urn:fishai:observatory:kg:edge/e067",
+      "@type": "KnowledgeEdge",
+      "predicate": "OBSERVED_IN",
+      "subject": {
+        "@id": "urn:fishai:observatory:kg:observation/raymond-2021-heat-dome"
+      },
+      "object": {
+        "@id": "urn:fishai:observatory:kg:region/willapa-bay"
+      },
+      "evidence_type": "SURVEY_DERIVED",
+      "source": "urn:fishai:observatory:kg:publication/raymond-2022",
+      "citation": "Raymond et al. 2022 is Salish Sea-focused; WA coast heat-dome coincidence is used as analogue, not a Willapa mortality GIS",
+      "confidence": "medium",
+      "date_range": {
+        "start": "2021-06-26",
+        "end": "2021-07",
+        "precision": "day"
+      },
+      "geographic_applicability": {
+        "region_id": "urn:fishai:observatory:kg:region/willapa-bay",
+        "grain": "estuary",
+        "geometry_policy": "COARSENED",
+        "notes": "Analogue \u2014 not a pin map"
+      },
+      "life_stage_applicability": [
+        "farmed_growout"
+      ],
+      "causal_status": "ASSOCIATIVE",
+      "review_status": "CONFLICT_OPEN",
+      "last_updated": "2026-09-18",
+      "notes": "CONFLICT_OPEN if treated as Willapa-specific bag mortality truth. Pair with WSG Rapid Response for WA narrative."
+    },
+    {
+      "@id": "urn:fishai:observatory:kg:edge/e068",
+      "@type": "KnowledgeEdge",
+      "predicate": "OBSERVED_IN",
+      "subject": {
+        "@id": "urn:fishai:observatory:kg:observation/raymond-2021-heat-dome"
+      },
+      "object": {
+        "@id": "urn:fishai:observatory:kg:habitat/willapa-intertidal-bag"
+      },
+      "evidence_type": "SURVEY_DERIVED",
+      "source": "urn:fishai:observatory:kg:publication/raymond-2022",
+      "citation": "Intertidal exposure pathway; Pacific oysters more affected than Olympia",
+      "confidence": "high",
+      "date_range": {
+        "start": "2021-06-26",
+        "end": "2021-06-28",
+        "precision": "day"
+      },
+      "geographic_applicability": {
+        "region_id": "urn:fishai:observatory:kg:region/willapa-bay",
+        "grain": "estuary",
+        "geometry_policy": "COARSENED"
+      },
+      "life_stage_applicability": [
+        "farmed_growout"
+      ],
+      "causal_status": "MECHANISTIC_CAUSAL",
+      "review_status": "EDITOR_DRAFT",
+      "last_updated": "2026-09-18",
+      "decision_applicability": "gigas_wa_72h_ops_stress"
+    },
+    {
+      "@id": "urn:fishai:observatory:kg:edge/e069",
+      "@type": "KnowledgeEdge",
+      "predicate": "OBSERVED_BY",
+      "subject": {
+        "@id": "urn:fishai:observatory:kg:observation/raymond-2021-heat-dome"
+      },
+      "object": {
+        "@id": "urn:fishai:observatory:kg:publication/raymond-2022"
+      },
+      "evidence_type": "SURVEY_DERIVED",
+      "source": "urn:fishai:observatory:kg:publication/raymond-2022",
+      "citation": "https://doi.org/10.1002/ecy.3798",
+      "confidence": "high",
+      "date_range": {
+        "start": "2021-06",
+        "end": "2022",
+        "precision": "year"
+      },
+      "geographic_applicability": {
+        "region_id": "urn:fishai:observatory:kg:region/willapa-bay",
+        "grain": "estuary",
+        "geometry_policy": "COARSENED"
+      },
+      "life_stage_applicability": [
+        "farmed_growout"
+      ],
+      "causal_status": "ASSOCIATIVE",
+      "review_status": "EDITOR_DRAFT",
+      "last_updated": "2026-09-18"
+    },
+    {
+      "@id": "urn:fishai:observatory:kg:edge/e070",
+      "@type": "KnowledgeEdge",
+      "predicate": "OBSERVED_BY",
+      "subject": {
+        "@id": "urn:fishai:observatory:kg:observation/raymond-2021-heat-dome"
+      },
+      "object": {
+        "@id": "urn:fishai:observatory:kg:survey/wsg-rapid-response-2021"
+      },
+      "evidence_type": "SURVEY_DERIVED",
+      "source": "urn:fishai:observatory:kg:survey/wsg-rapid-response-2021",
+      "citation": "WA Sea Grant Rapid Response Network 2021 narrative",
+      "confidence": "medium",
+      "date_range": {
+        "start": "2021-06",
+        "end": "2021-07",
+        "precision": "month"
+      },
+      "geographic_applicability": {
+        "region_id": "urn:fishai:observatory:kg:region/willapa-bay",
+        "grain": "estuary",
+        "geometry_policy": "COARSENED"
+      },
+      "life_stage_applicability": [
+        "farmed_growout"
+      ],
+      "causal_status": "ASSOCIATIVE",
+      "review_status": "EDITOR_DRAFT",
+      "last_updated": "2026-09-18"
+    },
+    {
+      "@id": "urn:fishai:observatory:kg:edge/e071",
+      "@type": "KnowledgeEdge",
+      "predicate": "OBSERVED_IN",
+      "subject": {
+        "@id": "urn:fishai:observatory:kg:observation/cheney-2000-ps-summer-mortality"
+      },
+      "object": {
+        "@id": "urn:fishai:observatory:kg:region/hood-canal"
+      },
+      "evidence_type": "LITERATURE_SYNTHESIS",
+      "source": "urn:fishai:observatory:kg:publication/cheney-2000",
+      "citation": "Cheney et al. 2000: Puget Sound summer mortality (heat, neap, hypoxia)",
+      "confidence": "high",
+      "date_range": {
+        "start": "1998",
+        "end": "2000",
+        "precision": "year"
+      },
+      "geographic_applicability": {
+        "region_id": "urn:fishai:observatory:kg:region/hood-canal",
+        "grain": "sub_basin",
+        "geometry_policy": "PUBLIC",
+        "notes": "Puget Sound / Hood Canal contrast; not Willapa"
+      },
+      "life_stage_applicability": [
+        "farmed_growout"
+      ],
+      "causal_status": "MECHANISTIC_CAUSAL",
+      "review_status": "EDITOR_DRAFT",
+      "last_updated": "2026-09-18",
+      "decision_applicability": "gigas_wa_72h_ops_stress",
+      "notes": "Geographic applicability is Puget Sound, not Willapa."
+    },
+    {
+      "@id": "urn:fishai:observatory:kg:edge/e072",
+      "@type": "KnowledgeEdge",
+      "predicate": "OBSERVED_BY",
+      "subject": {
+        "@id": "urn:fishai:observatory:kg:observation/cheney-2000-ps-summer-mortality"
+      },
+      "object": {
+        "@id": "urn:fishai:observatory:kg:publication/cheney-2000"
+      },
+      "evidence_type": "LITERATURE_SYNTHESIS",
+      "source": "urn:fishai:observatory:kg:publication/cheney-2000",
+      "citation": "J. Shellfish Res. 19:353\u2013359",
+      "confidence": "high",
+      "date_range": {
+        "start": "1998",
+        "end": "2000",
+        "precision": "year"
+      },
+      "geographic_applicability": {
+        "region_id": "urn:fishai:observatory:kg:region/hood-canal",
+        "grain": "sub_basin",
+        "geometry_policy": "PUBLIC",
+        "notes": "Puget Sound / Hood Canal contrast; not Willapa"
+      },
+      "life_stage_applicability": [
+        "farmed_growout"
+      ],
+      "causal_status": "ASSOCIATIVE",
+      "review_status": "EDITOR_DRAFT",
+      "last_updated": "2026-09-18"
+    },
+    {
+      "@id": "urn:fishai:observatory:kg:edge/e073",
+      "@type": "KnowledgeEdge",
+      "predicate": "OBSERVED_BY",
+      "subject": {
+        "@id": "urn:fishai:observatory:kg:observation/dumbould-2020-oshv1-or-wa-sentinel"
+      },
+      "object": {
+        "@id": "urn:fishai:observatory:kg:publication/dumbould-2023"
+      },
+      "evidence_type": "SURVEY_DERIVED",
+      "source": "urn:fishai:observatory:kg:publication/dumbould-2023",
+      "citation": "https://doi.org/10.3354/dao03868",
+      "confidence": "high",
+      "date_range": {
+        "start": "2020",
+        "end": "2023",
+        "precision": "year"
+      },
+      "geographic_applicability": {
+        "region_id": "urn:fishai:observatory:kg:region/willapa-bay",
+        "grain": "estuary",
+        "geometry_policy": "COARSENED"
+      },
+      "life_stage_applicability": [
+        "farmed_growout"
+      ],
+      "causal_status": "ASSOCIATIVE",
+      "review_status": "EDITOR_DRAFT",
+      "last_updated": "2026-09-18"
+    },
+    {
+      "@id": "urn:fishai:observatory:kg:edge/e074",
+      "@type": "KnowledgeEdge",
+      "predicate": "MEASURES",
+      "subject": {
+        "@id": "urn:fishai:observatory:kg:sensor/coops-tide-willapa-class"
+      },
+      "object": {
+        "@id": "urn:fishai:observatory:kg:emiv/emersion_duration"
+      },
+      "evidence_type": "OFFICIAL_REGULATORY",
+      "source": "urn:fishai:observatory:kg:source/coops",
+      "citation": "NOAA CO-OPS tide predictions \u2192 emersion hours when paired with lease elevation (elevation is PRIVATE metadata)",
+      "confidence": "high",
+      "date_range": {
+        "start": null,
+        "end": "2026-09-18",
+        "precision": "hour"
+      },
+      "geographic_applicability": {
+        "region_id": "urn:fishai:observatory:kg:region/willapa-bay",
+        "grain": "estuary",
+        "geometry_policy": "PUBLIC",
+        "notes": "Named estuary; no lease corners"
+      },
+      "life_stage_applicability": [
+        "farmed_growout"
+      ],
+      "causal_status": "MECHANISTIC_CAUSAL",
+      "review_status": "EDITOR_DRAFT",
+      "last_updated": "2026-09-18",
+      "decision_applicability": "gigas_wa_72h_ops_stress",
+      "emiv_id": "EMIV-PHY-EMERS-001"
+    },
+    {
+      "@id": "urn:fishai:observatory:kg:edge/e075",
+      "@type": "KnowledgeEdge",
+      "predicate": "MEASURES",
+      "subject": {
+        "@id": "urn:fishai:observatory:kg:sensor/nws-air-forecast"
+      },
+      "object": {
+        "@id": "urn:fishai:observatory:kg:emiv/air_temperature"
+      },
+      "evidence_type": "OFFICIAL_REGULATORY",
+      "source": "https://www.weather.gov/",
+      "citation": "NWS air temperature forecast; not bag microclimate",
+      "confidence": "high",
+      "date_range": {
+        "start": null,
+        "end": "2026-09-18",
+        "precision": "hour"
+      },
+      "geographic_applicability": {
+        "region_id": "urn:fishai:observatory:kg:region/willapa-bay",
+        "grain": "estuary",
+        "geometry_policy": "PUBLIC",
+        "notes": "Named estuary; no lease corners"
+      },
+      "life_stage_applicability": [
+        "farmed_growout"
+      ],
+      "causal_status": "PROXY",
+      "review_status": "EDITOR_DRAFT",
+      "last_updated": "2026-09-18",
+      "decision_applicability": "gigas_wa_72h_ops_stress",
+      "emiv_id": "EMIV-PHY-ATEMP-001",
+      "notes": "Causal variable is intertidal air/tissue T; NWS is the available proxy."
+    },
+    {
+      "@id": "urn:fishai:observatory:kg:edge/e076",
+      "@type": "KnowledgeEdge",
+      "predicate": "MEASURES",
+      "subject": {
+        "@id": "urn:fishai:observatory:kg:sensor/nws-air-forecast"
+      },
+      "object": {
+        "@id": "urn:fishai:observatory:kg:emiv/wind_wave"
+      },
+      "evidence_type": "OFFICIAL_REGULATORY",
+      "source": "https://www.weather.gov/",
+      "citation": "NWS marine wind/wave",
+      "confidence": "medium",
+      "date_range": {
+        "start": null,
+        "end": "2026-09-18",
+        "precision": "hour"
+      },
+      "geographic_applicability": {
+        "region_id": "urn:fishai:observatory:kg:region/willapa-bay",
+        "grain": "estuary",
+        "geometry_policy": "PUBLIC",
+        "notes": "Named estuary; no lease corners"
+      },
+      "life_stage_applicability": [
+        "farmed_growout"
+      ],
+      "causal_status": "MECHANISTIC_CAUSAL",
+      "review_status": "EDITOR_DRAFT",
+      "last_updated": "2026-09-18",
+      "decision_applicability": "gigas_wa_72h_ops_stress",
+      "emiv_id": "EMIV-PHY-WIND-001|EMIV-PHY-WAVE-001"
+    },
+    {
+      "@id": "urn:fishai:observatory:kg:edge/e077",
+      "@type": "KnowledgeEdge",
+      "predicate": "MEASURES",
+      "subject": {
+        "@id": "urn:fishai:observatory:kg:sensor/nanoos-grower-network"
+      },
+      "object": {
+        "@id": "urn:fishai:observatory:kg:emiv/water_temperature"
+      },
+      "evidence_type": "OFFICIAL_REGULATORY",
+      "source": "urn:fishai:observatory:kg:source/nanoos",
+      "citation": "NANOOS NVS Shellfish Growers in situ T \u2014 sparse vs leases",
+      "confidence": "medium",
+      "date_range": {
+        "start": null,
+        "end": "2026-09-18",
+        "precision": "hour"
+      },
+      "geographic_applicability": {
+        "region_id": "urn:fishai:observatory:kg:region/willapa-bay",
+        "grain": "estuary",
+        "geometry_policy": "PUBLIC",
+        "notes": "Named estuary; no lease corners"
+      },
+      "life_stage_applicability": [
+        "farmed_growout"
+      ],
+      "causal_status": "MECHANISTIC_CAUSAL",
+      "review_status": "EDITOR_DRAFT",
+      "last_updated": "2026-09-18",
+      "decision_applicability": "gigas_wa_72h_ops_stress",
+      "emiv_id": "EMIV-PHY-WTEMP-001"
+    },
+    {
+      "@id": "urn:fishai:observatory:kg:edge/e078",
+      "@type": "KnowledgeEdge",
+      "predicate": "MEASURES",
+      "subject": {
+        "@id": "urn:fishai:observatory:kg:sensor/nanoos-grower-network"
+      },
+      "object": {
+        "@id": "urn:fishai:observatory:kg:emiv/dissolved_oxygen"
+      },
+      "evidence_type": "OFFICIAL_REGULATORY",
+      "source": "urn:fishai:observatory:kg:source/nanoos",
+      "citation": "NANOOS/ORCA DO; coverage stronger in Hood Canal than Willapa \u2014 missing knowledge for Willapa 72h hypoxia",
+      "confidence": "low",
+      "date_range": {
+        "start": null,
+        "end": "2026-09-18",
+        "precision": "hour"
+      },
+      "geographic_applicability": {
+        "region_id": "urn:fishai:observatory:kg:region/hood-canal",
+        "grain": "sub_basin",
+        "geometry_policy": "PUBLIC",
+        "notes": "Puget Sound / Hood Canal contrast; not Willapa"
+      },
+      "life_stage_applicability": [
+        "farmed_growout"
+      ],
+      "causal_status": "MECHANISTIC_CAUSAL",
+      "review_status": "EDITOR_DRAFT",
+      "last_updated": "2026-09-18",
+      "decision_applicability": "gigas_wa_72h_ops_stress",
+      "emiv_id": "EMIV-BGC-DOXY-001",
+      "notes": "This edge's geography is Hood Canal / ORCA-class sites. Willapa DO MEASURES is the missing-knowledge hit."
+    },
+    {
+      "@id": "urn:fishai:observatory:kg:edge/e079",
+      "@type": "KnowledgeEdge",
+      "predicate": "MEASURES",
+      "subject": {
+        "@id": "urn:fishai:observatory:kg:sensor/nanoos-grower-network"
+      },
+      "object": {
+        "@id": "urn:fishai:observatory:kg:emiv/salinity"
+      },
+      "evidence_type": "OFFICIAL_REGULATORY",
+      "source": "urn:fishai:observatory:kg:source/nanoos",
+      "citation": "NANOOS salinity where a station exists",
+      "confidence": "medium",
+      "date_range": {
+        "start": null,
+        "end": "2026-09-18",
+        "precision": "hour"
+      },
+      "geographic_applicability": {
+        "region_id": "urn:fishai:observatory:kg:region/willapa-bay",
+        "grain": "estuary",
+        "geometry_policy": "PUBLIC",
+        "notes": "Named estuary; no lease corners"
+      },
+      "life_stage_applicability": [
+        "farmed_growout"
+      ],
+      "causal_status": "MECHANISTIC_CAUSAL",
+      "review_status": "EDITOR_DRAFT",
+      "last_updated": "2026-09-18",
+      "decision_applicability": "gigas_wa_72h_ops_stress",
+      "emiv_id": "EMIV-PHY-SALIN-001"
+    },
+    {
+      "@id": "urn:fishai:observatory:kg:edge/e080",
+      "@type": "KnowledgeEdge",
+      "predicate": "MEASURES",
+      "subject": {
+        "@id": "urn:fishai:observatory:kg:sensor/farm-logger-private"
+      },
+      "object": {
+        "@id": "urn:fishai:observatory:kg:emiv/water_temperature"
+      },
+      "evidence_type": "HYPOTHETICAL_RESEARCH",
+      "source": "fixture",
+      "citation": "Partner logger class. No GPS. No readings in this fixture.",
+      "confidence": "none",
+      "date_range": {
+        "start": "2026-09-18",
+        "end": "2026-09-18",
+        "precision": "hour"
+      },
+      "geographic_applicability": {
+        "region_id": "urn:fishai:observatory:kg:region/willapa-bay",
+        "grain": "lease_private",
+        "geometry_policy": "PRIVATE"
+      },
+      "life_stage_applicability": [
+        "farmed_growout"
+      ],
+      "causal_status": "MECHANISTIC_CAUSAL",
+      "review_status": "EDITOR_DRAFT",
+      "last_updated": "2026-09-18",
+      "privacy_tier": "PRIVATE",
+      "decision_applicability": "gigas_wa_72h_ops_stress",
+      "emiv_id": "EMIV-PHY-WTEMP-001"
+    },
+    {
+      "@id": "urn:fishai:observatory:kg:edge/e081",
+      "@type": "KnowledgeEdge",
+      "predicate": "MEASURES",
+      "subject": {
+        "@id": "urn:fishai:observatory:kg:sensor/farm-logger-private"
+      },
+      "object": {
+        "@id": "urn:fishai:observatory:kg:emiv/dissolved_oxygen"
+      },
+      "evidence_type": "HYPOTHETICAL_RESEARCH",
+      "source": "fixture",
+      "citation": "Partner DO logger class. No GPS. Recommended measurement if Willapa public DO is missing.",
+      "confidence": "none",
+      "date_range": {
+        "start": "2026-09-18",
+        "end": "2026-09-18",
+        "precision": "hour"
+      },
+      "geographic_applicability": {
+        "region_id": "urn:fishai:observatory:kg:region/willapa-bay",
+        "grain": "lease_private",
+        "geometry_policy": "PRIVATE"
+      },
+      "life_stage_applicability": [
+        "farmed_growout"
+      ],
+      "causal_status": "MECHANISTIC_CAUSAL",
+      "review_status": "EDITOR_DRAFT",
+      "last_updated": "2026-09-18",
+      "privacy_tier": "PRIVATE",
+      "decision_applicability": "gigas_wa_72h_ops_stress",
+      "emiv_id": "EMIV-BGC-DOXY-001"
+    },
+    {
+      "@id": "urn:fishai:observatory:kg:edge/e082",
+      "@type": "KnowledgeEdge",
+      "predicate": "SOURCED_FROM",
+      "subject": {
+        "@id": "urn:fishai:observatory:kg:sensor/coops-tide-willapa-class"
+      },
+      "object": {
+        "@id": "urn:fishai:observatory:kg:source/coops"
+      },
+      "evidence_type": "OFFICIAL_REGULATORY",
+      "source": "urn:fishai:observatory:kg:source/coops",
+      "citation": "https://tidesandcurrents.noaa.gov/",
+      "confidence": "high",
+      "date_range": {
+        "start": null,
+        "end": "2026-09-18",
+        "precision": "year"
+      },
+      "geographic_applicability": {
+        "region_id": "urn:fishai:observatory:kg:region/willapa-bay",
+        "grain": "estuary",
+        "geometry_policy": "PUBLIC",
+        "notes": "Named estuary; no lease corners"
+      },
+      "life_stage_applicability": [
+        "unspecified_mixed"
+      ],
+      "causal_status": "NOT_APPLICABLE",
+      "review_status": "EDITOR_DRAFT",
+      "last_updated": "2026-09-18"
+    },
+    {
+      "@id": "urn:fishai:observatory:kg:edge/e083",
+      "@type": "KnowledgeEdge",
+      "predicate": "SOURCED_FROM",
+      "subject": {
+        "@id": "urn:fishai:observatory:kg:sensor/nanoos-grower-network"
+      },
+      "object": {
+        "@id": "urn:fishai:observatory:kg:source/nanoos"
+      },
+      "evidence_type": "OFFICIAL_REGULATORY",
+      "source": "urn:fishai:observatory:kg:source/nanoos",
+      "citation": "https://nvs.nanoos.org/ShellfishGrowers",
+      "confidence": "high",
+      "date_range": {
+        "start": null,
+        "end": "2026-09-18",
+        "precision": "year"
+      },
+      "geographic_applicability": {
+        "region_id": "urn:fishai:observatory:kg:region/willapa-bay",
+        "grain": "estuary",
+        "geometry_policy": "PUBLIC",
+        "notes": "Named estuary; no lease corners"
+      },
+      "life_stage_applicability": [
+        "unspecified_mixed"
+      ],
+      "causal_status": "NOT_APPLICABLE",
+      "review_status": "EDITOR_DRAFT",
+      "last_updated": "2026-09-18"
+    },
+    {
+      "@id": "urn:fishai:observatory:kg:edge/e084",
+      "@type": "KnowledgeEdge",
+      "predicate": "TAGGED_BY",
+      "subject": {
+        "@id": "urn:fishai:observatory:kg:species/worms-158075"
+      },
+      "object": {
+        "@id": "urn:fishai:observatory:kg:tag/hinke-archival-chinook-program"
+      },
+      "evidence_type": "TAG_TELEMETRY_DERIVED",
+      "source": "urn:fishai:observatory:kg:publication/hinke-2005",
+      "citation": "Hinke et al. archival tags; no tracks stored in this graph",
+      "confidence": "high",
+      "date_range": {
+        "start": "2002",
+        "end": "2005",
+        "precision": "year"
+      },
+      "geographic_applicability": {
+        "region_id": "urn:fishai:observatory:kg:region/caor-shelf",
+        "grain": "management_area",
+        "geometry_policy": "COARSENED",
+        "notes": "No ESU or waypoint geometry"
+      },
+      "life_stage_applicability": [
+        "ocean_immature_adult"
+      ],
+      "causal_status": "MECHANISTIC_CAUSAL",
+      "review_status": "EDITOR_DRAFT",
+      "last_updated": "2026-09-18",
+      "decision_applicability": "chinook_caor_24h_encounter",
+      "privacy_tier": "PUBLIC"
+    },
+    {
+      "@id": "urn:fishai:observatory:kg:edge/e085",
+      "@type": "KnowledgeEdge",
+      "predicate": "MODELED_BY",
+      "subject": {
+        "@id": "urn:fishai:observatory:kg:species/worms-836033"
+      },
+      "object": {
+        "@id": "urn:fishai:observatory:kg:model/b4-gigas-air-tide-stress"
+      },
+      "evidence_type": "HYPOTHETICAL_RESEARCH",
+      "source": "urn:fishai:observatory:kg:model/b4-gigas-air-tide-stress",
+      "citation": "Expert-rule B4 candidate for Category D ops-stress; not operational",
+      "confidence": "none",
+      "date_range": {
+        "start": "2026-09-18",
+        "end": "2026-09-18",
+        "precision": "day"
+      },
+      "geographic_applicability": {
+        "region_id": "urn:fishai:observatory:kg:region/willapa-bay",
+        "grain": "estuary",
+        "geometry_policy": "PUBLIC",
+        "notes": "Named estuary; no lease corners"
+      },
+      "life_stage_applicability": [
+        "farmed_growout"
+      ],
+      "causal_status": "HYPOTHETICAL",
+      "review_status": "EDITOR_DRAFT",
+      "last_updated": "2026-09-18",
+      "decision_applicability": "gigas_wa_72h_ops_stress",
+      "prediction_contract_category": "D"
+    },
+    {
+      "@id": "urn:fishai:observatory:kg:edge/e086",
+      "@type": "KnowledgeEdge",
+      "predicate": "MODELED_BY",
+      "subject": {
+        "@id": "urn:fishai:observatory:kg:species/worms-158075"
+      },
+      "object": {
+        "@id": "urn:fishai:observatory:kg:model/chinook-sst-encounter"
+      },
+      "evidence_type": "HYPOTHETICAL_RESEARCH",
+      "source": "urn:fishai:observatory:kg:model/chinook-sst-encounter",
+      "citation": "Standalone SST encounter model \u2014 rejected as abundance; blocked for oyster transfer",
+      "confidence": "low",
+      "date_range": {
+        "start": "2026-09-18",
+        "end": "2026-09-18",
+        "precision": "day"
+      },
+      "geographic_applicability": {
+        "region_id": "urn:fishai:observatory:kg:region/caor-shelf",
+        "grain": "management_area",
+        "geometry_policy": "COARSENED",
+        "notes": "No ESU or waypoint geometry"
+      },
+      "life_stage_applicability": [
+        "ocean_immature_adult"
+      ],
+      "causal_status": "PROXY",
+      "review_status": "EDITOR_DRAFT",
+      "last_updated": "2026-09-18",
+      "decision_applicability": "chinook_caor_24h_encounter",
+      "prediction_contract_category": "E"
+    },
+    {
+      "@id": "urn:fishai:observatory:kg:edge/e087",
+      "@type": "KnowledgeEdge",
+      "predicate": "MODELED_BY",
+      "subject": {
+        "@id": "urn:fishai:observatory:kg:species/worms-836033"
+      },
+      "object": {
+        "@id": "urn:fishai:observatory:kg:model/gigas-oa-larval"
+      },
+      "evidence_type": "LITERATURE_SYNTHESIS",
+      "source": "urn:fishai:observatory:kg:source/noaa-fisheries-pacific-oyster",
+      "citation": "Larval OA / 2009 seed crisis model family",
+      "confidence": "high",
+      "date_range": {
+        "start": "2009",
+        "end": "2026-09-18",
+        "precision": "year"
+      },
+      "geographic_applicability": {
+        "region_id": "urn:fishai:observatory:kg:region/willapa-bay",
+        "grain": "estuary",
+        "geometry_policy": "PUBLIC",
+        "notes": "Named estuary; no lease corners"
+      },
+      "life_stage_applicability": [
+        "larva"
+      ],
+      "causal_status": "MECHANISTIC_CAUSAL",
+      "review_status": "EDITOR_DRAFT",
+      "last_updated": "2026-09-18",
+      "decision_applicability": "not_a_decision"
+    },
+    {
+      "@id": "urn:fishai:observatory:kg:edge/e088",
+      "@type": "KnowledgeEdge",
+      "predicate": "USES_EMIV",
+      "subject": {
+        "@id": "urn:fishai:observatory:kg:model/b4-gigas-air-tide-stress"
+      },
+      "object": {
+        "@id": "urn:fishai:observatory:kg:emiv/air_temperature"
+      },
+      "evidence_type": "HYPOTHETICAL_RESEARCH",
+      "source": "urn:fishai:observatory:kg:model/b4-gigas-air-tide-stress",
+      "citation": "B4 allowlist air_temperature",
+      "confidence": "none",
+      "date_range": {
+        "start": "2026-09-18",
+        "end": "2026-09-18",
+        "precision": "day"
+      },
+      "geographic_applicability": {
+        "region_id": "urn:fishai:observatory:kg:region/willapa-bay",
+        "grain": "estuary",
+        "geometry_policy": "PUBLIC",
+        "notes": "Named estuary; no lease corners"
+      },
+      "life_stage_applicability": [
+        "farmed_growout"
+      ],
+      "causal_status": "MECHANISTIC_CAUSAL",
+      "review_status": "EDITOR_DRAFT",
+      "last_updated": "2026-09-18",
+      "decision_applicability": "gigas_wa_72h_ops_stress",
+      "emiv_id": "EMIV-PHY-ATEMP-001",
+      "notes": "DO is causal but often unobserved in Willapa \u2014 still on the allowlist so missing-knowledge fires."
+    },
+    {
+      "@id": "urn:fishai:observatory:kg:edge/e089",
+      "@type": "KnowledgeEdge",
+      "predicate": "USES_EMIV",
+      "subject": {
+        "@id": "urn:fishai:observatory:kg:model/b4-gigas-air-tide-stress"
+      },
+      "object": {
+        "@id": "urn:fishai:observatory:kg:emiv/emersion_duration"
+      },
+      "evidence_type": "HYPOTHETICAL_RESEARCH",
+      "source": "urn:fishai:observatory:kg:model/b4-gigas-air-tide-stress",
+      "citation": "B4 allowlist emersion_duration",
+      "confidence": "none",
+      "date_range": {
+        "start": "2026-09-18",
+        "end": "2026-09-18",
+        "precision": "day"
+      },
+      "geographic_applicability": {
+        "region_id": "urn:fishai:observatory:kg:region/willapa-bay",
+        "grain": "estuary",
+        "geometry_policy": "PUBLIC",
+        "notes": "Named estuary; no lease corners"
+      },
+      "life_stage_applicability": [
+        "farmed_growout"
+      ],
+      "causal_status": "MECHANISTIC_CAUSAL",
+      "review_status": "EDITOR_DRAFT",
+      "last_updated": "2026-09-18",
+      "decision_applicability": "gigas_wa_72h_ops_stress",
+      "emiv_id": "EMIV-PHY-EMERS-001",
+      "notes": "DO is causal but often unobserved in Willapa \u2014 still on the allowlist so missing-knowledge fires."
+    },
+    {
+      "@id": "urn:fishai:observatory:kg:edge/e090",
+      "@type": "KnowledgeEdge",
+      "predicate": "USES_EMIV",
+      "subject": {
+        "@id": "urn:fishai:observatory:kg:model/b4-gigas-air-tide-stress"
+      },
+      "object": {
+        "@id": "urn:fishai:observatory:kg:emiv/water_temperature"
+      },
+      "evidence_type": "HYPOTHETICAL_RESEARCH",
+      "source": "urn:fishai:observatory:kg:model/b4-gigas-air-tide-stress",
+      "citation": "B4 allowlist water_temperature",
+      "confidence": "none",
+      "date_range": {
+        "start": "2026-09-18",
+        "end": "2026-09-18",
+        "precision": "day"
+      },
+      "geographic_applicability": {
+        "region_id": "urn:fishai:observatory:kg:region/willapa-bay",
+        "grain": "estuary",
+        "geometry_policy": "PUBLIC",
+        "notes": "Named estuary; no lease corners"
+      },
+      "life_stage_applicability": [
+        "farmed_growout"
+      ],
+      "causal_status": "MECHANISTIC_CAUSAL",
+      "review_status": "EDITOR_DRAFT",
+      "last_updated": "2026-09-18",
+      "decision_applicability": "gigas_wa_72h_ops_stress",
+      "emiv_id": "EMIV-PHY-WTEMP-001",
+      "notes": "DO is causal but often unobserved in Willapa \u2014 still on the allowlist so missing-knowledge fires."
+    },
+    {
+      "@id": "urn:fishai:observatory:kg:edge/e091",
+      "@type": "KnowledgeEdge",
+      "predicate": "USES_EMIV",
+      "subject": {
+        "@id": "urn:fishai:observatory:kg:model/b4-gigas-air-tide-stress"
+      },
+      "object": {
+        "@id": "urn:fishai:observatory:kg:emiv/dissolved_oxygen"
+      },
+      "evidence_type": "HYPOTHETICAL_RESEARCH",
+      "source": "urn:fishai:observatory:kg:model/b4-gigas-air-tide-stress",
+      "citation": "B4 allowlist dissolved_oxygen",
+      "confidence": "none",
+      "date_range": {
+        "start": "2026-09-18",
+        "end": "2026-09-18",
+        "precision": "day"
+      },
+      "geographic_applicability": {
+        "region_id": "urn:fishai:observatory:kg:region/willapa-bay",
+        "grain": "estuary",
+        "geometry_policy": "PUBLIC",
+        "notes": "Named estuary; no lease corners"
+      },
+      "life_stage_applicability": [
+        "farmed_growout"
+      ],
+      "causal_status": "MECHANISTIC_CAUSAL",
+      "review_status": "EDITOR_DRAFT",
+      "last_updated": "2026-09-18",
+      "decision_applicability": "gigas_wa_72h_ops_stress",
+      "emiv_id": "EMIV-BGC-DOXY-001",
+      "notes": "DO is causal but often unobserved in Willapa \u2014 still on the allowlist so missing-knowledge fires."
+    },
+    {
+      "@id": "urn:fishai:observatory:kg:edge/e092",
+      "@type": "KnowledgeEdge",
+      "predicate": "USES_EMIV",
+      "subject": {
+        "@id": "urn:fishai:observatory:kg:model/b4-gigas-air-tide-stress"
+      },
+      "object": {
+        "@id": "urn:fishai:observatory:kg:emiv/salinity"
+      },
+      "evidence_type": "HYPOTHETICAL_RESEARCH",
+      "source": "urn:fishai:observatory:kg:model/b4-gigas-air-tide-stress",
+      "citation": "B4 allowlist salinity",
+      "confidence": "none",
+      "date_range": {
+        "start": "2026-09-18",
+        "end": "2026-09-18",
+        "precision": "day"
+      },
+      "geographic_applicability": {
+        "region_id": "urn:fishai:observatory:kg:region/willapa-bay",
+        "grain": "estuary",
+        "geometry_policy": "PUBLIC",
+        "notes": "Named estuary; no lease corners"
+      },
+      "life_stage_applicability": [
+        "farmed_growout"
+      ],
+      "causal_status": "MECHANISTIC_CAUSAL",
+      "review_status": "EDITOR_DRAFT",
+      "last_updated": "2026-09-18",
+      "decision_applicability": "gigas_wa_72h_ops_stress",
+      "emiv_id": "EMIV-PHY-SALIN-001",
+      "notes": "DO is causal but often unobserved in Willapa \u2014 still on the allowlist so missing-knowledge fires."
+    },
+    {
+      "@id": "urn:fishai:observatory:kg:edge/e093",
+      "@type": "KnowledgeEdge",
+      "predicate": "USES_EMIV",
+      "subject": {
+        "@id": "urn:fishai:observatory:kg:model/b4-gigas-air-tide-stress"
+      },
+      "object": {
+        "@id": "urn:fishai:observatory:kg:emiv/wind_wave"
+      },
+      "evidence_type": "HYPOTHETICAL_RESEARCH",
+      "source": "urn:fishai:observatory:kg:model/b4-gigas-air-tide-stress",
+      "citation": "B4 allowlist wind_wave",
+      "confidence": "none",
+      "date_range": {
+        "start": "2026-09-18",
+        "end": "2026-09-18",
+        "precision": "day"
+      },
+      "geographic_applicability": {
+        "region_id": "urn:fishai:observatory:kg:region/willapa-bay",
+        "grain": "estuary",
+        "geometry_policy": "PUBLIC",
+        "notes": "Named estuary; no lease corners"
+      },
+      "life_stage_applicability": [
+        "farmed_growout"
+      ],
+      "causal_status": "MECHANISTIC_CAUSAL",
+      "review_status": "EDITOR_DRAFT",
+      "last_updated": "2026-09-18",
+      "decision_applicability": "gigas_wa_72h_ops_stress",
+      "emiv_id": "EMIV-PHY-WIND-001|EMIV-PHY-WAVE-001",
+      "notes": "DO is causal but often unobserved in Willapa \u2014 still on the allowlist so missing-knowledge fires."
+    },
+    {
+      "@id": "urn:fishai:observatory:kg:edge/e094",
+      "@type": "KnowledgeEdge",
+      "predicate": "USES_EMIV",
+      "subject": {
+        "@id": "urn:fishai:observatory:kg:model/chinook-sst-encounter"
+      },
+      "object": {
+        "@id": "urn:fishai:observatory:kg:emiv/satellite_sst"
+      },
+      "evidence_type": "HYPOTHETICAL_RESEARCH",
+      "source": "urn:fishai:observatory:kg:model/chinook-sst-encounter",
+      "citation": "SST-only feature set (insufficient and non-transferable)",
+      "confidence": "low",
+      "date_range": {
+        "start": "2026-09-18",
+        "end": "2026-09-18",
+        "precision": "day"
+      },
+      "geographic_applicability": {
+        "region_id": "urn:fishai:observatory:kg:region/caor-shelf",
+        "grain": "management_area",
+        "geometry_policy": "COARSENED",
+        "notes": "No ESU or waypoint geometry"
+      },
+      "life_stage_applicability": [
+        "ocean_immature_adult"
+      ],
+      "causal_status": "PROXY",
+      "review_status": "EDITOR_DRAFT",
+      "last_updated": "2026-09-18",
+      "decision_applicability": "chinook_caor_24h_encounter",
+      "emiv_id": "EMIV-PHY-SST-001"
+    },
+    {
+      "@id": "urn:fishai:observatory:kg:edge/e095",
+      "@type": "KnowledgeEdge",
+      "predicate": "USES_EMIV",
+      "subject": {
+        "@id": "urn:fishai:observatory:kg:model/gigas-oa-larval"
+      },
+      "object": {
+        "@id": "urn:fishai:observatory:kg:emiv/omega_aragonite"
+      },
+      "evidence_type": "LITERATURE_SYNTHESIS",
+      "source": "urn:fishai:observatory:kg:source/noaa-fisheries-pacific-oyster",
+      "citation": "Larval calcification driver",
+      "confidence": "high",
+      "date_range": {
+        "start": "2009",
+        "end": "2026-09-18",
+        "precision": "year"
+      },
+      "geographic_applicability": {
+        "region_id": "urn:fishai:observatory:kg:region/willapa-bay",
+        "grain": "estuary",
+        "geometry_policy": "PUBLIC",
+        "notes": "Named estuary; no lease corners"
+      },
+      "life_stage_applicability": [
+        "larva"
+      ],
+      "causal_status": "MECHANISTIC_CAUSAL",
+      "review_status": "EDITOR_DRAFT",
+      "last_updated": "2026-09-18",
+      "emiv_id": "EMIV-BGC-OMEGA-001"
+    },
+    {
+      "@id": "urn:fishai:observatory:kg:edge/e096",
+      "@type": "KnowledgeEdge",
+      "predicate": "VALIDATED_AGAINST",
+      "subject": {
+        "@id": "urn:fishai:observatory:kg:model/b4-gigas-air-tide-stress"
+      },
+      "object": {
+        "@id": "urn:fishai:observatory:kg:validation/osi72-protocol-only"
+      },
+      "evidence_type": "HYPOTHETICAL_RESEARCH",
+      "source": "urn:fishai:observatory:kg:validation/osi72-protocol-only",
+      "citation": "No prospective evaluation; protocol only",
+      "confidence": "none",
+      "date_range": {
+        "start": "2026-09-18",
+        "end": "2026-09-18",
+        "precision": "day"
+      },
+      "geographic_applicability": {
+        "region_id": "urn:fishai:observatory:kg:region/willapa-bay",
+        "grain": "estuary",
+        "geometry_policy": "PUBLIC",
+        "notes": "Named estuary; no lease corners"
+      },
+      "life_stage_applicability": [
+        "farmed_growout"
+      ],
+      "causal_status": "NOT_APPLICABLE",
+      "review_status": "UNREVIEWED",
+      "last_updated": "2026-09-18",
+      "decision_applicability": "gigas_wa_72h_ops_stress"
+    },
+    {
+      "@id": "urn:fishai:observatory:kg:edge/e097",
+      "@type": "KnowledgeEdge",
+      "predicate": "VALIDATED_AGAINST",
+      "subject": {
+        "@id": "urn:fishai:observatory:kg:forecast/synthetic-osi72-2026-09-18"
+      },
+      "object": {
+        "@id": "urn:fishai:observatory:kg:validation/osi72-protocol-only"
+      },
+      "evidence_type": "HYPOTHETICAL_RESEARCH",
+      "source": "urn:fishai:observatory:kg:validation/osi72-protocol-only",
+      "citation": "Synthetic forecast is not claim-eligible",
+      "confidence": "none",
+      "date_range": {
+        "start": "2026-09-18",
+        "end": "2026-09-18",
+        "precision": "day"
+      },
+      "geographic_applicability": {
+        "region_id": "urn:fishai:observatory:kg:region/willapa-bay",
+        "grain": "estuary",
+        "geometry_policy": "PUBLIC",
+        "notes": "Named estuary; no lease corners"
+      },
+      "life_stage_applicability": [
+        "farmed_growout"
+      ],
+      "causal_status": "NOT_APPLICABLE",
+      "review_status": "EDITOR_DRAFT",
+      "last_updated": "2026-09-18"
+    },
+    {
+      "@id": "urn:fishai:observatory:kg:edge/e098",
+      "@type": "KnowledgeEdge",
+      "predicate": "ISSUED_FOR",
+      "subject": {
+        "@id": "urn:fishai:observatory:kg:forecast/synthetic-osi72-2026-09-18"
+      },
+      "object": {
+        "@id": "urn:fishai:observatory:kg:species/worms-836033"
+      },
+      "evidence_type": "HYPOTHETICAL_RESEARCH",
+      "source": "urn:fishai:observatory:kg:forecast/synthetic-osi72-2026-09-18",
+      "citation": "API specification synthetic example 2026-09-18",
+      "confidence": "none",
+      "date_range": {
+        "start": "2026-09-18",
+        "end": "2026-09-21",
+        "precision": "day"
+      },
+      "geographic_applicability": {
+        "region_id": "urn:fishai:observatory:kg:region/willapa-bay",
+        "grain": "estuary",
+        "geometry_policy": "PUBLIC",
+        "notes": "Named estuary; no lease corners"
+      },
+      "life_stage_applicability": [
+        "farmed_growout"
+      ],
+      "causal_status": "HYPOTHETICAL",
+      "review_status": "EDITOR_DRAFT",
+      "last_updated": "2026-09-18",
+      "decision_applicability": "gigas_wa_72h_ops_stress",
+      "prediction_contract_category": "D"
+    },
+    {
+      "@id": "urn:fishai:observatory:kg:edge/e099",
+      "@type": "KnowledgeEdge",
+      "predicate": "ISSUED_FOR",
+      "subject": {
+        "@id": "urn:fishai:observatory:kg:forecast/synthetic-osi72-2026-09-18"
+      },
+      "object": {
+        "@id": "urn:fishai:observatory:kg:region/willapa-bay"
+      },
+      "evidence_type": "HYPOTHETICAL_RESEARCH",
+      "source": "urn:fishai:observatory:kg:forecast/synthetic-osi72-2026-09-18",
+      "citation": "Named estuary / growing-area frame",
+      "confidence": "none",
+      "date_range": {
+        "start": "2026-09-18",
+        "end": "2026-09-21",
+        "precision": "day"
+      },
+      "geographic_applicability": {
+        "region_id": "urn:fishai:observatory:kg:region/willapa-bay",
+        "grain": "estuary",
+        "geometry_policy": "PUBLIC",
+        "notes": "Named estuary; no lease corners"
+      },
+      "life_stage_applicability": [
+        "farmed_growout"
+      ],
+      "causal_status": "HYPOTHETICAL",
+      "review_status": "EDITOR_DRAFT",
+      "last_updated": "2026-09-18"
+    },
+    {
+      "@id": "urn:fishai:observatory:kg:edge/e100",
+      "@type": "KnowledgeEdge",
+      "predicate": "ISSUED_FOR",
+      "subject": {
+        "@id": "urn:fishai:observatory:kg:forecast/synthetic-osi72-2026-09-18"
+      },
+      "object": {
+        "@id": "urn:fishai:observatory:kg:farm/W1_FIXTURE_PRIVATE_LEASE_ZONE_B"
+      },
+      "evidence_type": "HYPOTHETICAL_RESEARCH",
+      "source": "fixture",
+      "citation": "Partner-facing issuance would name the farm; PUBLIC projection drops this edge",
+      "confidence": "none",
+      "date_range": {
+        "start": "2026-09-18",
+        "end": "2026-09-21",
+        "precision": "day"
+      },
+      "geographic_applicability": {
+        "region_id": "urn:fishai:observatory:kg:region/willapa-bay",
+        "grain": "lease_private",
+        "geometry_policy": "PRIVATE"
+      },
+      "life_stage_applicability": [
+        "farmed_growout"
+      ],
+      "causal_status": "HYPOTHETICAL",
+      "review_status": "EDITOR_DRAFT",
+      "last_updated": "2026-09-18",
+      "privacy_tier": "PRIVATE"
+    },
+    {
+      "@id": "urn:fishai:observatory:kg:edge/e101",
+      "@type": "KnowledgeEdge",
+      "predicate": "MODELED_BY",
+      "subject": {
+        "@id": "urn:fishai:observatory:kg:forecast/synthetic-osi72-2026-09-18"
+      },
+      "object": {
+        "@id": "urn:fishai:observatory:kg:model/b4-gigas-air-tide-stress"
+      },
+      "evidence_type": "HYPOTHETICAL_RESEARCH",
+      "source": "urn:fishai:observatory:kg:model/b4-gigas-air-tide-stress",
+      "citation": "Synthetic state uses B4 rule family",
+      "confidence": "none",
+      "date_range": {
+        "start": "2026-09-18",
+        "end": "2026-09-18",
+        "precision": "day"
+      },
+      "geographic_applicability": {
+        "region_id": "urn:fishai:observatory:kg:region/willapa-bay",
+        "grain": "estuary",
+        "geometry_policy": "PUBLIC",
+        "notes": "Named estuary; no lease corners"
+      },
+      "life_stage_applicability": [
+        "farmed_growout"
+      ],
+      "causal_status": "HYPOTHETICAL",
+      "review_status": "EDITOR_DRAFT",
+      "last_updated": "2026-09-18"
+    },
+    {
+      "@id": "urn:fishai:observatory:kg:edge/e102",
+      "@type": "KnowledgeEdge",
+      "predicate": "HAS_CONFIDENCE",
+      "subject": {
+        "@id": "urn:fishai:observatory:kg:model/b4-gigas-air-tide-stress"
+      },
+      "object": {
+        "@id": "urn:fishai:observatory:kg:validation/osi72-protocol-only"
+      },
+      "evidence_type": "HYPOTHETICAL_RESEARCH",
+      "source": "urn:fishai:observatory:kg:validation/osi72-protocol-only",
+      "citation": "Confidence = none / uncalibrated until V1\u2013V9 pass",
+      "confidence": "none",
+      "date_range": {
+        "start": "2026-09-18",
+        "end": "2026-09-18",
+        "precision": "day"
+      },
+      "geographic_applicability": {
+        "region_id": "urn:fishai:observatory:kg:region/willapa-bay",
+        "grain": "estuary",
+        "geometry_policy": "PUBLIC",
+        "notes": "Named estuary; no lease corners"
+      },
+      "life_stage_applicability": [
+        "farmed_growout"
+      ],
+      "causal_status": "NOT_APPLICABLE",
+      "review_status": "EDITOR_DRAFT",
+      "last_updated": "2026-09-18"
+    },
+    {
+      "@id": "urn:fishai:observatory:kg:edge/e103",
+      "@type": "KnowledgeEdge",
+      "predicate": "PRESSURED_BY",
+      "subject": {
+        "@id": "urn:fishai:observatory:kg:species/worms-836033"
+      },
+      "object": {
+        "@id": "urn:fishai:observatory:kg:pressure/atmospheric-heat-dome"
+      },
+      "evidence_type": "SURVEY_DERIVED",
+      "source": "urn:fishai:observatory:kg:publication/raymond-2022",
+      "citation": "2021 heat dome \u00d7 lowest tides",
+      "confidence": "high",
+      "date_range": {
+        "start": "2021-06-26",
+        "end": "2021-06-28",
+        "precision": "day"
+      },
+      "geographic_applicability": {
+        "region_id": "urn:fishai:observatory:kg:region/willapa-bay",
+        "grain": "estuary",
+        "geometry_policy": "PUBLIC",
+        "notes": "Named estuary; no lease corners"
+      },
+      "life_stage_applicability": [
+        "farmed_growout"
+      ],
+      "causal_status": "MECHANISTIC_CAUSAL",
+      "review_status": "EDITOR_DRAFT",
+      "last_updated": "2026-09-18",
+      "decision_applicability": "gigas_wa_72h_ops_stress"
+    },
+    {
+      "@id": "urn:fishai:observatory:kg:edge/e104",
+      "@type": "KnowledgeEdge",
+      "predicate": "PRESSURED_BY",
+      "subject": {
+        "@id": "urn:fishai:observatory:kg:species/worms-836033"
+      },
+      "object": {
+        "@id": "urn:fishai:observatory:kg:pressure/handling-crowding"
+      },
+      "evidence_type": "LITERATURE_SYNTHESIS",
+      "source": "https://wdfw.medium.com/whats-been-causing-mass-shellfish-die-offs-around-puget-sound-1ada7071a242",
+      "citation": "WDFW 2019: ordinary handling/crowding failed during die-offs",
+      "confidence": "medium",
+      "date_range": {
+        "start": "2018",
+        "end": "2019",
+        "precision": "year"
+      },
+      "geographic_applicability": {
+        "region_id": "urn:fishai:observatory:kg:region/hood-canal",
+        "grain": "sub_basin",
+        "geometry_policy": "PUBLIC",
+        "notes": "Puget Sound / Hood Canal contrast; not Willapa"
+      },
+      "life_stage_applicability": [
+        "farmed_growout"
+      ],
+      "causal_status": "MECHANISTIC_CAUSAL",
+      "review_status": "EDITOR_DRAFT",
+      "last_updated": "2026-09-18",
+      "decision_applicability": "gigas_wa_72h_ops_stress",
+      "privacy_tier": "COARSENED"
+    },
+    {
+      "@id": "urn:fishai:observatory:kg:edge/e105",
+      "@type": "KnowledgeEdge",
+      "predicate": "PRESSURED_BY",
+      "subject": {
+        "@id": "urn:fishai:observatory:kg:species/worms-836033"
+      },
+      "object": {
+        "@id": "urn:fishai:observatory:kg:pressure/freshwater-runoff"
+      },
+      "evidence_type": "LITERATURE_SYNTHESIS",
+      "source": "urn:fishai:observatory:kg:publication/fao-gigas",
+      "citation": "Acute low-salinity / flood multi-stressor",
+      "confidence": "medium",
+      "date_range": {
+        "start": null,
+        "end": "2026-09-18",
+        "precision": "season"
+      },
+      "geographic_applicability": {
+        "region_id": "urn:fishai:observatory:kg:region/willapa-bay",
+        "grain": "estuary",
+        "geometry_policy": "PUBLIC",
+        "notes": "Named estuary; no lease corners"
+      },
+      "life_stage_applicability": [
+        "farmed_growout"
+      ],
+      "causal_status": "MECHANISTIC_CAUSAL",
+      "review_status": "EDITOR_DRAFT",
+      "last_updated": "2026-09-18",
+      "decision_applicability": "gigas_wa_72h_ops_stress"
+    },
+    {
+      "@id": "urn:fishai:observatory:kg:edge/e106",
+      "@type": "KnowledgeEdge",
+      "predicate": "OCCURS_IN",
+      "subject": {
+        "@id": "urn:fishai:observatory:kg:fishery/wdfw-willapa-oyster-reserves"
+      },
+      "object": {
+        "@id": "urn:fishai:observatory:kg:region/willapa-bay"
+      },
+      "evidence_type": "OFFICIAL_REGULATORY",
+      "source": "https://dnr.wa.gov/aquatics/shellfish/aquaculture",
+      "citation": "WDFW Willapa oyster reserves (RCW 77.60.010) \u2014 not 72h farm stress",
+      "confidence": "high",
+      "date_range": {
+        "start": null,
+        "end": "2026-09-18",
+        "precision": "year"
+      },
+      "geographic_applicability": {
+        "region_id": "urn:fishai:observatory:kg:region/willapa-bay",
+        "grain": "estuary",
+        "geometry_policy": "PUBLIC",
+        "notes": "Named estuary; no lease corners"
+      },
+      "life_stage_applicability": [
+        "unspecified_mixed"
+      ],
+      "causal_status": "NOT_APPLICABLE",
+      "review_status": "EDITOR_DRAFT",
+      "last_updated": "2026-09-18",
+      "decision_applicability": "not_a_decision"
+    },
+    {
+      "@id": "urn:fishai:observatory:kg:edge/e107",
+      "@type": "KnowledgeEdge",
+      "predicate": "ASSOCIATED_WITH",
+      "subject": {
+        "@id": "urn:fishai:observatory:kg:fishery/wdfw-willapa-oyster-reserves"
+      },
+      "object": {
+        "@id": "urn:fishai:observatory:kg:species/worms-836033"
+      },
+      "evidence_type": "OFFICIAL_REGULATORY",
+      "source": "urn:fishai:observatory:kg:source/noaa-fisheries-pacific-oyster",
+      "citation": "Naturalized set on reserves; secondary to farmed grow-out wedge",
+      "confidence": "medium",
+      "date_range": {
+        "start": null,
+        "end": "2026-09-18",
+        "precision": "year"
+      },
+      "geographic_applicability": {
+        "region_id": "urn:fishai:observatory:kg:region/willapa-bay",
+        "grain": "estuary",
+        "geometry_policy": "PUBLIC",
+        "notes": "Named estuary; no lease corners"
+      },
+      "life_stage_applicability": [
+        "unspecified_mixed"
+      ],
+      "causal_status": "ASSOCIATIVE",
+      "review_status": "EDITOR_DRAFT",
+      "last_updated": "2026-09-18"
+    },
+    {
+      "@id": "urn:fishai:observatory:kg:edge/e108",
+      "@type": "KnowledgeEdge",
+      "predicate": "OCCURS_IN",
+      "subject": {
+        "@id": "urn:fishai:observatory:kg:protected_area/willapa-nwr"
+      },
+      "object": {
+        "@id": "urn:fishai:observatory:kg:region/willapa-bay"
+      },
+      "evidence_type": "OFFICIAL_REGULATORY",
+      "source": "https://www.fws.gov/refuge/willapa",
+      "citation": "Willapa NWR official designation. Outline as FWS publishes.",
+      "confidence": "high",
+      "date_range": {
+        "start": null,
+        "end": "2026-09-18",
+        "precision": "year"
+      },
+      "geographic_applicability": {
+        "region_id": "urn:fishai:observatory:kg:region/willapa-bay",
+        "grain": "estuary",
+        "geometry_policy": "PUBLIC"
+      },
+      "life_stage_applicability": [
+        "unspecified_mixed"
+      ],
+      "causal_status": "NOT_APPLICABLE",
+      "review_status": "EDITOR_DRAFT",
+      "last_updated": "2026-09-18"
+    },
+    {
+      "@id": "urn:fishai:observatory:kg:edge/e109",
+      "@type": "KnowledgeEdge",
+      "predicate": "SUPPORTS",
+      "subject": {
+        "@id": "urn:fishai:observatory:kg:observation/raymond-2021-heat-dome"
+      },
+      "object": {
+        "@id": "urn:fishai:observatory:kg:hypothesis/H-air-tide-primary-intertidal"
+      },
+      "evidence_type": "SURVEY_DERIVED",
+      "source": "urn:fishai:observatory:kg:publication/raymond-2022",
+      "citation": "Heat \u00d7 lowest tides; intertidal Pacific oysters heavily affected",
+      "confidence": "high",
+      "date_range": {
+        "start": "2021-06-26",
+        "end": "2021-06-28",
+        "precision": "day"
+      },
+      "geographic_applicability": {
+        "region_id": "urn:fishai:observatory:kg:region/willapa-bay",
+        "grain": "estuary",
+        "geometry_policy": "PUBLIC",
+        "notes": "Named estuary; no lease corners"
+      },
+      "life_stage_applicability": [
+        "farmed_growout"
+      ],
+      "causal_status": "MECHANISTIC_CAUSAL",
+      "review_status": "EDITOR_DRAFT",
+      "last_updated": "2026-09-18",
+      "decision_applicability": "gigas_wa_72h_ops_stress"
+    },
+    {
+      "@id": "urn:fishai:observatory:kg:edge/e110",
+      "@type": "KnowledgeEdge",
+      "predicate": "SUPPORTS",
+      "subject": {
+        "@id": "urn:fishai:observatory:kg:observation/cheney-2000-ps-summer-mortality"
+      },
+      "object": {
+        "@id": "urn:fishai:observatory:kg:hypothesis/H-hypoxia-primary-subtidal"
+      },
+      "evidence_type": "LITERATURE_SYNTHESIS",
+      "source": "urn:fishai:observatory:kg:publication/cheney-2000",
+      "citation": "Puget Sound: heat + neap + low oxygen",
+      "confidence": "high",
+      "date_range": {
+        "start": "1998",
+        "end": "2000",
+        "precision": "year"
+      },
+      "geographic_applicability": {
+        "region_id": "urn:fishai:observatory:kg:region/hood-canal",
+        "grain": "sub_basin",
+        "geometry_policy": "PUBLIC",
+        "notes": "Puget Sound / Hood Canal contrast; not Willapa"
+      },
+      "life_stage_applicability": [
+        "farmed_growout"
+      ],
+      "causal_status": "MECHANISTIC_CAUSAL",
+      "review_status": "EDITOR_DRAFT",
+      "last_updated": "2026-09-18",
+      "decision_applicability": "gigas_wa_72h_ops_stress"
+    },
+    {
+      "@id": "urn:fishai:observatory:kg:edge/e111",
+      "@type": "KnowledgeEdge",
+      "predicate": "COMPETES_WITH",
+      "subject": {
+        "@id": "urn:fishai:observatory:kg:hypothesis/H-air-tide-primary-intertidal"
+      },
+      "object": {
+        "@id": "urn:fishai:observatory:kg:hypothesis/H-hypoxia-primary-subtidal"
+      },
+      "evidence_type": "HYPOTHETICAL_RESEARCH",
+      "source": "urn:fishai:observatory:kg:hypothesis/H-air-tide-primary-intertidal",
+      "citation": "Not mutually exclusive globally: stratify by habitat. Conflict only if one is applied as the universal Willapa 72h cause.",
+      "confidence": "medium",
+      "date_range": {
+        "start": "2026-09-18",
+        "end": "2026-09-18",
+        "precision": "day"
+      },
+      "geographic_applicability": {
+        "region_id": "urn:fishai:observatory:kg:region/willapa-bay",
+        "grain": "estuary",
+        "geometry_policy": "PUBLIC",
+        "notes": "Named estuary; no lease corners"
+      },
+      "life_stage_applicability": [
+        "farmed_growout"
+      ],
+      "causal_status": "HYPOTHETICAL",
+      "review_status": "CONFLICT_OPEN",
+      "last_updated": "2026-09-18",
+      "decision_applicability": "gigas_wa_72h_ops_stress"
+    },
+    {
+      "@id": "urn:fishai:observatory:kg:edge/e112",
+      "@type": "KnowledgeEdge",
+      "predicate": "CONFLICTS_WITH",
+      "subject": {
+        "@id": "urn:fishai:observatory:kg:observation/cheney-2000-ps-summer-mortality"
+      },
+      "object": {
+        "@id": "urn:fishai:observatory:kg:hypothesis/H-air-tide-primary-intertidal"
+      },
+      "evidence_type": "LITERATURE_SYNTHESIS",
+      "source": "urn:fishai:observatory:kg:publication/cheney-2000",
+      "citation": "Conflict fires if Cheney Puget Sound hypoxia is treated as the Willapa intertidal bag mechanism without basin/habitat split",
+      "confidence": "medium",
+      "date_range": {
+        "start": "2026-09-18",
+        "end": "2026-09-18",
+        "precision": "day"
+      },
+      "geographic_applicability": {
+        "region_id": "urn:fishai:observatory:kg:region/willapa-bay",
+        "grain": "estuary",
+        "geometry_policy": "PUBLIC",
+        "notes": "Named estuary; no lease corners"
+      },
+      "life_stage_applicability": [
+        "farmed_growout"
+      ],
+      "causal_status": "WRONG_GEOGRAPHY",
+      "review_status": "CONFLICT_OPEN",
+      "last_updated": "2026-09-18",
+      "decision_applicability": "gigas_wa_72h_ops_stress",
+      "notes": "Resolved by stratification: H1 intertidal Willapa; H2 subtidal/stratified basins."
+    },
+    {
+      "@id": "urn:fishai:observatory:kg:edge/e113",
+      "@type": "KnowledgeEdge",
+      "predicate": "FORBIDDEN_TRANSFER",
+      "subject": {
+        "@id": "urn:fishai:observatory:kg:model/chinook-sst-encounter"
+      },
+      "object": {
+        "@id": "urn:fishai:observatory:kg:model/b4-gigas-air-tide-stress"
+      },
+      "evidence_type": "LITERATURE_SYNTHESIS",
+      "source": "urn:fishai:observatory:kg:constraint/block-chinook-sst-to-gigas-bags",
+      "citation": "Cannot transfer Chinook SST encounter model to Pacific oyster bags: taxon 158075\u2260836033; ocean_immature_adult\u2260farmed_growout; SHELF_THERMAL_BAND\u2260INTERTIDAL_AIR; SST PROXY\u2260air\u00d7tide MECHANISTIC_CAUSAL; encounter D\u2260ops-stress D.",
+      "confidence": "high",
+      "date_range": {
+        "start": "2026-09-18",
+        "end": "2026-09-18",
+        "precision": "day"
+      },
+      "geographic_applicability": {
+        "region_id": "urn:fishai:observatory:kg:region/willapa-bay",
+        "grain": "estuary",
+        "geometry_policy": "PUBLIC",
+        "notes": "Named estuary; no lease corners"
+      },
+      "life_stage_applicability": [
+        "farmed_growout",
+        "ocean_immature_adult"
+      ],
+      "causal_status": "WRONG_TARGET",
+      "review_status": "DOMAIN_REVIEWED",
+      "last_updated": "2026-09-18",
+      "decision_applicability": "gigas_wa_72h_ops_stress"
+    },
+    {
+      "@id": "urn:fishai:observatory:kg:edge/e114",
+      "@type": "KnowledgeEdge",
+      "predicate": "FORBIDDEN_TRANSFER",
+      "subject": {
+        "@id": "urn:fishai:observatory:kg:model/chinook-sst-encounter"
+      },
+      "object": {
+        "@id": "urn:fishai:observatory:kg:species/worms-836033"
+      },
+      "evidence_type": "LITERATURE_SYNTHESIS",
+      "source": "urn:fishai:observatory:kg:constraint/block-chinook-sst-to-gigas-bags",
+      "citation": "Direct block on applying Chinook SST model outputs to Magallana gigas farmed_growout.",
+      "confidence": "high",
+      "date_range": {
+        "start": "2026-09-18",
+        "end": "2026-09-18",
+        "precision": "day"
+      },
+      "geographic_applicability": {
+        "region_id": "urn:fishai:observatory:kg:region/willapa-bay",
+        "grain": "estuary",
+        "geometry_policy": "PUBLIC",
+        "notes": "Named estuary; no lease corners"
+      },
+      "life_stage_applicability": [
+        "farmed_growout"
+      ],
+      "causal_status": "WRONG_STAGE",
+      "review_status": "DOMAIN_REVIEWED",
+      "last_updated": "2026-09-18",
+      "decision_applicability": "gigas_wa_72h_ops_stress"
+    },
+    {
+      "@id": "urn:fishai:observatory:kg:edge/e115",
+      "@type": "KnowledgeEdge",
+      "predicate": "FORBIDDEN_TRANSFER",
+      "subject": {
+        "@id": "urn:fishai:observatory:kg:model/gigas-oa-larval"
+      },
+      "object": {
+        "@id": "urn:fishai:observatory:kg:model/b4-gigas-air-tide-stress"
+      },
+      "evidence_type": "LITERATURE_SYNTHESIS",
+      "source": "urn:fishai:observatory:kg:constraint/block-oa-larva-to-adult-bags",
+      "citation": "WRONG_STAGE: larval \u03a9_aragonite model is not a 72h adult-bag stress model",
+      "confidence": "high",
+      "date_range": {
+        "start": "2026-09-18",
+        "end": "2026-09-18",
+        "precision": "day"
+      },
+      "geographic_applicability": {
+        "region_id": "urn:fishai:observatory:kg:region/willapa-bay",
+        "grain": "estuary",
+        "geometry_policy": "PUBLIC",
+        "notes": "Named estuary; no lease corners"
+      },
+      "life_stage_applicability": [
+        "larva",
+        "farmed_growout"
+      ],
+      "causal_status": "WRONG_STAGE",
+      "review_status": "DOMAIN_REVIEWED",
+      "last_updated": "2026-09-18"
+    },
+    {
+      "@id": "urn:fishai:observatory:kg:edge/e116",
+      "@type": "KnowledgeEdge",
+      "predicate": "FORBIDDEN_TRANSFER",
+      "subject": {
+        "@id": "urn:fishai:observatory:kg:model/doh-class-as-stress"
+      },
+      "object": {
+        "@id": "urn:fishai:observatory:kg:model/b4-gigas-air-tide-stress"
+      },
+      "evidence_type": "OFFICIAL_REGULATORY",
+      "source": "urn:fishai:observatory:kg:constraint/block-doh-as-stress",
+      "citation": "WRONG_TARGET: WDOH/NSSP class must not be the ops-stress label",
+      "confidence": "high",
+      "date_range": {
+        "start": "2026-09-18",
+        "end": "2026-09-18",
+        "precision": "day"
+      },
+      "geographic_applicability": {
+        "region_id": "urn:fishai:observatory:kg:regulatory/WA_DOH_GROWING_AREA-Willapa-Nahcotta-fixture",
+        "grain": "official_growing_area",
+        "geometry_policy": "PUBLIC"
+      },
+      "life_stage_applicability": [
+        "farmed_growout"
+      ],
+      "causal_status": "WRONG_TARGET",
+      "review_status": "DOMAIN_REVIEWED",
+      "last_updated": "2026-09-18"
+    },
+    {
+      "@id": "urn:fishai:observatory:kg:edge/e117",
+      "@type": "KnowledgeEdge",
+      "predicate": "FORBIDDEN_TRANSFER",
+      "subject": {
+        "@id": "urn:fishai:observatory:kg:model/hood-canal-hypoxia-as-willapa"
+      },
+      "object": {
+        "@id": "urn:fishai:observatory:kg:model/b4-gigas-air-tide-stress"
+      },
+      "evidence_type": "LITERATURE_SYNTHESIS",
+      "source": "urn:fishai:observatory:kg:constraint/block-hood-canal-do-to-willapa",
+      "citation": "WRONG_GEOGRAPHY: Hood Canal hypoxia \u2260 Willapa",
+      "confidence": "high",
+      "date_range": {
+        "start": "2026-09-18",
+        "end": "2026-09-18",
+        "precision": "day"
+      },
+      "geographic_applicability": {
+        "region_id": "urn:fishai:observatory:kg:region/willapa-bay",
+        "grain": "estuary",
+        "geometry_policy": "PUBLIC",
+        "notes": "Named estuary; no lease corners"
+      },
+      "life_stage_applicability": [
+        "farmed_growout"
+      ],
+      "causal_status": "WRONG_GEOGRAPHY",
+      "review_status": "DOMAIN_REVIEWED",
+      "last_updated": "2026-09-18"
+    },
+    {
+      "@id": "urn:fishai:observatory:kg:edge/e118",
+      "@type": "KnowledgeEdge",
+      "predicate": "FORBIDDEN_TRANSFER",
+      "subject": {
+        "@id": "urn:fishai:observatory:kg:disease/OsHV-1"
+      },
+      "object": {
+        "@id": "urn:fishai:observatory:kg:model/b4-gigas-air-tide-stress"
+      },
+      "evidence_type": "SURVEY_DERIVED",
+      "source": "urn:fishai:observatory:kg:constraint/block-oshv1-ca-to-willapa",
+      "citation": "WRONG_GEOGRAPHY: do not use OsHV-1 as Willapa 72h driver without local detection",
+      "confidence": "medium",
+      "date_range": {
+        "start": "2020",
+        "end": "2026-09-18",
+        "precision": "year"
+      },
+      "geographic_applicability": {
+        "region_id": "urn:fishai:observatory:kg:region/willapa-bay",
+        "grain": "estuary",
+        "geometry_policy": "PUBLIC",
+        "notes": "Named estuary; no lease corners"
+      },
+      "life_stage_applicability": [
+        "farmed_growout"
+      ],
+      "causal_status": "WRONG_GEOGRAPHY",
+      "review_status": "DOMAIN_REVIEWED",
+      "last_updated": "2026-09-18"
+    },
+    {
+      "@id": "urn:fishai:observatory:kg:edge/e119",
+      "@type": "KnowledgeEdge",
+      "predicate": "FORBIDDEN_TRANSFER",
+      "subject": {
+        "@id": "urn:fishai:observatory:kg:survey/soundtoxins"
+      },
+      "object": {
+        "@id": "urn:fishai:observatory:kg:model/b4-gigas-air-tide-stress"
+      },
+      "evidence_type": "OFFICIAL_REGULATORY",
+      "source": "urn:fishai:observatory:kg:constraint/block-alexandrium-soundtoxins-as-ops-label",
+      "citation": "SoundToxins is a HAB constraint / data source. Alexandrium counts are not an ops-stress label. Heterosigma may inform a separate animal-stress HAB flag, never mixed into NSSP language.",
+      "confidence": "high",
+      "date_range": {
+        "start": "2026-09-18",
+        "end": "2026-09-18",
+        "precision": "day"
+      },
+      "geographic_applicability": {
+        "region_id": "urn:fishai:observatory:kg:region/willapa-bay",
+        "grain": "estuary",
+        "geometry_policy": "PUBLIC",
+        "notes": "Named estuary; no lease corners"
+      },
+      "life_stage_applicability": [
+        "farmed_growout"
+      ],
+      "causal_status": "WRONG_TARGET",
+      "review_status": "DOMAIN_REVIEWED",
+      "last_updated": "2026-09-18",
+      "decision_applicability": "gigas_wa_72h_ops_stress"
+    },
+    {
+      "@id": "urn:fishai:observatory:kg:edge/e120",
+      "@type": "KnowledgeEdge",
+      "predicate": "FORBIDDEN_TRANSFER",
+      "subject": {
+        "@id": "urn:fishai:observatory:kg:species/worms-156134"
+      },
+      "object": {
+        "@id": "urn:fishai:observatory:kg:emiv/dissolved_oxygen"
+      },
+      "evidence_type": "LITERATURE_SYNTHESIS",
+      "source": "urn:fishai:observatory:kg:constraint/block-sne-hypoxia-to-gom-lobster",
+      "citation": "Do not transfer SNE/LIS hypoxia DO models onto GOM Homarus next-trip CPUE",
+      "confidence": "high",
+      "date_range": {
+        "start": "2026-09-18",
+        "end": "2026-09-18",
+        "precision": "day"
+      },
+      "geographic_applicability": {
+        "region_id": "urn:fishai:observatory:kg:region/gom-inshore-coarse",
+        "grain": "stock",
+        "geometry_policy": "COARSENED",
+        "notes": "No trap GPS"
+      },
+      "life_stage_applicability": [
+        "legal_benthic_adult"
+      ],
+      "causal_status": "WRONG_GEOGRAPHY",
+      "review_status": "DOMAIN_REVIEWED",
+      "last_updated": "2026-09-18",
+      "decision_applicability": "lobster_gom_next_trip_cpue"
+    },
+    {
+      "@id": "urn:fishai:observatory:kg:edge/e121",
+      "@type": "KnowledgeEdge",
+      "predicate": "CITED_IN",
+      "subject": {
+        "@id": "urn:fishai:observatory:kg:species/worms-836033"
+      },
+      "object": {
+        "@id": "urn:fishai:observatory:kg:publication/raymond-2022"
+      },
+      "evidence_type": "LITERATURE_SYNTHESIS",
+      "source": "urn:fishai:observatory:kg:publication/raymond-2022",
+      "citation": "https://doi.org/10.1002/ecy.3798",
+      "confidence": "high",
+      "date_range": {
+        "start": "2022",
+        "end": "2022",
+        "precision": "year"
+      },
+      "geographic_applicability": {
+        "region_id": "urn:fishai:observatory:kg:region/willapa-bay",
+        "grain": "estuary",
+        "geometry_policy": "PUBLIC",
+        "notes": "Named estuary; no lease corners"
+      },
+      "life_stage_applicability": [
+        "farmed_growout"
+      ],
+      "causal_status": "ASSOCIATIVE",
+      "review_status": "EDITOR_DRAFT",
+      "last_updated": "2026-09-18"
+    },
+    {
+      "@id": "urn:fishai:observatory:kg:edge/e122",
+      "@type": "KnowledgeEdge",
+      "predicate": "CITED_IN",
+      "subject": {
+        "@id": "urn:fishai:observatory:kg:species/worms-836033"
+      },
+      "object": {
+        "@id": "urn:fishai:observatory:kg:publication/cheney-2000"
+      },
+      "evidence_type": "LITERATURE_SYNTHESIS",
+      "source": "urn:fishai:observatory:kg:publication/cheney-2000",
+      "citation": "J. Shellfish Res. 19:353\u2013359",
+      "confidence": "high",
+      "date_range": {
+        "start": "2000",
+        "end": "2000",
+        "precision": "year"
+      },
+      "geographic_applicability": {
+        "region_id": "urn:fishai:observatory:kg:region/hood-canal",
+        "grain": "sub_basin",
+        "geometry_policy": "PUBLIC",
+        "notes": "Puget Sound / Hood Canal contrast; not Willapa"
+      },
+      "life_stage_applicability": [
+        "farmed_growout"
+      ],
+      "causal_status": "ASSOCIATIVE",
+      "review_status": "EDITOR_DRAFT",
+      "last_updated": "2026-09-18"
+    },
+    {
+      "@id": "urn:fishai:observatory:kg:edge/e123",
+      "@type": "KnowledgeEdge",
+      "predicate": "CITED_IN",
+      "subject": {
+        "@id": "urn:fishai:observatory:kg:species/worms-836033"
+      },
+      "object": {
+        "@id": "urn:fishai:observatory:kg:publication/fao-gigas"
+      },
+      "evidence_type": "LITERATURE_SYNTHESIS",
+      "source": "urn:fishai:observatory:kg:publication/fao-gigas",
+      "citation": "FAO culture envelope",
+      "confidence": "medium",
+      "date_range": {
+        "start": null,
+        "end": "2026-09-18",
+        "precision": "year"
+      },
+      "geographic_applicability": {
+        "region_id": "urn:fishai:observatory:kg:region/willapa-bay",
+        "grain": "estuary",
+        "geometry_policy": "PUBLIC",
+        "notes": "Named estuary; no lease corners"
+      },
+      "life_stage_applicability": [
+        "farmed_growout",
+        "larva"
+      ],
+      "causal_status": "ASSOCIATIVE",
+      "review_status": "EDITOR_DRAFT",
+      "last_updated": "2026-09-18"
+    },
+    {
+      "@id": "urn:fishai:observatory:kg:edge/e124",
+      "@type": "KnowledgeEdge",
+      "predicate": "CITED_IN",
+      "subject": {
+        "@id": "urn:fishai:observatory:kg:species/worms-158075"
+      },
+      "object": {
+        "@id": "urn:fishai:observatory:kg:publication/hinke-2005"
+      },
+      "evidence_type": "TAG_TELEMETRY_DERIVED",
+      "source": "urn:fishai:observatory:kg:publication/hinke-2005",
+      "citation": "https://doi.org/10.3354/meps304207",
+      "confidence": "high",
+      "date_range": {
+        "start": "2005",
+        "end": "2005",
+        "precision": "year"
+      },
+      "geographic_applicability": {
+        "region_id": "urn:fishai:observatory:kg:region/caor-shelf",
+        "grain": "management_area",
+        "geometry_policy": "COARSENED",
+        "notes": "No ESU or waypoint geometry"
+      },
+      "life_stage_applicability": [
+        "ocean_immature_adult"
+      ],
+      "causal_status": "ASSOCIATIVE",
+      "review_status": "EDITOR_DRAFT",
+      "last_updated": "2026-09-18"
+    },
+    {
+      "@id": "urn:fishai:observatory:kg:edge/e125",
+      "@type": "KnowledgeEdge",
+      "predicate": "SOURCED_FROM",
+      "subject": {
+        "@id": "urn:fishai:observatory:kg:species/worms-836033"
+      },
+      "object": {
+        "@id": "urn:fishai:observatory:kg:source/worms"
+      },
+      "evidence_type": "OFFICIAL_REGULATORY",
+      "source": "urn:fishai:observatory:kg:source/worms",
+      "citation": "WoRMS Aphia 836033 access 2026-09-18",
+      "confidence": "high",
+      "date_range": {
+        "start": "2026-09-18",
+        "end": "2026-09-18",
+        "precision": "day"
+      },
+      "geographic_applicability": {
+        "region_id": null,
+        "grain": "unbounded_do_not_use",
+        "geometry_policy": "NONE",
+        "notes": "Taxonomy only"
+      },
+      "life_stage_applicability": [
+        "unspecified_mixed"
+      ],
+      "causal_status": "NOT_APPLICABLE",
+      "review_status": "DOMAIN_REVIEWED",
+      "last_updated": "2026-09-18"
+    },
+    {
+      "@id": "urn:fishai:observatory:kg:edge/e126",
+      "@type": "KnowledgeEdge",
+      "predicate": "SOURCED_FROM",
+      "subject": {
+        "@id": "urn:fishai:observatory:kg:species/worms-836033"
+      },
+      "object": {
+        "@id": "urn:fishai:observatory:kg:source/noaa-fisheries-pacific-oyster"
+      },
+      "evidence_type": "OFFICIAL_REGULATORY",
+      "source": "urn:fishai:observatory:kg:source/noaa-fisheries-pacific-oyster",
+      "citation": "https://www.fisheries.noaa.gov/species/pacific-oyster access 2026-09-18",
+      "confidence": "high",
+      "date_range": {
+        "start": "2026-09-18",
+        "end": "2026-09-18",
+        "precision": "day"
+      },
+      "geographic_applicability": {
+        "region_id": "urn:fishai:observatory:kg:region/willapa-bay",
+        "grain": "estuary",
+        "geometry_policy": "PUBLIC",
+        "notes": "Named estuary; no lease corners"
+      },
+      "life_stage_applicability": [
+        "farmed_growout"
+      ],
+      "causal_status": "NOT_APPLICABLE",
+      "review_status": "EDITOR_DRAFT",
+      "last_updated": "2026-09-18"
+    },
+    {
+      "@id": "urn:fishai:observatory:kg:edge/e127",
+      "@type": "KnowledgeEdge",
+      "predicate": "ASSOCIATED_WITH",
+      "subject": {
+        "@id": "urn:fishai:observatory:kg:species/worms-542155"
+      },
+      "object": {
+        "@id": "urn:fishai:observatory:kg:observation/raymond-2021-heat-dome"
+      },
+      "evidence_type": "SURVEY_DERIVED",
+      "source": "urn:fishai:observatory:kg:publication/raymond-2022",
+      "citation": "Olympia oysters less affected than Pacific oysters in 2021 intertidal heat",
+      "confidence": "high",
+      "date_range": {
+        "start": "2021-06-26",
+        "end": "2021-06-28",
+        "precision": "day"
+      },
+      "geographic_applicability": {
+        "region_id": "urn:fishai:observatory:kg:region/willapa-bay",
+        "grain": "estuary",
+        "geometry_policy": "COARSENED"
+      },
+      "life_stage_applicability": [
+        "adult"
+      ],
+      "causal_status": "MECHANISTIC_CAUSAL",
+      "review_status": "EDITOR_DRAFT",
+      "last_updated": "2026-09-18",
+      "notes": "Do not transfer gigas stress ranks onto Ostrea lurida."
+    }
+  ]
+}

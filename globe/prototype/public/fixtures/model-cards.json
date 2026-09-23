@@ -1,0 +1,20 @@
+{
+  "note": "A species may show current location, occurrence probability, abundance, movement, or a forecast only when a card is PUBLISHED and a baseline was beaten. Today that count is zero. Do not invent a PUBLISHED card to decorate the globe.",
+  "cards": [
+    {
+      "aphiaId": 836033,
+      "scientificName": "Magallana gigas",
+      "cardId": "W1_oyster_ops_risk_v0_DRAFT",
+      "publishStatus": "NOT_PUBLISHED",
+      "operational": false,
+      "hasCurrentEstimate": false,
+      "hasForecast": false,
+      "hasRelativeAbundance": false,
+      "hasMovement": false,
+      "predictionTarget": null,
+      "allowsWillapaWorkingConditionsDemo": true,
+      "target": "72-hour farm working-conditions stress — not animal GPS, not harvest legality",
+      "reviewerStatus": "REQUIRED_HUMAN_REVIEW"
+    }
+  ]
+}

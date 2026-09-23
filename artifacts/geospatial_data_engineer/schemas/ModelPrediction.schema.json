@@ -1,0 +1,142 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://fishai.local/schemas/ModelPrediction.schema.json",
+  "title": "ModelPrediction",
+  "description": "Append-only issued forecast. Never overwrite. Replay uses feature_snapshot_id + source_data_cutoff_utc + model_version. Explanations must not contain exact private coordinates. Fixture/schema only; do not train models in this agent.",
+  "allOf": [
+    { "$ref": "./_ObservationKernel.schema.json" },
+    {
+      "type": "object",
+      "required": [
+        "entity_type",
+        "forecast_id",
+        "project_id",
+        "wedge_id",
+        "species_scope",
+        "geographic_scope",
+        "issued_at_utc",
+        "forecast_window_start_utc",
+        "forecast_window_end_utc",
+        "target_definition",
+        "prediction_value",
+        "prediction_unit",
+        "confidence_category",
+        "model_version",
+        "feature_snapshot_id",
+        "source_data_cutoff_utc",
+        "prediction_contract_category",
+        "user_visible_limitations",
+        "privacy_policy_applied"
+      ],
+      "properties": {
+        "entity_type": { "const": "ModelPrediction" },
+        "forecast_id": { "type": "string", "format": "uuid" },
+        "project_id": { "type": "string" },
+        "wedge_id": {
+          "type": "string",
+          "description": "UNRESOLVED until founder lock. Examples: oyster_wa_ops_72h | chinook_caor_charter_48h | lobster_gom_cpue_next_trip"
+        },
+        "species_scope": { "type": "string" },
+        "geographic_scope": { "type": "string" },
+        "spatial_cell_or_polygon": { "type": "string" },
+        "issued_at_utc": { "type": "string", "format": "date-time" },
+        "forecast_window_start_utc": { "type": "string", "format": "date-time" },
+        "forecast_window_end_utc": { "type": "string", "format": "date-time" },
+        "target_definition": { "type": "string" },
+        "prediction_value": { "type": ["number", "string"] },
+        "prediction_unit": { "type": "string" },
+        "confidence_value": { "type": ["number", "null"], "minimum": 0, "maximum": 1 },
+        "confidence_category": {
+          "type": "string",
+          "enum": ["high", "medium", "low"]
+        },
+        "uncertainty_interval": {
+          "type": ["object", "null"],
+          "properties": {
+            "lower": { "type": "number" },
+            "upper": { "type": "number" },
+            "level": { "type": "number" }
+          }
+        },
+        "model_version": { "type": "string" },
+        "training_data_cutoff_utc": { "type": ["string", "null"], "format": "date-time" },
+        "feature_snapshot_id": { "type": "string", "format": "uuid" },
+        "source_data_cutoff_utc": { "type": "string", "format": "date-time" },
+        "feature_freshness_summary": { "type": ["object", "string", "null"] },
+        "known_missing_inputs": {
+          "type": "array",
+          "items": { "type": "string" }
+        },
+        "user_visible_explanation": { "type": ["string", "null"] },
+        "user_visible_limitations": { "type": "string" },
+        "user_visible_action_options": { "type": ["string", "null"] },
+        "source_attribution_bundle": { "type": ["string", "object", "null"] },
+        "regulatory_context_snapshot": { "type": ["string", "object", "null"] },
+        "privacy_policy_applied": { "type": "string" },
+        "delivery_channel": {
+          "type": ["string", "null"],
+          "enum": ["email", "sms", "whatsapp", "pdf", "api", "spreadsheet", "none", null]
+        },
+        "delivered_at_utc": { "type": ["string", "null"], "format": "date-time" },
+        "supersedes_forecast_id": { "type": ["string", "null"], "format": "uuid" },
+        "is_retrospective": { "type": "boolean", "default": false },
+        "prediction_contract_category": {
+          "type": "string",
+          "enum": ["C", "D"]
+        }
+      }
+    }
+  ],
+  "examples": [
+    {
+      "event_id": "01800000-0000-7000-8000-000000000030",
+      "entity_type": "ModelPrediction",
+      "source_id": "fishai.model",
+      "source_record_id": "forecast-fixture-0001",
+      "source_dataset_version": "model-none",
+      "source_owner": "FishAI",
+      "ingestion_run_id": "01800000-0000-7000-8000-000000000099",
+      "observed_at_utc": "2026-09-18T12:00:00Z",
+      "published_at_utc": "2026-09-18T12:00:00Z",
+      "ingested_at_utc": "2026-09-18T12:00:00Z",
+      "revised_at_utc": "2026-09-18T12:00:00Z",
+      "geometry_precision": "cell",
+      "spatial_cell_id": "8629a12ffffffff",
+      "h3_res": 6,
+      "spatial_cell_id_public": "8529a13ffffffff",
+      "license": "LicenseRef-Internal",
+      "privacy_tier": "COARSENED",
+      "data_rights_status": "APPROVED_INTERNAL_ONLY",
+      "raw_payload_reference": "s3://fishai-dev/prediction/fixture/forecast-0001.json",
+      "transformation_version": "0.0.0-design",
+      "transform_hash": "sha256:fixture",
+      "source_checksum": "sha256:fixture",
+      "forecast_id": "01800000-0000-7000-8000-000000000031",
+      "project_id": "fishai",
+      "wedge_id": "UNRESOLVED",
+      "species_scope": "Oncorhynchus tshawytscha (AphiaID 158075) OR bind other candidate",
+      "geographic_scope": "UNRESOLVED bounded CA/OR management area",
+      "spatial_cell_or_polygon": "h3:8529a13ffffffff",
+      "issued_at_utc": "2026-09-18T12:00:00Z",
+      "forecast_window_start_utc": "2026-09-18T12:00:00Z",
+      "forecast_window_end_utc": "2026-09-20T12:00:00Z",
+      "target_definition": "Relative encounter likelihood rank vs comparable historical days (not catch guarantee).",
+      "prediction_value": 0.72,
+      "prediction_unit": "{relative_rank}",
+      "confidence_value": 0.4,
+      "confidence_category": "low",
+      "model_version": "none-design-stub",
+      "feature_snapshot_id": "01800000-0000-7000-8000-000000000032",
+      "source_data_cutoff_utc": "2026-09-18T11:00:00Z",
+      "known_missing_inputs": ["partner_outcomes_not_yet_collected"],
+      "user_visible_explanation": "Placeholder. Real explanations must cite official units and allowed features only.",
+      "user_visible_limitations": "This is not a guarantee of catch and does not replace weather, navigation, licensing, or fishing-regulation decisions.",
+      "user_visible_action_options": "Consider trip-area ranking only after official season/area status is checked at the agency source.",
+      "privacy_policy_applied": "public_h3_parent_res5; no exact coordinates",
+      "delivery_channel": "none",
+      "prediction_contract_category": "D",
+      "is_retrospective": false,
+      "notes": "Schema fixture. No model was trained."
+    }
+  ]
+}

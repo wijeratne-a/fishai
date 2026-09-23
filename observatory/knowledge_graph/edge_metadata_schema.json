@@ -1,0 +1,173 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:fishai:observatory:kg:edge_metadata_schema",
+  "title": "FishAI observatory knowledge-graph edge metadata",
+  "description": "Required payload on every KnowledgeEdge. Aligns evidence_type with observatory user_output_contract.md output classes and causal_status with the proposed causal-engine enum (causal_ecology/ was not present on 2026-09-18). Do not put NEVER_PUBLISH coordinates in geographic_applicability.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "evidence_type",
+    "source",
+    "citation",
+    "confidence",
+    "date_range",
+    "geographic_applicability",
+    "life_stage_applicability",
+    "causal_status",
+    "review_status",
+    "last_updated"
+  ],
+  "properties": {
+    "evidence_type": {
+      "description": "How this edge is known. Same vocabulary as user_output_contract.md §1.2, plus LITERATURE_SYNTHESIS and OFFICIAL_REGULATORY for catalog edges that are not observations.",
+      "type": "string",
+      "enum": [
+        "DIRECTLY_OBSERVED",
+        "REMOTELY_DETECTED",
+        "SURVEY_DERIVED",
+        "TAG_TELEMETRY_DERIVED",
+        "OPERATIONALLY_OBSERVED",
+        "MODEL_INFERRED",
+        "FORECAST",
+        "HYPOTHETICAL_RESEARCH",
+        "UNKNOWN_INSUFFICIENT",
+        "LITERATURE_SYNTHESIS",
+        "OFFICIAL_REGULATORY"
+      ]
+    },
+    "source": {
+      "description": "Stable source node @id or official URL. Not a dump pointer. Catalog-only until rights approval.",
+      "type": "string",
+      "minLength": 1
+    },
+    "citation": {
+      "description": "Human-readable citation. Papers are cited, not copied. License UNKNOWN until a rights pass.",
+      "type": "string",
+      "minLength": 1
+    },
+    "confidence": {
+      "description": "Qualitative only unless a named validation result calibrates it. Matches commercial uncertainty policy language.",
+      "type": "string",
+      "enum": ["none", "low", "medium", "high", "uncalibrated"]
+    },
+    "date_range": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["start", "end", "precision"],
+      "properties": {
+        "start": {
+          "type": ["string", "null"],
+          "description": "ISO date or datetime. Null if unknown.",
+          "pattern": "^[0-9]{4}(-[0-9]{2}(-[0-9]{2}(T[0-9]{2}:[0-9]{2}:[0-9]{2}Z)?)?)?$"
+        },
+        "end": {
+          "type": ["string", "null"],
+          "pattern": "^[0-9]{4}(-[0-9]{2}(-[0-9]{2}(T[0-9]{2}:[0-9]{2}:[0-9]{2}Z)?)?)?$"
+        },
+        "precision": {
+          "type": "string",
+          "enum": ["hour", "day", "month", "season", "year", "multi_year", "unknown"]
+        }
+      }
+    },
+    "geographic_applicability": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["region_id", "grain", "geometry_policy"],
+      "properties": {
+        "region_id": {
+          "type": ["string", "null"],
+          "description": "OceanRegion or official-unit @id. Null only if applicability is explicitly 'unbounded' (discouraged)."
+        },
+        "grain": {
+          "type": "string",
+          "enum": [
+            "lease_private",
+            "official_growing_area",
+            "estuary",
+            "sub_basin",
+            "management_area",
+            "stock",
+            "lme_or_eez",
+            "basin",
+            "unbounded_do_not_use"
+          ]
+        },
+        "geometry_policy": {
+          "type": "string",
+          "enum": ["PUBLIC", "COARSENED", "DELAYED", "RESTRICTED", "PRIVATE", "NEVER_PUBLISH", "NONE"]
+        },
+        "notes": { "type": "string" }
+      }
+    },
+    "life_stage_applicability": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "string",
+        "description": "LifeStage @id or taxonomy_standard.md code (egg, larva, juvenile, farmed_growout, ocean_immature_adult, …)."
+      }
+    },
+    "causal_status": {
+      "description": "Binding target for the causal engine. If observatory/causal_ecology/ later ships a different enum, migrate via the map in ontology.md §8 — do not silently rename.",
+      "type": "string",
+      "enum": [
+        "UNKNOWN",
+        "ASSOCIATIVE",
+        "PROXY",
+        "CONFOUNDER",
+        "MECHANISTIC_CAUSAL",
+        "INTERVENTION_SUPPORTED",
+        "HYPOTHETICAL",
+        "WRONG_TARGET",
+        "WRONG_STAGE",
+        "WRONG_GEOGRAPHY",
+        "WRONG_TIMESCALE",
+        "NOT_APPLICABLE"
+      ]
+    },
+    "review_status": {
+      "type": "string",
+      "enum": [
+        "UNREVIEWED",
+        "EDITOR_DRAFT",
+        "DOMAIN_REVIEWED",
+        "CONFLICT_OPEN",
+        "DEPRECATED",
+        "REJECTED"
+      ]
+    },
+    "last_updated": {
+      "type": "string",
+      "format": "date",
+      "description": "ISO date the edge was last edited in this graph."
+    },
+    "privacy_tier": {
+      "description": "Optional. Defaults to the stricter of subject and object. PUBLIC projection strips PRIVATE and NEVER_PUBLISH edges.",
+      "type": "string",
+      "enum": ["PUBLIC", "COARSENED", "DELAYED", "RESTRICTED", "PRIVATE", "NEVER_PUBLISH"]
+    },
+    "decision_applicability": {
+      "description": "Optional. Which operator decision this edge may inform. Prevents Category-letter collisions (oyster D-stress vs Chinook D-encounter).",
+      "type": "string",
+      "enum": [
+        "gigas_wa_72h_ops_stress",
+        "chinook_caor_24h_encounter",
+        "lobster_gom_next_trip_cpue",
+        "taxonomy_only",
+        "regulatory_display_only",
+        "not_a_decision"
+      ]
+    },
+    "prediction_contract_category": {
+      "description": "Optional. A–E from the commercial prediction contract. E covariates are never abundance.",
+      "type": "string",
+      "enum": ["A", "B", "C", "D", "E", "none"]
+    },
+    "emiv_id": {
+      "description": "Optional. Registry variable_id from observatory/emiv/ (v0.1-draft), e.g. EMIV-PHY-ATEMP-001. Compound nodes may use A|B. Graph URN @id may still use the old slug path.",
+      "type": "string"
+    },
+    "notes": { "type": "string" }
+  }
+}

@@ -1,0 +1,192 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta
+      name="description"
+      content="FishAI marine globe. Sample data. Not live tracking. Not harvest or food-safety advice."
+    />
+    <title>FishAI — Marine life globe</title>
+  </head>
+  <body class="globe-app">
+    <a class="skip" href="#species-search">Skip to species search</a>
+
+    <div id="first-run" class="first-run" role="dialog" aria-label="How to use this globe">
+      <p>
+        Spin the Earth. Search a species or a place. The empty ocean is unknown, not a live
+        animal map. Colored zones, when they appear, are labeled as confirmed observation,
+        current estimate, forecast, historical pattern, favorable habitat, or unknown.
+
+      </p>
+      <button type="button" id="first-run-dismiss" class="primary">Got it</button>
+    </div>
+
+    <header class="chrome-top">
+      <div class="chrome-top__row">
+        <p class="top__name">FishAI</p>
+        <section class="search-home" id="rail-find" aria-label="Species or place search">
+          <label class="visually-hidden" for="species-search">Find a saltwater species or a place</label>
+          <div class="search-row">
+            <input
+              id="species-search"
+              type="search"
+              autocomplete="off"
+              placeholder="Search a species or place"
+            />
+            <button type="button" id="species-find" class="primary">Find</button>
+          </div>
+          <ul id="species-results" class="results" hidden></ul>
+          <p id="species-empty" class="lede" hidden>No matching name.</p>
+        </section>
+        <nav class="nav" aria-label="Primary">
+          <button type="button" class="nav-btn is-active" data-nav="find">Find</button>
+          <button type="button" class="nav-btn" data-nav="explore">Explore</button>
+          <button type="button" class="nav-btn" data-nav="evidence">Evidence</button>
+          <button type="button" class="nav-btn" data-nav="learn">Learn</button>
+        </nav>
+        <label class="expert-toggle">
+          <input type="checkbox" id="expert-mode" />
+          Expert
+        </label>
+      </div>
+      <p class="banner-line" role="status">
+        Sample data. Not live tracking. Not harvest or food-safety advice.
+      </p>
+    </header>
+
+    <h1 id="page-h1" class="visually-hidden">Find a saltwater species</h1>
+
+    <div id="map" role="region" aria-label="Interactive globe of Earth and marine evidence" tabindex="0"></div>
+    <div id="map-legend" class="map-legend" aria-label="Map legend"></div>
+    <p class="map-stamp" id="map-stamp">3D globe · Not live tracking</p>
+    <p id="map-view-status" class="map-view-status" aria-live="polite">3D globe · Not live tracking</p>
+    <p id="resolution-chip" class="resolution-chip">Imagery resolution will appear after the globe loads.</p>
+    <p id="map-coords" class="map-coords">—</p>
+    <p id="map-status" class="sr-live" aria-live="polite"></p>
+
+    <button type="button" id="toggle-controls" class="panel-toggle panel-toggle--left" aria-expanded="false" aria-controls="rail-explore">
+      Layers
+    </button>
+    <aside class="float-panel float-panel--left" id="rail-explore" hidden aria-label="Map controls">
+      <section>
+        <h2>This globe</h2>
+        <p class="lede" id="map-scope">
+          Drag to spin, scroll to zoom, right-drag or Control-drag to tilt. Double-click zooms in.
+          This is not live animal tracking.
+        </p>
+        <label class="toggle">
+          <input type="checkbox" id="flat-map" />
+          Use a flat map instead of the globe
+        </label>
+        <p class="camera-row">
+          <button type="button" id="home-view" class="secondary">Home</button>
+          <button type="button" id="north-up" class="secondary">North up</button>
+          <button type="button" id="reset-tilt" class="secondary">Reset tilt</button>
+          <button type="button" id="view-back" class="secondary">Back</button>
+        </p>
+      </section>
+      <section>
+        <h2>Pick a place</h2>
+        <label class="stack">
+          <span class="visually-hidden">Select a Willapa demo place</span>
+          <select id="cell-select"></select>
+        </label>
+        <p class="hint">Willapa places only apply to the Learn oyster demo.</p>
+      </section>
+      <section>
+        <h2>Gaps</h2>
+        <label class="toggle">
+          <input type="checkbox" id="unknown-map" />
+          Highlight where we have no estimate
+        </label>
+        <p class="hint" id="gap-hint">
+          Stripes mean we do not know. They do not mean the ocean is empty.
+        </p>
+      </section>
+      <section>
+        <h2>Depth</h2>
+        <fieldset>
+          <legend class="visually-hidden">Depth band</legend>
+          <label><input type="radio" name="depth" value="unknown_depth" checked /> Depth unknown</label>
+          <label><input type="radio" name="depth" value="surface" /> Surface water</label>
+          <label><input type="radio" name="depth" value="intertidal" /> Tide flat (air or water)</label>
+          <label><input type="radio" name="depth" value="0_10m" /> 0–10 meters</label>
+        </fieldset>
+        <p class="hint" id="depth-disclaimer">
+          Depth is unknown unless a record or model actually has it.
+        </p>
+      </section>
+      <section>
+        <h2>Layers</h2>
+        <fieldset>
+          <legend class="visually-hidden">Overlays</legend>
+          <label><input type="checkbox" id="overlay-sst" /> Water-skin temperature (°C)</label>
+          <label><input type="checkbox" id="overlay-habitat" /> Favorable conditions (not presence)</label>
+          <label class="expert-only" hidden>
+            <input type="checkbox" id="overlay-density" /> Sample counts
+          </label>
+        </fieldset>
+      </section>
+    </aside>
+
+    <button type="button" id="toggle-answer" class="panel-toggle panel-toggle--right" aria-expanded="true" aria-controls="answer-dock">
+      Answer
+    </button>
+    <aside class="float-panel float-panel--right" id="answer-dock" aria-label="Plain-language answer">
+      <section id="answer-strip" class="answer-strip" aria-label="Plain-language answer"></section>
+      <details id="evidence-details">
+        <summary>Evidence and method</summary>
+        <div id="evidence" class="evidence" tabindex="-1">
+          <h2 class="visually-hidden">Evidence</h2>
+          <p id="evidence-empty" class="lede">
+            Search a species or pick a place. This panel stays short unless Expert is on.
+          </p>
+          <div id="evidence-body" hidden></div>
+        </div>
+      </details>
+      <aside id="learn" class="evidence learn" hidden tabindex="-1">
+        <h2>Learn</h2>
+        <p><strong>Measured</strong> means someone recorded a value (for example water temperature).</p>
+        <p><strong>Guessed</strong> means a model inferred something. It is not a sighting.</p>
+        <p><strong>Future</strong> means a forecast for a named time window. It is not live tracking.</p>
+        <p>
+          <strong>Don’t know</strong> (stripes) means we do not have an estimate. It does not mean
+          the ocean is empty. Unknown is the default scientific status.
+        </p>
+        <p>
+          This globe does not collapse answers into “where the fish are.” Observed presence,
+          occurrence probability, relative abundance, movement, habitat suitability, and unknown
+          stay separate. Habitat is favorable conditions — not confirmed presence. Current
+          estimates and forecasts stay off unless a model card is actually published.
+        </p>
+        <p>
+          The Willapa Bay oyster screen is a <em>working-conditions</em> demo. It is farm air, tide,
+          and waves — not oyster GPS. Searching yellowfin tuna (or most names) should say we have no
+          current location and no forecast.
+        </p>
+        <p>
+          A species page may show past reports from public databases. Those are a historical
+          pattern, not where the animals are now. Sensitive taxa (for example white shark) withhold
+          locations.
+        </p>
+        <p>
+          <button type="button" id="learn-oyster" class="primary">Open the oyster working-conditions demo</button>
+        </p>
+      </aside>
+    </aside>
+
+    <footer class="chrome-bottom" aria-label="As-of time and imagery">
+      <div class="timebar">
+        <div><span class="k">As of</span> <span id="t-asof">—</span></div>
+        <div><span class="k">Soon</span> <span id="t-soon">No forecast issued</span></div>
+        <div><span class="k">Last measured here</span> <span id="t-obs">—</span></div>
+        <div class="expert-only" hidden>
+          <span class="k">Model</span> <span id="t-model">—</span>
+        </div>
+      </div>
+    </footer>
+
+    <script type="module" src="/src/main.ts"></script>
+  </body>
+</html>

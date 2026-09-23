@@ -1,0 +1,597 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://fishai.local/observatory/model_cards/model_card_schema.json",
+  "title": "FishAI Species Model Card",
+  "description": "Immutable Species Model Card for every published species model and every globe biological/operational output. Status 2026-09-18: no card may be PUBLISHED or OPERATIONAL. Cards exist as SPEC / unpublished baseline drafts only.",
+  "type": "object",
+  "additionalProperties": false,
+  "x-as_of_date": "2026-09-18",
+  "x-training_performed": false,
+  "x-field-count": {
+    "scientific_contract_fields": 31,
+    "governance_and_link_fields": 14,
+    "required_top_level_properties": 45,
+    "defined_top_level_properties": 50,
+    "globe_link_trio": ["card_id", "current_model_version", "claim_pack"]
+  },
+  "x-scientific-contract-fields": [
+    "species_identity",
+    "taxonomic_authority",
+    "geographic_scope",
+    "depth_scope",
+    "life_stage",
+    "prediction_target",
+    "output_category",
+    "support_tier",
+    "training_data_sources",
+    "data_rights_status",
+    "observation_count",
+    "observation_methods",
+    "environmental_variables",
+    "feature_availability_latency",
+    "model_architecture",
+    "baseline_comparison",
+    "validation_approach",
+    "performance_metrics",
+    "calibration_results",
+    "known_biases",
+    "known_failure_modes",
+    "uncertainty_method",
+    "geographic_seasonal_depth_gaps",
+    "sensitive_location_rules",
+    "last_retrained_date",
+    "current_model_version",
+    "reviewer_status",
+    "permitted_user_claims",
+    "prohibited_user_claims",
+    "recommended_use_cases",
+    "not_recommended_use_cases"
+  ],
+  "required": [
+    "card_id",
+    "schema_version",
+    "card_status",
+    "operational_status",
+    "claim_pack",
+    "as_of_date",
+    "wedge_id",
+    "wedge_lock_status",
+    "factory_step",
+    "observatory_output_class",
+    "capability_class",
+    "interviews_completed",
+    "observations_ingested",
+    "evidence_tier_strongest_label",
+    "species_identity",
+    "taxonomic_authority",
+    "geographic_scope",
+    "depth_scope",
+    "life_stage",
+    "prediction_target",
+    "output_category",
+    "support_tier",
+    "training_data_sources",
+    "data_rights_status",
+    "observation_count",
+    "observation_methods",
+    "environmental_variables",
+    "feature_availability_latency",
+    "model_architecture",
+    "baseline_comparison",
+    "validation_approach",
+    "performance_metrics",
+    "calibration_results",
+    "known_biases",
+    "known_failure_modes",
+    "uncertainty_method",
+    "geographic_seasonal_depth_gaps",
+    "sensitive_location_rules",
+    "last_retrained_date",
+    "current_model_version",
+    "reviewer_status",
+    "permitted_user_claims",
+    "prohibited_user_claims",
+    "recommended_use_cases",
+    "not_recommended_use_cases"
+  ],
+  "properties": {
+    "card_id": {
+      "type": "string",
+      "minLength": 1,
+      "description": "Stable public identifier. Globe cells and API outputs must carry this exact id. Missing card_id ⇒ layer cannot be published.",
+      "pattern": "^SMC-[A-Z0-9][A-Z0-9_-]+$"
+    },
+    "schema_version": {
+      "type": "string",
+      "const": "SMC-SCHEMA-2026-09-18-v1"
+    },
+    "card_status": {
+      "type": "string",
+      "enum": ["NOT_PUBLISHED", "PUBLISHED", "SUPERSEDED", "WITHDRAWN"],
+      "description": "Publication of the card itself. Drafts today are NOT_PUBLISHED. Past PUBLISHED cards are never overwritten."
+    },
+    "operational_status": {
+      "type": "string",
+      "enum": ["NOT_OPERATIONAL", "OPERATIONAL"],
+      "description": "Whether any live score, map, or brief is issued from this model version. Today: NOT_OPERATIONAL for all cards."
+    },
+    "claim_pack": {
+      "type": "string",
+      "minLength": 1,
+      "description": "Identifier of the permitted/prohibited claim pack bound to this card. Globe and product copy may only use sentences in this pack."
+    },
+    "as_of_date": {
+      "type": "string",
+      "format": "date",
+      "description": "Card snapshot date (ISO). Replay and evaluation use this card as it existed on as_of_date; later cards get new card_id."
+    },
+    "wedge_id": {
+      "type": "string",
+      "enum": [
+        "UNRESOLVED",
+        "W1_oyster_wa_ops_72h",
+        "W2_chinook_caor_encounter_24_48h",
+        "W3_lobster_gom_cpue_next_trip",
+        "OBSERVATORY_TAXON_ONLY"
+      ]
+    },
+    "wedge_lock_status": {
+      "type": "string",
+      "enum": ["UNRESOLVED", "LOCKED"]
+    },
+    "factory_step": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 8,
+      "description": "Highest completed species-model factory step (1 taxonomy … 7 publish … 8 monitor). Publish is step 7. Nothing has reached step 7 as of 2026-09-18."
+    },
+    "observatory_output_class": {
+      "type": "string",
+      "enum": [
+        "DIRECTLY OBSERVED",
+        "REMOTELY DETECTED",
+        "SURVEY-DERIVED",
+        "TAG/TELEMETRY-DERIVED",
+        "OPERATIONALLY OBSERVED",
+        "MODEL-INFERRED",
+        "FORECAST",
+        "HYPOTHETICAL/RESEARCH MODE",
+        "UNKNOWN/INSUFFICIENT DATA"
+      ]
+    },
+    "capability_class": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 7,
+      "description": "1 observable today; 2 inferable today; 3 forecastable today; 4 requires new data infrastructure; 5 scientifically plausible but unproven; 6 technically speculative; 7 physically impossible or not currently measurable."
+    },
+    "interviews_completed": {
+      "type": "integer",
+      "minimum": 0,
+      "description": "Count of operator/domain interviews actually completed for this card. 0 on 2026-09-18."
+    },
+    "observations_ingested": {
+      "type": "integer",
+      "minimum": 0,
+      "description": "Count of biological/operational observation records ingested into FishAI stores for this model. 0 on 2026-09-18. Catalog metadata is not ingest."
+    },
+    "evidence_tier_strongest_label": {
+      "type": "string",
+      "enum": ["none", "T1_direct", "T2_operational", "T3_remote_or_modeled", "T4_unverified"],
+      "description": "Strongest label evidence that would support an issued score. Ceiling rule: user-facing claim ≤ this tier. T4 never a prediction."
+    },
+    "supersedes_card_id": {
+      "type": ["string", "null"],
+      "description": "Prior immutable card this snapshot replaces. Null for first draft. Never mutate the prior file."
+    },
+    "superseded_by_card_id": {
+      "type": ["string", "null"],
+      "description": "Set only on the old card when a newer card is published. Old file remains on disk."
+    },
+    "red_team_blocker_ids": {
+      "type": "array",
+      "items": { "type": "string" },
+      "description": "Open BLOCKER/HIGH IDs from artifacts/scientific_red_team that still apply."
+    },
+    "extrapolation_flag": {
+      "type": "boolean",
+      "description": "True if any issued score would be outside trained space/season/depth/era. Vacuously true when no model is trained."
+    },
+    "notes": {
+      "type": "string"
+    },
+    "species_identity": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "common_name",
+        "scientific_name_accepted",
+        "worms_aphiaid",
+        "lsid",
+        "principal_synonyms",
+        "common_name_collisions",
+        "population_unit"
+      ],
+      "properties": {
+        "common_name": { "type": "string" },
+        "scientific_name_accepted": { "type": "string" },
+        "worms_aphiaid": { "type": "integer" },
+        "lsid": { "type": "string" },
+        "principal_synonyms": {
+          "type": "array",
+          "items": { "type": "string" }
+        },
+        "common_name_collisions": {
+          "type": "array",
+          "items": { "type": "string" }
+        },
+        "population_unit": { "type": "string" }
+      }
+    },
+    "taxonomic_authority": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["authority", "url", "access_date", "worms_status", "license_status"],
+      "properties": {
+        "authority": { "type": "string", "const": "WoRMS" },
+        "url": { "type": "string", "format": "uri" },
+        "access_date": { "type": "string", "format": "date" },
+        "worms_status": { "type": "string" },
+        "license_status": {
+          "type": "string",
+          "enum": [
+            "UNKNOWN",
+            "APPROVED_OPEN_COMMERCIAL",
+            "APPROVED_WITH_ATTRIBUTION",
+            "APPROVED_INTERNAL_ONLY",
+            "APPROVED_PARTNER_CONSENT",
+            "CONDITIONAL_REVIEW_REQUIRED",
+            "PAID_LICENSE_REQUIRED",
+            "RESEARCH_ONLY",
+            "NONCOMMERCIAL_ONLY",
+            "RESTRICTED",
+            "REJECTED"
+          ]
+        },
+        "notes": { "type": "string" }
+      }
+    },
+    "geographic_scope": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["description", "bounding_units", "public_grain", "founder_locked"],
+      "properties": {
+        "description": { "type": "string" },
+        "bounding_units": {
+          "type": "array",
+          "items": { "type": "string" }
+        },
+        "public_grain": { "type": "string" },
+        "founder_locked": { "type": "boolean" }
+      }
+    },
+    "depth_scope": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["depth_band", "depth_known"],
+      "properties": {
+        "depth_band": { "type": "string" },
+        "depth_known": { "type": "boolean" },
+        "notes": { "type": "string" }
+      }
+    },
+    "life_stage": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["in_scope", "out_of_scope"],
+      "properties": {
+        "in_scope": { "type": "string" },
+        "out_of_scope": { "type": "string" }
+      }
+    },
+    "prediction_target": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["name", "definition", "horizon", "unit", "label_id"],
+      "properties": {
+        "name": { "type": "string" },
+        "definition": { "type": "string" },
+        "horizon": { "type": "string" },
+        "unit": { "type": "string" },
+        "label_id": { "type": "string" }
+      }
+    },
+    "output_category": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["prediction_contract_category", "visual_truth_state"],
+      "properties": {
+        "prediction_contract_category": {
+          "type": "string",
+          "enum": ["A", "B", "C", "D", "E", "NONE"],
+          "description": "A direct count; B survey index; C effort-normalized catch; D relative habitat/encounter/risk; E unverified indicator (never a prediction). NONE = do not issue."
+        },
+        "visual_truth_state": {
+          "type": "string",
+          "enum": [
+            "DIRECT_OBSERVATION",
+            "REMOTE_DETECTION",
+            "SURVEY_INDEX",
+            "TAGGED_INDIVIDUAL",
+            "EDNA_DETECTION",
+            "ACOUSTIC_DETECTION",
+            "SONAR_BIOMASS_ESTIMATE",
+            "OPERATIONAL_CATCH_OR_EFFORT",
+            "MODEL_INFERENCE",
+            "FORECAST",
+            "HISTORICAL_RANGE",
+            "HABITAT_SUITABILITY",
+            "UNKNOWN",
+            "DATA_GAP",
+            "RESTRICTED_OR_COARSENED"
+          ]
+        }
+      }
+    },
+    "support_tier": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["factory_eligibility_tier", "emitted_tier", "evidence_ceiling_tier"],
+      "properties": {
+        "factory_eligibility_tier": {
+          "type": "string",
+          "enum": ["T0", "T1", "T2", "T3", "T4", "T5", "T6"]
+        },
+        "emitted_tier": {
+          "type": "string",
+          "enum": ["T0", "T1", "T2", "T3", "T4", "T5", "T6"]
+        },
+        "evidence_ceiling_tier": {
+          "type": "string",
+          "enum": ["T0", "T1", "T2", "T3", "T4", "T5", "T6"]
+        },
+        "notes": { "type": "string" }
+      }
+    },
+    "training_data_sources": {
+      "type": "array",
+      "description": "Sources that would be used to train. Empty or SPEC-only citations allowed. Do not list sources not rights-cleared as if they were ingested.",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["source_id", "role", "ingested"],
+        "properties": {
+          "source_id": { "type": "string" },
+          "role": {
+            "type": "string",
+            "enum": ["label", "feature", "context", "baseline_only", "forbidden", "not_used"]
+          },
+          "ingested": { "type": "boolean" },
+          "rights_class": { "type": "string" },
+          "notes": { "type": "string" }
+        }
+      }
+    },
+    "data_rights_status": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["overall", "human_legal_review", "ingest_authorized"],
+      "properties": {
+        "overall": { "type": "string" },
+        "human_legal_review": {
+          "type": "string",
+          "enum": ["REQUIRED", "CLEARED", "BLOCKED"]
+        },
+        "ingest_authorized": { "type": "boolean" },
+        "privacy_default": { "type": "string" },
+        "notes": { "type": "string" }
+      }
+    },
+    "observation_count": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["ingested_n", "catalog_metadata_n", "partner_label_n"],
+      "properties": {
+        "ingested_n": { "type": "integer", "minimum": 0 },
+        "catalog_metadata_n": {
+          "type": ["integer", "null"],
+          "description": "OBIS/GBIF metadata total if catalogued; not a census; not ingested."
+        },
+        "partner_label_n": { "type": "integer", "minimum": 0 }
+      }
+    },
+    "observation_methods": {
+      "type": "array",
+      "items": { "type": "string" }
+    },
+    "environmental_variables": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["name", "role", "mechanism_status"],
+        "properties": {
+          "name": { "type": "string" },
+          "role": {
+            "type": "string",
+            "enum": ["primary", "supporting", "context_only", "forbidden_as_label", "not_used"]
+          },
+          "mechanism_status": {
+            "type": "string",
+            "enum": ["causal", "correlative", "proxy", "unknown", "wrong_variable"]
+          },
+          "notes": { "type": "string" }
+        }
+      }
+    },
+    "feature_availability_latency": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["as_of_replay_implemented", "availability_at_prediction_time", "notes"],
+      "properties": {
+        "as_of_replay_implemented": { "type": "boolean" },
+        "availability_at_prediction_time": {
+          "type": "string",
+          "enum": ["implemented", "specified_not_built", "missing"]
+        },
+        "notes": { "type": "string" }
+      }
+    },
+    "model_architecture": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["family", "trained", "description"],
+      "properties": {
+        "family": {
+          "type": "string",
+          "enum": [
+            "none",
+            "expert_rule",
+            "climatology",
+            "expert_rule_plus_climatology",
+            "persistence",
+            "statistical",
+            "ml",
+            "ensemble"
+          ]
+        },
+        "trained": { "type": "boolean" },
+        "description": { "type": "string" }
+      }
+    },
+    "baseline_comparison": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["baselines_specified", "baselines_fitted", "relevant_baseline_id", "beats_relevant_baseline"],
+      "properties": {
+        "baselines_specified": { "type": "boolean" },
+        "baselines_fitted": { "type": "boolean" },
+        "relevant_baseline_id": { "type": ["string", "null"] },
+        "beats_relevant_baseline": {
+          "type": "string",
+          "enum": ["yes", "no", "not_evaluated"]
+        },
+        "notes": { "type": "string" }
+      }
+    },
+    "validation_approach": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["protocol_id", "time_forward_run", "spatial_holdout_run", "prospective_pilot_run", "status"],
+      "properties": {
+        "protocol_id": { "type": "string" },
+        "time_forward_run": { "type": "boolean" },
+        "spatial_holdout_run": { "type": "boolean" },
+        "prospective_pilot_run": { "type": "boolean" },
+        "status": {
+          "type": "string",
+          "enum": ["NOT_RUN", "FAILED", "PASSED", "BOUNDED"]
+        }
+      }
+    },
+    "performance_metrics": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["available", "primary_metric", "value", "split"],
+      "properties": {
+        "available": { "type": "boolean" },
+        "primary_metric": { "type": ["string", "null"] },
+        "value": { "type": ["number", "string", "null"] },
+        "split": { "type": ["string", "null"] },
+        "notes": { "type": "string" }
+      }
+    },
+    "calibration_results": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["calibration_plot_accepted_by_human", "ece_or_coverage", "notes"],
+      "properties": {
+        "calibration_plot_accepted_by_human": { "type": "boolean" },
+        "ece_or_coverage": { "type": ["string", "null"] },
+        "notes": { "type": "string" }
+      }
+    },
+    "known_biases": {
+      "type": "array",
+      "items": { "type": "string" }
+    },
+    "known_failure_modes": {
+      "type": "array",
+      "items": { "type": "string" }
+    },
+    "uncertainty_method": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["method", "confidence_labels_allowed", "numeric_probabilities_allowed"],
+      "properties": {
+        "method": { "type": "string" },
+        "confidence_labels_allowed": { "type": "boolean" },
+        "numeric_probabilities_allowed": { "type": "boolean" }
+      }
+    },
+    "geographic_seasonal_depth_gaps": {
+      "type": "array",
+      "items": { "type": "string" }
+    },
+    "sensitive_location_rules": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["publish_class", "never_publish", "public_max_grain"],
+      "properties": {
+        "publish_class": {
+          "type": "string",
+          "enum": ["PUBLIC", "COARSENED", "DELAYED", "RESTRICTED", "PRIVATE", "NEVER_PUBLISH"]
+        },
+        "never_publish": {
+          "type": "array",
+          "items": { "type": "string" }
+        },
+        "public_max_grain": { "type": "string" }
+      }
+    },
+    "last_retrained_date": {
+      "type": ["string", "null"],
+      "description": "ISO date of last training run, or null if never trained."
+    },
+    "current_model_version": {
+      "type": "string",
+      "minLength": 1,
+      "description": "Model version string. Globe and API must echo this. SPEC / DRAFT versions are not operational."
+    },
+    "reviewer_status": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["status", "human_reviewer_names", "red_team_signoff", "domain_reviewer_signoff"],
+      "properties": {
+        "status": {
+          "type": "string",
+          "enum": ["REQUIRED_HUMAN_REVIEW", "APPROVED", "REJECTED", "BOUNDED"]
+        },
+        "human_reviewer_names": {
+          "type": "array",
+          "items": { "type": "string" },
+          "description": "Empty array means none named."
+        },
+        "red_team_signoff": { "type": "boolean" },
+        "domain_reviewer_signoff": { "type": "boolean" },
+        "review_date": { "type": ["string", "null"], "format": "date" }
+      }
+    },
+    "permitted_user_claims": {
+      "type": "array",
+      "items": { "type": "string" }
+    },
+    "prohibited_user_claims": {
+      "type": "array",
+      "items": { "type": "string" }
+    },
+    "recommended_use_cases": {
+      "type": "array",
+      "items": { "type": "string" }
+    },
+    "not_recommended_use_cases": {
+      "type": "array",
+      "items": { "type": "string" }
+    }
+  }
+}

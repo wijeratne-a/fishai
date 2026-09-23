@@ -1,0 +1,110 @@
+{
+  "type": "FeatureCollection",
+  "name": "approximate_public_land_masses",
+  "features": [
+    {
+      "type": "Feature",
+      "properties": {
+        "name": "Long Beach Peninsula (approximate, not a cadastral map)",
+        "kind": "land"
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              -124.09,
+              46.35
+            ],
+            [
+              -124.035,
+              46.35
+            ],
+            [
+              -124.03,
+              46.55
+            ],
+            [
+              -124.038,
+              46.64
+            ],
+            [
+              -124.055,
+              46.705
+            ],
+            [
+              -124.08,
+              46.728
+            ],
+            [
+              -124.1,
+              46.7
+            ],
+            [
+              -124.09,
+              46.35
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "name": "Willapa mainland (approximate, not a cadastral map)",
+        "kind": "land"
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              -123.78,
+              46.35
+            ],
+            [
+              -123.62,
+              46.35
+            ],
+            [
+              -123.62,
+              46.76
+            ],
+            [
+              -123.88,
+              46.76
+            ],
+            [
+              -123.94,
+              46.72
+            ],
+            [
+              -123.9,
+              46.69
+            ],
+            [
+              -123.82,
+              46.66
+            ],
+            [
+              -123.78,
+              46.58
+            ],
+            [
+              -123.79,
+              46.48
+            ],
+            [
+              -123.81,
+              46.4
+            ],
+            [
+              -123.78,
+              46.35
+            ]
+          ]
+        ]
+      }
+    }
+  ]
+}

@@ -1,0 +1,156 @@
+current_text,problem,replacement_plain_english,location_file_component,severity
+"FishAI · Ocean Life Globe","Title promises a life globe; the screen is a Willapa oyster working-conditions fixture.","FishAI · Willapa oyster demo (not a fish tracker)",index.html header.banner__mark,P0
+"FishAI Ocean Life Globe — Willapa prototype (fixture)","Browser tab still leads with Globe; 'fixture' is lab slang.","FishAI — Willapa Bay demo (sample data)",index.html title,P1
+"Not a live fish map. All values are synthetic fixtures generated 2026-09-18. No OBIS, GBIF, AIS, GFW, or catch locations. Not harvest authorization. Not food-safety. Not WA DOH open/closed.","First sentence is a pile of acronyms and legal NOTs. A new user still does not know what TO do.","Sample data (18 Sep 2026). This is not tracking animals and not a harvest or food-safety notice. Search a species or open the Willapa oyster demo.",index.html header.banner__alert,P0
+"Skip to evidence explorer","'Evidence explorer' is not a user goal.","Skip to what's going on here",index.html a.skip,P2
+"AOI","Internal GIS term.","Place",index.html aside.rail h2,P0
+"Willapa Bay, Washington — named public water body, coarsened H3-like cells (~20 km²). Approximate outline, not a shoreline survey, not a lease map.","Correct but packed with H3, coarsened, lease.","Willapa Bay, Washington. Map cells are large on purpose (~20 km²). Not a shoreline chart and not a farm map.",index.html AOI paragraph.lede,P1
+"Globe mode","Implies 10-mode globe product.","Map view",index.html h2,P0
+"Mode 1 · Earth / surface (2D map)","Numbered mode catalog. Users do not have a Mode 1.","Map (2D)",index.html input[value=earth_surface] + types.ts MODE_LABELS,P0
+"Mode 8 · Evidence / provenance","Mode 8 is meaningless; evidence is already the right panel.","Show sensors (expert)",index.html input[value=evidence_provenance],P0
+"Mode 9 · Uncertainty / data-gap","'Uncertainty / data-gap' is two expert nouns.","Show where we have no data",index.html input[value=uncertainty_data_gap],P0
+"Later modes (not in prototype)","Advertises a product that does not exist (subsurface, food-web…).","Remove from main UI; mention in Learn if needed.",index.html ul.later,P0
+"2 Subsurface","Dead link in a list. Looks broken.","(remove)",index.html ul.later,P1
+"3 Vertical slice","Dead.","(remove)",index.html ul.later,P1
+"4 Horizontal slice","Dead.","(remove)",index.html ul.later,P1
+"5 Seafloor","Dead.","(remove)",index.html ul.later,P1
+"6 Time-lapse","Dead; also sounds like live tracking.","(remove from main; later: Play forecast frames)",index.html ul.later,P1
+"7 Compare","Dead.","(remove)",index.html ul.later,P1
+"10 Food-web","Dead; sounds like a game.","(remove)",index.html ul.later,P0
+"Unknown map","Sounds like a missing map.","Gaps in the data",index.html h2,P0
+"Show ignorance as the feature","Philosophy slogan. Founder-unreadable.","Highlight places we cannot estimate",index.html #unknown-map label,P0
+"Hatched cells are not empty ocean. Unknown is not zero probability and not “no oysters.”","Triple negative; 'zero probability' is stats-speak.","Stripes mean we don't know — not that the water is empty.",index.html Unknown map .hint,P1
+"Depth (stub)","'(stub)' is an engineering leftover on a user screen.","Depth this estimate refers to",index.html h2,P0
+"Surface","Ambiguous (map surface vs sea surface vs animal).","Sea surface (top of the water)",index.html depth radio,P1
+"Intertidal / emersion","Emersion is oyster-farm jargon.","Tide flats (in air at low tide)",index.html depth radio,P0
+"0–10 m","OK if species context exists; here no species.","0–10 meters down",index.html depth radio,P2
+"Unknown depth","OK but needs consequence in plain words.","Depth not identified",index.html depth radio,P2
+"Depth-integrated views mix bands and hide vertical structure. They are not a water column of animals. Unknown depth blocks High confidence.","Scientist-to-scientist.","This control is which depth we are talking about — not a stack of fish. If depth is unknown we will not say we are sure.",index.html #depth-disclaimer,P1
+"Unknown depth is selected. Vertical position is not identified. Do not read this as a depth-integrated school of animals. Unknown depth blocks High confidence.","Same density; 'school of animals' is a warning only experts parse.","We do not know the depth. This is not a picture of fish in the water column. Certainty cannot be High.",src/main.ts depthDisclaimer unknown_depth,P1
+"Intertidal / emersion band. For oysters this is air exposure vs water, not a 50-layer z-grid. Depth-integrated maps hide that distinction.","z-grid is modeler slang; only makes sense for oysters.","For this oyster demo: air at low tide vs underwater — not a 50-layer ocean model.",src/main.ts depthDisclaimer intertidal,P1
+"Layer stubs","Engineering leftover.","Optional overlays",index.html h2,P0
+"Synthetic SST (°C, water skin only)","SST + synthetic + skin.","Sea-surface temperature (°C, top millimeter of water — not animals)",index.html #overlay-sst,P1
+"Habitat class (not presence)","'Class' + parenthetical.","Habitat type (not 'animals are here')",index.html #overlay-habitat,P1
+"Observation density (synthetic n)","n is stats.","How many sample records (demo counts — not a headcount)",index.html #overlay-density,P1
+"Overlays do not replace visual-truth outlines. SST is not oyster tissue temperature and not a fish map.","'Visual-truth outlines' is spec jargon.","Colors on the cells still mean observed / guessed / forecast / unknown. Temperature is water, not oyster bodies or fish.",index.html layer hint,P1
+"Jump to cell","Cells are not a user concept.","Jump to a place on this bay",index.html h2,P0
+"Select a coarsened cell","Coarsened is privacy/grid jargon.","Choose a place",src/main.ts placeholder option,P0
+"WILLAPA-C17 · FORECAST · W1 OPS-RISK","ID + enum + program code. Unreadable.","Nahcotta area — forecast of farm working conditions (demo)",src/main.ts option.textContent + geojson cellId,P0
+"WILLAPA-C01 · DIRECT_OBSERVATION","Enum dump.","Northern entrance — measured water temperature (demo sensor)",src/main.ts + willapa-cells.geojson,P0
+"WILLAPA-C05 · UNKNOWN","Sounds like a bug.","Central Willapa — not enough information",src/main.ts,P0
+"WILLAPA-C06 · DATA_GAP","DATA_GAP vs UNKNOWN is a scientist split.","Northeast reach — no samples in this window",src/main.ts,P0
+"WILLAPA-C07 · RESTRICTED_OR_COARSENED","Looks like a database error.","Peninsula shore — details withheld for privacy",src/main.ts,P0
+"WILLAPA-C08 · MODEL_INFERENCE","Inference is academic.","Central Willapa — model guess (not a sighting)",src/main.ts,P0
+"WILLAPA-C04 · HABITAT_SUITABILITY","Suitability ≠ presence; label doesn't say that.","Central Willapa — habitat type only (not 'oysters are here')",src/main.ts,P0
+"Legend","OK but below the fold.","What the colors mean",src/legend.ts h2,P1
+"Colorblind-safe Okabe–Ito hues plus pattern. Never a single red “life” heatmap.","Palette brand name in the legend.","Patterns plus colors so this is not a red 'fish here' map.",src/legend.ts .hint,P2
+"Direct observation (solid)","OK-ish; 'observation' of what?","Measured here (solid outline)",src/types.ts TRUTH_LABELS + legend,P1
+"Model inference (dotted, translucent)","Inference.","Guess from a rule or model (dotted)",src/types.ts TRUTH_LABELS,P0
+"Forecast (dashed, future window)","Better than others; still technical.","About the next few days (dashed)",src/types.ts TRUTH_LABELS,P1
+"Habitat suitability (not presence)","Keep the not-presence; drop suitability.","Places that look like the right habitat — not a sighting",src/types.ts TRUTH_LABELS,P1
+"Unknown / insufficient evidence","Two phrases for one idea.","Not enough information",src/types.ts TRUTH_LABELS,P1
+"Data gap (not absence)","Gap vs unknown vs absence — three-way distinction on the main legend.","No samples here (not the same as 'zero animals')",src/types.ts TRUTH_LABELS,P1
+"Restricted or coarsened (privacy)","Coarsened.","Hidden or shown only as a large area (privacy)",src/types.ts TRUTH_LABELS,P1
+"Solid outline = observation. Dotted = inference. Dashed = forecast. Hatch = unknown/gap/privacy.","Four encodings in one line; inference/hatch/gap stacked.","Solid = measured. Dotted = guess. Dashed = future. Stripes = we don't know or we are hiding detail.",src/legend.ts,P1
+"SST overlay: yellow→blue sequential, units °C, water skin only — not animals, not tissue temperature.","Cartography lecture.","Dots show water-surface temperature in °C — not animals.",src/legend.ts overlayNotes,P2
+"Habitat overlay: green sequential (reduced / typical / elevated). Not presence.","Reduced/typical/elevated of what?","Green dots = habitat type (low / usual / high). Not 'animals are here'.",src/legend.ts,P1
+"Density labels: synthetic n protocol rows, not a head-count of oysters or fish.","n protocol rows.","Numbers are demo sample counts, not a count of animals.",src/legend.ts,P1
+"Unknown map on: hatched grey = gap/unknown; muted green = some fixture exists. Gap is not absence.","Fixture exists.","Grey stripes = no estimate. Faint green = some demo data exists. Stripes are not empty ocean.",src/legend.ts,P1
+"FIXTURE · NOT FOR NAVIGATION · NOT A LIVE ANIMAL MAP","FIXTURE is lab slang; all-caps stamp.","SAMPLE DATA · not a chart for boats · not live tracking",index.html .map-stamp,P1
+"Approximate public geography · fixture cells · not for navigation · not a live animal map","Same.","Approximate public map · sample cells · not for navigation · not live tracking",src/mapApp.ts AttributionControl,P2
+"Use ⌘ + scroll to zoom the map","OK; extra friction.","Scroll to pan; ⌘-scroll to zoom (keep)",MapLibre cooperativeGestures overlay,P2
+"Evidence explorer","Lab name; not 'answer'.","What's going on here",index.html #evidence h2,P0
+"Click a cell, or choose one in the list. Every cell has exactly one visual-truth state and the 16 provenance fields.","Visual-truth + provenance + 16 fields.","Click the map or pick a place. We'll say what we know, what we guessed, and what we don't know.",index.html #evidence-empty,P0
+"Nahcotta-adjacent public water (W1 OPS-RISK example cell)","W1 OPS-RISK in the place name.","Public water near Nahcotta (oyster working-conditions demo)",willapa-cells.geojson label + evidence lede,P0
+"WILLAPA-C17","Grid ID as a badge.","Nahcotta-area cell (demo id C17) — Expert Mode only for the id",evidence.ts badge-row,P0
+"FORECAST","Raw enum on a badge.","Forecast (next 72 hours) — not a sighting",evidence.ts badge,P0
+"PUBLIC","Looks like 'this is public information' vs publish-class.","Shown at public map detail (not a farm boundary)",evidence.ts badge publishClass,P1
+"COARSENED","Database publish class.","Shown only as a large area",evidence.ts badge,P0
+"PRIVATE","Scary and unclear.","Not shown on the public map",evidence.ts badge,P1
+"W1 oyster OPS-RISK (Category D)","W1 + OPS-RISK + Category D — founder failure sentence.","Oyster farm working conditions (a risk estimate — not a count of animals)",src/evidence.ts renderOps h3,P0
+"NOT food-safety","All-caps legal chip; OK if paired with a positive sentence.","Not a food-safety result",src/evidence.ts ops-flags,P1
+"NOT harvest authorization","OK meaning; jargon 'authorization'.","Does not say whether harvesting is allowed",src/evidence.ts ops-flags,P1
+"Verify WA DOH","Agency acronym.","Check Washington Department of Health for harvest rules",src/evidence.ts ops-flags,P1
+"Air × tide — not SST = body temperature","Equation in a chip.","Uses air and tide; satellite temperature is not the oyster's body temperature",src/evidence.ts ops-flags,P0
+"Status (fixture): ELEVATED (fixture tercile, not a calibrated probability)","Fixture + tercile + calibrated probability.","Status (sample): Harder than usual working conditions vs similar tides this season — not a precise chance of anything.",evidence-by-cell.json opsRisk.status,P0
+"Elevated operational stress indicator for coarsened public cell WILLAPA-C17 over the next 72 hours, associated with forecast air temperature overlapping daytime emersion and wave/wind exposure. Comparison set: this cell, similar tides, late-summer season (FIXTURE). Confidence: Low. Category D. Strongest evidence: Tier 3 forecast only. This is not a food-safety determination and not harvest authorization. Verify official growing-area and biotoxin status with the Washington State Department of Health (and tribal or FDA authorities where applicable). Satellite temperature is not oyster body temperature and is not a tissue toxin test. It does not replace the Vibrio parahaemolyticus control plan (WAC 246-282-006).","~90 words; Category D; Tier 3; WAC; Latin pathogen; cell ID. Unreadable. Split into: what / not / check official / why.","Over the next 3 days, work on the water here may be harder than usual (hot air at low tide + wind/waves). Confidence: low. This does not say oysters are dying, that harvest is legal, or that the meat is safe. For harvest and toxins, use the Health Department. We did not measure oyster body temperature.",evidence-by-cell.json opsRisk.headline + evidence.ts,P0
+"Pacific oyster (Magallana gigas / Crassostrea gigas), AphiaID 836033","Two Latin names + AphiaID on the main panel.","Pacific oyster — Expert: Magallana gigas, Aphia 836033",opsRisk.species,P0
+"Willapa Bay, Washington — coarsened PUBLIC water-body cell. Not a farm lease. Not Totten Inlet. Not a Vp Category 3 harvest-control demo.","Totten / Vp Category 3 is insider.","Willapa Bay public water (not a farm outline). Not a harvest-closure map.",opsRisk.geography,P0
+"Category D 72h operational disruption / environmental-stress indicator (workability, emersion-heat, wave/gear).","Category D is the founder-unreadable core.","This is a 72-hour estimate of farm working conditions (heat when bags are in air, wind and waves) — not a count of animals.",opsRisk.target,P0
+"Suggested action OPTIONS (not commands):","Shouting OPTIONS.","Things you might consider (not orders):",evidence.ts,P2
+"A. Consider shifting labor off the hottest daytime emersion.","Emersion.","A. Consider moving crew off the hottest low-tide period.",opsRisk.options,P1
+"Never 'harvest now'.","Good. Keep.","Never treat this as 'harvest now'. (keep)",opsRisk.options,P2
+"Official harvest open/closed is not a model output of this cell. Check WA DOH pages; those pages win.","OK if WA DOH expanded once.","This map does not decide open vs closed harvest. The Health Department page wins if they disagree.",evidence.ts renderOps,P1
+"Why does the platform believe this?","'Platform' is corporate.","Why do we think this?",src/evidence.ts renderAnswers,P2
+"How much should I trust it?","Good question. Keep.","How much should I trust this? (keep)",src/evidence.ts,P3
+"What data is missing?","Good. Keep.","What's missing? (keep)",src/evidence.ts,P3
+"Observed, inferred, or forecast?","'Inferred' is the hard word.","Measured, guessed, or about the future?",src/evidence.ts,P0
+"A fixture rule flagged forecast air overlapping daytime emersion plus wind/wave workability. That is an operational-stress indicator, not a census.","Fixture / emersion / census / workability.","A demo rule saw hot air at low tide plus rough water. That is about working conditions, not a count of oysters.",C17 answers.why,P0
+"Low. Unvalidated. Do not change a high-cost action on this demo.","Unvalidated.","Low confidence. This demo has not been tested against real outcomes. Don't change an expensive plan based on it.",C17 answers.trust,P1
+"On-lease sensors, ploidy, handling, HAB toxin (always missing from this target), last-14d mortality, official harvest status as a model input (forbidden).","Ploidy, HAB, forbidden.","We don't have on-farm sensors, oyster type (ploidy), handling, toxin tests, or last-2-week deaths. Harvest legality is not an input here (on purpose).",C17 answers.missing,P0
+"FORECAST. Not observed. Not a present-time occupancy inference.","Occupancy inference.","This is a forecast — not something measured here, and not a claim that oysters are present.",C17 answers.observedInferredForecast,P0
+"The fixture contains no supporting observation or validated model for this cell.","Fixture / validated model.","We have no measurement and no tested model for this place.",C05 answers.why,P1
+"Do not trust a filled-in animal story. Confidence is None. That is the product.","'That is the product' is a manifesto.","Don't imagine animals here. Confidence: none. Saying 'we don't know' is the answer.",C05 answers.trust,P1
+"UNKNOWN. Not observed. Not inferred. Not forecast. Not absence.","Five-beat chant.","We don't know. That is not the same as 'nothing lives here'.",C05 answers.observedInferredForecast,P1
+"Copy cell JSON","Developer affordance on the main panel.","Copy details (Expert)",src/evidence.ts button.copy-json,P1
+"Copied","OK.","Copied (keep)",src/main.ts,P3
+"1. Current estimate","Sounds like a stock price.","1. What's going on now",src/evidence.ts FIELD_TITLES,P1
+"2. Forecast estimate","OK-ish.","2. What we think happens next",src/evidence.ts FIELD_TITLES,P1
+"3. Confidence","OK. Add High/Medium/Low/None in the heading.","3. How sure we are",src/evidence.ts FIELD_TITLES,P2
+"4. Last direct observation","Direct observation.","4. Last time something was actually measured here",src/evidence.ts FIELD_TITLES,P1
+"5. Observation count in the region","Count of what.","5. How many measurements in this area",src/evidence.ts FIELD_TITLES,P1
+"6. Observation types","OK.","6. What kinds of measurements",src/evidence.ts FIELD_TITLES,P2
+"7. Environmental inputs","Inputs.","7. Weather and water used",src/evidence.ts FIELD_TITLES,P1
+"8. Key model drivers","Drivers ≠ causes but users won't know.","8. What the estimate used (not proven causes)",src/evidence.ts FIELD_TITLES,P1
+"9. Comparable historical conditions","Wordy.","9. Compared with what past conditions",src/evidence.ts FIELD_TITLES,P2
+"10. Model version","OK for expert.","10. Which rule or model version (Expert)",src/evidence.ts FIELD_TITLES,P2
+"11. Validation performance for this species/region","Validation performance.","11. How well this has been tested here",src/evidence.ts FIELD_TITLES,P1
+"12. Known limitations","OK.","12. What this cannot tell you",src/evidence.ts FIELD_TITLES,P2
+"13. Source links and licenses","Licenses on the main path.","13. Sources (Expert: licenses)",src/evidence.ts FIELD_TITLES,P2
+"14. Data freshness","OK.","14. How recent the inputs are",src/evidence.ts FIELD_TITLES,P2
+"15. Privacy / coarsening explanation","Coarsening.","15. Why the map is blurry or blank here",src/evidence.ts FIELD_TITLES,P1
+"16. What would reduce uncertainty here?","Uncertainty.","16. What measurement would make this clearer?",src/evidence.ts FIELD_TITLES,P2
+"Category: LOW (High / Medium / Low / None only; no fake %)","Meta-commentary about the scale.","How sure: Low. We only use High / Medium / Low / None — no fake percentages.",src/evidence.ts renderValue confidence,P1
+"FRESH:ok — fixture timestamp inside the demo window","Machine reason codes.","The demo clock is current (sample).",evidence-by-cell.json confidence.reasons,P0
+"DENSITY:low — no on-cell sensors","DENSITY:low.","Few or no sensors in this cell.",evidence-by-cell.json,P1
+"LABEL_SUPPORT:none — no farm outcomes","LABEL_SUPPORT.","No real farm results to check against.",evidence-by-cell.json,P0
+"CALIBRATION_OK:low — never evaluated","CALIBRATION_OK.","Never tested against later outcomes.",evidence-by-cell.json,P0
+"IN_DOMAIN:n/a — not a trained model","IN_DOMAIN.","Not a trained model.",evidence-by-cell.json C01,P1
+"n = 0 · window 72h forecast window","n =.","Measurements in the next-72-hour window: 0",src/evidence.ts observationCount,P1
+"None issued.","Sounds like a government notice.","None for this place.",src/evidence.ts environmentalInputs empty,P2
+"Forecast issued at","OK if time is human.","Forecast made at",index.html footer .k,P2
+"Valid for","OK.","Applies to",index.html footer .k,P2
+"Inputs current through","Inputs.","Weather/water data as of",index.html footer .k,P1
+"Last direct observation","In footer this is bay-wide, easy to confuse with the cell.","Last measurement in this bay",index.html footer .k,P1
+"Forecast confidence","Looks like a live tuna forecast.","How sure this demo forecast is",index.html footer .k,P0
+"Model version","OK expert.","Rule/model id (Expert)",index.html footer .k,P2
+"Data coverage","Coverage of what.","How much of the bay has data",index.html footer .k,P1
+"2026-09-18T23:00:00Z · Sep 18, 2026, 16:00 PDT","ISO-8601 plus local, duplicated, unreadable at 0.65rem.","18 Sep 2026, 4:00 pm Pacific",src/main.ts formatClock,P0
+"low (category, not a %)","Parenthetical lecture.","Low (not a percentage)",src/main.ts fillTimebar t-conf,P0
+"GLOBE-PROTO-FIXTURE-2026-09-18-v0","Build id in the footer.","Demo rule 18 Sep 2026 (Expert)",meta.json modelVersion + timebar,P0
+"27 coarsened cells; 5 DATA_GAP; 3 UNKNOWN; 0 live ingest","Enums in the coverage line.","27 map cells. 5 with no samples. 3 with no estimate. Nothing downloaded live.",meta.json dataCoverage,P0
+"Selected WILLAPA-C17, FORECAST, confidence low. Depth band in view: Surface (water skin). Not a live animal map.","SR-only; still enums.","Selected Nahcotta-area cell. This is a forecast, confidence low, talking about the sea surface. Not live tracking.",src/main.ts statusEl,P1
+"This cell has no fixture for Intertidal / emersion — hatched as depth-missing, not as biological absence.","Fixture / biological absence.","This place has no demo data for tide-flat depth. Stripes mean missing depth data, not 'no animals'.",src/main.ts depthNote,P1
+"DIRECT_OBSERVATION (fixture): in-water temperature 15.7 °C at fictional station FIXTURE-STATION-WILLAPA-C01. Units: °C, water — not oyster tissue, not a fish count.","Station IDs + fixture.","Measured (demo): water temperature 15.7 °C at a fake sensor. Water, not oyster bodies, not a fish count.",C01 currentEstimate,P1
+"No current occupancy issued.","Occupancy.","No estimate of whether animals are here now.",C03 currentEstimate,P0
+"HABITAT_SUITABILITY (fixture): estuarine intertidal / shallow-water habitat class = reduced. Separate palette from observations and from ops-stress. Not presence. Not abundance. Not a farm score.","Five nots + ops-stress.","Demo habitat type: reduced. This is not a sighting, not a count, not a farm grade.",C04 currentEstimate,P1
+"UNKNOWN / insufficient evidence. This is a successful product state. It is not zero animals and not 'safe' or 'empty'.","'Successful product state' is a manifesto.","Not enough information. That is a real answer — not 'zero animals' and not 'safe'.",C05 currentEstimate,P1
+"DATA_GAP — no fixture in this cell×window. This is a successful product state. It is not zero animals and not 'safe' or 'empty'.","cell×window.","No samples in this place and time. Not 'zero animals'.",C06 currentEstimate,P1
+"RESTRICTED_OR_COARSENED: values that would identify a farm, string, or fine location are withheld.","String (gear).","Fine locations that could identify a farm are hidden. This blank is privacy, not empty water.",C07 currentEstimate,P1
+"MODEL_INFERENCE (fixture): relative environmental-stress / workability inference … Dotted, translucent on purpose. Not occupancy. Not abundance.","Workability / occupancy.","Demo model guess about working conditions. Dotted on purpose. Not a sighting or a count.",C08 currentEstimate,P1
+"Cannot issue. No forecast is drawn through a gap.","Cannot issue.","No forecast. We will not invent one across a gap.",C05 forecastEstimate,P1
+"Issuing a filled heatmap here would be interpolation theater","Internal insult-to-self; users don't know interpolation theater.","Filling this with a smooth color would be fake.",C05 confidence.reasons,P2
+"No kriging of animals.","Kriging.","We did not invent animal numbers between samples.",C05 comparableHistoricalConditions,P1
+"Gap ≠ absence.","Equation.","A gap is not the same as no animals.",C05 observationCount.note,P1
+"PUBLIC coarsened water-body cell. NOT a farm lease polygon. PRIVATE operational outcomes are not on this map. Exact farm performance is withheld.","Publish-class lecture.","This is public water drawn as a large cell, not a farm. Farm results stay off this map.",C17 privacyCoarsening,P1
+"Category D","Prediction-contract letter on the main screen. Meaning: not abundance.","This is a risk estimate, not a count of animals",ops heading + target + headline (move letter to Expert),P0
+"OPS-RISK","Looks like a military/ops dashboard.","Farm working conditions",C17 label, options, heading,P0
+"W1","Wedge code.","Oyster demo",everywhere W1,P0
+"EMIV / EMIV-PHY-* / AphiaID / H3 / OSI-72 / Tier 3 / T0–T6 / Category A–E","Observatory IDs. None should be on the main screen (EMIV not currently painted, but Category D / Aphia / H3 are).","Expert Mode only. Main screen: species, place, now/soon, sure, depth, why.",globe specs + C17 species line + AOI copy,P0
+"visual-truth state","Spec term in empty-state copy.","Whether this is measured, guessed, forecast, or unknown",index.html evidence-empty,P0
+"provenance fields","Academic.","Where the numbers came from",index.html evidence-empty,P0
+"coarsened","Repeats across AOI, badges, ops.","Large cells on purpose (privacy / honesty)",many,P0
+"fixture","Repeats in almost every sentence.","Sample / demo data",many,P0
+"n= (map density labels)","On-map text when Mode 9 or density on.","samples: 0 (not animals)",mapApp.ts cells-density text-field,P1
+"Zoom in / Zoom out / Drag to rotate map, click to reset north","Rotate on a locked Willapa 2D map is extra.","Hide compass rotate for this AOI; keep zoom.",MapLibre NavigationControl showCompass true,P2
+"Prototype failed to start: … Fixtures must be present under /public/fixtures.","OK for engineers.","This demo could not load its sample map files.",src/main.ts catch,P2

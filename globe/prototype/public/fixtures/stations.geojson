@@ -1,0 +1,63 @@
+{
+  "type": "FeatureCollection",
+  "name": "fictional_in_water_sensors",
+  "features": [
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "FIXTURE-STATION-WILLAPA-C01",
+        "cellId": "WILLAPA-C01",
+        "observedAt": "2026-09-16T21:05:00Z",
+        "variable": "sea_water_temperature",
+        "valueC": 15.7,
+        "units": "°C",
+        "note": "Fictional in-water sensor. Not an animal. Not a farm."
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -124.03546987259091,
+          46.696
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "FIXTURE-STATION-TOKE",
+        "cellId": "WILLAPA-C02",
+        "observedAt": "2026-09-18T16:10:00Z",
+        "variable": "sea_water_temperature",
+        "valueC": 15.7,
+        "units": "°C",
+        "note": "Fictional in-water sensor. Not an animal. Not a farm."
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -123.97,
+          46.696
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "FIXTURE-STATION-WILLAPA-C13",
+        "cellId": "WILLAPA-C13",
+        "observedAt": "2026-09-16T21:05:00Z",
+        "variable": "sea_water_temperature",
+        "valueC": 15.3,
+        "units": "°C",
+        "note": "Fictional in-water sensor. Not an animal. Not a farm."
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -123.87179519111363,
+          46.579
+        ]
+      }
+    }
+  ]
+}

@@ -1,0 +1,250 @@
+{
+  "program_name": "GLOBAL_SALTWATER_LIFE_OBSERVATORY",
+  "parent_project": "FishAI",
+  "program_root": "/Users/wijeratne/dev/fishai/observatory",
+  "commercial_wedge_state_file": "/Users/wijeratne/dev/fishai/project_state.json",
+  "commercial_wedge_state_observed": "STATE_10_PAUSED_FOR_HUMAN_DECISION",
+  "commercial_wedge_alignment": "READ-ONLY. Do not expand ONE species x ONE geography x ONE customer x ONE decision. Observatory is scientific blueprint only.",
+  "current_state": "STATE_1_FRAMEWORK",
+  "current_iteration": 1,
+  "start_time": "2026-09-18T22:35:00-07:00",
+  "last_checkpoint_time": "2026-09-18T22:35:00-07:00",
+  "elapsed_time": "PT0H40M",
+  "remaining_time_budget": "PT71H20M",
+  "autonomous_work_budget": {
+    "MAX_AUTONOMOUS_WORK_HOURS": 72,
+    "MAX_PARALLEL_AGENTS": 16,
+    "CHECKPOINT_INTERVAL_HOURS": 4,
+    "MAX_HYPOTHESIS_ITERATIONS": 12,
+    "MAX_DATA_SOURCE_DISCOVERY_PASSES": 5,
+    "MAX_PROTOTYPE_DESIGNS": 10,
+    "source": "observatory prompt; recorded 2026-09-18"
+  },
+  "budget_consumed": {
+    "hypothesis_iterations_used": 0,
+    "data_source_discovery_passes_used": 1,
+    "prototype_designs_used": 0,
+    "data_source_discovery_pass_notes": "Pass 1 (taxonomy): WoRMS REST name resolution and OBIS occurrence-count metadata (size=0). No point ingest."
+  },
+  "state_machine": [
+    {
+      "id": "STATE_0_CONFIGURE",
+      "purpose": "Create observatory directories, budget, honesty rules, and project_state."
+    },
+    {
+      "id": "STATE_1_FRAMEWORK",
+      "purpose": "Taxonomy standard, species support tiers, species-model factory, user output contract."
+    },
+    {
+      "id": "STATE_2_MODALITY_AND_HYPOTHESIS_RESEARCH",
+      "purpose": "Observation-modality matrix, sensor catalogs, hypothesis portfolio, physics feasibility."
+    },
+    {
+      "id": "STATE_3_GLOBAL_DATA_CATALOG",
+      "purpose": "Lawful source catalog and ocean-variable catalog. Catalog only; no bulk ingest."
+    },
+    {
+      "id": "STATE_4_RIGHTS_PRIVACY_SAFETY",
+      "purpose": "Global data-rights register, sensitive-location policy, partner-network design."
+    },
+    {
+      "id": "STATE_5_DIGITAL_TWIN_ARCHITECTURE",
+      "purpose": "Depth-aware twin, assimilation design, research API. Must not contradict commercial as-of replay or privacy tiers."
+    },
+    {
+      "id": "STATE_6_VALIDATION_AND_RED_TEAM",
+      "purpose": "Validation protocol, uncertainty, scientific red team of claims."
+    },
+    {
+      "id": "STATE_7_COST_ROADMAP_PROTOTYPE_DESIGNS",
+      "purpose": "Cost/deployment models, coverage roadmaps, up to MAX_PROTOTYPE_DESIGNS paper designs."
+    },
+    {
+      "id": "STATE_8_ITERATE",
+      "purpose": "Observe-hypothesize-test-red-team loop until budget, stop, or blueprint complete."
+    },
+    {
+      "id": "STATE_9_BLUEPRINT_COMPLETE",
+      "purpose": "GLOBAL_SALTWATER_LIFE_OBSERVATORY_BLUEPRINT.md with spec section 17 headings."
+    },
+    {
+      "id": "STATE_10_PAUSED_FOR_HUMAN_DECISION",
+      "purpose": "External dependency, rights block, or founder decision required."
+    },
+    {
+      "id": "STATE_11_STOPPED_OR_DEFERRED",
+      "purpose": "Stop condition, physical impossibility at claimed grain, or budget exhausted without a safe path."
+    }
+  ],
+  "honesty_rules": {
+    "capability_classes": [
+      "1_observable_today",
+      "2_inferable_today",
+      "3_forecastable_today",
+      "4_requires_new_data_infrastructure",
+      "5_scientifically_plausible_but_unproven",
+      "6_technically_speculative",
+      "7_physically_impossible_or_not_currently_measurable"
+    ],
+    "output_classes": [
+      "DIRECTLY OBSERVED",
+      "REMOTELY DETECTED",
+      "SURVEY-DERIVED",
+      "TAG/TELEMETRY-DERIVED",
+      "OPERATIONALLY OBSERVED",
+      "MODEL-INFERRED",
+      "FORECAST",
+      "HYPOTHETICAL/RESEARCH MODE",
+      "UNKNOWN/INSUFFICIENT DATA"
+    ],
+    "never_claim": [
+      "exact locations of all individuals",
+      "exact census",
+      "real-time tracking without contemporaneous observation",
+      "abundance from satellite surface image",
+      "abundance from vessel density",
+      "harvest legality from habitat",
+      "a model is an observation",
+      "global operational tracking exists"
+    ],
+    "unknown_is_high_quality": true,
+    "licenses_default": "UNKNOWN_UNTIL_VERIFIED"
+  },
+  "active_agents": [
+    "TAXONOMY_AND_SPECIES_REGISTRY_AGENT",
+    "GLOBAL_SALTWATER_LIFE_OBSERVATORY_ORCHESTRATOR"
+  ],
+  "parallel_workstreams_launched_by_parent": [
+    "TAXONOMY_AND_SPECIES_REGISTRY_AGENT",
+    "DATA_RIGHTS_PRIVACY_AND_ECOLOGICAL_SAFETY_AGENT",
+    "HYPOTHETICAL_TECHNOLOGY_AGENT",
+    "OCEAN_DATA_ARCHITECTURE_AND_TWIN_AGENT",
+    "GLOBAL_BIODIVERSITY_AND_OCEAN_DATA_CATALOG_AGENT",
+    "OBSERVATION_MODALITY_CLUSTER"
+  ],
+  "completed_agents": [
+    "TAXONOMY_AND_SPECIES_REGISTRY_AGENT"
+  ],
+  "unresolved_decisions": [
+    "FOUNDER_OR_ORGANIZATION (shared with commercial run; still UNRESOLVED)",
+    "Whether any commercial wedge W1/W2/W3 is accepted (observatory must not decide this)",
+    "Whether IUCN spatial products may ever be used (default: no download; often non-commercial)",
+    "ASFIS 3-alpha codes not copied pending opening of official 2026 list under rights review",
+    "No human domain-expert review of example-tier assignments"
+  ],
+  "approved_sources": [],
+  "rejected_sources": [
+    {
+      "source": "AIS / VMS / vessel density as abundance of marine life",
+      "reason": "Vessel activity is not a measurement of abundance.",
+      "status": "rejected_as_abundance_label"
+    },
+    {
+      "source": "Satellite SST or ocean color as animal census",
+      "reason": "Surface fields are not counts of organisms at depth. Bloom/canopy/mat signals must stay labeled REMOTELY DETECTED of that signal only.",
+      "status": "rejected_as_census"
+    },
+    {
+      "source": "Habitat suitability as harvest legality or food safety",
+      "reason": "Non-negotiable honesty rule.",
+      "status": "rejected_as_product_claim"
+    }
+  ],
+  "blocked_sources": [
+    {
+      "source": "Exact coordinates of endangered taxa, spawning, nurseries, nesting beaches, private catch, farm KPIs, Indigenous knowledge",
+      "reason": "Ecological safety and privacy. Cataloging existence of programs is allowed; publishing points is not.",
+      "status": "blocked"
+    },
+    {
+      "source": "Paywalled datasets or APIs without documented license",
+      "reason": "No TOS/paywall bypass. License UNKNOWN until verified.",
+      "status": "blocked"
+    },
+    {
+      "source": "Bulk OBIS/GBIF/WoRMS dumps",
+      "reason": "No ingest this program until rights + architecture gates. Metadata counts only.",
+      "status": "blocked_ingest"
+    }
+  ],
+  "critical_data_gaps": [
+    "No complete global species list instantiated (27 example rows only)",
+    "No occurrence points, telemetry, eDNA, or acoustics ingested",
+    "No species ecology profile cards yet",
+    "No observation-coverage, depth-coverage, or uncertainty maps yet",
+    "No T3-T6 evidence for any taxon inside this observatory",
+    "FAO ASFIS 3-alpha codes not verified from the 2026 list file",
+    "IUCN categories not copied (rights + no need for identity)"
+  ],
+  "species_support_tier_counts_iteration_1": {
+    "n_example_taxa": 27,
+    "T0": 4,
+    "T1": 14,
+    "T2": 9,
+    "T3": 0,
+    "T4": 0,
+    "T5": 0,
+    "T6": 0,
+    "note": "Eligibility from cited public metadata, not live observatory products. Current emitted class for all: UNKNOWN/INSUFFICIENT DATA."
+  },
+  "taxonomy_authority": {
+    "name": "WoRMS / Aphia",
+    "url": "https://www.marinespecies.org/",
+    "access_date": "2026-09-18",
+    "license_status": "UNKNOWN"
+  },
+  "current_model_version": "none",
+  "current_baseline_version": "none",
+  "latest_validation_status": "not_started",
+  "latest_red_team_status": "not_started",
+  "ingest_status": "none",
+  "global_operational_tracking_claim": "false",
+  "highest_priority_next_action": "Complete parallel modality, catalog, rights, hypothesis, and architecture workstreams; do not ingest; do not upgrade tiers without evidence.",
+  "reasons_not_to_expand_commercial_scope": [
+    "Commercial run is paused for founder wedge selection",
+    "Observatory breadth would violate ONE x ONE x ONE x ONE if copied into artifacts/",
+    "T2 habitat eligibility is not a product",
+    "Sensitive taxa make a public world heatmap unsafe"
+  ],
+  "stop_condition_status": "none; framework iteration proceeding",
+  "state_history": [
+    {
+      "previous_state": null,
+      "next_state": "STATE_0_CONFIGURE",
+      "reason": "Stand up observatory program under fishai/observatory without writing to commercial artifacts/.",
+      "evidence": [
+        "Parent prompt 2026-09-18T22:35:00-07:00",
+        "Commercial project_state.json observed in STATE_10_PAUSED_FOR_HUMAN_DECISION"
+      ],
+      "artifacts": [
+        "observatory/project_state.json",
+        "observatory/ directory skeleton"
+      ],
+      "responsible_agent": "GLOBAL_SALTWATER_LIFE_OBSERVATORY_ORCHESTRATOR",
+      "timestamp": "2026-09-18T22:35:00-07:00"
+    },
+    {
+      "previous_state": "STATE_0_CONFIGURE",
+      "next_state": "STATE_1_FRAMEWORK",
+      "reason": "Budget and skeleton exist. Build taxonomy standard, support-tier framework, example registry, factory, output contract, checkpoint, iteration report.",
+      "evidence": [
+        "WoRMS REST accepted-name lookups 2026-09-18",
+        "OBIS occurrence-count metadata size=0 2026-09-18",
+        "No T3-T6 upgrades"
+      ],
+      "artifacts": [
+        "observatory/README.md",
+        "observatory/global_species_registry/README.md",
+        "observatory/global_species_registry/support_tier_framework.md",
+        "observatory/taxonomy_graph/taxonomy_standard.md",
+        "observatory/species_support_tiers.csv",
+        "observatory/species_model_factory.md",
+        "observatory/user_output_contract.md",
+        "observatory/checkpoints/CHECKPOINT_2026-09-18T2235.md",
+        "observatory/iteration_reports/ITERATION_01.md"
+      ],
+      "responsible_agent": "TAXONOMY_AND_SPECIES_REGISTRY_AGENT",
+      "timestamp": "2026-09-18T23:15:00-07:00"
+    }
+  ]
+}

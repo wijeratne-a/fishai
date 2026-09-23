@@ -1,0 +1,275 @@
+{
+  "generatedAt": "2026-09-22",
+  "source": "WoRMS official REST AphiaRecordsByName, accessed 2026-09-22. Modest lookups only.",
+  "licenseNote": "WoRMS names and AphiaIDs. Attribution required. Not a distribution map.",
+  "taxa": [
+    {
+      "aphiaId": 127027,
+      "scientificName": "Thunnus albacares",
+      "commonNames": ["yellowfin tuna", "yellowfin"],
+      "group": "fish",
+      "status": "no_estimate"
+    },
+    {
+      "aphiaId": 127018,
+      "scientificName": "Katsuwonus pelamis",
+      "commonNames": ["skipjack tuna", "skipjack"],
+      "group": "fish",
+      "status": "no_estimate"
+    },
+    {
+      "aphiaId": 127026,
+      "scientificName": "Thunnus alalunga",
+      "commonNames": ["albacore"],
+      "group": "fish",
+      "status": "no_estimate"
+    },
+    {
+      "aphiaId": 127029,
+      "scientificName": "Thunnus thynnus",
+      "commonNames": ["Atlantic bluefin tuna", "bluefin tuna"],
+      "group": "fish",
+      "status": "no_estimate"
+    },
+    {
+      "aphiaId": 126436,
+      "scientificName": "Gadus morhua",
+      "commonNames": ["Atlantic cod", "cod"],
+      "group": "fish",
+      "status": "no_estimate"
+    },
+    {
+      "aphiaId": 126437,
+      "scientificName": "Melanogrammus aeglefinus",
+      "commonNames": ["haddock"],
+      "group": "fish",
+      "status": "no_estimate"
+    },
+    {
+      "aphiaId": 126441,
+      "scientificName": "Pollachius virens",
+      "commonNames": ["saithe", "pollock"],
+      "group": "fish",
+      "status": "no_estimate"
+    },
+    {
+      "aphiaId": 158075,
+      "scientificName": "Oncorhynchus tshawytscha",
+      "commonNames": ["Chinook salmon", "king salmon", "chinook"],
+      "group": "fish",
+      "status": "no_estimate"
+    },
+    {
+      "aphiaId": 127185,
+      "scientificName": "Oncorhynchus mykiss",
+      "commonNames": ["rainbow trout", "steelhead"],
+      "group": "fish",
+      "status": "no_estimate"
+    },
+    {
+      "aphiaId": 151179,
+      "scientificName": "Morone saxatilis",
+      "commonNames": ["striped bass"],
+      "group": "fish",
+      "status": "no_estimate"
+    },
+    {
+      "aphiaId": 126417,
+      "scientificName": "Clupea harengus",
+      "commonNames": ["Atlantic herring", "herring"],
+      "group": "fish",
+      "status": "no_estimate"
+    },
+    {
+      "aphiaId": 127023,
+      "scientificName": "Scomber scombrus",
+      "commonNames": ["Atlantic mackerel", "mackerel"],
+      "group": "fish",
+      "status": "no_estimate"
+    },
+    {
+      "aphiaId": 127094,
+      "scientificName": "Xiphias gladius",
+      "commonNames": ["swordfish"],
+      "group": "fish",
+      "status": "no_estimate"
+    },
+    {
+      "aphiaId": 126846,
+      "scientificName": "Coryphaena hippurus",
+      "commonNames": ["mahi-mahi", "dolphinfish"],
+      "group": "fish",
+      "status": "no_estimate"
+    },
+    {
+      "aphiaId": 126975,
+      "scientificName": "Dicentrarchus labrax",
+      "commonNames": ["European seabass"],
+      "group": "fish",
+      "status": "no_estimate"
+    },
+    {
+      "aphiaId": 127143,
+      "scientificName": "Pleuronectes platessa",
+      "commonNames": ["European plaice", "plaice"],
+      "group": "fish",
+      "status": "no_estimate"
+    },
+    {
+      "aphiaId": 127138,
+      "scientificName": "Hippoglossus hippoglossus",
+      "commonNames": ["Atlantic halibut", "halibut"],
+      "group": "fish",
+      "status": "no_estimate"
+    },
+    {
+      "aphiaId": 159463,
+      "scientificName": "Anoplopoma fimbria",
+      "commonNames": ["sablefish", "black cod"],
+      "group": "fish",
+      "status": "no_estimate"
+    },
+    {
+      "aphiaId": 240745,
+      "scientificName": "Ophiodon elongatus",
+      "commonNames": ["lingcod"],
+      "group": "fish",
+      "status": "no_estimate"
+    },
+    {
+      "aphiaId": 159795,
+      "scientificName": "Lutjanus campechanus",
+      "commonNames": ["red snapper"],
+      "group": "fish",
+      "status": "no_estimate"
+    },
+    {
+      "aphiaId": 126950,
+      "scientificName": "Makaira nigricans",
+      "commonNames": ["blue marlin"],
+      "group": "fish",
+      "status": "no_estimate"
+    },
+    {
+      "aphiaId": 218436,
+      "scientificName": "Seriola lalandi",
+      "commonNames": ["yellowtail amberjack", "yellowtail"],
+      "group": "fish",
+      "status": "no_estimate"
+    },
+    {
+      "aphiaId": 217452,
+      "scientificName": "Sardinops sagax",
+      "commonNames": ["Pacific sardine", "sardine"],
+      "group": "fish",
+      "status": "no_estimate"
+    },
+    {
+      "aphiaId": 272286,
+      "scientificName": "Engraulis mordax",
+      "commonNames": ["northern anchovy", "anchovy"],
+      "group": "fish",
+      "status": "no_estimate"
+    },
+    {
+      "aphiaId": 156134,
+      "scientificName": "Homarus americanus",
+      "commonNames": ["American lobster", "Maine lobster", "lobster"],
+      "group": "crustacean",
+      "status": "no_estimate"
+    },
+    {
+      "aphiaId": 107253,
+      "scientificName": "Homarus gammarus",
+      "commonNames": ["European lobster"],
+      "group": "crustacean",
+      "status": "no_estimate"
+    },
+    {
+      "aphiaId": 440388,
+      "scientificName": "Metacarcinus magister",
+      "commonNames": ["Dungeness crab", "Cancer magister"],
+      "group": "crustacean",
+      "status": "no_estimate"
+    },
+    {
+      "aphiaId": 107379,
+      "scientificName": "Callinectes sapidus",
+      "commonNames": ["blue crab"],
+      "group": "crustacean",
+      "status": "no_estimate"
+    },
+    {
+      "aphiaId": 107649,
+      "scientificName": "Pandalus borealis",
+      "commonNames": ["northern shrimp", "pink shrimp"],
+      "group": "crustacean",
+      "status": "no_estimate"
+    },
+    {
+      "aphiaId": 107254,
+      "scientificName": "Nephrops norvegicus",
+      "commonNames": ["Norway lobster", "langoustine", "scampi"],
+      "group": "crustacean",
+      "status": "no_estimate"
+    },
+    {
+      "aphiaId": 107276,
+      "scientificName": "Cancer pagurus",
+      "commonNames": ["edible crab", "brown crab"],
+      "group": "crustacean",
+      "status": "no_estimate"
+    },
+    {
+      "aphiaId": 233889,
+      "scientificName": "Paralithodes camtschaticus",
+      "commonNames": ["red king crab", "king crab"],
+      "group": "crustacean",
+      "status": "no_estimate"
+    },
+    {
+      "aphiaId": 107315,
+      "scientificName": "Chionoecetes opilio",
+      "commonNames": ["snow crab"],
+      "group": "crustacean",
+      "status": "no_estimate"
+    },
+    {
+      "aphiaId": 382891,
+      "scientificName": "Panulirus argus",
+      "commonNames": ["Caribbean spiny lobster"],
+      "group": "crustacean",
+      "status": "no_estimate"
+    },
+    {
+      "aphiaId": 208814,
+      "scientificName": "Scylla serrata",
+      "commonNames": ["mud crab"],
+      "group": "crustacean",
+      "status": "no_estimate"
+    },
+    {
+      "aphiaId": 107552,
+      "scientificName": "Crangon crangon",
+      "commonNames": ["brown shrimp"],
+      "group": "crustacean",
+      "status": "no_estimate"
+    },
+    {
+      "aphiaId": 836033,
+      "scientificName": "Magallana gigas",
+      "commonNames": ["Pacific oyster", "oyster"],
+      "group": "mollusc",
+      "status": "oyster_demo",
+      "note": "Working-conditions demo only. Not a fish or crustacean. Not a published location model."
+    },
+    {
+      "aphiaId": 105838,
+      "scientificName": "Carcharodon carcharias",
+      "commonNames": ["white shark", "great white shark"],
+      "group": "fish",
+      "status": "no_estimate",
+      "note": "Sensitive taxon. Past-report locations withheld. Not a published location model."
+    }
+  ]
+}

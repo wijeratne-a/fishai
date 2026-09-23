@@ -1,0 +1,2125 @@
+{
+  "WILLAPA-C01": {
+    "evidence": {
+      "currentEstimate": "DIRECT_OBSERVATION (fixture): in-water temperature 15.7 °C at fictional station FIXTURE-STATION-WILLAPA-C01. Units: °C, water — not oyster tissue, not a fish count.",
+      "forecastEstimate": "No forecast issued from this observation. A temperature reading is not a 72h ops-stress rank.",
+      "confidence": {
+        "category": "medium",
+        "reasons": [
+          "FRESH:ok — fixture timestamp inside the demo window",
+          "DENSITY:low — one fictional station, not a survey",
+          "IN_DOMAIN:n/a — not a trained model",
+          "LABEL_SUPPORT:none — no biological labels"
+        ]
+      },
+      "lastDirectObservation": {
+        "at": "2026-09-16T21:05:00Z",
+        "note": "FIXTURE-STATION-WILLAPA-C01 water temperature (fixture). Method: fictional in-situ sensor. Not an animal."
+      },
+      "observationCount": {
+        "n": 24,
+        "window": "last 7 days (fixture)",
+        "note": "Synthetic hourly samples at one point. Not abundance."
+      },
+      "observationTypes": [
+        "in-situ temperature (fixture sensor)",
+        "no survey",
+        "no tag",
+        "no eDNA",
+        "no catch/effort"
+      ],
+      "environmentalInputs": [
+        {
+          "name": "In-water temperature",
+          "value": "15.7 °C",
+          "asOf": "2026-09-16T21:05:00Z",
+          "role": "DIRECTLY measured at a fictional point (water), not tissue"
+        }
+      ],
+      "keyModelDrivers": [
+        "None. This cell is an observation, not a model field."
+      ],
+      "comparableHistoricalConditions": "Not computed. A single station does not define a tercile of ops-stress.",
+      "modelVersion": "GLOBE-PROTO-FIXTURE-2026-09-18-v0",
+      "validationPerformance": "Never evaluated. This prototype has no skill score, no calibration plot, and no prospective window.",
+      "knownLimitations": [
+        "Fixture / synthetic data only (generated 2026-09-18).",
+        "Not a live animal map.",
+        "Approximate public water-body cells, not farm leases and not DOH growing-area polygons.",
+        "No OBIS, GBIF, AIS, GFW, or catch locations.",
+        "Point measurement ≠ lease or bay mean.",
+        "No depth profile; intake depth is unknown in the fixture (unknown-depth flag applies if you ask for 0–10 m biology)."
+      ],
+      "sourceLinksAndLicenses": [
+        {
+          "name": "WA DOH Commercial Shellfish Map Viewer",
+          "url": "https://fortress.wa.gov/doh/oswpviewer/index.html",
+          "license": "Official public page (not ingested)",
+          "note": "Context link only. This app does not model harvest open/closed and did not download growing-area polygons."
+        },
+        {
+          "name": "WA DOH Growing Area Closures",
+          "url": "https://fortress.wa.gov/doh/eh/portal/odw/si/GrowingAreaClosures.aspx",
+          "license": "Official public page (not ingested)",
+          "note": "Those pages win on harvest legality. This globe never paints open/closed."
+        },
+        {
+          "name": "NOAA CO-OPS Toke Point (9440910) — named analog only",
+          "url": "https://tidesandcurrents.noaa.gov/stationhome.html?id=9440910",
+          "license": "Not ingested in this prototype",
+          "note": "Fixture timestamps do not come from this station. Named so operators know what a real brief would cite."
+        }
+      ],
+      "dataFreshness": "Inputs current through 2026-09-18T21:00:00Z in the fixture clock. Nothing was fetched live.",
+      "privacyCoarsening": "PUBLIC coarsened cell WILLAPA-C01. Station coordinates are fictional and snapped to the cell, not a secret GPS.",
+      "whatWouldReduceUncertainty": [
+        "A real permissioned on-site logger with documented depth and calibration.",
+        "A survey protocol if the question is biological — temperature is not that protocol."
+      ]
+    },
+    "answers": {
+      "why": "A fixture in-situ temperature was recorded at FIXTURE-STATION-WILLAPA-C01. That is the only claim.",
+      "trust": "Trust the number as a demo temperature, not as oyster or fish presence. Medium confidence on the sensor story; none on biology.",
+      "missing": "On-cell biology, tissue temperature, dissolved oxygen, toxin tests, harvest status.",
+      "observedInferredForecast": "OBSERVED (environmental). Not inferred occupancy. Not a forecast."
+    }
+  },
+  "WILLAPA-C02": {
+    "evidence": {
+      "currentEstimate": "DIRECT_OBSERVATION (fixture): in-water temperature 15.7 °C at fictional station FIXTURE-STATION-TOKE. Units: °C, water — not oyster tissue, not a fish count.",
+      "forecastEstimate": "No forecast issued from this observation. A temperature reading is not a 72h ops-stress rank.",
+      "confidence": {
+        "category": "medium",
+        "reasons": [
+          "FRESH:ok — fixture timestamp inside the demo window",
+          "DENSITY:low — one fictional station, not a survey",
+          "IN_DOMAIN:n/a — not a trained model",
+          "LABEL_SUPPORT:none — no biological labels"
+        ]
+      },
+      "lastDirectObservation": {
+        "at": "2026-09-18T16:10:00Z",
+        "note": "FIXTURE-STATION-TOKE water temperature (fixture). Method: fictional in-situ sensor. Not an animal."
+      },
+      "observationCount": {
+        "n": 25,
+        "window": "last 7 days (fixture)",
+        "note": "Synthetic hourly samples at one point. Not abundance."
+      },
+      "observationTypes": [
+        "in-situ temperature (fixture sensor)",
+        "no survey",
+        "no tag",
+        "no eDNA",
+        "no catch/effort"
+      ],
+      "environmentalInputs": [
+        {
+          "name": "In-water temperature",
+          "value": "15.7 °C",
+          "asOf": "2026-09-18T16:10:00Z",
+          "role": "DIRECTLY measured at a fictional point (water), not tissue"
+        }
+      ],
+      "keyModelDrivers": [
+        "None. This cell is an observation, not a model field."
+      ],
+      "comparableHistoricalConditions": "Not computed. A single station does not define a tercile of ops-stress.",
+      "modelVersion": "GLOBE-PROTO-FIXTURE-2026-09-18-v0",
+      "validationPerformance": "Never evaluated. This prototype has no skill score, no calibration plot, and no prospective window.",
+      "knownLimitations": [
+        "Fixture / synthetic data only (generated 2026-09-18).",
+        "Not a live animal map.",
+        "Approximate public water-body cells, not farm leases and not DOH growing-area polygons.",
+        "No OBIS, GBIF, AIS, GFW, or catch locations.",
+        "Point measurement ≠ lease or bay mean.",
+        "No depth profile; intake depth is unknown in the fixture (unknown-depth flag applies if you ask for 0–10 m biology)."
+      ],
+      "sourceLinksAndLicenses": [
+        {
+          "name": "WA DOH Commercial Shellfish Map Viewer",
+          "url": "https://fortress.wa.gov/doh/oswpviewer/index.html",
+          "license": "Official public page (not ingested)",
+          "note": "Context link only. This app does not model harvest open/closed and did not download growing-area polygons."
+        },
+        {
+          "name": "WA DOH Growing Area Closures",
+          "url": "https://fortress.wa.gov/doh/eh/portal/odw/si/GrowingAreaClosures.aspx",
+          "license": "Official public page (not ingested)",
+          "note": "Those pages win on harvest legality. This globe never paints open/closed."
+        },
+        {
+          "name": "NOAA CO-OPS Toke Point (9440910) — named analog only",
+          "url": "https://tidesandcurrents.noaa.gov/stationhome.html?id=9440910",
+          "license": "Not ingested in this prototype",
+          "note": "Fixture timestamps do not come from this station. Named so operators know what a real brief would cite."
+        }
+      ],
+      "dataFreshness": "Inputs current through 2026-09-18T21:00:00Z in the fixture clock. Nothing was fetched live.",
+      "privacyCoarsening": "PUBLIC coarsened cell WILLAPA-C02. Station coordinates are fictional and snapped to the cell, not a secret GPS.",
+      "whatWouldReduceUncertainty": [
+        "A real permissioned on-site logger with documented depth and calibration.",
+        "A survey protocol if the question is biological — temperature is not that protocol."
+      ]
+    },
+    "answers": {
+      "why": "A fixture in-situ temperature was recorded at FIXTURE-STATION-TOKE. That is the only claim.",
+      "trust": "Trust the number as a demo temperature, not as oyster or fish presence. Medium confidence on the sensor story; none on biology.",
+      "missing": "On-cell biology, tissue temperature, dissolved oxygen, toxin tests, harvest status.",
+      "observedInferredForecast": "OBSERVED (environmental). Not inferred occupancy. Not a forecast."
+    }
+  },
+  "WILLAPA-C03": {
+    "evidence": {
+      "currentEstimate": "No current occupancy issued.",
+      "forecastEstimate": "FORECAST (fixture): 24–72h environmental-workability context for Northern entrance (Shoalwater / Toke Point reach). Dashed encoding = future window. Not species presence.",
+      "confidence": {
+        "category": "low",
+        "reasons": [
+          "Forecast-only fixture",
+          "No biological labels",
+          "Unvalidated"
+        ]
+      },
+      "lastDirectObservation": {
+        "at": null,
+        "note": "None in this cell."
+      },
+      "observationCount": {
+        "n": 0,
+        "window": "72h",
+        "note": "Zero biological rows."
+      },
+      "observationTypes": [
+        "forecast environmental analog only"
+      ],
+      "environmentalInputs": [
+        {
+          "name": "Fixture NWP-analog air/wind",
+          "value": "see time readout",
+          "asOf": "2026-09-18T21:00:00Z",
+          "role": "forecast driver"
+        }
+      ],
+      "keyModelDrivers": [
+        "Forecast air/wind analog — not SST=animals"
+      ],
+      "comparableHistoricalConditions": "No comparison set issued for this cell.",
+      "modelVersion": "GLOBE-PROTO-FIXTURE-2026-09-18-v0",
+      "validationPerformance": "Never evaluated. This prototype has no skill score, no calibration plot, and no prospective window.",
+      "knownLimitations": [
+        "Fixture / synthetic data only (generated 2026-09-18).",
+        "Not a live animal map.",
+        "Approximate public water-body cells, not farm leases and not DOH growing-area polygons.",
+        "No OBIS, GBIF, AIS, GFW, or catch locations."
+      ],
+      "sourceLinksAndLicenses": [
+        {
+          "name": "WA DOH Commercial Shellfish Map Viewer",
+          "url": "https://fortress.wa.gov/doh/oswpviewer/index.html",
+          "license": "Official public page (not ingested)",
+          "note": "Context link only. This app does not model harvest open/closed and did not download growing-area polygons."
+        },
+        {
+          "name": "WA DOH Growing Area Closures",
+          "url": "https://fortress.wa.gov/doh/eh/portal/odw/si/GrowingAreaClosures.aspx",
+          "license": "Official public page (not ingested)",
+          "note": "Those pages win on harvest legality. This globe never paints open/closed."
+        },
+        {
+          "name": "NOAA CO-OPS Toke Point (9440910) — named analog only",
+          "url": "https://tidesandcurrents.noaa.gov/stationhome.html?id=9440910",
+          "license": "Not ingested in this prototype",
+          "note": "Fixture timestamps do not come from this station. Named so operators know what a real brief would cite."
+        }
+      ],
+      "dataFreshness": "Inputs current through 2026-09-18T21:00:00Z in the fixture clock. Nothing was fetched live.",
+      "privacyCoarsening": "COARSENED public cell WILLAPA-C03.",
+      "whatWouldReduceUncertainty": [
+        "Direct observations in this cell and depth band."
+      ]
+    },
+    "answers": {
+      "why": "The fixture clock has a forecast environmental field here. Nothing was observed on cell.",
+      "trust": "Low. Unvalidated. Do not change a high-cost action on this demo.",
+      "missing": "Any biological observation; depth-resolved records; validation.",
+      "observedInferredForecast": "FORECAST. Not observed. Not a present-time occupancy inference."
+    }
+  },
+  "WILLAPA-C04": {
+    "evidence": {
+      "currentEstimate": "HABITAT_SUITABILITY (fixture): estuarine intertidal / shallow-water habitat class = reduced. Separate palette from observations and from ops-stress. Not presence. Not abundance. Not a farm score.",
+      "forecastEstimate": "Habitat class is a slow spatial prior in this prototype, not a 72h forecast.",
+      "confidence": {
+        "category": "low",
+        "reasons": [
+          "Literature-like envelope only",
+          "No substrate survey ingested",
+          "T1-style prior, not T3"
+        ]
+      },
+      "lastDirectObservation": {
+        "at": null,
+        "note": "No habitat survey row in the fixture."
+      },
+      "observationCount": {
+        "n": 0,
+        "window": "n/a",
+        "note": "Envelope, not a count."
+      },
+      "observationTypes": [
+        "none — habitat class is not an observation type"
+      ],
+      "environmentalInputs": [
+        {
+          "name": "Estuary / intertidal setting (public geography)",
+          "value": "reduced",
+          "asOf": "static fixture",
+          "role": "habitat prior"
+        }
+      ],
+      "keyModelDrivers": [
+        "Coarse estuary class only. Not SST-as-oysters."
+      ],
+      "comparableHistoricalConditions": "Not an anomaly. No reference climatology of habitat was computed.",
+      "modelVersion": "GLOBE-PROTO-FIXTURE-2026-09-18-v0",
+      "validationPerformance": "Never evaluated. This prototype has no skill score, no calibration plot, and no prospective window.",
+      "knownLimitations": [
+        "Fixture / synthetic data only (generated 2026-09-18).",
+        "Not a live animal map.",
+        "Approximate public water-body cells, not farm leases and not DOH growing-area polygons.",
+        "No OBIS, GBIF, AIS, GFW, or catch locations."
+      ],
+      "sourceLinksAndLicenses": [
+        {
+          "name": "WA DOH Commercial Shellfish Map Viewer",
+          "url": "https://fortress.wa.gov/doh/oswpviewer/index.html",
+          "license": "Official public page (not ingested)",
+          "note": "Context link only. This app does not model harvest open/closed and did not download growing-area polygons."
+        },
+        {
+          "name": "WA DOH Growing Area Closures",
+          "url": "https://fortress.wa.gov/doh/eh/portal/odw/si/GrowingAreaClosures.aspx",
+          "license": "Official public page (not ingested)",
+          "note": "Those pages win on harvest legality. This globe never paints open/closed."
+        },
+        {
+          "name": "NOAA CO-OPS Toke Point (9440910) — named analog only",
+          "url": "https://tidesandcurrents.noaa.gov/stationhome.html?id=9440910",
+          "license": "Not ingested in this prototype",
+          "note": "Fixture timestamps do not come from this station. Named so operators know what a real brief would cite."
+        }
+      ],
+      "dataFreshness": "Inputs current through 2026-09-18T21:00:00Z in the fixture clock. Nothing was fetched live.",
+      "privacyCoarsening": "PUBLIC water-body. Habitat is not a lease map.",
+      "whatWouldReduceUncertainty": [
+        "A real benthic/substrate survey with rights clearance."
+      ]
+    },
+    "answers": {
+      "why": "The cell sits in a coarsened public estuary polygon, so a habitat class was assigned as a prior.",
+      "trust": "Low as a biological claim. Habitat ≠ anyone is there.",
+      "missing": "Substrate, emersion hours measured on site, any species observation.",
+      "observedInferredForecast": "HABITAT PRIOR. Not observed presence. Not a forecast of animals."
+    }
+  },
+  "WILLAPA-C05": {
+    "evidence": {
+      "currentEstimate": "UNKNOWN / insufficient evidence. This is a successful product state. It is not zero animals and not 'safe' or 'empty'.",
+      "forecastEstimate": "Cannot issue. No forecast is drawn through a gap.",
+      "confidence": {
+        "category": "none",
+        "reasons": [
+          "No recent direct observations in this coarsened cell",
+          "No depth-specific biological records",
+          "No validated survey data",
+          "Issuing a filled heatmap here would be interpolation theater"
+        ]
+      },
+      "lastDirectObservation": {
+        "at": null,
+        "note": "None."
+      },
+      "observationCount": {
+        "n": 0,
+        "window": "7d fixture",
+        "note": "Zero. Gap ≠ absence."
+      },
+      "observationTypes": [
+        "none"
+      ],
+      "environmentalInputs": [],
+      "keyModelDrivers": [
+        "None issued."
+      ],
+      "comparableHistoricalConditions": "Not computed across gaps. No kriging of animals.",
+      "modelVersion": "GLOBE-PROTO-FIXTURE-2026-09-18-v0",
+      "validationPerformance": "Never evaluated. This prototype has no skill score, no calibration plot, and no prospective window.",
+      "knownLimitations": [
+        "Fixture / synthetic data only (generated 2026-09-18).",
+        "Not a live animal map.",
+        "Approximate public water-body cells, not farm leases and not DOH growing-area polygons.",
+        "No OBIS, GBIF, AIS, GFW, or catch locations."
+      ],
+      "sourceLinksAndLicenses": [
+        {
+          "name": "WA DOH Commercial Shellfish Map Viewer",
+          "url": "https://fortress.wa.gov/doh/oswpviewer/index.html",
+          "license": "Official public page (not ingested)",
+          "note": "Context link only. This app does not model harvest open/closed and did not download growing-area polygons."
+        },
+        {
+          "name": "WA DOH Growing Area Closures",
+          "url": "https://fortress.wa.gov/doh/eh/portal/odw/si/GrowingAreaClosures.aspx",
+          "license": "Official public page (not ingested)",
+          "note": "Those pages win on harvest legality. This globe never paints open/closed."
+        },
+        {
+          "name": "NOAA CO-OPS Toke Point (9440910) — named analog only",
+          "url": "https://tidesandcurrents.noaa.gov/stationhome.html?id=9440910",
+          "license": "Not ingested in this prototype",
+          "note": "Fixture timestamps do not come from this station. Named so operators know what a real brief would cite."
+        }
+      ],
+      "dataFreshness": "Inputs current through 2026-09-18T21:00:00Z in the fixture clock. Nothing was fetched live.",
+      "privacyCoarsening": "PUBLIC cell with nothing to show. Hiding the hatch would be the dishonest option.",
+      "whatWouldReduceUncertainty": [
+        "A designed survey or permissioned sensor in this cell and depth band.",
+        "Season-matched repeats — one visit does not close a gap forever.",
+        "Declared depth. Unknown depth blocks High confidence."
+      ]
+    },
+    "answers": {
+      "why": "The fixture contains no supporting observation or validated model for this cell.",
+      "trust": "Do not trust a filled-in animal story. Confidence is None. That is the product.",
+      "missing": "Any protocol observation at this depth and season; a model that has been evaluated rather than interpolated.",
+      "observedInferredForecast": "UNKNOWN. Not observed. Not inferred. Not forecast. Not absence."
+    }
+  },
+  "WILLAPA-C06": {
+    "evidence": {
+      "currentEstimate": "DATA_GAP — no fixture in this cell×window. This is a successful product state. It is not zero animals and not 'safe' or 'empty'.",
+      "forecastEstimate": "Cannot issue. No forecast is drawn through a gap.",
+      "confidence": {
+        "category": "none",
+        "reasons": [
+          "No recent direct observations in this coarsened cell",
+          "No depth-specific biological records",
+          "No validated survey data",
+          "Issuing a filled heatmap here would be interpolation theater"
+        ]
+      },
+      "lastDirectObservation": {
+        "at": null,
+        "note": "None."
+      },
+      "observationCount": {
+        "n": 0,
+        "window": "7d fixture",
+        "note": "Zero. Gap ≠ absence."
+      },
+      "observationTypes": [
+        "none"
+      ],
+      "environmentalInputs": [],
+      "keyModelDrivers": [
+        "None issued."
+      ],
+      "comparableHistoricalConditions": "Not computed across gaps. No kriging of animals.",
+      "modelVersion": "GLOBE-PROTO-FIXTURE-2026-09-18-v0",
+      "validationPerformance": "Never evaluated. This prototype has no skill score, no calibration plot, and no prospective window.",
+      "knownLimitations": [
+        "Fixture / synthetic data only (generated 2026-09-18).",
+        "Not a live animal map.",
+        "Approximate public water-body cells, not farm leases and not DOH growing-area polygons.",
+        "No OBIS, GBIF, AIS, GFW, or catch locations."
+      ],
+      "sourceLinksAndLicenses": [
+        {
+          "name": "WA DOH Commercial Shellfish Map Viewer",
+          "url": "https://fortress.wa.gov/doh/oswpviewer/index.html",
+          "license": "Official public page (not ingested)",
+          "note": "Context link only. This app does not model harvest open/closed and did not download growing-area polygons."
+        },
+        {
+          "name": "WA DOH Growing Area Closures",
+          "url": "https://fortress.wa.gov/doh/eh/portal/odw/si/GrowingAreaClosures.aspx",
+          "license": "Official public page (not ingested)",
+          "note": "Those pages win on harvest legality. This globe never paints open/closed."
+        },
+        {
+          "name": "NOAA CO-OPS Toke Point (9440910) — named analog only",
+          "url": "https://tidesandcurrents.noaa.gov/stationhome.html?id=9440910",
+          "license": "Not ingested in this prototype",
+          "note": "Fixture timestamps do not come from this station. Named so operators know what a real brief would cite."
+        }
+      ],
+      "dataFreshness": "Inputs current through 2026-09-18T21:00:00Z in the fixture clock. Nothing was fetched live.",
+      "privacyCoarsening": "PUBLIC cell with nothing to show. Hiding the hatch would be the dishonest option.",
+      "whatWouldReduceUncertainty": [
+        "A designed survey or permissioned sensor in this cell and depth band.",
+        "Season-matched repeats — one visit does not close a gap forever.",
+        "Declared depth. Unknown depth blocks High confidence."
+      ]
+    },
+    "answers": {
+      "why": "The fixture contains no supporting observation or validated model for this cell.",
+      "trust": "Do not trust a filled-in animal story. Confidence is None. That is the product.",
+      "missing": "Any protocol observation at this depth and season; a model that has been evaluated rather than interpolated.",
+      "observedInferredForecast": "UNKNOWN. Not observed. Not inferred. Not forecast. Not absence."
+    }
+  },
+  "WILLAPA-C07": {
+    "evidence": {
+      "currentEstimate": "RESTRICTED_OR_COARSENED: values that would identify a farm, string, or fine location are withheld. You are looking at a privacy-preserving empty/coarse cell, not a biological zero.",
+      "forecastEstimate": "No public forecast at a finer grain.",
+      "confidence": {
+        "category": "none",
+        "reasons": [
+          "No recent direct observations in this coarsened cell",
+          "No depth-specific biological records",
+          "No validated survey data",
+          "Issuing a filled heatmap here would be interpolation theater"
+        ]
+      },
+      "lastDirectObservation": {
+        "at": null,
+        "note": "None."
+      },
+      "observationCount": {
+        "n": 0,
+        "window": "7d fixture",
+        "note": "Zero. Gap ≠ absence."
+      },
+      "observationTypes": [
+        "withheld"
+      ],
+      "environmentalInputs": [],
+      "keyModelDrivers": [
+        "None issued."
+      ],
+      "comparableHistoricalConditions": "Not computed across gaps. No kriging of animals.",
+      "modelVersion": "GLOBE-PROTO-FIXTURE-2026-09-18-v0",
+      "validationPerformance": "Never evaluated. This prototype has no skill score, no calibration plot, and no prospective window.",
+      "knownLimitations": [
+        "Fixture / synthetic data only (generated 2026-09-18).",
+        "Not a live animal map.",
+        "Approximate public water-body cells, not farm leases and not DOH growing-area polygons.",
+        "No OBIS, GBIF, AIS, GFW, or catch locations."
+      ],
+      "sourceLinksAndLicenses": [
+        {
+          "name": "WA DOH Commercial Shellfish Map Viewer",
+          "url": "https://fortress.wa.gov/doh/oswpviewer/index.html",
+          "license": "Official public page (not ingested)",
+          "note": "Context link only. This app does not model harvest open/closed and did not download growing-area polygons."
+        },
+        {
+          "name": "WA DOH Growing Area Closures",
+          "url": "https://fortress.wa.gov/doh/eh/portal/odw/si/GrowingAreaClosures.aspx",
+          "license": "Official public page (not ingested)",
+          "note": "Those pages win on harvest legality. This globe never paints open/closed."
+        },
+        {
+          "name": "NOAA CO-OPS Toke Point (9440910) — named analog only",
+          "url": "https://tidesandcurrents.noaa.gov/stationhome.html?id=9440910",
+          "license": "Not ingested in this prototype",
+          "note": "Fixture timestamps do not come from this station. Named so operators know what a real brief would cite."
+        }
+      ],
+      "dataFreshness": "Inputs current through 2026-09-18T21:00:00Z in the fixture clock. Nothing was fetched live.",
+      "privacyCoarsening": "RESTRICTED_OR_COARSENED: geometry is intentionally large. Private farm or fine-scale data are not shown.",
+      "whatWouldReduceUncertainty": [
+        "A designed survey or permissioned sensor in this cell and depth band.",
+        "Season-matched repeats — one visit does not close a gap forever.",
+        "Declared depth. Unknown depth blocks High confidence."
+      ]
+    },
+    "answers": {
+      "why": "Privacy / coarsening rules forbid showing a finer public claim here.",
+      "trust": "Do not trust a filled-in animal story. Confidence is None. That is the product.",
+      "missing": "Permission from the data owner; even then public grain stays coarse.",
+      "observedInferredForecast": "WITHHELD / COARSENED. Not observed. Not a public inference."
+    }
+  },
+  "WILLAPA-C08": {
+    "evidence": {
+      "currentEstimate": "MODEL_INFERENCE (fixture): relative environmental-stress / workability inference for Central Willapa Bay (public water). Dotted, translucent on purpose. Not occupancy. Not abundance.",
+      "forecastEstimate": "No separate forecast layer on this cell. Inference is a present-window rule output from fixture drivers.",
+      "confidence": {
+        "category": "low",
+        "reasons": [
+          "No local labels",
+          "Rule is unvalidated",
+          "Observation density low"
+        ]
+      },
+      "lastDirectObservation": {
+        "at": null,
+        "note": "None. Inference is not an observation."
+      },
+      "observationCount": {
+        "n": 3,
+        "window": "7d fixture",
+        "note": "Sparse or zero protocol rows."
+      },
+      "observationTypes": [
+        "none sufficient",
+        "environmental proxies only"
+      ],
+      "environmentalInputs": [
+        {
+          "name": "Fixture air / tide analog",
+          "value": "present-window",
+          "asOf": "2026-09-18T21:00:00Z",
+          "role": "inference driver — not body temperature"
+        }
+      ],
+      "keyModelDrivers": [
+        "Unvalidated air×tide rule (fixture)",
+        "Not chlorophyll",
+        "Not AIS"
+      ],
+      "comparableHistoricalConditions": "No locked comparison set. Do not read this as a percentile of animals.",
+      "modelVersion": "GLOBE-PROTO-FIXTURE-2026-09-18-v0",
+      "validationPerformance": "Never evaluated. This prototype has no skill score, no calibration plot, and no prospective window.",
+      "knownLimitations": [
+        "Fixture / synthetic data only (generated 2026-09-18).",
+        "Not a live animal map.",
+        "Approximate public water-body cells, not farm leases and not DOH growing-area polygons.",
+        "No OBIS, GBIF, AIS, GFW, or catch locations."
+      ],
+      "sourceLinksAndLicenses": [
+        {
+          "name": "WA DOH Commercial Shellfish Map Viewer",
+          "url": "https://fortress.wa.gov/doh/oswpviewer/index.html",
+          "license": "Official public page (not ingested)",
+          "note": "Context link only. This app does not model harvest open/closed and did not download growing-area polygons."
+        },
+        {
+          "name": "WA DOH Growing Area Closures",
+          "url": "https://fortress.wa.gov/doh/eh/portal/odw/si/GrowingAreaClosures.aspx",
+          "license": "Official public page (not ingested)",
+          "note": "Those pages win on harvest legality. This globe never paints open/closed."
+        },
+        {
+          "name": "NOAA CO-OPS Toke Point (9440910) — named analog only",
+          "url": "https://tidesandcurrents.noaa.gov/stationhome.html?id=9440910",
+          "license": "Not ingested in this prototype",
+          "note": "Fixture timestamps do not come from this station. Named so operators know what a real brief would cite."
+        }
+      ],
+      "dataFreshness": "Inputs current through 2026-09-18T21:00:00Z in the fixture clock. Nothing was fetched live.",
+      "privacyCoarsening": "PUBLIC coarsened cell. Inference is not a reason to publish finer geometry.",
+      "whatWouldReduceUncertainty": [
+        "Direct observations with a protocol.",
+        "A named baseline evaluated in a prospective lane."
+      ]
+    },
+    "answers": {
+      "why": "A fixture environmental rule was applied. Rules are not animals.",
+      "trust": "Low. Treat as a watch on the method, not a sure bet on biology.",
+      "missing": "Protocol observations, depth, calibration, farm/vessel outcomes.",
+      "observedInferredForecast": "INFERRED. Not observed. Not a forecast plume."
+    }
+  },
+  "WILLAPA-C09": {
+    "evidence": {
+      "currentEstimate": "No current occupancy issued.",
+      "forecastEstimate": "FORECAST (fixture): 24–72h environmental-workability context for Northeast reach (Tokeland–South Bend water). Dashed encoding = future window. Not species presence.",
+      "confidence": {
+        "category": "low",
+        "reasons": [
+          "Forecast-only fixture",
+          "No biological labels",
+          "Unvalidated"
+        ]
+      },
+      "lastDirectObservation": {
+        "at": null,
+        "note": "None in this cell."
+      },
+      "observationCount": {
+        "n": 0,
+        "window": "72h",
+        "note": "Zero biological rows."
+      },
+      "observationTypes": [
+        "forecast environmental analog only"
+      ],
+      "environmentalInputs": [
+        {
+          "name": "Fixture NWP-analog air/wind",
+          "value": "see time readout",
+          "asOf": "2026-09-18T21:00:00Z",
+          "role": "forecast driver"
+        }
+      ],
+      "keyModelDrivers": [
+        "Forecast air/wind analog — not SST=animals"
+      ],
+      "comparableHistoricalConditions": "No comparison set issued for this cell.",
+      "modelVersion": "GLOBE-PROTO-FIXTURE-2026-09-18-v0",
+      "validationPerformance": "Never evaluated. This prototype has no skill score, no calibration plot, and no prospective window.",
+      "knownLimitations": [
+        "Fixture / synthetic data only (generated 2026-09-18).",
+        "Not a live animal map.",
+        "Approximate public water-body cells, not farm leases and not DOH growing-area polygons.",
+        "No OBIS, GBIF, AIS, GFW, or catch locations."
+      ],
+      "sourceLinksAndLicenses": [
+        {
+          "name": "WA DOH Commercial Shellfish Map Viewer",
+          "url": "https://fortress.wa.gov/doh/oswpviewer/index.html",
+          "license": "Official public page (not ingested)",
+          "note": "Context link only. This app does not model harvest open/closed and did not download growing-area polygons."
+        },
+        {
+          "name": "WA DOH Growing Area Closures",
+          "url": "https://fortress.wa.gov/doh/eh/portal/odw/si/GrowingAreaClosures.aspx",
+          "license": "Official public page (not ingested)",
+          "note": "Those pages win on harvest legality. This globe never paints open/closed."
+        },
+        {
+          "name": "NOAA CO-OPS Toke Point (9440910) — named analog only",
+          "url": "https://tidesandcurrents.noaa.gov/stationhome.html?id=9440910",
+          "license": "Not ingested in this prototype",
+          "note": "Fixture timestamps do not come from this station. Named so operators know what a real brief would cite."
+        }
+      ],
+      "dataFreshness": "Inputs current through 2026-09-18T21:00:00Z in the fixture clock. Nothing was fetched live.",
+      "privacyCoarsening": "COARSENED public cell WILLAPA-C09.",
+      "whatWouldReduceUncertainty": [
+        "Direct observations in this cell and depth band."
+      ]
+    },
+    "answers": {
+      "why": "The fixture clock has a forecast environmental field here. Nothing was observed on cell.",
+      "trust": "Low. Unvalidated. Do not change a high-cost action on this demo.",
+      "missing": "Any biological observation; depth-resolved records; validation.",
+      "observedInferredForecast": "FORECAST. Not observed. Not a present-time occupancy inference."
+    }
+  },
+  "WILLAPA-C10": {
+    "evidence": {
+      "currentEstimate": "HABITAT_SUITABILITY (fixture): estuarine intertidal / shallow-water habitat class = reduced. Separate palette from observations and from ops-stress. Not presence. Not abundance. Not a farm score.",
+      "forecastEstimate": "Habitat class is a slow spatial prior in this prototype, not a 72h forecast.",
+      "confidence": {
+        "category": "low",
+        "reasons": [
+          "Literature-like envelope only",
+          "No substrate survey ingested",
+          "T1-style prior, not T3"
+        ]
+      },
+      "lastDirectObservation": {
+        "at": null,
+        "note": "No habitat survey row in the fixture."
+      },
+      "observationCount": {
+        "n": 0,
+        "window": "n/a",
+        "note": "Envelope, not a count."
+      },
+      "observationTypes": [
+        "none — habitat class is not an observation type"
+      ],
+      "environmentalInputs": [
+        {
+          "name": "Estuary / intertidal setting (public geography)",
+          "value": "reduced",
+          "asOf": "static fixture",
+          "role": "habitat prior"
+        }
+      ],
+      "keyModelDrivers": [
+        "Coarse estuary class only. Not SST-as-oysters."
+      ],
+      "comparableHistoricalConditions": "Not an anomaly. No reference climatology of habitat was computed.",
+      "modelVersion": "GLOBE-PROTO-FIXTURE-2026-09-18-v0",
+      "validationPerformance": "Never evaluated. This prototype has no skill score, no calibration plot, and no prospective window.",
+      "knownLimitations": [
+        "Fixture / synthetic data only (generated 2026-09-18).",
+        "Not a live animal map.",
+        "Approximate public water-body cells, not farm leases and not DOH growing-area polygons.",
+        "No OBIS, GBIF, AIS, GFW, or catch locations."
+      ],
+      "sourceLinksAndLicenses": [
+        {
+          "name": "WA DOH Commercial Shellfish Map Viewer",
+          "url": "https://fortress.wa.gov/doh/oswpviewer/index.html",
+          "license": "Official public page (not ingested)",
+          "note": "Context link only. This app does not model harvest open/closed and did not download growing-area polygons."
+        },
+        {
+          "name": "WA DOH Growing Area Closures",
+          "url": "https://fortress.wa.gov/doh/eh/portal/odw/si/GrowingAreaClosures.aspx",
+          "license": "Official public page (not ingested)",
+          "note": "Those pages win on harvest legality. This globe never paints open/closed."
+        },
+        {
+          "name": "NOAA CO-OPS Toke Point (9440910) — named analog only",
+          "url": "https://tidesandcurrents.noaa.gov/stationhome.html?id=9440910",
+          "license": "Not ingested in this prototype",
+          "note": "Fixture timestamps do not come from this station. Named so operators know what a real brief would cite."
+        }
+      ],
+      "dataFreshness": "Inputs current through 2026-09-18T21:00:00Z in the fixture clock. Nothing was fetched live.",
+      "privacyCoarsening": "PUBLIC water-body. Habitat is not a lease map.",
+      "whatWouldReduceUncertainty": [
+        "A real benthic/substrate survey with rights clearance."
+      ]
+    },
+    "answers": {
+      "why": "The cell sits in a coarsened public estuary polygon, so a habitat class was assigned as a prior.",
+      "trust": "Low as a biological claim. Habitat ≠ anyone is there.",
+      "missing": "Substrate, emersion hours measured on site, any species observation.",
+      "observedInferredForecast": "HABITAT PRIOR. Not observed presence. Not a forecast of animals."
+    }
+  },
+  "WILLAPA-C11": {
+    "evidence": {
+      "currentEstimate": "DATA_GAP — no fixture in this cell×window. This is a successful product state. It is not zero animals and not 'safe' or 'empty'.",
+      "forecastEstimate": "Cannot issue. No forecast is drawn through a gap.",
+      "confidence": {
+        "category": "none",
+        "reasons": [
+          "No recent direct observations in this coarsened cell",
+          "No depth-specific biological records",
+          "No validated survey data",
+          "Issuing a filled heatmap here would be interpolation theater"
+        ]
+      },
+      "lastDirectObservation": {
+        "at": null,
+        "note": "None."
+      },
+      "observationCount": {
+        "n": 0,
+        "window": "7d fixture",
+        "note": "Zero. Gap ≠ absence."
+      },
+      "observationTypes": [
+        "none"
+      ],
+      "environmentalInputs": [],
+      "keyModelDrivers": [
+        "None issued."
+      ],
+      "comparableHistoricalConditions": "Not computed across gaps. No kriging of animals.",
+      "modelVersion": "GLOBE-PROTO-FIXTURE-2026-09-18-v0",
+      "validationPerformance": "Never evaluated. This prototype has no skill score, no calibration plot, and no prospective window.",
+      "knownLimitations": [
+        "Fixture / synthetic data only (generated 2026-09-18).",
+        "Not a live animal map.",
+        "Approximate public water-body cells, not farm leases and not DOH growing-area polygons.",
+        "No OBIS, GBIF, AIS, GFW, or catch locations."
+      ],
+      "sourceLinksAndLicenses": [
+        {
+          "name": "WA DOH Commercial Shellfish Map Viewer",
+          "url": "https://fortress.wa.gov/doh/oswpviewer/index.html",
+          "license": "Official public page (not ingested)",
+          "note": "Context link only. This app does not model harvest open/closed and did not download growing-area polygons."
+        },
+        {
+          "name": "WA DOH Growing Area Closures",
+          "url": "https://fortress.wa.gov/doh/eh/portal/odw/si/GrowingAreaClosures.aspx",
+          "license": "Official public page (not ingested)",
+          "note": "Those pages win on harvest legality. This globe never paints open/closed."
+        },
+        {
+          "name": "NOAA CO-OPS Toke Point (9440910) — named analog only",
+          "url": "https://tidesandcurrents.noaa.gov/stationhome.html?id=9440910",
+          "license": "Not ingested in this prototype",
+          "note": "Fixture timestamps do not come from this station. Named so operators know what a real brief would cite."
+        }
+      ],
+      "dataFreshness": "Inputs current through 2026-09-18T21:00:00Z in the fixture clock. Nothing was fetched live.",
+      "privacyCoarsening": "PUBLIC cell with nothing to show. Hiding the hatch would be the dishonest option.",
+      "whatWouldReduceUncertainty": [
+        "A designed survey or permissioned sensor in this cell and depth band.",
+        "Season-matched repeats — one visit does not close a gap forever.",
+        "Declared depth. Unknown depth blocks High confidence."
+      ]
+    },
+    "answers": {
+      "why": "The fixture contains no supporting observation or validated model for this cell.",
+      "trust": "Do not trust a filled-in animal story. Confidence is None. That is the product.",
+      "missing": "Any protocol observation at this depth and season; a model that has been evaluated rather than interpolated.",
+      "observedInferredForecast": "UNKNOWN. Not observed. Not inferred. Not forecast. Not absence."
+    }
+  },
+  "WILLAPA-C12": {
+    "evidence": {
+      "currentEstimate": "UNKNOWN / insufficient evidence. This is a successful product state. It is not zero animals and not 'safe' or 'empty'.",
+      "forecastEstimate": "Cannot issue. No forecast is drawn through a gap.",
+      "confidence": {
+        "category": "none",
+        "reasons": [
+          "No recent direct observations in this coarsened cell",
+          "No depth-specific biological records",
+          "No validated survey data",
+          "Issuing a filled heatmap here would be interpolation theater"
+        ]
+      },
+      "lastDirectObservation": {
+        "at": null,
+        "note": "None."
+      },
+      "observationCount": {
+        "n": 0,
+        "window": "7d fixture",
+        "note": "Zero. Gap ≠ absence."
+      },
+      "observationTypes": [
+        "none"
+      ],
+      "environmentalInputs": [],
+      "keyModelDrivers": [
+        "None issued."
+      ],
+      "comparableHistoricalConditions": "Not computed across gaps. No kriging of animals.",
+      "modelVersion": "GLOBE-PROTO-FIXTURE-2026-09-18-v0",
+      "validationPerformance": "Never evaluated. This prototype has no skill score, no calibration plot, and no prospective window.",
+      "knownLimitations": [
+        "Fixture / synthetic data only (generated 2026-09-18).",
+        "Not a live animal map.",
+        "Approximate public water-body cells, not farm leases and not DOH growing-area polygons.",
+        "No OBIS, GBIF, AIS, GFW, or catch locations."
+      ],
+      "sourceLinksAndLicenses": [
+        {
+          "name": "WA DOH Commercial Shellfish Map Viewer",
+          "url": "https://fortress.wa.gov/doh/oswpviewer/index.html",
+          "license": "Official public page (not ingested)",
+          "note": "Context link only. This app does not model harvest open/closed and did not download growing-area polygons."
+        },
+        {
+          "name": "WA DOH Growing Area Closures",
+          "url": "https://fortress.wa.gov/doh/eh/portal/odw/si/GrowingAreaClosures.aspx",
+          "license": "Official public page (not ingested)",
+          "note": "Those pages win on harvest legality. This globe never paints open/closed."
+        },
+        {
+          "name": "NOAA CO-OPS Toke Point (9440910) — named analog only",
+          "url": "https://tidesandcurrents.noaa.gov/stationhome.html?id=9440910",
+          "license": "Not ingested in this prototype",
+          "note": "Fixture timestamps do not come from this station. Named so operators know what a real brief would cite."
+        }
+      ],
+      "dataFreshness": "Inputs current through 2026-09-18T21:00:00Z in the fixture clock. Nothing was fetched live.",
+      "privacyCoarsening": "PUBLIC cell with nothing to show. Hiding the hatch would be the dishonest option.",
+      "whatWouldReduceUncertainty": [
+        "A designed survey or permissioned sensor in this cell and depth band.",
+        "Season-matched repeats — one visit does not close a gap forever.",
+        "Declared depth. Unknown depth blocks High confidence."
+      ]
+    },
+    "answers": {
+      "why": "The fixture contains no supporting observation or validated model for this cell.",
+      "trust": "Do not trust a filled-in animal story. Confidence is None. That is the product.",
+      "missing": "Any protocol observation at this depth and season; a model that has been evaluated rather than interpolated.",
+      "observedInferredForecast": "UNKNOWN. Not observed. Not inferred. Not forecast. Not absence."
+    }
+  },
+  "WILLAPA-C13": {
+    "evidence": {
+      "currentEstimate": "DIRECT_OBSERVATION (fixture): in-water temperature 15.3 °C at fictional station FIXTURE-STATION-WILLAPA-C13. Units: °C, water — not oyster tissue, not a fish count.",
+      "forecastEstimate": "No forecast issued from this observation. A temperature reading is not a 72h ops-stress rank.",
+      "confidence": {
+        "category": "medium",
+        "reasons": [
+          "FRESH:ok — fixture timestamp inside the demo window",
+          "DENSITY:low — one fictional station, not a survey",
+          "IN_DOMAIN:n/a — not a trained model",
+          "LABEL_SUPPORT:none — no biological labels"
+        ]
+      },
+      "lastDirectObservation": {
+        "at": "2026-09-16T21:05:00Z",
+        "note": "FIXTURE-STATION-WILLAPA-C13 water temperature (fixture). Method: fictional in-situ sensor. Not an animal."
+      },
+      "observationCount": {
+        "n": 29,
+        "window": "last 7 days (fixture)",
+        "note": "Synthetic hourly samples at one point. Not abundance."
+      },
+      "observationTypes": [
+        "in-situ temperature (fixture sensor)",
+        "no survey",
+        "no tag",
+        "no eDNA",
+        "no catch/effort"
+      ],
+      "environmentalInputs": [
+        {
+          "name": "In-water temperature",
+          "value": "15.3 °C",
+          "asOf": "2026-09-16T21:05:00Z",
+          "role": "DIRECTLY measured at a fictional point (water), not tissue"
+        }
+      ],
+      "keyModelDrivers": [
+        "None. This cell is an observation, not a model field."
+      ],
+      "comparableHistoricalConditions": "Not computed. A single station does not define a tercile of ops-stress.",
+      "modelVersion": "GLOBE-PROTO-FIXTURE-2026-09-18-v0",
+      "validationPerformance": "Never evaluated. This prototype has no skill score, no calibration plot, and no prospective window.",
+      "knownLimitations": [
+        "Fixture / synthetic data only (generated 2026-09-18).",
+        "Not a live animal map.",
+        "Approximate public water-body cells, not farm leases and not DOH growing-area polygons.",
+        "No OBIS, GBIF, AIS, GFW, or catch locations.",
+        "Point measurement ≠ lease or bay mean.",
+        "No depth profile; intake depth is unknown in the fixture (unknown-depth flag applies if you ask for 0–10 m biology)."
+      ],
+      "sourceLinksAndLicenses": [
+        {
+          "name": "WA DOH Commercial Shellfish Map Viewer",
+          "url": "https://fortress.wa.gov/doh/oswpviewer/index.html",
+          "license": "Official public page (not ingested)",
+          "note": "Context link only. This app does not model harvest open/closed and did not download growing-area polygons."
+        },
+        {
+          "name": "WA DOH Growing Area Closures",
+          "url": "https://fortress.wa.gov/doh/eh/portal/odw/si/GrowingAreaClosures.aspx",
+          "license": "Official public page (not ingested)",
+          "note": "Those pages win on harvest legality. This globe never paints open/closed."
+        },
+        {
+          "name": "NOAA CO-OPS Toke Point (9440910) — named analog only",
+          "url": "https://tidesandcurrents.noaa.gov/stationhome.html?id=9440910",
+          "license": "Not ingested in this prototype",
+          "note": "Fixture timestamps do not come from this station. Named so operators know what a real brief would cite."
+        }
+      ],
+      "dataFreshness": "Inputs current through 2026-09-18T21:00:00Z in the fixture clock. Nothing was fetched live.",
+      "privacyCoarsening": "PUBLIC coarsened cell WILLAPA-C13. Station coordinates are fictional and snapped to the cell, not a secret GPS.",
+      "whatWouldReduceUncertainty": [
+        "A real permissioned on-site logger with documented depth and calibration.",
+        "A survey protocol if the question is biological — temperature is not that protocol."
+      ]
+    },
+    "answers": {
+      "why": "A fixture in-situ temperature was recorded at FIXTURE-STATION-WILLAPA-C13. That is the only claim.",
+      "trust": "Trust the number as a demo temperature, not as oyster or fish presence. Medium confidence on the sensor story; none on biology.",
+      "missing": "On-cell biology, tissue temperature, dissolved oxygen, toxin tests, harvest status.",
+      "observedInferredForecast": "OBSERVED (environmental). Not inferred occupancy. Not a forecast."
+    }
+  },
+  "WILLAPA-C14": {
+    "evidence": {
+      "currentEstimate": "MODEL_INFERENCE (fixture): relative environmental-stress / workability inference for Peninsula inner shore, north (public water). Dotted, translucent on purpose. Not occupancy. Not abundance.",
+      "forecastEstimate": "No separate forecast layer on this cell. Inference is a present-window rule output from fixture drivers.",
+      "confidence": {
+        "category": "low",
+        "reasons": [
+          "No local labels",
+          "Rule is unvalidated",
+          "Observation density low"
+        ]
+      },
+      "lastDirectObservation": {
+        "at": null,
+        "note": "None. Inference is not an observation."
+      },
+      "observationCount": {
+        "n": 3,
+        "window": "7d fixture",
+        "note": "Sparse or zero protocol rows."
+      },
+      "observationTypes": [
+        "none sufficient",
+        "environmental proxies only"
+      ],
+      "environmentalInputs": [
+        {
+          "name": "Fixture air / tide analog",
+          "value": "present-window",
+          "asOf": "2026-09-18T21:00:00Z",
+          "role": "inference driver — not body temperature"
+        }
+      ],
+      "keyModelDrivers": [
+        "Unvalidated air×tide rule (fixture)",
+        "Not chlorophyll",
+        "Not AIS"
+      ],
+      "comparableHistoricalConditions": "No locked comparison set. Do not read this as a percentile of animals.",
+      "modelVersion": "GLOBE-PROTO-FIXTURE-2026-09-18-v0",
+      "validationPerformance": "Never evaluated. This prototype has no skill score, no calibration plot, and no prospective window.",
+      "knownLimitations": [
+        "Fixture / synthetic data only (generated 2026-09-18).",
+        "Not a live animal map.",
+        "Approximate public water-body cells, not farm leases and not DOH growing-area polygons.",
+        "No OBIS, GBIF, AIS, GFW, or catch locations."
+      ],
+      "sourceLinksAndLicenses": [
+        {
+          "name": "WA DOH Commercial Shellfish Map Viewer",
+          "url": "https://fortress.wa.gov/doh/oswpviewer/index.html",
+          "license": "Official public page (not ingested)",
+          "note": "Context link only. This app does not model harvest open/closed and did not download growing-area polygons."
+        },
+        {
+          "name": "WA DOH Growing Area Closures",
+          "url": "https://fortress.wa.gov/doh/eh/portal/odw/si/GrowingAreaClosures.aspx",
+          "license": "Official public page (not ingested)",
+          "note": "Those pages win on harvest legality. This globe never paints open/closed."
+        },
+        {
+          "name": "NOAA CO-OPS Toke Point (9440910) — named analog only",
+          "url": "https://tidesandcurrents.noaa.gov/stationhome.html?id=9440910",
+          "license": "Not ingested in this prototype",
+          "note": "Fixture timestamps do not come from this station. Named so operators know what a real brief would cite."
+        }
+      ],
+      "dataFreshness": "Inputs current through 2026-09-18T21:00:00Z in the fixture clock. Nothing was fetched live.",
+      "privacyCoarsening": "PUBLIC coarsened cell. Inference is not a reason to publish finer geometry.",
+      "whatWouldReduceUncertainty": [
+        "Direct observations with a protocol.",
+        "A named baseline evaluated in a prospective lane."
+      ]
+    },
+    "answers": {
+      "why": "A fixture environmental rule was applied. Rules are not animals.",
+      "trust": "Low. Treat as a watch on the method, not a sure bet on biology.",
+      "missing": "Protocol observations, depth, calibration, farm/vessel outcomes.",
+      "observedInferredForecast": "INFERRED. Not observed. Not a forecast plume."
+    }
+  },
+  "WILLAPA-C15": {
+    "evidence": {
+      "currentEstimate": "No current occupancy issued.",
+      "forecastEstimate": "FORECAST (fixture): 24–72h environmental-workability context for Central Willapa Bay (public water). Dashed encoding = future window. Not species presence.",
+      "confidence": {
+        "category": "low",
+        "reasons": [
+          "Forecast-only fixture",
+          "No biological labels",
+          "Unvalidated"
+        ]
+      },
+      "lastDirectObservation": {
+        "at": null,
+        "note": "None in this cell."
+      },
+      "observationCount": {
+        "n": 0,
+        "window": "72h",
+        "note": "Zero biological rows."
+      },
+      "observationTypes": [
+        "forecast environmental analog only"
+      ],
+      "environmentalInputs": [
+        {
+          "name": "Fixture NWP-analog air/wind",
+          "value": "see time readout",
+          "asOf": "2026-09-18T21:00:00Z",
+          "role": "forecast driver"
+        }
+      ],
+      "keyModelDrivers": [
+        "Forecast air/wind analog — not SST=animals"
+      ],
+      "comparableHistoricalConditions": "No comparison set issued for this cell.",
+      "modelVersion": "GLOBE-PROTO-FIXTURE-2026-09-18-v0",
+      "validationPerformance": "Never evaluated. This prototype has no skill score, no calibration plot, and no prospective window.",
+      "knownLimitations": [
+        "Fixture / synthetic data only (generated 2026-09-18).",
+        "Not a live animal map.",
+        "Approximate public water-body cells, not farm leases and not DOH growing-area polygons.",
+        "No OBIS, GBIF, AIS, GFW, or catch locations."
+      ],
+      "sourceLinksAndLicenses": [
+        {
+          "name": "WA DOH Commercial Shellfish Map Viewer",
+          "url": "https://fortress.wa.gov/doh/oswpviewer/index.html",
+          "license": "Official public page (not ingested)",
+          "note": "Context link only. This app does not model harvest open/closed and did not download growing-area polygons."
+        },
+        {
+          "name": "WA DOH Growing Area Closures",
+          "url": "https://fortress.wa.gov/doh/eh/portal/odw/si/GrowingAreaClosures.aspx",
+          "license": "Official public page (not ingested)",
+          "note": "Those pages win on harvest legality. This globe never paints open/closed."
+        },
+        {
+          "name": "NOAA CO-OPS Toke Point (9440910) — named analog only",
+          "url": "https://tidesandcurrents.noaa.gov/stationhome.html?id=9440910",
+          "license": "Not ingested in this prototype",
+          "note": "Fixture timestamps do not come from this station. Named so operators know what a real brief would cite."
+        }
+      ],
+      "dataFreshness": "Inputs current through 2026-09-18T21:00:00Z in the fixture clock. Nothing was fetched live.",
+      "privacyCoarsening": "COARSENED public cell WILLAPA-C15.",
+      "whatWouldReduceUncertainty": [
+        "Direct observations in this cell and depth band."
+      ]
+    },
+    "answers": {
+      "why": "The fixture clock has a forecast environmental field here. Nothing was observed on cell.",
+      "trust": "Low. Unvalidated. Do not change a high-cost action on this demo.",
+      "missing": "Any biological observation; depth-resolved records; validation.",
+      "observedInferredForecast": "FORECAST. Not observed. Not a present-time occupancy inference."
+    }
+  },
+  "WILLAPA-C16": {
+    "evidence": {
+      "currentEstimate": "DATA_GAP — no fixture in this cell×window. This is a successful product state. It is not zero animals and not 'safe' or 'empty'.",
+      "forecastEstimate": "Cannot issue. No forecast is drawn through a gap.",
+      "confidence": {
+        "category": "none",
+        "reasons": [
+          "No recent direct observations in this coarsened cell",
+          "No depth-specific biological records",
+          "No validated survey data",
+          "Issuing a filled heatmap here would be interpolation theater"
+        ]
+      },
+      "lastDirectObservation": {
+        "at": null,
+        "note": "None."
+      },
+      "observationCount": {
+        "n": 0,
+        "window": "7d fixture",
+        "note": "Zero. Gap ≠ absence."
+      },
+      "observationTypes": [
+        "none"
+      ],
+      "environmentalInputs": [],
+      "keyModelDrivers": [
+        "None issued."
+      ],
+      "comparableHistoricalConditions": "Not computed across gaps. No kriging of animals.",
+      "modelVersion": "GLOBE-PROTO-FIXTURE-2026-09-18-v0",
+      "validationPerformance": "Never evaluated. This prototype has no skill score, no calibration plot, and no prospective window.",
+      "knownLimitations": [
+        "Fixture / synthetic data only (generated 2026-09-18).",
+        "Not a live animal map.",
+        "Approximate public water-body cells, not farm leases and not DOH growing-area polygons.",
+        "No OBIS, GBIF, AIS, GFW, or catch locations."
+      ],
+      "sourceLinksAndLicenses": [
+        {
+          "name": "WA DOH Commercial Shellfish Map Viewer",
+          "url": "https://fortress.wa.gov/doh/oswpviewer/index.html",
+          "license": "Official public page (not ingested)",
+          "note": "Context link only. This app does not model harvest open/closed and did not download growing-area polygons."
+        },
+        {
+          "name": "WA DOH Growing Area Closures",
+          "url": "https://fortress.wa.gov/doh/eh/portal/odw/si/GrowingAreaClosures.aspx",
+          "license": "Official public page (not ingested)",
+          "note": "Those pages win on harvest legality. This globe never paints open/closed."
+        },
+        {
+          "name": "NOAA CO-OPS Toke Point (9440910) — named analog only",
+          "url": "https://tidesandcurrents.noaa.gov/stationhome.html?id=9440910",
+          "license": "Not ingested in this prototype",
+          "note": "Fixture timestamps do not come from this station. Named so operators know what a real brief would cite."
+        }
+      ],
+      "dataFreshness": "Inputs current through 2026-09-18T21:00:00Z in the fixture clock. Nothing was fetched live.",
+      "privacyCoarsening": "PUBLIC cell with nothing to show. Hiding the hatch would be the dishonest option.",
+      "whatWouldReduceUncertainty": [
+        "A designed survey or permissioned sensor in this cell and depth band.",
+        "Season-matched repeats — one visit does not close a gap forever.",
+        "Declared depth. Unknown depth blocks High confidence."
+      ]
+    },
+    "answers": {
+      "why": "The fixture contains no supporting observation or validated model for this cell.",
+      "trust": "Do not trust a filled-in animal story. Confidence is None. That is the product.",
+      "missing": "Any protocol observation at this depth and season; a model that has been evaluated rather than interpolated.",
+      "observedInferredForecast": "UNKNOWN. Not observed. Not inferred. Not forecast. Not absence."
+    }
+  },
+  "WILLAPA-C17": {
+    "evidence": {
+      "currentEstimate": "No current biological estimate. Planted oysters are not being counted. This cell carries a Category D operational-stress indicator (fixture).",
+      "forecastEstimate": "FORECAST (fixture): Elevated 72h operational stress / work-window indicator vs a fictional late-summer comparable-tide set for this coarsened public cell. Rank: upper tercile of that set. Not a probability. Not % dead.",
+      "confidence": {
+        "category": "low",
+        "reasons": [
+          "FRESH:ok on fixture NWS-analog / tide-analog clocks",
+          "DENSITY:low — no on-cell sensors",
+          "LABEL_SUPPORT:none — no farm outcomes",
+          "CALIBRATION_OK:low — never evaluated",
+          "Rule: SST-only would be Low or None; this demo uses air × daytime emersion, still Low without lease sensors"
+        ]
+      },
+      "lastDirectObservation": {
+        "at": "2026-09-17T18:40:00Z",
+        "note": "Nearest fixture station is off-cell. Not a lease logger. Not an animal observation."
+      },
+      "observationCount": {
+        "n": 0,
+        "window": "72h forecast window",
+        "note": "Zero biological observations. Ops-stress is not a count."
+      },
+      "observationTypes": [
+        "none on cell",
+        "forecast inputs are environmental analogs (not ingested)"
+      ],
+      "environmentalInputs": [
+        {
+          "name": "Forecast air × daytime low-tide emersion × solar geometry",
+          "value": "overlap flagged Sat–Sun in the fixture clock",
+          "asOf": "2026-09-18T21:00:00Z",
+          "role": "PRIMARY driver — not SST, not body temperature"
+        },
+        {
+          "name": "Wind / seas workability",
+          "value": "above a fictional easy-work rule of thumb",
+          "asOf": "2026-09-18T21:00:00Z",
+          "role": "PRIMARY operational input"
+        },
+        {
+          "name": "Synthetic SST (supporting only)",
+          "value": "14.8 °C water skin",
+          "asOf": "2026-09-18T21:00:00Z",
+          "role": "SUPPORTING covariate with spatial mismatch — not oyster tissue temperature"
+        }
+      ],
+      "keyModelDrivers": [
+        "Air temperature overlapping daytime emersion (PRIMARY)",
+        "Wind/wave workability (PRIMARY)",
+        "Water T/DO/S if present are supporting only and were NOT used as a kill law"
+      ],
+      "comparableHistoricalConditions": "Fixture comparison set: this coarsened cell, similar tides, late-summer season. Not a calibrated climatology. Not 'top 20%'. Tercile only.",
+      "modelVersion": "GLOBE-PROTO-FIXTURE-2026-09-18-v0",
+      "validationPerformance": "Never evaluated. This prototype has no skill score, no calibration plot, and no prospective window.",
+      "knownLimitations": [
+        "Fixture / synthetic data only (generated 2026-09-18).",
+        "Not a live animal map.",
+        "Approximate public water-body cells, not farm leases and not DOH growing-area polygons.",
+        "No OBIS, GBIF, AIS, GFW, or catch locations.",
+        "NOT food-safety. NOT harvest authorization. NOT NSSP. NOT a toxin test.",
+        "Satellite or fixture SST is not oyster body temperature.",
+        "Does not replace WAC 246-282-006 / the Vp control plan.",
+        "Air×tide language is physical exposure, not mortality.",
+        "No on-lease microclimate, ploidy, handling, or last-14d mortality."
+      ],
+      "sourceLinksAndLicenses": [
+        {
+          "name": "WA DOH Commercial Shellfish Map Viewer",
+          "url": "https://fortress.wa.gov/doh/oswpviewer/index.html",
+          "license": "Official public page (not ingested)",
+          "note": "Context link only. This app does not model harvest open/closed and did not download growing-area polygons."
+        },
+        {
+          "name": "WA DOH Growing Area Closures",
+          "url": "https://fortress.wa.gov/doh/eh/portal/odw/si/GrowingAreaClosures.aspx",
+          "license": "Official public page (not ingested)",
+          "note": "Those pages win on harvest legality. This globe never paints open/closed."
+        },
+        {
+          "name": "NOAA CO-OPS Toke Point (9440910) — named analog only",
+          "url": "https://tidesandcurrents.noaa.gov/stationhome.html?id=9440910",
+          "license": "Not ingested in this prototype",
+          "note": "Fixture timestamps do not come from this station. Named so operators know what a real brief would cite."
+        }
+      ],
+      "dataFreshness": "Inputs current through 2026-09-18T21:00:00Z in the fixture clock. Nothing was fetched live.",
+      "privacyCoarsening": "PUBLIC coarsened water-body cell. NOT a farm lease polygon. PRIVATE operational outcomes are not on this map. Exact farm performance is withheld.",
+      "whatWouldReduceUncertainty": [
+        "Permissioned on-lease air/emersion loggers timed to the tide clock.",
+        "Partner workability / protocol mortality outcomes (PRIVATE).",
+        "A prospective scoring window — none exists yet."
+      ]
+    },
+    "answers": {
+      "why": "A fixture rule flagged forecast air overlapping daytime emersion plus wind/wave workability. That is an operational-stress indicator, not a census.",
+      "trust": "Low. Unvalidated. Do not change a high-cost action on this demo.",
+      "missing": "On-lease sensors, ploidy, handling, HAB toxin (always missing from this target), last-14d mortality, official harvest status as a model input (forbidden).",
+      "observedInferredForecast": "FORECAST. Not observed. Not a present-time occupancy inference."
+    },
+    "opsRisk": {
+      "wedge": "W1",
+      "species": "Pacific oyster (Magallana gigas / Crassostrea gigas), AphiaID 836033",
+      "geography": "Willapa Bay, Washington — coarsened PUBLIC water-body cell. Not a farm lease. Not Totten Inlet. Not a Vp Category 3 harvest-control demo.",
+      "target": "Category D 72h operational disruption / environmental-stress indicator (workability, emersion-heat, wave/gear).",
+      "category": "D",
+      "status": "ELEVATED (fixture tercile, not a calibrated probability)",
+      "headline": "Elevated operational stress indicator for coarsened public cell WILLAPA-C17 over the next 72 hours, associated with forecast air temperature overlapping daytime emersion and wave/wind exposure. Comparison set: this cell, similar tides, late-summer season (FIXTURE). Confidence: Low. Category D. Strongest evidence: Tier 3 forecast only. This is not a food-safety determination and not harvest authorization. Verify official growing-area and biotoxin status with the Washington State Department of Health (and tribal or FDA authorities where applicable). Satellite temperature is not oyster body temperature and is not a tissue toxin test. It does not replace the Vibrio parahaemolyticus control plan (WAC 246-282-006).",
+      "notFoodSafety": true,
+      "notHarvestAuthorization": true,
+      "verifyWaDoh": true,
+      "airTimesTideNotSstAsBodyTemp": true,
+      "options": [
+        "A. Consider shifting labor off the hottest daytime emersion.",
+        "B. Consider increasing monitoring on the daylight tide.",
+        "C. Consider inspecting gear after the forecast wave/wind event.",
+        "D. Keep the current plan if your on-site read disagrees.",
+        "Choose none if official DOH status, your Vp plan, or your observations disagree. Never 'harvest now'."
+      ]
+    }
+  },
+  "WILLAPA-C18": {
+    "evidence": {
+      "currentEstimate": "MODEL_INFERENCE (fixture): relative environmental-stress / workability inference for Central Willapa Bay (public water). Dotted, translucent on purpose. Not occupancy. Not abundance.",
+      "forecastEstimate": "No separate forecast layer on this cell. Inference is a present-window rule output from fixture drivers.",
+      "confidence": {
+        "category": "low",
+        "reasons": [
+          "No local labels",
+          "Rule is unvalidated",
+          "Observation density low"
+        ]
+      },
+      "lastDirectObservation": {
+        "at": null,
+        "note": "None. Inference is not an observation."
+      },
+      "observationCount": {
+        "n": 4,
+        "window": "7d fixture",
+        "note": "Sparse or zero protocol rows."
+      },
+      "observationTypes": [
+        "none sufficient",
+        "environmental proxies only"
+      ],
+      "environmentalInputs": [
+        {
+          "name": "Fixture air / tide analog",
+          "value": "present-window",
+          "asOf": "2026-09-18T21:00:00Z",
+          "role": "inference driver — not body temperature"
+        }
+      ],
+      "keyModelDrivers": [
+        "Unvalidated air×tide rule (fixture)",
+        "Not chlorophyll",
+        "Not AIS"
+      ],
+      "comparableHistoricalConditions": "No locked comparison set. Do not read this as a percentile of animals.",
+      "modelVersion": "GLOBE-PROTO-FIXTURE-2026-09-18-v0",
+      "validationPerformance": "Never evaluated. This prototype has no skill score, no calibration plot, and no prospective window.",
+      "knownLimitations": [
+        "Fixture / synthetic data only (generated 2026-09-18).",
+        "Not a live animal map.",
+        "Approximate public water-body cells, not farm leases and not DOH growing-area polygons.",
+        "No OBIS, GBIF, AIS, GFW, or catch locations."
+      ],
+      "sourceLinksAndLicenses": [
+        {
+          "name": "WA DOH Commercial Shellfish Map Viewer",
+          "url": "https://fortress.wa.gov/doh/oswpviewer/index.html",
+          "license": "Official public page (not ingested)",
+          "note": "Context link only. This app does not model harvest open/closed and did not download growing-area polygons."
+        },
+        {
+          "name": "WA DOH Growing Area Closures",
+          "url": "https://fortress.wa.gov/doh/eh/portal/odw/si/GrowingAreaClosures.aspx",
+          "license": "Official public page (not ingested)",
+          "note": "Those pages win on harvest legality. This globe never paints open/closed."
+        },
+        {
+          "name": "NOAA CO-OPS Toke Point (9440910) — named analog only",
+          "url": "https://tidesandcurrents.noaa.gov/stationhome.html?id=9440910",
+          "license": "Not ingested in this prototype",
+          "note": "Fixture timestamps do not come from this station. Named so operators know what a real brief would cite."
+        }
+      ],
+      "dataFreshness": "Inputs current through 2026-09-18T21:00:00Z in the fixture clock. Nothing was fetched live.",
+      "privacyCoarsening": "PUBLIC coarsened cell. Inference is not a reason to publish finer geometry.",
+      "whatWouldReduceUncertainty": [
+        "Direct observations with a protocol.",
+        "A named baseline evaluated in a prospective lane."
+      ]
+    },
+    "answers": {
+      "why": "A fixture environmental rule was applied. Rules are not animals.",
+      "trust": "Low. Treat as a watch on the method, not a sure bet on biology.",
+      "missing": "Protocol observations, depth, calibration, farm/vessel outcomes.",
+      "observedInferredForecast": "INFERRED. Not observed. Not a forecast plume."
+    }
+  },
+  "WILLAPA-C19": {
+    "evidence": {
+      "currentEstimate": "No current occupancy issued.",
+      "forecastEstimate": "FORECAST (fixture): 24–72h environmental-workability context for Eastern channel (public water). Dashed encoding = future window. Not species presence.",
+      "confidence": {
+        "category": "low",
+        "reasons": [
+          "Forecast-only fixture",
+          "No biological labels",
+          "Unvalidated"
+        ]
+      },
+      "lastDirectObservation": {
+        "at": null,
+        "note": "None in this cell."
+      },
+      "observationCount": {
+        "n": 0,
+        "window": "72h",
+        "note": "Zero biological rows."
+      },
+      "observationTypes": [
+        "forecast environmental analog only"
+      ],
+      "environmentalInputs": [
+        {
+          "name": "Fixture NWP-analog air/wind",
+          "value": "see time readout",
+          "asOf": "2026-09-18T21:00:00Z",
+          "role": "forecast driver"
+        }
+      ],
+      "keyModelDrivers": [
+        "Forecast air/wind analog — not SST=animals"
+      ],
+      "comparableHistoricalConditions": "No comparison set issued for this cell.",
+      "modelVersion": "GLOBE-PROTO-FIXTURE-2026-09-18-v0",
+      "validationPerformance": "Never evaluated. This prototype has no skill score, no calibration plot, and no prospective window.",
+      "knownLimitations": [
+        "Fixture / synthetic data only (generated 2026-09-18).",
+        "Not a live animal map.",
+        "Approximate public water-body cells, not farm leases and not DOH growing-area polygons.",
+        "No OBIS, GBIF, AIS, GFW, or catch locations."
+      ],
+      "sourceLinksAndLicenses": [
+        {
+          "name": "WA DOH Commercial Shellfish Map Viewer",
+          "url": "https://fortress.wa.gov/doh/oswpviewer/index.html",
+          "license": "Official public page (not ingested)",
+          "note": "Context link only. This app does not model harvest open/closed and did not download growing-area polygons."
+        },
+        {
+          "name": "WA DOH Growing Area Closures",
+          "url": "https://fortress.wa.gov/doh/eh/portal/odw/si/GrowingAreaClosures.aspx",
+          "license": "Official public page (not ingested)",
+          "note": "Those pages win on harvest legality. This globe never paints open/closed."
+        },
+        {
+          "name": "NOAA CO-OPS Toke Point (9440910) — named analog only",
+          "url": "https://tidesandcurrents.noaa.gov/stationhome.html?id=9440910",
+          "license": "Not ingested in this prototype",
+          "note": "Fixture timestamps do not come from this station. Named so operators know what a real brief would cite."
+        }
+      ],
+      "dataFreshness": "Inputs current through 2026-09-18T21:00:00Z in the fixture clock. Nothing was fetched live.",
+      "privacyCoarsening": "COARSENED public cell WILLAPA-C19.",
+      "whatWouldReduceUncertainty": [
+        "Direct observations in this cell and depth band."
+      ]
+    },
+    "answers": {
+      "why": "The fixture clock has a forecast environmental field here. Nothing was observed on cell.",
+      "trust": "Low. Unvalidated. Do not change a high-cost action on this demo.",
+      "missing": "Any biological observation; depth-resolved records; validation.",
+      "observedInferredForecast": "FORECAST. Not observed. Not a present-time occupancy inference."
+    }
+  },
+  "WILLAPA-C20": {
+    "evidence": {
+      "currentEstimate": "HABITAT_SUITABILITY (fixture): estuarine intertidal / shallow-water habitat class = typical. Separate palette from observations and from ops-stress. Not presence. Not abundance. Not a farm score.",
+      "forecastEstimate": "Habitat class is a slow spatial prior in this prototype, not a 72h forecast.",
+      "confidence": {
+        "category": "low",
+        "reasons": [
+          "Literature-like envelope only",
+          "No substrate survey ingested",
+          "T1-style prior, not T3"
+        ]
+      },
+      "lastDirectObservation": {
+        "at": null,
+        "note": "No habitat survey row in the fixture."
+      },
+      "observationCount": {
+        "n": 0,
+        "window": "n/a",
+        "note": "Envelope, not a count."
+      },
+      "observationTypes": [
+        "none — habitat class is not an observation type"
+      ],
+      "environmentalInputs": [
+        {
+          "name": "Estuary / intertidal setting (public geography)",
+          "value": "typical",
+          "asOf": "static fixture",
+          "role": "habitat prior"
+        }
+      ],
+      "keyModelDrivers": [
+        "Coarse estuary class only. Not SST-as-oysters."
+      ],
+      "comparableHistoricalConditions": "Not an anomaly. No reference climatology of habitat was computed.",
+      "modelVersion": "GLOBE-PROTO-FIXTURE-2026-09-18-v0",
+      "validationPerformance": "Never evaluated. This prototype has no skill score, no calibration plot, and no prospective window.",
+      "knownLimitations": [
+        "Fixture / synthetic data only (generated 2026-09-18).",
+        "Not a live animal map.",
+        "Approximate public water-body cells, not farm leases and not DOH growing-area polygons.",
+        "No OBIS, GBIF, AIS, GFW, or catch locations."
+      ],
+      "sourceLinksAndLicenses": [
+        {
+          "name": "WA DOH Commercial Shellfish Map Viewer",
+          "url": "https://fortress.wa.gov/doh/oswpviewer/index.html",
+          "license": "Official public page (not ingested)",
+          "note": "Context link only. This app does not model harvest open/closed and did not download growing-area polygons."
+        },
+        {
+          "name": "WA DOH Growing Area Closures",
+          "url": "https://fortress.wa.gov/doh/eh/portal/odw/si/GrowingAreaClosures.aspx",
+          "license": "Official public page (not ingested)",
+          "note": "Those pages win on harvest legality. This globe never paints open/closed."
+        },
+        {
+          "name": "NOAA CO-OPS Toke Point (9440910) — named analog only",
+          "url": "https://tidesandcurrents.noaa.gov/stationhome.html?id=9440910",
+          "license": "Not ingested in this prototype",
+          "note": "Fixture timestamps do not come from this station. Named so operators know what a real brief would cite."
+        }
+      ],
+      "dataFreshness": "Inputs current through 2026-09-18T21:00:00Z in the fixture clock. Nothing was fetched live.",
+      "privacyCoarsening": "PUBLIC water-body. Habitat is not a lease map.",
+      "whatWouldReduceUncertainty": [
+        "A real benthic/substrate survey with rights clearance."
+      ]
+    },
+    "answers": {
+      "why": "The cell sits in a coarsened public estuary polygon, so a habitat class was assigned as a prior.",
+      "trust": "Low as a biological claim. Habitat ≠ anyone is there.",
+      "missing": "Substrate, emersion hours measured on site, any species observation.",
+      "observedInferredForecast": "HABITAT PRIOR. Not observed presence. Not a forecast of animals."
+    }
+  },
+  "WILLAPA-C21": {
+    "evidence": {
+      "currentEstimate": "UNKNOWN / insufficient evidence. This is a successful product state. It is not zero animals and not 'safe' or 'empty'.",
+      "forecastEstimate": "Cannot issue. No forecast is drawn through a gap.",
+      "confidence": {
+        "category": "none",
+        "reasons": [
+          "No recent direct observations in this coarsened cell",
+          "No depth-specific biological records",
+          "No validated survey data",
+          "Issuing a filled heatmap here would be interpolation theater"
+        ]
+      },
+      "lastDirectObservation": {
+        "at": null,
+        "note": "None."
+      },
+      "observationCount": {
+        "n": 0,
+        "window": "7d fixture",
+        "note": "Zero. Gap ≠ absence."
+      },
+      "observationTypes": [
+        "none"
+      ],
+      "environmentalInputs": [],
+      "keyModelDrivers": [
+        "None issued."
+      ],
+      "comparableHistoricalConditions": "Not computed across gaps. No kriging of animals.",
+      "modelVersion": "GLOBE-PROTO-FIXTURE-2026-09-18-v0",
+      "validationPerformance": "Never evaluated. This prototype has no skill score, no calibration plot, and no prospective window.",
+      "knownLimitations": [
+        "Fixture / synthetic data only (generated 2026-09-18).",
+        "Not a live animal map.",
+        "Approximate public water-body cells, not farm leases and not DOH growing-area polygons.",
+        "No OBIS, GBIF, AIS, GFW, or catch locations."
+      ],
+      "sourceLinksAndLicenses": [
+        {
+          "name": "WA DOH Commercial Shellfish Map Viewer",
+          "url": "https://fortress.wa.gov/doh/oswpviewer/index.html",
+          "license": "Official public page (not ingested)",
+          "note": "Context link only. This app does not model harvest open/closed and did not download growing-area polygons."
+        },
+        {
+          "name": "WA DOH Growing Area Closures",
+          "url": "https://fortress.wa.gov/doh/eh/portal/odw/si/GrowingAreaClosures.aspx",
+          "license": "Official public page (not ingested)",
+          "note": "Those pages win on harvest legality. This globe never paints open/closed."
+        },
+        {
+          "name": "NOAA CO-OPS Toke Point (9440910) — named analog only",
+          "url": "https://tidesandcurrents.noaa.gov/stationhome.html?id=9440910",
+          "license": "Not ingested in this prototype",
+          "note": "Fixture timestamps do not come from this station. Named so operators know what a real brief would cite."
+        }
+      ],
+      "dataFreshness": "Inputs current through 2026-09-18T21:00:00Z in the fixture clock. Nothing was fetched live.",
+      "privacyCoarsening": "PUBLIC cell with nothing to show. Hiding the hatch would be the dishonest option.",
+      "whatWouldReduceUncertainty": [
+        "A designed survey or permissioned sensor in this cell and depth band.",
+        "Season-matched repeats — one visit does not close a gap forever.",
+        "Declared depth. Unknown depth blocks High confidence."
+      ]
+    },
+    "answers": {
+      "why": "The fixture contains no supporting observation or validated model for this cell.",
+      "trust": "Do not trust a filled-in animal story. Confidence is None. That is the product.",
+      "missing": "Any protocol observation at this depth and season; a model that has been evaluated rather than interpolated.",
+      "observedInferredForecast": "UNKNOWN. Not observed. Not inferred. Not forecast. Not absence."
+    }
+  },
+  "WILLAPA-C22": {
+    "evidence": {
+      "currentEstimate": "DATA_GAP — no fixture in this cell×window. This is a successful product state. It is not zero animals and not 'safe' or 'empty'.",
+      "forecastEstimate": "Cannot issue. No forecast is drawn through a gap.",
+      "confidence": {
+        "category": "none",
+        "reasons": [
+          "No recent direct observations in this coarsened cell",
+          "No depth-specific biological records",
+          "No validated survey data",
+          "Issuing a filled heatmap here would be interpolation theater"
+        ]
+      },
+      "lastDirectObservation": {
+        "at": null,
+        "note": "None."
+      },
+      "observationCount": {
+        "n": 0,
+        "window": "7d fixture",
+        "note": "Zero. Gap ≠ absence."
+      },
+      "observationTypes": [
+        "none"
+      ],
+      "environmentalInputs": [],
+      "keyModelDrivers": [
+        "None issued."
+      ],
+      "comparableHistoricalConditions": "Not computed across gaps. No kriging of animals.",
+      "modelVersion": "GLOBE-PROTO-FIXTURE-2026-09-18-v0",
+      "validationPerformance": "Never evaluated. This prototype has no skill score, no calibration plot, and no prospective window.",
+      "knownLimitations": [
+        "Fixture / synthetic data only (generated 2026-09-18).",
+        "Not a live animal map.",
+        "Approximate public water-body cells, not farm leases and not DOH growing-area polygons.",
+        "No OBIS, GBIF, AIS, GFW, or catch locations."
+      ],
+      "sourceLinksAndLicenses": [
+        {
+          "name": "WA DOH Commercial Shellfish Map Viewer",
+          "url": "https://fortress.wa.gov/doh/oswpviewer/index.html",
+          "license": "Official public page (not ingested)",
+          "note": "Context link only. This app does not model harvest open/closed and did not download growing-area polygons."
+        },
+        {
+          "name": "WA DOH Growing Area Closures",
+          "url": "https://fortress.wa.gov/doh/eh/portal/odw/si/GrowingAreaClosures.aspx",
+          "license": "Official public page (not ingested)",
+          "note": "Those pages win on harvest legality. This globe never paints open/closed."
+        },
+        {
+          "name": "NOAA CO-OPS Toke Point (9440910) — named analog only",
+          "url": "https://tidesandcurrents.noaa.gov/stationhome.html?id=9440910",
+          "license": "Not ingested in this prototype",
+          "note": "Fixture timestamps do not come from this station. Named so operators know what a real brief would cite."
+        }
+      ],
+      "dataFreshness": "Inputs current through 2026-09-18T21:00:00Z in the fixture clock. Nothing was fetched live.",
+      "privacyCoarsening": "PUBLIC cell with nothing to show. Hiding the hatch would be the dishonest option.",
+      "whatWouldReduceUncertainty": [
+        "A designed survey or permissioned sensor in this cell and depth band.",
+        "Season-matched repeats — one visit does not close a gap forever.",
+        "Declared depth. Unknown depth blocks High confidence."
+      ]
+    },
+    "answers": {
+      "why": "The fixture contains no supporting observation or validated model for this cell.",
+      "trust": "Do not trust a filled-in animal story. Confidence is None. That is the product.",
+      "missing": "Any protocol observation at this depth and season; a model that has been evaluated rather than interpolated.",
+      "observedInferredForecast": "UNKNOWN. Not observed. Not inferred. Not forecast. Not absence."
+    }
+  },
+  "WILLAPA-C23": {
+    "evidence": {
+      "currentEstimate": "RESTRICTED_OR_COARSENED: values that would identify a farm, string, or fine location are withheld. You are looking at a privacy-preserving empty/coarse cell, not a biological zero.",
+      "forecastEstimate": "No public forecast at a finer grain.",
+      "confidence": {
+        "category": "none",
+        "reasons": [
+          "No recent direct observations in this coarsened cell",
+          "No depth-specific biological records",
+          "No validated survey data",
+          "Issuing a filled heatmap here would be interpolation theater"
+        ]
+      },
+      "lastDirectObservation": {
+        "at": null,
+        "note": "None."
+      },
+      "observationCount": {
+        "n": 0,
+        "window": "7d fixture",
+        "note": "Zero. Gap ≠ absence."
+      },
+      "observationTypes": [
+        "withheld"
+      ],
+      "environmentalInputs": [],
+      "keyModelDrivers": [
+        "None issued."
+      ],
+      "comparableHistoricalConditions": "Not computed across gaps. No kriging of animals.",
+      "modelVersion": "GLOBE-PROTO-FIXTURE-2026-09-18-v0",
+      "validationPerformance": "Never evaluated. This prototype has no skill score, no calibration plot, and no prospective window.",
+      "knownLimitations": [
+        "Fixture / synthetic data only (generated 2026-09-18).",
+        "Not a live animal map.",
+        "Approximate public water-body cells, not farm leases and not DOH growing-area polygons.",
+        "No OBIS, GBIF, AIS, GFW, or catch locations."
+      ],
+      "sourceLinksAndLicenses": [
+        {
+          "name": "WA DOH Commercial Shellfish Map Viewer",
+          "url": "https://fortress.wa.gov/doh/oswpviewer/index.html",
+          "license": "Official public page (not ingested)",
+          "note": "Context link only. This app does not model harvest open/closed and did not download growing-area polygons."
+        },
+        {
+          "name": "WA DOH Growing Area Closures",
+          "url": "https://fortress.wa.gov/doh/eh/portal/odw/si/GrowingAreaClosures.aspx",
+          "license": "Official public page (not ingested)",
+          "note": "Those pages win on harvest legality. This globe never paints open/closed."
+        },
+        {
+          "name": "NOAA CO-OPS Toke Point (9440910) — named analog only",
+          "url": "https://tidesandcurrents.noaa.gov/stationhome.html?id=9440910",
+          "license": "Not ingested in this prototype",
+          "note": "Fixture timestamps do not come from this station. Named so operators know what a real brief would cite."
+        }
+      ],
+      "dataFreshness": "Inputs current through 2026-09-18T21:00:00Z in the fixture clock. Nothing was fetched live.",
+      "privacyCoarsening": "RESTRICTED_OR_COARSENED: geometry is intentionally large. Private farm or fine-scale data are not shown.",
+      "whatWouldReduceUncertainty": [
+        "A designed survey or permissioned sensor in this cell and depth band.",
+        "Season-matched repeats — one visit does not close a gap forever.",
+        "Declared depth. Unknown depth blocks High confidence."
+      ]
+    },
+    "answers": {
+      "why": "Privacy / coarsening rules forbid showing a finer public claim here.",
+      "trust": "Do not trust a filled-in animal story. Confidence is None. That is the product.",
+      "missing": "Permission from the data owner; even then public grain stays coarse.",
+      "observedInferredForecast": "WITHHELD / COARSENED. Not observed. Not a public inference."
+    }
+  },
+  "WILLAPA-C24": {
+    "evidence": {
+      "currentEstimate": "MODEL_INFERENCE (fixture): relative environmental-stress / workability inference for Southern central Willapa (public water). Dotted, translucent on purpose. Not occupancy. Not abundance.",
+      "forecastEstimate": "No separate forecast layer on this cell. Inference is a present-window rule output from fixture drivers.",
+      "confidence": {
+        "category": "low",
+        "reasons": [
+          "No local labels",
+          "Rule is unvalidated",
+          "Observation density low"
+        ]
+      },
+      "lastDirectObservation": {
+        "at": null,
+        "note": "None. Inference is not an observation."
+      },
+      "observationCount": {
+        "n": 4,
+        "window": "7d fixture",
+        "note": "Sparse or zero protocol rows."
+      },
+      "observationTypes": [
+        "none sufficient",
+        "environmental proxies only"
+      ],
+      "environmentalInputs": [
+        {
+          "name": "Fixture air / tide analog",
+          "value": "present-window",
+          "asOf": "2026-09-18T21:00:00Z",
+          "role": "inference driver — not body temperature"
+        }
+      ],
+      "keyModelDrivers": [
+        "Unvalidated air×tide rule (fixture)",
+        "Not chlorophyll",
+        "Not AIS"
+      ],
+      "comparableHistoricalConditions": "No locked comparison set. Do not read this as a percentile of animals.",
+      "modelVersion": "GLOBE-PROTO-FIXTURE-2026-09-18-v0",
+      "validationPerformance": "Never evaluated. This prototype has no skill score, no calibration plot, and no prospective window.",
+      "knownLimitations": [
+        "Fixture / synthetic data only (generated 2026-09-18).",
+        "Not a live animal map.",
+        "Approximate public water-body cells, not farm leases and not DOH growing-area polygons.",
+        "No OBIS, GBIF, AIS, GFW, or catch locations."
+      ],
+      "sourceLinksAndLicenses": [
+        {
+          "name": "WA DOH Commercial Shellfish Map Viewer",
+          "url": "https://fortress.wa.gov/doh/oswpviewer/index.html",
+          "license": "Official public page (not ingested)",
+          "note": "Context link only. This app does not model harvest open/closed and did not download growing-area polygons."
+        },
+        {
+          "name": "WA DOH Growing Area Closures",
+          "url": "https://fortress.wa.gov/doh/eh/portal/odw/si/GrowingAreaClosures.aspx",
+          "license": "Official public page (not ingested)",
+          "note": "Those pages win on harvest legality. This globe never paints open/closed."
+        },
+        {
+          "name": "NOAA CO-OPS Toke Point (9440910) — named analog only",
+          "url": "https://tidesandcurrents.noaa.gov/stationhome.html?id=9440910",
+          "license": "Not ingested in this prototype",
+          "note": "Fixture timestamps do not come from this station. Named so operators know what a real brief would cite."
+        }
+      ],
+      "dataFreshness": "Inputs current through 2026-09-18T21:00:00Z in the fixture clock. Nothing was fetched live.",
+      "privacyCoarsening": "PUBLIC coarsened cell. Inference is not a reason to publish finer geometry.",
+      "whatWouldReduceUncertainty": [
+        "Direct observations with a protocol.",
+        "A named baseline evaluated in a prospective lane."
+      ]
+    },
+    "answers": {
+      "why": "A fixture environmental rule was applied. Rules are not animals.",
+      "trust": "Low. Treat as a watch on the method, not a sure bet on biology.",
+      "missing": "Protocol observations, depth, calibration, farm/vessel outcomes.",
+      "observedInferredForecast": "INFERRED. Not observed. Not a forecast plume."
+    }
+  },
+  "WILLAPA-C25": {
+    "evidence": {
+      "currentEstimate": "No current occupancy issued.",
+      "forecastEstimate": "FORECAST (fixture): 24–72h environmental-workability context for Southern central Willapa (public water). Dashed encoding = future window. Not species presence.",
+      "confidence": {
+        "category": "low",
+        "reasons": [
+          "Forecast-only fixture",
+          "No biological labels",
+          "Unvalidated"
+        ]
+      },
+      "lastDirectObservation": {
+        "at": null,
+        "note": "None in this cell."
+      },
+      "observationCount": {
+        "n": 0,
+        "window": "72h",
+        "note": "Zero biological rows."
+      },
+      "observationTypes": [
+        "forecast environmental analog only"
+      ],
+      "environmentalInputs": [
+        {
+          "name": "Fixture NWP-analog air/wind",
+          "value": "see time readout",
+          "asOf": "2026-09-18T21:00:00Z",
+          "role": "forecast driver"
+        }
+      ],
+      "keyModelDrivers": [
+        "Forecast air/wind analog — not SST=animals"
+      ],
+      "comparableHistoricalConditions": "No comparison set issued for this cell.",
+      "modelVersion": "GLOBE-PROTO-FIXTURE-2026-09-18-v0",
+      "validationPerformance": "Never evaluated. This prototype has no skill score, no calibration plot, and no prospective window.",
+      "knownLimitations": [
+        "Fixture / synthetic data only (generated 2026-09-18).",
+        "Not a live animal map.",
+        "Approximate public water-body cells, not farm leases and not DOH growing-area polygons.",
+        "No OBIS, GBIF, AIS, GFW, or catch locations."
+      ],
+      "sourceLinksAndLicenses": [
+        {
+          "name": "WA DOH Commercial Shellfish Map Viewer",
+          "url": "https://fortress.wa.gov/doh/oswpviewer/index.html",
+          "license": "Official public page (not ingested)",
+          "note": "Context link only. This app does not model harvest open/closed and did not download growing-area polygons."
+        },
+        {
+          "name": "WA DOH Growing Area Closures",
+          "url": "https://fortress.wa.gov/doh/eh/portal/odw/si/GrowingAreaClosures.aspx",
+          "license": "Official public page (not ingested)",
+          "note": "Those pages win on harvest legality. This globe never paints open/closed."
+        },
+        {
+          "name": "NOAA CO-OPS Toke Point (9440910) — named analog only",
+          "url": "https://tidesandcurrents.noaa.gov/stationhome.html?id=9440910",
+          "license": "Not ingested in this prototype",
+          "note": "Fixture timestamps do not come from this station. Named so operators know what a real brief would cite."
+        }
+      ],
+      "dataFreshness": "Inputs current through 2026-09-18T21:00:00Z in the fixture clock. Nothing was fetched live.",
+      "privacyCoarsening": "COARSENED public cell WILLAPA-C25.",
+      "whatWouldReduceUncertainty": [
+        "Direct observations in this cell and depth band."
+      ]
+    },
+    "answers": {
+      "why": "The fixture clock has a forecast environmental field here. Nothing was observed on cell.",
+      "trust": "Low. Unvalidated. Do not change a high-cost action on this demo.",
+      "missing": "Any biological observation; depth-resolved records; validation.",
+      "observedInferredForecast": "FORECAST. Not observed. Not a present-time occupancy inference."
+    }
+  },
+  "WILLAPA-C26": {
+    "evidence": {
+      "currentEstimate": "HABITAT_SUITABILITY (fixture): estuarine intertidal / shallow-water habitat class = typical. Separate palette from observations and from ops-stress. Not presence. Not abundance. Not a farm score.",
+      "forecastEstimate": "Habitat class is a slow spatial prior in this prototype, not a 72h forecast.",
+      "confidence": {
+        "category": "low",
+        "reasons": [
+          "Literature-like envelope only",
+          "No substrate survey ingested",
+          "T1-style prior, not T3"
+        ]
+      },
+      "lastDirectObservation": {
+        "at": null,
+        "note": "No habitat survey row in the fixture."
+      },
+      "observationCount": {
+        "n": 0,
+        "window": "n/a",
+        "note": "Envelope, not a count."
+      },
+      "observationTypes": [
+        "none — habitat class is not an observation type"
+      ],
+      "environmentalInputs": [
+        {
+          "name": "Estuary / intertidal setting (public geography)",
+          "value": "typical",
+          "asOf": "static fixture",
+          "role": "habitat prior"
+        }
+      ],
+      "keyModelDrivers": [
+        "Coarse estuary class only. Not SST-as-oysters."
+      ],
+      "comparableHistoricalConditions": "Not an anomaly. No reference climatology of habitat was computed.",
+      "modelVersion": "GLOBE-PROTO-FIXTURE-2026-09-18-v0",
+      "validationPerformance": "Never evaluated. This prototype has no skill score, no calibration plot, and no prospective window.",
+      "knownLimitations": [
+        "Fixture / synthetic data only (generated 2026-09-18).",
+        "Not a live animal map.",
+        "Approximate public water-body cells, not farm leases and not DOH growing-area polygons.",
+        "No OBIS, GBIF, AIS, GFW, or catch locations."
+      ],
+      "sourceLinksAndLicenses": [
+        {
+          "name": "WA DOH Commercial Shellfish Map Viewer",
+          "url": "https://fortress.wa.gov/doh/oswpviewer/index.html",
+          "license": "Official public page (not ingested)",
+          "note": "Context link only. This app does not model harvest open/closed and did not download growing-area polygons."
+        },
+        {
+          "name": "WA DOH Growing Area Closures",
+          "url": "https://fortress.wa.gov/doh/eh/portal/odw/si/GrowingAreaClosures.aspx",
+          "license": "Official public page (not ingested)",
+          "note": "Those pages win on harvest legality. This globe never paints open/closed."
+        },
+        {
+          "name": "NOAA CO-OPS Toke Point (9440910) — named analog only",
+          "url": "https://tidesandcurrents.noaa.gov/stationhome.html?id=9440910",
+          "license": "Not ingested in this prototype",
+          "note": "Fixture timestamps do not come from this station. Named so operators know what a real brief would cite."
+        }
+      ],
+      "dataFreshness": "Inputs current through 2026-09-18T21:00:00Z in the fixture clock. Nothing was fetched live.",
+      "privacyCoarsening": "PUBLIC water-body. Habitat is not a lease map.",
+      "whatWouldReduceUncertainty": [
+        "A real benthic/substrate survey with rights clearance."
+      ]
+    },
+    "answers": {
+      "why": "The cell sits in a coarsened public estuary polygon, so a habitat class was assigned as a prior.",
+      "trust": "Low as a biological claim. Habitat ≠ anyone is there.",
+      "missing": "Substrate, emersion hours measured on site, any species observation.",
+      "observedInferredForecast": "HABITAT PRIOR. Not observed presence. Not a forecast of animals."
+    }
+  },
+  "WILLAPA-C27": {
+    "evidence": {
+      "currentEstimate": "DATA_GAP — no fixture in this cell×window. This is a successful product state. It is not zero animals and not 'safe' or 'empty'.",
+      "forecastEstimate": "Cannot issue. No forecast is drawn through a gap.",
+      "confidence": {
+        "category": "none",
+        "reasons": [
+          "No recent direct observations in this coarsened cell",
+          "No depth-specific biological records",
+          "No validated survey data",
+          "Issuing a filled heatmap here would be interpolation theater"
+        ]
+      },
+      "lastDirectObservation": {
+        "at": null,
+        "note": "None."
+      },
+      "observationCount": {
+        "n": 0,
+        "window": "7d fixture",
+        "note": "Zero. Gap ≠ absence."
+      },
+      "observationTypes": [
+        "none"
+      ],
+      "environmentalInputs": [],
+      "keyModelDrivers": [
+        "None issued."
+      ],
+      "comparableHistoricalConditions": "Not computed across gaps. No kriging of animals.",
+      "modelVersion": "GLOBE-PROTO-FIXTURE-2026-09-18-v0",
+      "validationPerformance": "Never evaluated. This prototype has no skill score, no calibration plot, and no prospective window.",
+      "knownLimitations": [
+        "Fixture / synthetic data only (generated 2026-09-18).",
+        "Not a live animal map.",
+        "Approximate public water-body cells, not farm leases and not DOH growing-area polygons.",
+        "No OBIS, GBIF, AIS, GFW, or catch locations."
+      ],
+      "sourceLinksAndLicenses": [
+        {
+          "name": "WA DOH Commercial Shellfish Map Viewer",
+          "url": "https://fortress.wa.gov/doh/oswpviewer/index.html",
+          "license": "Official public page (not ingested)",
+          "note": "Context link only. This app does not model harvest open/closed and did not download growing-area polygons."
+        },
+        {
+          "name": "WA DOH Growing Area Closures",
+          "url": "https://fortress.wa.gov/doh/eh/portal/odw/si/GrowingAreaClosures.aspx",
+          "license": "Official public page (not ingested)",
+          "note": "Those pages win on harvest legality. This globe never paints open/closed."
+        },
+        {
+          "name": "NOAA CO-OPS Toke Point (9440910) — named analog only",
+          "url": "https://tidesandcurrents.noaa.gov/stationhome.html?id=9440910",
+          "license": "Not ingested in this prototype",
+          "note": "Fixture timestamps do not come from this station. Named so operators know what a real brief would cite."
+        }
+      ],
+      "dataFreshness": "Inputs current through 2026-09-18T21:00:00Z in the fixture clock. Nothing was fetched live.",
+      "privacyCoarsening": "PUBLIC cell with nothing to show. Hiding the hatch would be the dishonest option.",
+      "whatWouldReduceUncertainty": [
+        "A designed survey or permissioned sensor in this cell and depth band.",
+        "Season-matched repeats — one visit does not close a gap forever.",
+        "Declared depth. Unknown depth blocks High confidence."
+      ]
+    },
+    "answers": {
+      "why": "The fixture contains no supporting observation or validated model for this cell.",
+      "trust": "Do not trust a filled-in animal story. Confidence is None. That is the product.",
+      "missing": "Any protocol observation at this depth and season; a model that has been evaluated rather than interpolated.",
+      "observedInferredForecast": "UNKNOWN. Not observed. Not inferred. Not forecast. Not absence."
+    }
+  }
+}

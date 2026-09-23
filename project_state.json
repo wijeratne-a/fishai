@@ -1,0 +1,215 @@
+{
+  "project_name": "FishAI",
+  "current_state": "STATE_10_PAUSED_FOR_HUMAN_DECISION",
+  "canonical_prototype_id": "P0-WILLAPA-MGIGAS-OSI72",
+  "current_iteration": 1,
+  "start_time": "2026-09-18T22:15:00-07:00",
+  "elapsed_time": "PT2H30M",
+  "remaining_time_budget": "PT45H30M",
+  "autonomous_work_budget": {
+    "MAX_AUTONOMOUS_WORK_HOURS": 48,
+    "MAX_RESEARCH_ITERATIONS": 8,
+    "MAX_MODEL_ITERATIONS": 4,
+    "MAX_PARALLEL_AGENTS": 8,
+    "CHECKPOINT_INTERVAL_HOURS": 4,
+    "DECISION_REVIEW_INTERVAL_HOURS": 12
+  },
+  "active_agents": [],
+  "completed_agents": [
+    "REQUIREMENTS_AND_WEDGE_AGENT",
+    "MARINE_DOMAIN_AGENT",
+    "DATA_RIGHTS_AND_PRIVACY_AGENT",
+    "GEOSPATIAL_DATA_ENGINEER_AGENT",
+    "QUALITY_AND_VALIDATION_AGENT",
+    "PRODUCT_AND_MONETIZATION_AGENT",
+    "SCIENTIFIC_RED_TEAM_AGENT",
+    "DATA_DISCOVERY_AGENT",
+    "COMMERCIAL_LAYER_INTEGRATOR"
+  ],
+  "unresolved_decisions": [
+    "PROJECT_NAME confirmation (working name FishAI is allowed; legal entity UNRESOLVED)",
+    "FOUNDER_OR_ORGANIZATION",
+    "Select exactly one of W1 / W2 / W3 or a written replacement that is still ONE species x ONE geography x ONE customer type x ONE recurring decision",
+    "INITIAL_SPECIES_COMMON_NAME and INITIAL_SPECIES_SCIENTIFIC_NAME",
+    "INITIAL_TAXONOMIC_AUTHORITY and INITIAL_WORMS_APHIAID_OR_TAXON_ID",
+    "INITIAL_LIFE_STAGE_IF_RELEVANT",
+    "INITIAL_GEOGRAPHY and GEOGRAPHY_BOUNDARY_FORMAT (for W1: Willapa vs South Puget Sound vs other named DOH growing areas)",
+    "TARGET_COUNTRY_OR_JURISDICTION",
+    "INITIAL_CUSTOMER_SEGMENT",
+    "INITIAL_USE_CASE",
+    "INITIAL_PRIMARY_DECISION_TO_IMPROVE",
+    "DECISION_FREQUENCY and FORECAST_HORIZON",
+    "SPATIAL_RESOLUTION_TARGET and TEMPORAL_RESOLUTION_TARGET",
+    "PRIMARY_OUTCOME_METRIC and SECONDARY_OUTCOME_METRICS",
+    "TARGET_DATA_LATENCY and TARGET_PRODUCT_DELIVERY_FORMAT",
+    "BUDGET_CONSTRAINT, COMPUTE_CONSTRAINT, DATA_STORAGE_REGION, SECURITY_REQUIREMENTS",
+    "HUMAN_DOMAIN_EXPERTS_AVAILABLE",
+    "TARGET_PILOT_CUSTOMER_COUNT, PILOT_START_DATE, SUCCESS_THRESHOLD, FAILURE_THRESHOLD",
+    "REGULATORY_OR_SAFETY_CONSTRAINTS",
+    "KNOWN_COMPETITORS_OR_ALTERNATIVES, KNOWN_INITIAL_DATA_SOURCES, KNOWN_DATA_PARTNERS, KNOWN_LIMITATIONS",
+    "Permission to interview named operators; no customer interviews have been conducted"
+  ],
+  "approved_sources": [],
+  "rejected_sources": [
+    {
+      "source": "AIS / VMS vessel density as a direct proxy for fish or lobster abundance",
+      "reason": "Prompt non-negotiable: vessel activity is not a measurement of abundance. Catalog only if later used as effort/context with documented limitations.",
+      "status": "rejected_as_abundance_label"
+    },
+    {
+      "source": "Social-media catch reports / fishing forums as model labels",
+      "reason": "Evidence Tier 4; cannot support user-facing predictions or abundance claims.",
+      "status": "rejected_as_label"
+    },
+    {
+      "source": "WA DOH growing-area classification / biotoxin results as a product that authorizes harvest",
+      "reason": "Official food-safety determination belongs to the authority. May be displayed as attributed official status only; never modeled as FishAI authorization.",
+      "status": "rejected_as_product_claim"
+    }
+  ],
+  "blocked_sources": [
+    {
+      "source": "Exact private fishing locations, farm performance, tribal/Indigenous knowledge, protected-species locations",
+      "reason": "Non-negotiable privacy/ecological rule. Partner data requires documented consent before any collection.",
+      "status": "blocked_until_consent_and_legal_review"
+    },
+    {
+      "source": "Paywalled commercial datasets, logbooks, or APIs without a documented license",
+      "reason": "No bypass of paywalls, auth, or licenses. Catalog-only until rights agent + human approval.",
+      "status": "blocked"
+    },
+    {
+      "source": "Any dataset whose commercial-use rights are unclear",
+      "reason": "Stop-condition trigger. Do not ingest.",
+      "status": "blocked"
+    }
+  ],
+  "critical_data_gaps": [
+    "No founder-selected species x geography x customer x decision",
+    "No design-partner farms, captains, or lobster operators; no permissioned outcome data",
+    "No interviews, so willingness-to-pay and current workflow remain hypotheses",
+    "Public RecFIN/CRFS and Maine DMR landings are lagged and/or confidential at haul scale; they cannot by themselves support a 24-48h trip product",
+    "Farm mortality and bag-level outcomes are private; PSI voluntary mortality form is research-only",
+    "NANOOS/ORCA coverage is spatially uneven (stronger in Hood Canal than Willapa); Willapa relies on fewer in-situ assets",
+    "No DATA_RIGHTS_AND_PRIVACY_AGENT approval of any source for ingestion",
+    "No ground-truth protocol signed with a customer"
+  ],
+  "current_model_version": "none",
+  "current_baseline_version": "none",
+  "latest_validation_status": "PROTOCOL_ONLY",
+  "latest_red_team_status": "HIGH_BLOCKERS_OPEN",
+  "pilot_status": "NOT_STARTED",
+  "traction_status": "ZERO_INTERVIEWS",
+  "highest_priority_next_action": "founder wedge lock",
+  "reasons_not_to_expand_scope": [
+    "Wedge is not decided; expanding species/geography would violate ONE x ONE x ONE x ONE",
+    "No customer interviews; pain and WTP are documented only at industry scale, not at buyer scale",
+    "No ingestion or ML is permitted until wedge, label, rights, baseline, and red-team gates are met",
+    "Food-safety, ESA/Chinook, and right-whale/location sensitivity make a broad ocean terminal unsafe as v0",
+    "Public data already exists as maps (NANOOS Shellfish Growers, RecFIN, DMR landings); the product must be a decision brief, not another dashboard"
+  ],
+  "stop_condition_status": "PAUSED: Section 2 founder values unresolved after requirements phase. This is the required human-decision stop, not a scientific failure. No STOP_DECISION_MEMO because the trigger is missing configuration, not failed assumptions.",
+  "last_checkpoint_time": "2026-09-18T22:38:00-07:00",
+  "state_history": [
+    {
+      "previous_state": null,
+      "next_state": "STATE_0_CONFIGURE",
+      "reason": "Begin Ocean Intelligence Builder. Founder supplied no Section 2 configuration. Initialize project_state, budget defaults, and directory skeleton.",
+      "evidence": [
+        "Empty /Users/wijeratne/dev/fishai at start of run",
+        "Master prompt Section 2: if values not supplied, mark UNRESOLVED and launch REQUIREMENTS_AND_WEDGE_AGENT",
+        "Default budget applied: 48h / 8 research iterations / 4 model iterations / 8 parallel agents / 4h checkpoint / 12h decision review"
+      ],
+      "artifacts": [
+        "config/project_config.json",
+        "project_state.json"
+      ],
+      "responsible_agent": "REQUIREMENTS_AND_WEDGE_AGENT",
+      "timestamp": "2026-09-18T22:15:00-07:00"
+    },
+    {
+      "previous_state": "STATE_0_CONFIGURE",
+      "next_state": "STATE_1_SELECT_WEDGE",
+      "reason": "Configuration fields remain UNRESOLVED. Transition to wedge selection research: evaluate three lawful ONE x ONE x ONE x ONE candidates from official sources; do not lock a wedge as DECIDED.",
+      "evidence": [
+        "config/project_config.json all INITIAL_* fields UNRESOLVED",
+        "HiveClaw/Atlas/NeuroClaw inspection found no FishAI company name or marine-product founder choice",
+        "Shared research candidates W1 Pacific oyster WA, W2 Chinook CA/OR charter, W3 American lobster Gulf of Maine"
+      ],
+      "artifacts": [
+        "artifacts/requirements_and_wedge/wedge_options.md",
+        "artifacts/requirements_and_wedge/recommended_initial_wedge.md"
+      ],
+      "responsible_agent": "REQUIREMENTS_AND_WEDGE_AGENT",
+      "timestamp": "2026-09-18T22:20:00-07:00"
+    },
+    {
+      "previous_state": "STATE_1_SELECT_WEDGE",
+      "next_state": "STATE_10_PAUSED_FOR_HUMAN_DECISION",
+      "reason": "After catalog-only official-source research, PROJECT_NAME (working), INITIAL_SPECIES, INITIAL_GEOGRAPHY, INITIAL_CUSTOMER_SEGMENT, INITIAL_PRIMARY_DECISION_TO_IMPROVE, and PRIMARY_OUTCOME_METRIC remain UNRESOLVED. Prompt requires STOP with decision_required.md and three viable wedges.",
+      "evidence": [
+        "No founder confirmation of any wedge",
+        "No customer interviews",
+        "No data ingested",
+        "No ML started",
+        "Three viable wedges documented with tradeoffs and minimum customer/data requirements"
+      ],
+      "artifacts": [
+        "decision_required.md",
+        "artifacts/requirements_and_wedge/wedge_options.md",
+        "artifacts/requirements_and_wedge/recommended_initial_wedge.md",
+        "artifacts/requirements_and_wedge/customer_decision_map.md",
+        "artifacts/requirements_and_wedge/decision_economics.md",
+        "artifacts/requirements_and_wedge/interview_script.md",
+        "artifacts/requirements_and_wedge/assumptions_register.md",
+        "artifacts/requirements_and_wedge/agent_handoff.md",
+        "iteration_reports/ITERATION_REPORT_2026-09-18_01.md",
+        "checkpoints/CHECKPOINT_2026-09-18T2215.md",
+        "README.md"
+      ],
+      "responsible_agent": "REQUIREMENTS_AND_WEDGE_AGENT",
+      "timestamp": "2026-09-18T23:45:00-07:00"
+    },
+    {
+      "previous_state": "STATE_10_PAUSED_FOR_HUMAN_DECISION",
+      "next_state": "STATE_10_PAUSED_FOR_HUMAN_DECISION",
+      "reason": "Product and scientific red-team completed while paused. Unsafe sample copy (Totten / top-20% / SST-first) and SST≥19°C-as-kill expert rule were remediated in place. Customer-facing model claims halted. Wedge remains RECOMMENDED not DECIDED. Go/no-go is PAUSE not GO.",
+      "evidence": [
+        "current_state unchanged: STATE_10_PAUSED_FOR_HUMAN_DECISION",
+        "latest_red_team_status=HIGH_BLOCKERS_OPEN",
+        "latest_validation_status=PROTOCOL_ONLY",
+        "pilot_status=NOT_STARTED",
+        "traction_status=ZERO_INTERVIEWS",
+        "No ingest, no ML, no observatory writes, no wedge lock"
+      ],
+      "artifacts": [
+        "artifacts/integration/COMMERCIAL_WEDGE_SYNTHESIS.md",
+        "artifacts/integration/claims_remediation_log.md",
+        "checkpoints/CHECKPOINT_2026-09-18T2238_COMMERCIAL.md",
+        "artifacts/product_and_monetization/product_thesis.md",
+        "artifacts/product_and_monetization/MVP_workflow.md",
+        "artifacts/product_and_monetization/wireframe_spec.md",
+        "artifacts/quality_and_validation/baseline_model_spec.md"
+      ],
+      "responsible_agent": "COMMERCIAL_LAYER_INTEGRATOR",
+      "timestamp": "2026-09-18T22:38:00-07:00"
+    },
+    {
+      "previous_state": "STATE_10_PAUSED_FOR_HUMAN_DECISION",
+      "next_state": "STATE_10_PAUSED_FOR_HUMAN_DECISION",
+      "reason": "Alignment scribe recorded canonical prototype id P0-WILLAPA-MGIGAS-OSI72 as RECOMMENDED not DECIDED. Independent agreement already exists across commercial synthesis, observatory cost/roadmap, physics red team, and digital twin architecture. Wedge not locked. No ingest, no training, no observatory in-flight writes.",
+      "evidence": [
+        "current_state unchanged: STATE_10_PAUSED_FOR_HUMAN_DECISION",
+        "canonical_prototype_id=P0-WILLAPA-MGIGAS-OSI72 (RECOMMENDED, not DECIDED)",
+        "latest_red_team_status=HIGH_BLOCKERS_OPEN",
+        "No ingest, no ML, no wedge lock"
+      ],
+      "artifacts": [
+        "P0_WILLAPA_MGIGAS_OSI72.md",
+        "README.md"
+      ],
+      "responsible_agent": "ALIGNMENT_SCRIBE",
+      "timestamp": "2026-09-18T22:49:00-07:00"
+    }
+  ]
+}

@@ -1,0 +1,1545 @@
+{
+  "type": "FeatureCollection",
+  "name": "willapa_fixture_cells",
+  "features": [
+    {
+      "type": "Feature",
+      "properties": {
+        "cellId": "WILLAPA-C01",
+        "label": "Northern entrance (Shoalwater / Toke Point reach)",
+        "visualTruthState": "DIRECT_OBSERVATION",
+        "publishClass": "PUBLIC",
+        "isOpsRiskExample": false,
+        "sstC": 15.7,
+        "habitatClass": "not_applicable",
+        "observationDensity": "high",
+        "observationN": 24,
+        "lastDirectObservation": "2026-09-16T21:05:00Z",
+        "confidence": "medium",
+        "depthSurface": true,
+        "depthIntertidal": false,
+        "depth0to10": true,
+        "depthUnknown": false,
+        "centerLon": -124.0355,
+        "centerLat": 46.696
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              -124.00526684133453,
+              46.684039999999996
+            ],
+            [
+              -124.00526684133453,
+              46.70796
+            ],
+            [
+              -124.03546987259091,
+              46.719919999999995
+            ],
+            [
+              -124.06567290384729,
+              46.70796
+            ],
+            [
+              -124.06567290384729,
+              46.684039999999996
+            ],
+            [
+              -124.03546987259091,
+              46.67208
+            ],
+            [
+              -124.00526684133453,
+              46.684039999999996
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "cellId": "WILLAPA-C02",
+        "label": "Northern entrance (Shoalwater / Toke Point reach)",
+        "visualTruthState": "DIRECT_OBSERVATION",
+        "publishClass": "PUBLIC",
+        "isOpsRiskExample": false,
+        "sstC": 15.7,
+        "habitatClass": "not_applicable",
+        "observationDensity": "high",
+        "observationN": 25,
+        "lastDirectObservation": "2026-09-18T16:10:00Z",
+        "confidence": "medium",
+        "depthSurface": true,
+        "depthIntertidal": false,
+        "depth0to10": false,
+        "depthUnknown": false,
+        "centerLon": -123.97,
+        "centerLat": 46.696
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              -123.93979696874362,
+              46.684039999999996
+            ],
+            [
+              -123.93979696874362,
+              46.70796
+            ],
+            [
+              -123.97,
+              46.719919999999995
+            ],
+            [
+              -124.00020303125638,
+              46.70796
+            ],
+            [
+              -124.00020303125638,
+              46.684039999999996
+            ],
+            [
+              -123.97,
+              46.67208
+            ],
+            [
+              -123.93979696874362,
+              46.684039999999996
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "cellId": "WILLAPA-C03",
+        "label": "Northern entrance (Shoalwater / Toke Point reach)",
+        "visualTruthState": "FORECAST",
+        "publishClass": "PUBLIC",
+        "isOpsRiskExample": false,
+        "sstC": 15.8,
+        "habitatClass": "not_applicable",
+        "observationDensity": "none",
+        "observationN": 0,
+        "lastDirectObservation": null,
+        "confidence": "low",
+        "depthSurface": true,
+        "depthIntertidal": true,
+        "depth0to10": false,
+        "depthUnknown": false,
+        "centerLon": -123.9045,
+        "centerLat": 46.696
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              -123.87432709615271,
+              46.684039999999996
+            ],
+            [
+              -123.87432709615271,
+              46.70796
+            ],
+            [
+              -123.90453012740909,
+              46.719919999999995
+            ],
+            [
+              -123.93473315866547,
+              46.70796
+            ],
+            [
+              -123.93473315866547,
+              46.684039999999996
+            ],
+            [
+              -123.90453012740909,
+              46.67208
+            ],
+            [
+              -123.87432709615271,
+              46.684039999999996
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "cellId": "WILLAPA-C04",
+        "label": "Central Willapa Bay (public water)",
+        "visualTruthState": "HABITAT_SUITABILITY",
+        "publishClass": "PUBLIC",
+        "isOpsRiskExample": false,
+        "sstC": 15.5,
+        "habitatClass": "reduced",
+        "observationDensity": "none",
+        "observationN": 0,
+        "lastDirectObservation": null,
+        "confidence": "low",
+        "depthSurface": true,
+        "depthIntertidal": true,
+        "depth0to10": false,
+        "depthUnknown": false,
+        "centerLon": -124.0027,
+        "centerLat": 46.657
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              -123.9725536954615,
+              46.645039999999995
+            ],
+            [
+              -123.9725536954615,
+              46.66896
+            ],
+            [
+              -124.00273493629545,
+              46.68091999999999
+            ],
+            [
+              -124.03291617712941,
+              46.66896
+            ],
+            [
+              -124.03291617712941,
+              46.645039999999995
+            ],
+            [
+              -124.00273493629545,
+              46.63308
+            ],
+            [
+              -123.9725536954615,
+              46.645039999999995
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "cellId": "WILLAPA-C05",
+        "label": "Central Willapa Bay (public water)",
+        "visualTruthState": "UNKNOWN",
+        "publishClass": "PUBLIC",
+        "isOpsRiskExample": false,
+        "sstC": -999,
+        "habitatClass": "not_applicable",
+        "observationDensity": "none",
+        "observationN": 0,
+        "lastDirectObservation": null,
+        "confidence": "none",
+        "depthSurface": true,
+        "depthIntertidal": false,
+        "depth0to10": false,
+        "depthUnknown": true,
+        "centerLon": -123.9373,
+        "centerLat": 46.657
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              -123.90708382287059,
+              46.645039999999995
+            ],
+            [
+              -123.90708382287059,
+              46.66896
+            ],
+            [
+              -123.93726506370454,
+              46.68091999999999
+            ],
+            [
+              -123.9674463045385,
+              46.66896
+            ],
+            [
+              -123.9674463045385,
+              46.645039999999995
+            ],
+            [
+              -123.93726506370454,
+              46.63308
+            ],
+            [
+              -123.90708382287059,
+              46.645039999999995
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "cellId": "WILLAPA-C06",
+        "label": "Northeast reach (Tokeland–South Bend water)",
+        "visualTruthState": "DATA_GAP",
+        "publishClass": "PUBLIC",
+        "isOpsRiskExample": false,
+        "sstC": -999,
+        "habitatClass": "not_applicable",
+        "observationDensity": "none",
+        "observationN": 0,
+        "lastDirectObservation": null,
+        "confidence": "none",
+        "depthSurface": false,
+        "depthIntertidal": false,
+        "depth0to10": false,
+        "depthUnknown": true,
+        "centerLon": -123.8718,
+        "centerLat": 46.657
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              -123.84161395027968,
+              46.645039999999995
+            ],
+            [
+              -123.84161395027968,
+              46.66896
+            ],
+            [
+              -123.87179519111363,
+              46.68091999999999
+            ],
+            [
+              -123.90197643194759,
+              46.66896
+            ],
+            [
+              -123.90197643194759,
+              46.645039999999995
+            ],
+            [
+              -123.87179519111363,
+              46.63308
+            ],
+            [
+              -123.84161395027968,
+              46.645039999999995
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "cellId": "WILLAPA-C07",
+        "label": "Peninsula inner shore, north (public water)",
+        "visualTruthState": "RESTRICTED_OR_COARSENED",
+        "publishClass": "COARSENED",
+        "isOpsRiskExample": false,
+        "sstC": 15.3,
+        "habitatClass": "not_applicable",
+        "observationDensity": "none",
+        "observationN": 0,
+        "lastDirectObservation": null,
+        "confidence": "none",
+        "depthSurface": true,
+        "depthIntertidal": false,
+        "depth0to10": false,
+        "depthUnknown": true,
+        "centerLon": -124.0355,
+        "centerLat": 46.618
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              -124.0053103767965,
+              46.60604
+            ],
+            [
+              -124.0053103767965,
+              46.629960000000004
+            ],
+            [
+              -124.03546987259091,
+              46.64192
+            ],
+            [
+              -124.06562936838532,
+              46.629960000000004
+            ],
+            [
+              -124.06562936838532,
+              46.60604
+            ],
+            [
+              -124.03546987259091,
+              46.594080000000005
+            ],
+            [
+              -124.0053103767965,
+              46.60604
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "cellId": "WILLAPA-C08",
+        "label": "Central Willapa Bay (public water)",
+        "visualTruthState": "MODEL_INFERENCE",
+        "publishClass": "PUBLIC",
+        "isOpsRiskExample": false,
+        "sstC": 15.4,
+        "habitatClass": "not_applicable",
+        "observationDensity": "low",
+        "observationN": 3,
+        "lastDirectObservation": null,
+        "confidence": "low",
+        "depthSurface": true,
+        "depthIntertidal": false,
+        "depth0to10": false,
+        "depthUnknown": false,
+        "centerLon": -123.97,
+        "centerLat": 46.618
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              -123.93984050420559,
+              46.60604
+            ],
+            [
+              -123.93984050420559,
+              46.629960000000004
+            ],
+            [
+              -123.97,
+              46.64192
+            ],
+            [
+              -124.0001594957944,
+              46.629960000000004
+            ],
+            [
+              -124.0001594957944,
+              46.60604
+            ],
+            [
+              -123.97,
+              46.594080000000005
+            ],
+            [
+              -123.93984050420559,
+              46.60604
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "cellId": "WILLAPA-C09",
+        "label": "Northeast reach (Tokeland–South Bend water)",
+        "visualTruthState": "FORECAST",
+        "publishClass": "PUBLIC",
+        "isOpsRiskExample": false,
+        "sstC": 15.5,
+        "habitatClass": "not_applicable",
+        "observationDensity": "none",
+        "observationN": 0,
+        "lastDirectObservation": null,
+        "confidence": "low",
+        "depthSurface": true,
+        "depthIntertidal": true,
+        "depth0to10": false,
+        "depthUnknown": false,
+        "centerLon": -123.9045,
+        "centerLat": 46.618
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              -123.87437063161468,
+              46.60604
+            ],
+            [
+              -123.87437063161468,
+              46.629960000000004
+            ],
+            [
+              -123.90453012740909,
+              46.64192
+            ],
+            [
+              -123.9346896232035,
+              46.629960000000004
+            ],
+            [
+              -123.9346896232035,
+              46.60604
+            ],
+            [
+              -123.90453012740909,
+              46.594080000000005
+            ],
+            [
+              -123.87437063161468,
+              46.60604
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "cellId": "WILLAPA-C10",
+        "label": "Northeast reach (Tokeland–South Bend water)",
+        "visualTruthState": "HABITAT_SUITABILITY",
+        "publishClass": "PUBLIC",
+        "isOpsRiskExample": false,
+        "sstC": 15.6,
+        "habitatClass": "reduced",
+        "observationDensity": "none",
+        "observationN": 0,
+        "lastDirectObservation": null,
+        "confidence": "low",
+        "depthSurface": true,
+        "depthIntertidal": true,
+        "depth0to10": false,
+        "depthUnknown": false,
+        "centerLon": -123.8391,
+        "centerLat": 46.618
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              -123.80890075902377,
+              46.60604
+            ],
+            [
+              -123.80890075902377,
+              46.629960000000004
+            ],
+            [
+              -123.83906025481818,
+              46.64192
+            ],
+            [
+              -123.86921975061259,
+              46.629960000000004
+            ],
+            [
+              -123.86921975061259,
+              46.60604
+            ],
+            [
+              -123.83906025481818,
+              46.594080000000005
+            ],
+            [
+              -123.80890075902377,
+              46.60604
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "cellId": "WILLAPA-C11",
+        "label": "Central Willapa Bay (public water)",
+        "visualTruthState": "DATA_GAP",
+        "publishClass": "PUBLIC",
+        "isOpsRiskExample": false,
+        "sstC": -999,
+        "habitatClass": "not_applicable",
+        "observationDensity": "none",
+        "observationN": 0,
+        "lastDirectObservation": null,
+        "confidence": "none",
+        "depthSurface": false,
+        "depthIntertidal": false,
+        "depth0to10": false,
+        "depthUnknown": true,
+        "centerLon": -124.0027,
+        "centerLat": 46.579
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              -123.97259714027585,
+              46.56704
+            ],
+            [
+              -123.97259714027585,
+              46.59096
+            ],
+            [
+              -124.00273493629545,
+              46.60292
+            ],
+            [
+              -124.03287273231506,
+              46.59096
+            ],
+            [
+              -124.03287273231506,
+              46.56704
+            ],
+            [
+              -124.00273493629545,
+              46.555080000000004
+            ],
+            [
+              -123.97259714027585,
+              46.56704
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "cellId": "WILLAPA-C12",
+        "label": "Central Willapa Bay (public water)",
+        "visualTruthState": "UNKNOWN",
+        "publishClass": "PUBLIC",
+        "isOpsRiskExample": false,
+        "sstC": -999,
+        "habitatClass": "not_applicable",
+        "observationDensity": "none",
+        "observationN": 0,
+        "lastDirectObservation": null,
+        "confidence": "none",
+        "depthSurface": true,
+        "depthIntertidal": false,
+        "depth0to10": false,
+        "depthUnknown": true,
+        "centerLon": -123.9373,
+        "centerLat": 46.579
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              -123.90712726768494,
+              46.56704
+            ],
+            [
+              -123.90712726768494,
+              46.59096
+            ],
+            [
+              -123.93726506370454,
+              46.60292
+            ],
+            [
+              -123.96740285972415,
+              46.59096
+            ],
+            [
+              -123.96740285972415,
+              46.56704
+            ],
+            [
+              -123.93726506370454,
+              46.555080000000004
+            ],
+            [
+              -123.90712726768494,
+              46.56704
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "cellId": "WILLAPA-C13",
+        "label": "Eastern channel (public water)",
+        "visualTruthState": "DIRECT_OBSERVATION",
+        "publishClass": "PUBLIC",
+        "isOpsRiskExample": false,
+        "sstC": 15.3,
+        "habitatClass": "not_applicable",
+        "observationDensity": "high",
+        "observationN": 29,
+        "lastDirectObservation": "2026-09-16T21:05:00Z",
+        "confidence": "medium",
+        "depthSurface": true,
+        "depthIntertidal": false,
+        "depth0to10": true,
+        "depthUnknown": false,
+        "centerLon": -123.8718,
+        "centerLat": 46.579
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              -123.84165739509403,
+              46.56704
+            ],
+            [
+              -123.84165739509403,
+              46.59096
+            ],
+            [
+              -123.87179519111363,
+              46.60292
+            ],
+            [
+              -123.90193298713324,
+              46.59096
+            ],
+            [
+              -123.90193298713324,
+              46.56704
+            ],
+            [
+              -123.87179519111363,
+              46.555080000000004
+            ],
+            [
+              -123.84165739509403,
+              46.56704
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "cellId": "WILLAPA-C14",
+        "label": "Peninsula inner shore, north (public water)",
+        "visualTruthState": "MODEL_INFERENCE",
+        "publishClass": "PUBLIC",
+        "isOpsRiskExample": false,
+        "sstC": 15,
+        "habitatClass": "not_applicable",
+        "observationDensity": "low",
+        "observationN": 3,
+        "lastDirectObservation": null,
+        "confidence": "low",
+        "depthSurface": true,
+        "depthIntertidal": false,
+        "depth0to10": false,
+        "depthUnknown": false,
+        "centerLon": -124.0355,
+        "centerLat": 46.54
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              -124.0053537311991,
+              46.52804
+            ],
+            [
+              -124.0053537311991,
+              46.55196
+            ],
+            [
+              -124.03546987259091,
+              46.563919999999996
+            ],
+            [
+              -124.06558601398272,
+              46.55196
+            ],
+            [
+              -124.06558601398272,
+              46.52804
+            ],
+            [
+              -124.03546987259091,
+              46.51608
+            ],
+            [
+              -124.0053537311991,
+              46.52804
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "cellId": "WILLAPA-C15",
+        "label": "Central Willapa Bay (public water)",
+        "visualTruthState": "FORECAST",
+        "publishClass": "PUBLIC",
+        "isOpsRiskExample": false,
+        "sstC": 15,
+        "habitatClass": "not_applicable",
+        "observationDensity": "none",
+        "observationN": 0,
+        "lastDirectObservation": null,
+        "confidence": "low",
+        "depthSurface": true,
+        "depthIntertidal": true,
+        "depth0to10": false,
+        "depthUnknown": false,
+        "centerLon": -123.97,
+        "centerLat": 46.54
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              -123.93988385860818,
+              46.52804
+            ],
+            [
+              -123.93988385860818,
+              46.55196
+            ],
+            [
+              -123.97,
+              46.563919999999996
+            ],
+            [
+              -124.00011614139181,
+              46.55196
+            ],
+            [
+              -124.00011614139181,
+              46.52804
+            ],
+            [
+              -123.97,
+              46.51608
+            ],
+            [
+              -123.93988385860818,
+              46.52804
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "cellId": "WILLAPA-C16",
+        "label": "Central Willapa Bay (public water)",
+        "visualTruthState": "DATA_GAP",
+        "publishClass": "PUBLIC",
+        "isOpsRiskExample": false,
+        "sstC": -999,
+        "habitatClass": "not_applicable",
+        "observationDensity": "none",
+        "observationN": 0,
+        "lastDirectObservation": null,
+        "confidence": "none",
+        "depthSurface": false,
+        "depthIntertidal": false,
+        "depth0to10": false,
+        "depthUnknown": true,
+        "centerLon": -123.9045,
+        "centerLat": 46.54
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              -123.87441398601727,
+              46.52804
+            ],
+            [
+              -123.87441398601727,
+              46.55196
+            ],
+            [
+              -123.90453012740909,
+              46.563919999999996
+            ],
+            [
+              -123.9346462688009,
+              46.55196
+            ],
+            [
+              -123.9346462688009,
+              46.52804
+            ],
+            [
+              -123.90453012740909,
+              46.51608
+            ],
+            [
+              -123.87441398601727,
+              46.52804
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "cellId": "WILLAPA-C17",
+        "label": "Nahcotta-adjacent public water (W1 OPS-RISK example cell)",
+        "visualTruthState": "FORECAST",
+        "publishClass": "PUBLIC",
+        "isOpsRiskExample": true,
+        "sstC": 14.8,
+        "habitatClass": "not_applicable",
+        "observationDensity": "none",
+        "observationN": 0,
+        "lastDirectObservation": "2026-09-17T18:40:00Z",
+        "confidence": "low",
+        "depthSurface": true,
+        "depthIntertidal": true,
+        "depth0to10": false,
+        "depthUnknown": false,
+        "centerLon": -124.0027,
+        "centerLat": 46.501
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              -123.97264040450169,
+              46.489039999999996
+            ],
+            [
+              -123.97264040450169,
+              46.51296
+            ],
+            [
+              -124.00273493629545,
+              46.524919999999995
+            ],
+            [
+              -124.03282946808922,
+              46.51296
+            ],
+            [
+              -124.03282946808922,
+              46.489039999999996
+            ],
+            [
+              -124.00273493629545,
+              46.47708
+            ],
+            [
+              -123.97264040450169,
+              46.489039999999996
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "cellId": "WILLAPA-C18",
+        "label": "Central Willapa Bay (public water)",
+        "visualTruthState": "MODEL_INFERENCE",
+        "publishClass": "PUBLIC",
+        "isOpsRiskExample": false,
+        "sstC": 14.9,
+        "habitatClass": "not_applicable",
+        "observationDensity": "low",
+        "observationN": 4,
+        "lastDirectObservation": null,
+        "confidence": "low",
+        "depthSurface": true,
+        "depthIntertidal": false,
+        "depth0to10": false,
+        "depthUnknown": false,
+        "centerLon": -123.9373,
+        "centerLat": 46.501
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              -123.90717053191078,
+              46.489039999999996
+            ],
+            [
+              -123.90717053191078,
+              46.51296
+            ],
+            [
+              -123.93726506370454,
+              46.524919999999995
+            ],
+            [
+              -123.96735959549831,
+              46.51296
+            ],
+            [
+              -123.96735959549831,
+              46.489039999999996
+            ],
+            [
+              -123.93726506370454,
+              46.47708
+            ],
+            [
+              -123.90717053191078,
+              46.489039999999996
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "cellId": "WILLAPA-C19",
+        "label": "Eastern channel (public water)",
+        "visualTruthState": "FORECAST",
+        "publishClass": "PUBLIC",
+        "isOpsRiskExample": false,
+        "sstC": 15,
+        "habitatClass": "not_applicable",
+        "observationDensity": "none",
+        "observationN": 0,
+        "lastDirectObservation": null,
+        "confidence": "low",
+        "depthSurface": true,
+        "depthIntertidal": true,
+        "depth0to10": false,
+        "depthUnknown": false,
+        "centerLon": -123.8718,
+        "centerLat": 46.501
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              -123.84170065931987,
+              46.489039999999996
+            ],
+            [
+              -123.84170065931987,
+              46.51296
+            ],
+            [
+              -123.87179519111363,
+              46.524919999999995
+            ],
+            [
+              -123.9018897229074,
+              46.51296
+            ],
+            [
+              -123.9018897229074,
+              46.489039999999996
+            ],
+            [
+              -123.87179519111363,
+              46.47708
+            ],
+            [
+              -123.84170065931987,
+              46.489039999999996
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "cellId": "WILLAPA-C20",
+        "label": "Peninsula inner shore, Nahcotta–Oysterville reach (public water)",
+        "visualTruthState": "HABITAT_SUITABILITY",
+        "publishClass": "PUBLIC",
+        "isOpsRiskExample": false,
+        "sstC": 14.6,
+        "habitatClass": "typical",
+        "observationDensity": "none",
+        "observationN": 0,
+        "lastDirectObservation": null,
+        "confidence": "low",
+        "depthSurface": true,
+        "depthIntertidal": true,
+        "depth0to10": false,
+        "depthUnknown": false,
+        "centerLon": -124.0355,
+        "centerLat": 46.462
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              -124.00539690548233,
+              46.450039999999994
+            ],
+            [
+              -124.00539690548233,
+              46.47396
+            ],
+            [
+              -124.03546987259091,
+              46.48591999999999
+            ],
+            [
+              -124.06554283969949,
+              46.47396
+            ],
+            [
+              -124.06554283969949,
+              46.450039999999994
+            ],
+            [
+              -124.03546987259091,
+              46.43808
+            ],
+            [
+              -124.00539690548233,
+              46.450039999999994
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "cellId": "WILLAPA-C21",
+        "label": "Southern central Willapa (public water)",
+        "visualTruthState": "UNKNOWN",
+        "publishClass": "PUBLIC",
+        "isOpsRiskExample": false,
+        "sstC": -999,
+        "habitatClass": "not_applicable",
+        "observationDensity": "none",
+        "observationN": 0,
+        "lastDirectObservation": null,
+        "confidence": "none",
+        "depthSurface": true,
+        "depthIntertidal": false,
+        "depth0to10": false,
+        "depthUnknown": true,
+        "centerLon": -123.97,
+        "centerLat": 46.462
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              -123.93992703289142,
+              46.450039999999994
+            ],
+            [
+              -123.93992703289142,
+              46.47396
+            ],
+            [
+              -123.97,
+              46.48591999999999
+            ],
+            [
+              -124.00007296710858,
+              46.47396
+            ],
+            [
+              -124.00007296710858,
+              46.450039999999994
+            ],
+            [
+              -123.97,
+              46.43808
+            ],
+            [
+              -123.93992703289142,
+              46.450039999999994
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "cellId": "WILLAPA-C22",
+        "label": "Southern central Willapa (public water)",
+        "visualTruthState": "DATA_GAP",
+        "publishClass": "PUBLIC",
+        "isOpsRiskExample": false,
+        "sstC": -999,
+        "habitatClass": "not_applicable",
+        "observationDensity": "none",
+        "observationN": 0,
+        "lastDirectObservation": null,
+        "confidence": "none",
+        "depthSurface": false,
+        "depthIntertidal": false,
+        "depth0to10": false,
+        "depthUnknown": true,
+        "centerLon": -123.9045,
+        "centerLat": 46.462
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              -123.87445716030051,
+              46.450039999999994
+            ],
+            [
+              -123.87445716030051,
+              46.47396
+            ],
+            [
+              -123.90453012740909,
+              46.48591999999999
+            ],
+            [
+              -123.93460309451767,
+              46.47396
+            ],
+            [
+              -123.93460309451767,
+              46.450039999999994
+            ],
+            [
+              -123.90453012740909,
+              46.43808
+            ],
+            [
+              -123.87445716030051,
+              46.450039999999994
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "cellId": "WILLAPA-C23",
+        "label": "Southern central Willapa (public water)",
+        "visualTruthState": "RESTRICTED_OR_COARSENED",
+        "publishClass": "COARSENED",
+        "isOpsRiskExample": false,
+        "sstC": 14.9,
+        "habitatClass": "not_applicable",
+        "observationDensity": "none",
+        "observationN": 0,
+        "lastDirectObservation": null,
+        "confidence": "none",
+        "depthSurface": true,
+        "depthIntertidal": false,
+        "depth0to10": false,
+        "depthUnknown": true,
+        "centerLon": -123.8391,
+        "centerLat": 46.462
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              -123.8089872877096,
+              46.450039999999994
+            ],
+            [
+              -123.8089872877096,
+              46.47396
+            ],
+            [
+              -123.83906025481818,
+              46.48591999999999
+            ],
+            [
+              -123.86913322192676,
+              46.47396
+            ],
+            [
+              -123.86913322192676,
+              46.450039999999994
+            ],
+            [
+              -123.83906025481818,
+              46.43808
+            ],
+            [
+              -123.8089872877096,
+              46.450039999999994
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "cellId": "WILLAPA-C24",
+        "label": "Southern central Willapa (public water)",
+        "visualTruthState": "MODEL_INFERENCE",
+        "publishClass": "PUBLIC",
+        "isOpsRiskExample": false,
+        "sstC": 14.5,
+        "habitatClass": "not_applicable",
+        "observationDensity": "low",
+        "observationN": 4,
+        "lastDirectObservation": null,
+        "confidence": "low",
+        "depthSurface": true,
+        "depthIntertidal": false,
+        "depth0to10": false,
+        "depthUnknown": false,
+        "centerLon": -124.0027,
+        "centerLat": 46.423
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              -123.97268348907565,
+              46.41104
+            ],
+            [
+              -123.97268348907565,
+              46.434960000000004
+            ],
+            [
+              -124.00273493629545,
+              46.44692
+            ],
+            [
+              -124.03278638351526,
+              46.434960000000004
+            ],
+            [
+              -124.03278638351526,
+              46.41104
+            ],
+            [
+              -124.00273493629545,
+              46.399080000000005
+            ],
+            [
+              -123.97268348907565,
+              46.41104
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "cellId": "WILLAPA-C25",
+        "label": "Southern central Willapa (public water)",
+        "visualTruthState": "FORECAST",
+        "publishClass": "PUBLIC",
+        "isOpsRiskExample": false,
+        "sstC": 14.6,
+        "habitatClass": "not_applicable",
+        "observationDensity": "none",
+        "observationN": 0,
+        "lastDirectObservation": null,
+        "confidence": "low",
+        "depthSurface": true,
+        "depthIntertidal": true,
+        "depth0to10": false,
+        "depthUnknown": false,
+        "centerLon": -123.9373,
+        "centerLat": 46.423
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              -123.90721361648474,
+              46.41104
+            ],
+            [
+              -123.90721361648474,
+              46.434960000000004
+            ],
+            [
+              -123.93726506370454,
+              46.44692
+            ],
+            [
+              -123.96731651092435,
+              46.434960000000004
+            ],
+            [
+              -123.96731651092435,
+              46.41104
+            ],
+            [
+              -123.93726506370454,
+              46.399080000000005
+            ],
+            [
+              -123.90721361648474,
+              46.41104
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "cellId": "WILLAPA-C26",
+        "label": "Southern central Willapa (public water)",
+        "visualTruthState": "HABITAT_SUITABILITY",
+        "publishClass": "PUBLIC",
+        "isOpsRiskExample": false,
+        "sstC": 14.6,
+        "habitatClass": "typical",
+        "observationDensity": "none",
+        "observationN": 0,
+        "lastDirectObservation": null,
+        "confidence": "low",
+        "depthSurface": true,
+        "depthIntertidal": true,
+        "depth0to10": false,
+        "depthUnknown": false,
+        "centerLon": -123.8718,
+        "centerLat": 46.423
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              -123.84174374389383,
+              46.41104
+            ],
+            [
+              -123.84174374389383,
+              46.434960000000004
+            ],
+            [
+              -123.87179519111363,
+              46.44692
+            ],
+            [
+              -123.90184663833344,
+              46.434960000000004
+            ],
+            [
+              -123.90184663833344,
+              46.41104
+            ],
+            [
+              -123.87179519111363,
+              46.399080000000005
+            ],
+            [
+              -123.84174374389383,
+              46.41104
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "cellId": "WILLAPA-C27",
+        "label": "South Bay (public water)",
+        "visualTruthState": "DATA_GAP",
+        "publishClass": "PUBLIC",
+        "isOpsRiskExample": false,
+        "sstC": -999,
+        "habitatClass": "not_applicable",
+        "observationDensity": "none",
+        "observationN": 0,
+        "lastDirectObservation": null,
+        "confidence": "none",
+        "depthSurface": false,
+        "depthIntertidal": false,
+        "depth0to10": false,
+        "depthUnknown": true,
+        "centerLon": -123.97,
+        "centerLat": 46.384
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              -123.93997002798855,
+              46.37204
+            ],
+            [
+              -123.93997002798855,
+              46.39596
+            ],
+            [
+              -123.97,
+              46.40792
+            ],
+            [
+              -124.00002997201145,
+              46.39596
+            ],
+            [
+              -124.00002997201145,
+              46.37204
+            ],
+            [
+              -123.97,
+              46.36008
+            ],
+            [
+              -123.93997002798855,
+              46.37204
+            ]
+          ]
+        ]
+      }
+    }
+  ]
+}

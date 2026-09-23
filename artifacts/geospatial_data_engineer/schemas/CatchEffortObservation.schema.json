@@ -1,0 +1,111 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://fishai.local/schemas/CatchEffortObservation.schema.json",
+  "title": "CatchEffortObservation",
+  "description": "Effort-normalized catch or encounter observation (prediction contract category C). Default privacy PRIVATE. Do not treat as wild abundance. Fixture/schema only; no production ingest.",
+  "allOf": [
+    { "$ref": "./_ObservationKernel.schema.json" },
+    {
+      "type": "object",
+      "required": [
+        "entity_type",
+        "gear_type",
+        "sampling_effort_type",
+        "sampling_effort_value",
+        "sampling_effort_unit",
+        "absence_reported",
+        "reporting_channel"
+      ],
+      "properties": {
+        "entity_type": { "const": "CatchEffortObservation" },
+        "prediction_contract_category": { "const": "C" },
+        "evidence_tier": {
+          "type": "string",
+          "enum": ["T1_direct", "T2_operational"]
+        },
+        "vessel_trip_id": { "type": ["string", "null"] },
+        "gear_type": {
+          "type": "string",
+          "examples": ["rod_reel", "troll", "trap", "pot", "other"]
+        },
+        "target_taxon_id": { "type": ["string", "null"] },
+        "catch_count": { "type": ["integer", "null"], "minimum": 0 },
+        "catch_weight_kg": { "type": ["number", "null"], "minimum": 0 },
+        "kept_count": { "type": ["integer", "null"], "minimum": 0 },
+        "released_count": { "type": ["integer", "null"], "minimum": 0 },
+        "cpue_value": { "type": ["number", "null"], "minimum": 0 },
+        "cpue_unit": {
+          "type": ["string", "null"],
+          "examples": ["{fish}/{rod.h}", "{lobster}/{trap.haul}", "{lb}/{trap.haul}"]
+        },
+        "absence_reported": {
+          "type": "boolean",
+          "description": "True when effort occurred and zero catch of the target was recorded. Distinct from missing data."
+        },
+        "reporting_channel": {
+          "type": "string",
+          "enum": ["partner_form", "electronic_logbook", "observer", "agency_landings", "other"]
+        },
+        "selection_bias_notes": { "type": ["string", "null"] },
+        "privacy_tier": {
+          "type": "string",
+          "enum": ["RESTRICTED", "PRIVATE", "NEVER_PUBLISH"]
+        }
+      }
+    }
+  ],
+  "examples": [
+    {
+      "event_id": "01800000-0000-7000-8000-000000000010",
+      "entity_type": "CatchEffortObservation",
+      "source_id": "partner.lobster.fixture",
+      "source_record_id": "fixture-haul-0001",
+      "source_dataset_version": "fixture-0",
+      "source_owner": "FIXTURE_NOT_A_PERSON",
+      "ingestion_run_id": "01800000-0000-7000-8000-000000000099",
+      "observed_at_utc": "2026-09-16T10:00:00Z",
+      "published_at_utc": "2026-09-16T22:00:00Z",
+      "ingested_at_utc": "2026-09-18T04:00:00Z",
+      "revised_at_utc": "2026-09-16T22:00:00Z",
+      "latitude": null,
+      "longitude": null,
+      "geometry": null,
+      "geometry_precision": "cell",
+      "spatial_cell_id": "872a30689ffffff",
+      "h3_res": 7,
+      "spatial_cell_id_public": "852a306bfffffff",
+      "official_unit_id": "NEFSC_STAT_AREA:513",
+      "official_unit_type": "nefsc_statistical_area",
+      "species_taxon_id": "urn:lsid:marinespecies.org:taxname:156134",
+      "scientific_name_at_source": "American lobster",
+      "accepted_scientific_name": "Homarus americanus",
+      "taxonomic_authority": "WoRMS",
+      "measurement_type": "cpue",
+      "measurement_value": 0.8,
+      "measurement_unit": "{lobster}/{trap.haul}",
+      "sampling_effort_type": "trap_hauls",
+      "sampling_effort_value": 40,
+      "sampling_effort_unit": "{haul}",
+      "gear_type": "trap",
+      "catch_count": 32,
+      "cpue_value": 0.8,
+      "cpue_unit": "{lobster}/{trap.haul}",
+      "absence_reported": false,
+      "reporting_channel": "partner_form",
+      "observation_confidence": "medium",
+      "quality_flags": ["PRIVACY_STRIPPED"],
+      "evidence_tier": "T2_operational",
+      "prediction_contract_category": "C",
+      "provenance_URL": "https://fishai.local/fixtures/not-a-source",
+      "license": "LicenseRef-Partner-DUA",
+      "attribution_text": "Partner fixture; not redistributable",
+      "privacy_tier": "PRIVATE",
+      "data_rights_status": "APPROVED_PARTNER_CONSENT",
+      "raw_payload_reference": "s3://fishai-dev/raw/partner.lobster.fixture/run-099/payload.json",
+      "transformation_version": "0.0.0-design",
+      "transform_hash": "sha256:fixture",
+      "source_checksum": "sha256:fixture",
+      "notes": "Synthetic schema example. No real vessel or trap GPS."
+    }
+  ]
+}

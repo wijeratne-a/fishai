@@ -1,0 +1,56 @@
+{
+  "title": "FishAI Ocean Life Globe prototype — Willapa Bay fixture",
+  "generatedAt": "2026-09-18",
+  "disclaimer": "ALL DATA ARE SYNTHETIC FIXTURES generated locally on 2026-09-18. This is not a live fish map, not a harvest map, not a farm-performance map, and not an endangered-species map. No OBIS, GBIF, AIS, GFW, or catch locations were downloaded. Approximate public water-body geography only.",
+  "aoi": {
+    "name": "Willapa Bay, Washington, USA",
+    "kind": "named public water body (approximate bbox/outline)",
+    "bbox": [
+      -124.12,
+      46.34,
+      -123.62,
+      46.76
+    ],
+    "note": "Not a farm lease map. Not WA DOH growing-area polygons. Not for navigation."
+  },
+  "grid": {
+    "type": "H3-like hexagons generated locally",
+    "nominalAreaKm2": "~20",
+    "note": "Not Uber H3 indexes. Coarser than a farm. Area is approximate; hexes are not equal-area on the ellipsoid."
+  },
+  "timeReadout": {
+    "forecastIssuedAt": "2026-09-18T23:00:00Z",
+    "validFrom": "2026-09-18T23:00:00Z",
+    "validTo": "2026-09-21T23:00:00Z",
+    "environmentalInputsCurrentThrough": "2026-09-18T21:00:00Z",
+    "lastDirectObservationInAoi": "2026-09-18T16:10:00Z",
+    "forecastConfidence": "low",
+    "modelVersion": "GLOBE-PROTO-FIXTURE-2026-09-18-v0",
+    "dataCoverage": "27 coarsened cells; 5 DATA_GAP; 3 UNKNOWN; 0 live ingest"
+  },
+  "cellCount": 27,
+  "visualTruthStateCounts": {
+    "DIRECT_OBSERVATION": 3,
+    "FORECAST": 6,
+    "MODEL_INFERENCE": 4,
+    "HABITAT_SUITABILITY": 4,
+    "UNKNOWN": 3,
+    "DATA_GAP": 5,
+    "RESTRICTED_OR_COARSENED": 2
+  },
+  "opsRiskExampleCellId": "WILLAPA-C17",
+  "modesInPrototype": [
+    "earth_surface",
+    "evidence_provenance",
+    "uncertainty_data_gap"
+  ],
+  "modesNotInPrototype": [
+    "semi_transparent_subsurface",
+    "vertical_depth_slice",
+    "horizontal_depth_slice",
+    "seafloor_habitat",
+    "timelapse_forecast",
+    "side_by_side_comparison",
+    "ecosystem_foodweb"
+  ]
+}

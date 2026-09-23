@@ -1,0 +1,20 @@
+{
+  "name": "fishai-ocean-life-globe-prototype",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "description": "Fixture-only Willapa Bay Ocean Life Globe prototype. Not a live animal map.",
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc --noEmit && vite build",
+    "preview": "vite preview",
+    "generate-fixtures": "node scripts/generate-fixtures.mjs"
+  },
+  "dependencies": {
+    "maplibre-gl": "6.10.0"
+  },
+  "devDependencies": {
+    "typescript": "5.9.3",
+    "vite": "6.4.3"
+  }
+}
