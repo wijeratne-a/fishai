@@ -7,7 +7,7 @@ export function emptyAnswer(): AnswerStrip {
     whereNow: "Search a species or pick a place.",
     soon: "No forecast issued.",
     howSure: "None",
-    depth: "Depth unknown",
+    depth: "Depth unknown / not modeled.",
     why: "Nothing has been asked yet.",
     thisIsNot: "Live tracking, a fishing map, or a count of animals.",
     whatShown: "Empty globe. No species layer. Unknown is the scientific status.",
@@ -32,7 +32,7 @@ export function renderAnswerStrip(container: HTMLElement, strip: AnswerStrip): v
     </div>
     ${
       strip.targetsNote
-        ? `<p class="targets-note">${escapeHtml(strip.targetsNote)}</p>`
+        ? `<p class="targets-note expert-only">${escapeHtml(strip.targetsNote)}</p>`
         : ""
     }
     ${
@@ -43,6 +43,11 @@ export function renderAnswerStrip(container: HTMLElement, strip: AnswerStrip): v
     ${
       strip.supportLine
         ? `<p class="support-line">${escapeHtml(strip.supportLine)}</p>`
+        : ""
+    }
+    ${
+      strip.whatCouldBeWrong
+        ? `<p class="wrong-note">${escapeHtml(strip.whatCouldBeWrong)}</p>`
         : ""
     }
   `;

@@ -1,4 +1,5 @@
-import type { Map as MapLibreMap } from "maplibre-gl";
+import type { Map as MapLibreMap, StyleSpecification } from "maplibre-gl";
+import type { MapProjectionMode } from "./camera";
 
 export interface MapSourceRecord {
   source_id: string;
@@ -181,7 +182,64 @@ export function softenDemoStyle(map: MapLibreMap): void {
   }
 }
 
+export function buildGlobeStyle(mode: MapProjectionMode): StyleSpecification {
+  const nasa = SOURCE_REGISTRY.find((row) => row.source_id === "nasa-gibs-blue-marble-bathymetry");
+  const eox = SOURCE_REGISTRY.find((row) => row.source_id === "eox-s2cloudless-2020");
+  if (!nasa?.tiles || !eox?.tiles) {
+    throw new Error("Basemap registry is missing NASA or EOX tiles.");
+  }
+  return {
+    version: 8,
+    name: "FishAI marine globe",
+    projection: { type: mode },
+    glyphs: "https://demotiles.maplibre.org/font/{fontstack}/{range}.pbf",
+    sources: {
+      [nasa.source_id]: {
+        type: "raster",
+        tiles: nasa.tiles,
+        tileSize: nasa.tileSize ?? 256,
+        maxzoom: nasa.max_meaningful_zoom,
+        minzoom: nasa.min_zoom,
+        attribution: nasa.attribution,
+      },
+      [eox.source_id]: {
+        type: "raster",
+        tiles: eox.tiles,
+        tileSize: eox.tileSize ?? 256,
+        maxzoom: eox.max_meaningful_zoom,
+        minzoom: eox.min_zoom,
+        attribution: eox.attribution,
+      },
+    },
+    layers: [
+      { id: "background", type: "background", paint: { "background-color": "#07141d" } },
+      {
+        id: "basemap-nasa",
+        type: "raster",
+        source: nasa.source_id,
+        paint: {
+          "raster-opacity": ["interpolate", ["linear"], ["zoom"], 0, 1, 7.1, 1, 8.7, 0.18],
+          "raster-fade-duration": 220,
+        },
+      },
+      {
+        id: "basemap-eox",
+        type: "raster",
+        source: eox.source_id,
+        minzoom: 6.4,
+        paint: {
+          "raster-opacity": ["interpolate", ["linear"], ["zoom"], 6.4, 0, 8, 0.9],
+          "raster-fade-duration": 220,
+        },
+      },
+    ],
+  };
+}
+
 export function installBasemap(map: MapLibreMap): { nasa: boolean; eox: boolean } {
+  if (map.getLayer("basemap-nasa") && map.getLayer("basemap-eox")) {
+    return { nasa: true, eox: true };
+  }
   softenDemoStyle(map);
   const nasa = SOURCE_REGISTRY.find((row) => row.source_id === "nasa-gibs-blue-marble-bathymetry");
   const eox = SOURCE_REGISTRY.find((row) => row.source_id === "eox-s2cloudless-2020");

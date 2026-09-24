@@ -12,8 +12,8 @@ export const PLACES: NamedPlace[] = [
     id: "earth",
     name: "Whole Earth",
     aliases: ["earth", "world", "globe", "planet"],
-    center: [0, 12],
-    zoom: 1.35,
+    center: [0, 15],
+    zoom: 1.6,
   },
   {
     id: "pacific",
@@ -42,6 +42,13 @@ export const PLACES: NamedPlace[] = [
     aliases: ["southern ocean", "antarctic ocean"],
     center: [0, -60],
     zoom: 2.4,
+  },
+  {
+    id: "ten-thousand-islands",
+    name: "Ten Thousand Islands",
+    aliases: ["ten thousand islands", "thousand islands florida"],
+    center: [-81.6, 25.85],
+    zoom: 7.2,
   },
   {
     id: "willapa",

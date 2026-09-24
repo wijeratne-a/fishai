@@ -264,6 +264,14 @@
       "note": "Working-conditions demo only. Not a fish or crustacean. Not a published location model."
     },
     {
+      "aphiaId": 159353,
+      "scientificName": "Epinephelus itajara",
+      "commonNames": ["Atlantic goliath grouper", "goliath grouper", "goliath"],
+      "group": "fish",
+      "status": "no_estimate",
+      "note": "First species slice. No published location model. Aggregation sites are sensitive; public past reports stay ~1° if shown."
+    },
+    {
       "aphiaId": 105838,
       "scientificName": "Carcharodon carcharias",
       "commonNames": ["white shark", "great white shark"],

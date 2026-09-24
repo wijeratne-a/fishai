@@ -3,10 +3,17 @@ import "./styles.css";
 import { setWorkerUrl } from "maplibre-gl";
 import workerUrl from "maplibre-gl/dist/maplibre-gl-worker.mjs?url";
 import { composeLiveSentence, emptyAnswer, renderAnswerStrip } from "./answer";
-import { renderEvidenceHtml, renderPastReportsHtml } from "./evidence";
-import { mayDrawCurrentEstimate, mayDrawForecast, PAST_REPORTS_RESOLUTION, scientificStatusCopy, targetsCopy } from "./layers";
+import { renderEvidenceHtml, renderPastReportCellHtml, renderPastReportsHtml } from "./evidence";
+import {
+  GOLIATH_APHIA_ID,
+  mayDrawCurrentEstimate,
+  mayDrawForecast,
+  PAST_REPORTS_RESOLUTION,
+  scientificStatusCopy,
+  targetsCopy,
+} from "./layers";
 import { renderLegend } from "./legend";
-import { createGlobeMap, resizeLater } from "./mapApp";
+import { createGlobeMap, resizeLater, type PastReportPick } from "./mapApp";
 import { fetchPastReports } from "./obis";
 import { exactPlace, searchPlaces, type NamedPlace } from "./places";
 import { displayName, resolveSpecies, searchLocal } from "./search";
@@ -125,6 +132,12 @@ async function main(): Promise<void> {
   const coordsEl = document.getElementById("map-coords");
   const toggleControls = document.getElementById("toggle-controls");
   const toggleAnswer = document.getElementById("toggle-answer");
+  const toolProjection = document.getElementById("tool-projection");
+  const toolNorth = document.getElementById("tool-north");
+  const toolHome = document.getElementById("tool-home");
+  const toolZoomIn = document.getElementById("tool-zoom-in");
+  const toolZoomOut = document.getElementById("tool-zoom-out");
+  const mapHints = document.getElementById("map-hints");
   if (
     !(mapEl instanceof HTMLElement) ||
     !(evidenceBody instanceof HTMLElement) ||
@@ -148,7 +161,13 @@ async function main(): Promise<void> {
     !(resolutionEl instanceof HTMLElement) ||
     !(coordsEl instanceof HTMLElement) ||
     !(toggleControls instanceof HTMLButtonElement) ||
-    !(toggleAnswer instanceof HTMLButtonElement)
+    !(toggleAnswer instanceof HTMLButtonElement) ||
+    !(toolProjection instanceof HTMLButtonElement) ||
+    !(toolNorth instanceof HTMLButtonElement) ||
+    !(toolHome instanceof HTMLButtonElement) ||
+    !(toolZoomIn instanceof HTMLButtonElement) ||
+    !(toolZoomOut instanceof HTMLButtonElement) ||
+    !(mapHints instanceof HTMLElement)
   ) {
     throw new Error("Prototype markup is missing required nodes.");
   }
@@ -253,6 +272,38 @@ async function main(): Promise<void> {
     const publishedSoon = mayDrawForecast(card);
     const demo = taxon.status === "oyster_demo" && Boolean(card?.allowsWillapaWorkingConditionsDemo) && state.showWillapaCells;
     const name = `${displayName(taxon)} (${taxon.scientificName})`;
+    if (taxon.aphiaId === GOLIATH_APHIA_ID) {
+      const hist =
+        past && past.total && past.total > 0 && !past.withheld
+          ? `Public databases list ${past.total.toLocaleString()} compiled records${past.yearSpan ? ` (${past.yearSpan})` : ""}. Those are past reports at about 1° / 100 km — not where the animals are now. Exact spawning wrecks and nursery pins are withheld.`
+          : past?.withheld
+            ? "Historical locations are withheld."
+            : past?.error
+              ? `No evaluated model. Past-report lookup failed (${past.error}).`
+              : "No published occurrence model. Optional past reports, if they appear, are historical and coarsened.";
+      return {
+        species: name,
+        whereNow: "No issued location.",
+        soon: "No forecast issued.",
+        howSure: "Not assessed.",
+        depth:
+          "Ecology note, not a live map: juveniles in mangrove and estuary shallows; adults mostly on structure in about 0–50 m (published sources also list to ~100 m). Depth is not modeled here.",
+        why: hist,
+        thisIsNot: "Live tracking, a wreck map, a spawning-site list, or a count of animals.",
+        whatShown: whatShownFor(taxon, past, false),
+        scientificStatus: scientificStatusCopy({
+          demo: false,
+          past,
+          publishedNow,
+          publishedSoon,
+          withheld: Boolean(past?.withheld),
+        }),
+        supportLine: supportLine(taxon, card, past),
+        targetsNote: targetsCopy({ card, past, demo: false }),
+        whatCouldBeWrong:
+          "A past-report cell can be sampling bias, not a living fish. Mangrove or reef conditions are not confirmed presence. July–September is a published spawning season, not a live aggregation. This product does not know where every goliath grouper is.",
+      };
+    }
     if (demo) {
       return {
         species: name,
@@ -345,6 +396,39 @@ async function main(): Promise<void> {
     setAnswerOpen(true);
   };
 
+  const showPastReportCell = (pick: PastReportPick): void => {
+    evidenceEmpty.hidden = true;
+    evidenceBody.hidden = false;
+    evidenceBody.innerHTML = renderPastReportCellHtml(state.selectedTaxon, pick.label, pick.n);
+    evidenceDetails.open = true;
+    setAnswerOpen(true);
+    const taxon = state.selectedTaxon;
+    setStrip({
+      species: taxon ? `${displayName(taxon)} (${taxon.scientificName})` : "No species selected",
+      whereNow: "No issued location.",
+      soon: "No forecast issued.",
+      howSure: taxon?.aphiaId === GOLIATH_APHIA_ID ? "Not assessed." : "None",
+      depth:
+        taxon?.aphiaId === GOLIATH_APHIA_ID
+          ? "Ecology note, not a live map: juveniles in mangrove and estuary shallows; adults mostly on structure in about 0–50 m. Depth is not modeled here."
+          : "Depth unknown / not modeled.",
+      why: `Past-report cell “${pick.label}” has ${pick.n.toLocaleString()} compiled records. This is a partial extract of historical reports, not where the animals are now. Missing cells are not biological absence.`,
+      thisIsNot: "Live tracking, a fishing map, or a count of animals.",
+      whatShown: "Past reports (historical pattern). Not a current estimate.",
+      scientificStatus: scientificStatusCopy({
+        demo: false,
+        past,
+        publishedNow: false,
+        publishedSoon: false,
+      }),
+      supportLine: "Past reports exist. This is not where it is right now.",
+      whatCouldBeWrong:
+        taxon?.aphiaId === GOLIATH_APHIA_ID
+          ? "A past-report cell can be sampling bias, not a living fish. This product does not know where every goliath grouper is."
+          : "A past-report cell can be sampling bias, not a living animal.",
+    });
+  };
+
   const globe = await createGlobeMap({
     container: mapEl,
     land,
@@ -352,10 +436,22 @@ async function main(): Promise<void> {
     cells,
     stations,
     onSelect: showCell,
+    onPastReportSelect: showPastReportCell,
   });
 
+  const syncProjectionChrome = (): void => {
+    const flat = globe.getProjectionMode() === "mercator";
+    const flatBox = document.getElementById("flat-map");
+    if (flatBox instanceof HTMLInputElement) flatBox.checked = flat;
+    toolProjection.textContent = flat ? "2D flat map" : "3D globe";
+    toolProjection.setAttribute("aria-pressed", flat ? "true" : "false");
+    mapHints.textContent = flat
+      ? "Drag to pan the map. Scroll or pinch to zoom. Click a highlighted area for details."
+      : "Drag to rotate the globe. Scroll or pinch to zoom. Click a highlighted area for details.";
+  };
+
   const viewLabel = (): string =>
-    globe.getProjectionMode() === "globe" ? "3D globe" : "Flat map";
+    globe.getProjectionMode() === "globe" ? "3D globe" : "2D flat map";
 
   const refreshResolution = (): void => {
     let chip = globe.resolutionChip();
@@ -378,6 +474,7 @@ async function main(): Promise<void> {
   const applyUi = (): void => {
     globe.apply(state);
     renderLegend(legendEl, state);
+    syncProjectionChrome();
     if (state.selectedTaxon?.status === "oyster_demo" && state.showWillapaCells && state.depth === "intertidal") {
       depthDisclaimer.textContent =
         "Tide flat: oysters can be in air at low tide. That is not a stack of swimming animals.";
@@ -426,10 +523,10 @@ async function main(): Promise<void> {
       nav === "find"
         ? "Find a saltwater species"
         : nav === "explore"
-          ? "Explore the globe"
+          ? "Explore the ocean"
           : nav === "evidence"
-            ? "Evidence"
-            : "Learn";
+            ? "Evidence and data"
+            : "Learn and methods";
     if (nav === "explore") {
       state.mode = "earth_surface";
       setControlsOpen(true);
@@ -711,6 +808,24 @@ async function main(): Promise<void> {
       applyUi();
     });
   }
+
+  toolProjection.addEventListener("click", () => {
+    const next = globe.getProjectionMode() === "globe" ? "mercator" : "globe";
+    globe.setProjectionMode(next);
+    applyUi();
+  });
+  toolNorth.addEventListener("click", () => {
+    globe.resetNorth();
+  });
+  toolHome.addEventListener("click", () => {
+    globe.showWorld();
+  });
+  toolZoomIn.addEventListener("click", () => {
+    globe.zoomBy(1);
+  });
+  toolZoomOut.addEventListener("click", () => {
+    globe.zoomBy(-1);
+  });
 
   document.getElementById("north-up")?.addEventListener("click", () => {
     globe.resetNorth();

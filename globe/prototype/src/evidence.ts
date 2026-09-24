@@ -1,3 +1,4 @@
+import { GOLIATH_APHIA_ID } from "./layers";
 import type {
   CellRecord,
   Evidence16,
@@ -14,7 +15,7 @@ const FIELD_TITLES: { key: keyof Evidence16; title: string }[] = [
   { key: "lastDirectObservation", title: "4. Last direct observation" },
   { key: "observationCount", title: "5. Observation count in the region" },
   { key: "observationTypes", title: "6. Observation types" },
-  { key: "environmentalInputs", title: "7. Environmental inputs" },
+  { key: "environmentalInputs", title: "7. Environmental factors" },
   { key: "keyModelDrivers", title: "8. Key model drivers" },
   { key: "comparableHistoricalConditions", title: "9. Comparable historical conditions" },
   { key: "modelVersion", title: "10. Model version" },
@@ -83,7 +84,7 @@ function renderAnswers(answers: HonestyAnswers): string {
     <p><strong>Why this?</strong> ${escapeHtml(answers.why)}</p>
     <p><strong>How much to trust it?</strong> ${escapeHtml(answers.trust)}</p>
     <p><strong>What is missing?</strong> ${escapeHtml(answers.missing)}</p>
-    <p><strong>Measured, guessed, or future?</strong> ${escapeHtml(answers.observedInferredForecast)}</p>
+    <p><strong>Measured, estimate, or forecast?</strong> ${escapeHtml(answers.observedInferredForecast)}</p>
   </section>`;
 }
 
@@ -118,6 +119,18 @@ function renderOpsExpert(ops: OpsRiskBlock): string {
   </section>`;
 }
 
+function envLines(evidence: Evidence16): string {
+  if (evidence.environmentalInputs.length === 0) {
+    return "<p>No environmental factors issued for this cell.</p>";
+  }
+  return evidence.environmentalInputs
+    .map(
+      (row) =>
+        `<p><strong>${escapeHtml(row.name)}</strong>: ${escapeHtml(row.value)} (as-of ${escapeHtml(row.asOf)})</p>`,
+    )
+    .join("");
+}
+
 export function renderPastReportsHtml(taxon: TaxonRecord, past: PastReportsSummary | null): string {
   const name = escapeHtml(taxon.commonNames[0] ?? taxon.scientificName);
   if (!past) {
@@ -130,20 +143,79 @@ export function renderPastReportsHtml(taxon: TaxonRecord, past: PastReportsSumma
   }
   if (past.error) {
     return `<p class="lede">${name}</p>
-      <p>Past-report lookup failed (${escapeHtml(past.error)}). The map stays striped: we do not know, not empty ocean.</p>`;
+      <p>Past-report lookup failed (${escapeHtml(past.error)}). We do not know where it is. That is not an empty ocean.</p>`;
   }
   const total =
     past.total && past.total > 0
       ? `${past.total.toLocaleString()} compiled records`
       : "no compiled records in this lookup";
   const years = past.yearSpan ? `Years: ${escapeHtml(past.yearSpan)}.` : "Year span unknown.";
-  return `<p class="lede">${name}</p>
-    <section class="answers" aria-label="Past reports">
+  const cells = past.cellsDrawn;
+  const goliathNote =
+    taxon.aphiaId === GOLIATH_APHIA_ID
+      ? `<p>This map can show historical reports where permitted. No issued current location estimate or forecast exists for this species in this build.</p>`
+      : "";
+  return `
+    ${goliathNote}
+    <p class="evidence-summary">
+      This view shows <strong>${escapeHtml(total)}</strong>
+      (${cells} coarse cells drawn), <strong>0</strong> survey encounters listed here,
+      and <strong>no</strong> model-estimated likelihood (no published card).
+      Environmental factors are not issued for this species layer.
+    </p>
+    <section class="evidence-group" aria-label="Observations">
+      <h3>Observations</h3>
       <p><strong>Past reports</strong> — ${escapeHtml(total)}. ${years}</p>
-      <p>These cells are where people sampled and recorded this name. This is not where the animals are now.</p>
+      <p>Past reports = where people recorded this species in the past, not live presence.</p>
+      <p>Drawn cells: ${cells}. This is a partial extract of the public grid (hidden if fewer than 3 records; at most 80 cells, in API order, about 1° / 100 km). Missing cells are not biological absence.</p>
+    </section>
+    <section class="evidence-group" aria-label="Model estimates">
+      <h3>Model estimates</h3>
+      <p>No issued location. No forecast issued. How sure: None.</p>
+    </section>
+    <section class="evidence-group" aria-label="Environment">
+      <h3>Environment</h3>
+      <p>No environmental factors issued for this species search.</p>
+    </section>
+    <section class="evidence-group" aria-label="Methods and limitations">
+      <h3>Methods and limitations</h3>
       <p><strong>Source:</strong> ${escapeHtml(past.source)}</p>
       <p><strong>License:</strong> ${escapeHtml(past.licenseNote)}</p>
-      <p>Drawn cells: ${past.cellsDrawn} (hidden if fewer than 3 records; at most 80 cells; about 1° / 100 km).</p>
+      <p>Coarse public grid only. Not a count of animals. Not live tracking.</p>
+    </section>`;
+}
+
+export function renderPastReportCellHtml(
+  taxon: TaxonRecord | null,
+  cellLabel: string,
+  reportCount: number,
+): string {
+  const species = taxon
+    ? escapeHtml(taxon.commonNames[0] ?? taxon.scientificName)
+    : "Selected species";
+  return `
+    <p class="evidence-summary">
+      This cell shows <strong>${reportCount.toLocaleString()}</strong> past reports for
+      <strong>${species}</strong>, <strong>0</strong> survey encounters listed here,
+      and <strong>no</strong> model-estimated likelihood (if available).
+      Environmental factors are not issued for past-report cells.
+    </p>
+    <section class="evidence-group" aria-label="Observations">
+      <h3>Observations</h3>
+      <p><strong>${escapeHtml(cellLabel)}</strong> — ${reportCount.toLocaleString()} compiled records in this coarse cell.</p>
+      <p>Past reports = where people recorded this species in the past, not live presence.</p>
+    </section>
+    <section class="evidence-group" aria-label="Model estimates">
+      <h3>Model estimates</h3>
+      <p>No issued location. No forecast issued.</p>
+    </section>
+    <section class="evidence-group" aria-label="Environment">
+      <h3>Environment</h3>
+      <p>No environmental factors issued for this cell.</p>
+    </section>
+    <section class="evidence-group" aria-label="Methods and limitations">
+      <h3>Methods and limitations</h3>
+      <p>About 1° / 100 km public coarsening. Zooming in does not sharpen the biology.</p>
     </section>`;
 }
 
@@ -155,17 +227,68 @@ export function renderEvidenceHtml(
   record: CellRecord,
   expert: boolean,
 ): string {
-  const answers = renderAnswers(record.answers);
+  const evidence = record.evidence;
+  const obsN = evidence.observationCount.n;
+  const hasEstimate =
+    evidence.currentEstimate &&
+    !/no issued|none issued|not issued|unknown/i.test(evidence.currentEstimate);
+  const hasForecast =
+    evidence.forecastEstimate &&
+    !/no issued|none issued|not issued|unknown/i.test(evidence.forecastEstimate);
+  const summary = `
+    <p class="evidence-summary">
+      This cell shows <strong>${obsN}</strong> past reports / sample rows,
+      <strong>${hasEstimate ? "a demo" : "no"}</strong> model-estimated likelihood
+      ${hasEstimate ? "(demo encoding — not a published species location)" : "(if available)"},
+      and the following environmental conditions when present.
+      ${hasForecast ? " A forecast encoding is shown for the demo only." : " No forecast issued for a published species product."}
+    </p>`;
+
+  const observations = `
+    <section class="evidence-group" aria-label="Observations">
+      <h3>Observations</h3>
+      <p>Last direct observation: ${
+        evidence.lastDirectObservation.at
+          ? escapeHtml(evidence.lastDirectObservation.at)
+          : "none"
+      }.</p>
+      <p>${escapeHtml(evidence.lastDirectObservation.note)}</p>
+      <p>Sample rows in window: <span class="unit">${obsN}</span> (${escapeHtml(evidence.observationCount.window)}).</p>
+      <p>Types: ${evidence.observationTypes.map((item) => escapeHtml(item)).join("; ") || "none listed"}.</p>
+    </section>`;
+
+  const models = `
+    <section class="evidence-group" aria-label="Model estimates">
+      <h3>Model estimates</h3>
+      <p><strong>Current:</strong> ${escapeHtml(evidence.currentEstimate)}</p>
+      <p><strong>Forecast:</strong> ${escapeHtml(evidence.forecastEstimate)}</p>
+      <p><strong>How sure:</strong> ${escapeHtml(evidence.confidence.category)}</p>
+    </section>`;
+
+  const environment = `
+    <section class="evidence-group" aria-label="Environment">
+      <h3>Environment</h3>
+      ${envLines(evidence)}
+    </section>`;
+
+  const methods = `
+    <section class="evidence-group" aria-label="Methods and limitations">
+      <h3>Methods and limitations</h3>
+      ${renderAnswers(record.answers)}
+      <p>${escapeHtml(evidence.privacyCoarsening)}</p>
+      <ul>${evidence.knownLimitations.map((item) => `<li>${escapeHtml(item)}</li>`).join("")}</ul>
+    </section>`;
+
   const ops = record.opsRisk
     ? expert
       ? renderOpsExpert(record.opsRisk)
       : renderOpsPlain(record.opsRisk)
     : "";
   const fields = expert
-    ? FIELD_TITLES.map(
+    ? `<details class="expert-methods"><summary>Expert methodology (16 fields)</summary><div class="fields">${FIELD_TITLES.map(
         ({ key, title }) =>
           `<article><h3>${escapeHtml(title)}</h3>${renderValue(key, record.evidence)}</article>`,
-      ).join("")
+      ).join("")}</div></details>`
     : "";
   const jsonButton = expert
     ? `<button type="button" class="copy-json" data-cell="${escapeHtml(cellId)}">Copy cell JSON</button>`
@@ -181,9 +304,13 @@ export function renderEvidenceHtml(
   return `
     <p class="lede">${escapeHtml(label)}</p>
     ${badges}
+    ${summary}
     ${ops}
-    ${answers}
+    ${observations}
+    ${models}
+    ${environment}
+    ${methods}
     ${jsonButton}
-    ${expert ? `<div class="fields">${fields}</div>` : ""}
+    ${fields}
   `;
 }

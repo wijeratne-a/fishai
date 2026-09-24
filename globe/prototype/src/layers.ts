@@ -1,5 +1,7 @@
 import type { LayerKind, LayerResolutionMeta, ModelCardGate, PastReportsSummary, PredictionTarget } from "./types";
 
+export const GOLIATH_APHIA_ID = 159353;
+
 export const PREDICTION_TARGETS: readonly PredictionTarget[] = [
   "observed_presence",
   "occurrence_probability",
@@ -88,11 +90,13 @@ export function scientificStatusCopy(options: {
   publishedSoon: boolean;
   withheld?: boolean;
 }): string {
-  if (options.demo) return "Learn demo encodings (measured / guessed / future) — not a published species location.";
-  if (options.publishedNow) return "Current estimate (published card).";
+  if (options.demo) return "Learn demo encodings (measured / estimate / forecast) — not a published species location.";
+  if (options.publishedNow) return "Model estimate available (experimental).";
   if (options.publishedSoon) return "Forecast (published card).";
   if (options.past?.withheld || options.withheld) return "Unknown now. Historical pattern withheld.";
-  if (options.past && options.past.cellsDrawn > 0) return "Historical pattern (past reports). Unknown as a current estimate.";
+  if (options.past && options.past.cellsDrawn > 0) {
+    return "Past reports (historical pattern). Unknown as a current estimate.";
+  }
   return "Unknown.";
 }
 

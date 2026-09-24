@@ -1,11 +1,14 @@
 # FishAI — Find a saltwater species
 
 **Path:** `/Users/wijeratne/dev/fishai/globe/prototype/`  
-**Stack:** Vite 6.4.3 + TypeScript 5.9.3 + MapLibre GL JS 6.10.0 (2D map; no Cesium).
+**Stack:** Vite 6.4.3 + TypeScript 5.9.3 + MapLibre GL JS **6.10.0** (globe projection; no Cesium; no Google tiles).
 
-Search a fish or crustacean name. Most species return **no current location** and **no forecast**. Some names show coarse **past reports** from OBIS. The Willapa oyster screen is a **working-conditions demo** opened from Learn — not harvest advice and not animal GPS.
+**Research problem:** [`../../RESEARCH_PROBLEM.md`](../../RESEARCH_PROBLEM.md)  
+**First species slice:** Atlantic goliath grouper — [`../../species/goliath-grouper/`](../../species/goliath-grouper/)
 
-This is **not** live tracking.
+Search a fish or crustacean name. Most species return **no current location** and **no forecast**. Some names show coarse **past reports** from OBIS. Goliath grouper is the first named slice: ecology copy and coarsened history only — **not** a live location. The Willapa oyster screen is a **working-conditions demo** opened from Learn.
+
+This is **not** live tracking. The system does **not** know exactly where goliath grouper (or any species) are at every moment.
 
 ---
 
@@ -30,40 +33,28 @@ No backend. No API keys. No `.env`. Willapa cells are static fixtures. Species n
 
 ---
 
-## What the first screen does
-
-- One-line banner: sample data, not live tracking, not harvest or food-safety advice.
-- Four destinations: Find Species, Explore Globe, Evidence, Learn. Expert is a toggle.
-- Cold load: “Search a species or pick a place.” No Category D cell, no AphiaID wall, no later-modes list.
-- Answer strip always above the fold: Where now, Soon, How sure, Depth, Why, This is not.
-- Map legend: Measured, Guessed, Future, Don’t know.
-
-Typing **yellowfin tuna** should say there is no issued location and no forecast. Stripes mean we do not know, not that the ocean is empty. If OBIS returns records, they draw as coarse past reports with a year span and license note.
-
-The **Pacific oyster** working-conditions demo opens from **Learn** only.
-
----
-
 ## Honesty rules in this build
 
-- Current location and forecasts appear only when a model card is `PUBLISHED` and a baseline was beaten. That count is **zero**.
-- The oyster demo is air, tide, sun, and waves — not sea-surface temperature as body temperature, not harvest legality.
-- Satellites, chlorophyll, and vessel traffic are never painted as animal positions.
-- Empty water stays “not enough data,” not absence.
-- Sensitive taxa (for example white shark) are withheld from the public past-report grid.
-- Cells with fewer than 3 records are hidden. At most 80 coarse cells are drawn.
+- Current location, occurrence probability, abundance, movement, and forecasts appear only when a model card is `PUBLISHED` and a baseline was beaten. That count is **zero**.
+- Habitat is **favorable conditions — not confirmed presence**.
+- Past OBIS cells are a **historical pattern**, ~1° / 100 km, `n ≥ 3`, max 80 cells.
+- Goliath aggregation wrecks and nursery pins are **not** drawn. A 1° grid may appear with a coarsening note.
+- White shark past-report locations stay **withheld**.
+- The oyster demo is air, tide, sun, and waves — not oyster GPS.
+- Empty water is **unknown**, not absence.
 
 ---
 
-## What is fixture vs live lookup
+## Status
 
-| Item | Status |
+Browser results for the 2026-09-23 integration are in [`VERIFICATION.md`](VERIFICATION.md). That file is the only current pass/fail record.
+
+| Bucket | What |
 |---|---|
-| Willapa cell colors, ranks, SST, habitat class, observation `n` | Synthetic fixtures generated 2026-09-18 |
-| In-water stations | Fictional sensors, not animals |
-| Species catalog | Local WoRMS-verified names; unknown spellings resolve via the official WoRMS REST service |
-| Past-report grid | Official OBIS occurrence + 1° grid, rate-limited |
-| Model cards | Only Magallana gigas draft, `NOT_PUBLISHED` |
+| **Designed only** | 4D occupancy, occupancy-with-effort, VAST, movement state-space, observation planner execution — see `species/goliath-grouper/` |
+| **Blocked on data or licensing** | Rights-approved ingest; ATN/telemetry; survey microdata; GEBCO terrain tiles |
+| **Blocked on scientific validation** | Current-estimate and forecast layers; spawning-aggregation layer; any published card |
+| **Not started** | Training, skill scores, as-of replay implementation, named reviewer/publisher |
 
 ---
 
@@ -75,5 +66,6 @@ prototype/
   index.html
   src/                 UI + MapLibre + WoRMS/OBIS clients
   public/fixtures/     Willapa GeoJSON + taxa + model-card gate
+  docs/                camera, layers, publication decision
   scripts/generate-fixtures.mjs
 ```

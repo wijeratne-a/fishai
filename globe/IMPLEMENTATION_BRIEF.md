@@ -1,7 +1,7 @@
 # Globe-quality marine interface — implementation brief
 
 **Status:** Binding for the `globe/prototype` pass that follows.  
-**Research problem:** [`../RESEARCH_PROBLEM.md`](../RESEARCH_PROBLEM.md) — canonical. This globe must answer that problem honestly, not invent a published species model.  
+**Research problem:** [`../RESEARCH_PROBLEM.md`](../RESEARCH_PROBLEM.md) — canonical. First species slice: [`../species/goliath-grouper/`](../species/goliath-grouper/) (*Epinephelus itajara*). This globe must answer that problem honestly, not invent a published species model.  
 **Honesty rules remain in** [`../GLOBAL_MARINE_LIFE_INTELLIGENCE_PROMPT.md`](../GLOBAL_MARINE_LIFE_INTELLIGENCE_PROMPT.md). This file does not replace that prompt or the research-problem document.
 
 ## Mission

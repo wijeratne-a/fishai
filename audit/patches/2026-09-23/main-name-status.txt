@@ -1,0 +1,14 @@
+M	globe/IMPLEMENTATION_BRIEF.md
+M	globe/prototype/README.md
+M	globe/prototype/VERIFICATION.md
+M	globe/prototype/index.html
+M	globe/prototype/public/fixtures/taxa.json
+M	globe/prototype/src/answer.ts
+M	globe/prototype/src/basemap.ts
+M	globe/prototype/src/camera.ts
+M	globe/prototype/src/layers.ts
+M	globe/prototype/src/main.ts
+M	globe/prototype/src/mapApp.ts
+M	globe/prototype/src/places.ts
+M	globe/prototype/src/styles.css
+M	globe/prototype/src/types.ts

@@ -1,0 +1,13 @@
+ globe/prototype/README.md                 |   9 +-
+ globe/prototype/VERIFICATION.md           |  31 +++++--
+ globe/prototype/index.html                |  97 +++++++++++++-------
+ globe/prototype/public/fixtures/taxa.json |   8 ++
+ globe/prototype/src/answer.ts             |  12 ++-
+ globe/prototype/src/evidence.ts           | 143 +++++++++++++++++++++++++++---
+ globe/prototype/src/layers.ts             |   8 +-
+ globe/prototype/src/legend.ts             |  70 +++++++++++----
+ globe/prototype/src/main.ts               |  99 ++++++++++++++++++---
+ globe/prototype/src/mapApp.ts             |  34 +++++++
+ globe/prototype/src/styles.css            | 124 +++++++++++++++++++++++++-
+ globe/prototype/src/types.ts              |  16 ++--
+ 12 files changed, 546 insertions(+), 105 deletions(-)

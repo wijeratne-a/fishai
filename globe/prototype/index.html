@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <meta
       name="description"
-      content="FishAI marine globe. Sample data. Not live tracking. Not harvest or food-safety advice."
+      content="Explore where marine species have been observed and how models estimate their distributions, when available. Sample data. Not live tracking."
     />
     <title>FishAI — Marine life globe</title>
   </head>
@@ -14,9 +14,10 @@
 
     <div id="first-run" class="first-run" role="dialog" aria-label="How to use this globe">
       <p>
-        Spin the Earth. Search a species or a place. The empty ocean is unknown, not a live
-        animal map. Colored zones, when they appear, are labeled as confirmed observation,
-        current estimate, forecast, historical pattern, favorable habitat, or unknown.
+        Explore where marine species have been observed and how models estimate their
+        distributions, when available. Most searches show no current location and no forecast.
+        Colored or striped zones are labeled Measured, Estimate, Forecast, Past reports, or
+        Unknown — never live GPS of every animal.
 
       </p>
       <button type="button" id="first-run-dismiss" class="primary">Got it</button>
@@ -36,14 +37,18 @@
             />
             <button type="button" id="species-find" class="primary">Find</button>
           </div>
+          <p class="purpose-line">
+            Explore where marine species have been observed and how models estimate their
+            distributions, when available.
+          </p>
           <ul id="species-results" class="results" hidden></ul>
           <p id="species-empty" class="lede" hidden>No matching name.</p>
         </section>
         <nav class="nav" aria-label="Primary">
-          <button type="button" class="nav-btn is-active" data-nav="find">Find</button>
-          <button type="button" class="nav-btn" data-nav="explore">Explore</button>
-          <button type="button" class="nav-btn" data-nav="evidence">Evidence</button>
-          <button type="button" class="nav-btn" data-nav="learn">Learn</button>
+          <button type="button" class="nav-btn is-active" data-nav="find">Find Species</button>
+          <button type="button" class="nav-btn" data-nav="explore">Explore Ocean</button>
+          <button type="button" class="nav-btn" data-nav="evidence">Evidence &amp; Data</button>
+          <button type="button" class="nav-btn" data-nav="learn">Learn &amp; Methods</button>
         </nav>
         <label class="expert-toggle">
           <input type="checkbox" id="expert-mode" />
@@ -58,6 +63,20 @@
     <h1 id="page-h1" class="visually-hidden">Find a saltwater species</h1>
 
     <div id="map" role="region" aria-label="Interactive globe of Earth and marine evidence" tabindex="0"></div>
+
+    <div class="map-tools" role="toolbar" aria-label="Globe view controls">
+      <button type="button" id="tool-projection" class="secondary" aria-pressed="false">
+        3D globe
+      </button>
+      <button type="button" id="tool-north" class="secondary">Reset North</button>
+      <button type="button" id="tool-home" class="secondary">Home view</button>
+      <button type="button" id="tool-zoom-in" class="secondary" aria-label="Zoom in">+</button>
+      <button type="button" id="tool-zoom-out" class="secondary" aria-label="Zoom out">−</button>
+    </div>
+    <p id="map-hints" class="map-hints">
+      Drag to rotate the globe. Scroll or pinch to zoom. Click a highlighted area for details.
+    </p>
+
     <div id="map-legend" class="map-legend" aria-label="Map legend"></div>
     <p class="map-stamp" id="map-stamp">3D globe · Not live tracking</p>
     <p id="map-view-status" class="map-view-status" aria-live="polite">3D globe · Not live tracking</p>
@@ -72,16 +91,16 @@
       <section>
         <h2>This globe</h2>
         <p class="lede" id="map-scope">
-          Drag to spin, scroll to zoom, right-drag or Control-drag to tilt. Double-click zooms in.
-          This is not live animal tracking.
+          Drag to rotate, scroll or pinch to zoom, right-drag or Control-drag to tilt.
+          Double-click zooms in. This is not live animal tracking.
         </p>
         <label class="toggle">
           <input type="checkbox" id="flat-map" />
-          Use a flat map instead of the globe
+          Use a 2D flat map instead of the 3D globe
         </label>
         <p class="camera-row">
-          <button type="button" id="home-view" class="secondary">Home</button>
-          <button type="button" id="north-up" class="secondary">North up</button>
+          <button type="button" id="home-view" class="secondary">Home view</button>
+          <button type="button" id="north-up" class="secondary">Reset North</button>
           <button type="button" id="reset-tilt" class="secondary">Reset tilt</button>
           <button type="button" id="view-back" class="secondary">Back</button>
         </p>
@@ -140,39 +159,56 @@
         <div id="evidence" class="evidence" tabindex="-1">
           <h2 class="visually-hidden">Evidence</h2>
           <p id="evidence-empty" class="lede">
-            Search a species or pick a place. This panel stays short unless Expert is on.
+            Search a species or click a highlighted area. This panel stays short unless Expert is on.
           </p>
           <div id="evidence-body" hidden></div>
         </div>
       </details>
       <aside id="learn" class="evidence learn" hidden tabindex="-1">
-        <h2>Learn</h2>
-        <p><strong>Measured</strong> means someone recorded a value (for example water temperature).</p>
-        <p><strong>Guessed</strong> means a model inferred something. It is not a sighting.</p>
-        <p><strong>Future</strong> means a forecast for a named time window. It is not live tracking.</p>
+        <h2>Learn &amp; Methods</h2>
         <p>
-          <strong>Don’t know</strong> (stripes) means we do not have an estimate. It does not mean
-          the ocean is empty. Unknown is the default scientific status.
+          <strong>Measured</strong> means someone recorded a value (for example water temperature).
         </p>
         <p>
-          This globe does not collapse answers into “where the fish are.” Observed presence,
-          occurrence probability, relative abundance, movement, habitat suitability, and unknown
-          stay separate. Habitat is favorable conditions — not confirmed presence. Current
-          estimates and forecasts stay off unless a model card is actually published.
+          <strong>Estimate</strong> means a model inferred something when a published card allows it.
+          It is not a sighting. No estimate is issued in this build.
         </p>
         <p>
-          The Willapa Bay oyster screen is a <em>working-conditions</em> demo. It is farm air, tide,
-          and waves — not oyster GPS. Searching yellowfin tuna (or most names) should say we have no
-          current location and no forecast.
+          <strong>Forecast</strong> means a published prediction for a named time window. It is not
+          live tracking. No forecast is issued in this build.
         </p>
         <p>
-          A species page may show past reports from public databases. Those are a historical
-          pattern, not where the animals are now. Sensitive taxa (for example white shark) withhold
-          locations.
+          <strong>Past reports</strong> = where people recorded this species in the past, not live
+          presence.
         </p>
         <p>
-          <button type="button" id="learn-oyster" class="primary">Open the oyster working-conditions demo</button>
+          <strong>Unknown</strong> (stripes, where a layer is drawn) means we do not have an estimate.
+          It does not mean the ocean is empty. Unknown is the default scientific status.
         </p>
+        <p>
+          Observed presence, occurrence probability, relative abundance, movement, habitat
+          suitability, and unknown stay separate. Habitat is favorable conditions — not confirmed
+          presence. Current estimates and forecasts stay off unless a model card is actually
+          published.
+        </p>
+        <p>
+          Searching yellowfin tuna, Atlantic goliath grouper, or most names should say we have no
+          current location and no forecast. Goliath aggregation sites stay coarsened or withheld.
+          Past reports from public databases are a historical pattern, not where the animals are
+          now. Sensitive taxa (for example white shark) withhold locations.
+        </p>
+        <section class="demo-section" aria-label="Specialized demos">
+          <h3>Specialized demo</h3>
+          <p class="hint">
+            The Willapa Bay oyster screen is a working-conditions demo (farm air, tide, and waves),
+            not oyster GPS. Optional. Not a species location product. Not harvest or food-safety advice.
+          </p>
+          <p>
+            <button type="button" id="learn-oyster" class="primary">
+              Open the oyster working-conditions demo
+            </button>
+          </p>
+        </section>
       </aside>
     </aside>
 

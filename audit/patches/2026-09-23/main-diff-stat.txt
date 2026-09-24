@@ -1,0 +1,15 @@
+ globe/IMPLEMENTATION_BRIEF.md             |  2 +-
+ globe/prototype/README.md                 | 54 +++++++++++++---------------
+ globe/prototype/VERIFICATION.md           | 41 ++++++++++++++-------
+ globe/prototype/index.html                |  4 +--
+ globe/prototype/public/fixtures/taxa.json |  8 +++++
+ globe/prototype/src/answer.ts             |  5 +++
+ globe/prototype/src/basemap.ts            | 60 ++++++++++++++++++++++++++++++-
+ globe/prototype/src/camera.ts             | 12 +++----
+ globe/prototype/src/layers.ts             |  2 ++
+ globe/prototype/src/main.ts               | 41 ++++++++++++++++++++-
+ globe/prototype/src/mapApp.ts             | 23 +++++++++---
+ globe/prototype/src/places.ts             | 11 ++++--
+ globe/prototype/src/styles.css            | 10 +++---
+ globe/prototype/src/types.ts              |  1 +
+ 14 files changed, 209 insertions(+), 65 deletions(-)

@@ -3,13 +3,13 @@ import type { FlyToOptions, LngLatBoundsLike, Map as MapLibreMap, MapOptions } f
 export type MapProjectionMode = "globe" | "mercator";
 
 export const CAMERA = {
-  WORLD_CENTER: [0, 12] as [number, number],
-  WORLD_ZOOM: 1.35,
-  WORLD_PITCH: 42,
-  MIN_ZOOM: 0.55,
+  WORLD_CENTER: [0, 15] as [number, number],
+  WORLD_ZOOM: 1.6,
+  WORLD_PITCH: 28,
+  MIN_ZOOM: 0.8,
   MAX_ZOOM: 12,
   MIN_PITCH: 0,
-  MAX_PITCH: 70,
+  MAX_PITCH: 60,
   GLOBE_TILT_UNTIL_ZOOM: 4,
   SELECT_DRAG_PX: 7,
 };
@@ -33,7 +33,7 @@ export function mapCameraOptions(projectionMode: MapProjectionMode): Partial<Map
   return {
     center: CAMERA.WORLD_CENTER,
     zoom: CAMERA.WORLD_ZOOM,
-    pitch: projectionMode === "globe" ? CAMERA.WORLD_PITCH : 0,
+    pitch: 0,
     bearing: 0,
     minZoom: CAMERA.MIN_ZOOM,
     maxZoom: CAMERA.MAX_ZOOM,

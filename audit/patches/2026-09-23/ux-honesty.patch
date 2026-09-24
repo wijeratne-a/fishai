@@ -1,0 +1,1091 @@
+diff --git a/globe/prototype/README.md b/globe/prototype/README.md
+index 6b3bfe4c1d834ba590645bed305e86790af35081..9840b897ebf5e2b0b36d25b0f03f3518e5df370d 100644
+--- a/globe/prototype/README.md
++++ b/globe/prototype/README.md
+@@ -1,7 +1,8 @@
+ # FishAI — Find a saltwater species
+ 
+ **Path:** `/Users/wijeratne/dev/fishai/globe/prototype/`  
+-**Stack:** Vite 6.4.3 + TypeScript 5.9.3 + MapLibre GL JS 6.10.0 (2D map; no Cesium).
++**Stack:** Vite 6.4.3 + TypeScript 5.9.3 + MapLibre GL JS 6.10.0 (2D map; no Cesium).  
++**UX notes:** see [`UX_AUDIT_NOTES.md`](./UX_AUDIT_NOTES.md).
+ 
+ Search a fish or crustacean name. Most species return **no current location** and **no forecast**. Some names show coarse **past reports** from OBIS. The Willapa oyster screen is a **working-conditions demo** opened from Learn — not harvest advice and not animal GPS.
+ 
+@@ -33,10 +34,10 @@ No backend. No API keys. No `.env`. Willapa cells are static fixtures. Species n
+ ## What the first screen does
+ 
+ - One-line banner: sample data, not live tracking, not harvest or food-safety advice.
+-- Four destinations: Find Species, Explore Globe, Evidence, Learn. Expert is a toggle.
+-- Cold load: “Search a species or pick a place.” No Category D cell, no AphiaID wall, no later-modes list.
++- Four destinations: Find Species, Explore Ocean, Evidence & Data, Learn & Methods. Expert is a toggle.
++- Cold load: purpose line + “Search a species or pick a place.” No Category D cell, no AphiaID wall, no later-modes list.
+ - Answer strip always above the fold: Where now, Soon, How sure, Depth, Why, This is not.
+-- Map legend: Measured, Guessed, Future, Don’t know.
++- Map legend: Measured, Estimate, Forecast, Past reports, Unknown (patterns, not color alone).
+ 
+ Typing **yellowfin tuna** should say there is no issued location and no forecast. Stripes mean we do not know, not that the ocean is empty. If OBIS returns records, they draw as coarse past reports with a year span and license note.
+ 
+diff --git a/globe/prototype/VERIFICATION.md b/globe/prototype/VERIFICATION.md
+index 48b1ad08507612098a157e6ea02049cb4d45032a..bf4d534365bf4914a8013a6cf7a93b02aeb20d75 100644
+--- a/globe/prototype/VERIFICATION.md
++++ b/globe/prototype/VERIFICATION.md
+@@ -1,16 +1,29 @@
++# UI verification note (2026-09-22 UX honesty pass)
++
++**What the UI now guarantees (presentation only):** cold load shows a clean globe, prominent species search, a one-line purpose about observed distributions and estimates *when available*, and an empty answer strip that prompts action. Specialized demos (Willapa oyster working-conditions) stay behind Learn & Methods. With **zero** `PUBLISHED` model cards, Where now stays **No issued location.** and Soon stays **No forecast issued.** Legend labels are Measured / Estimate / Forecast / Past reports / Unknown with patterns, not color alone. Copy does not claim live tracking, catch guarantees, harvest permission, or global omniscience.
++
++See also [`UX_AUDIT_NOTES.md`](./UX_AUDIT_NOTES.md).
++
++---
++
+ # Browser verification — readable life atlas (2026-09-22)
+ 
+-Checked at `http://localhost:5173/` after Phases A–G.
++Checked at `http://localhost:5173/` after Phases A–G, then UX honesty pass.
+ 
+ | Flow | Result |
+ |---|---|
+-| Cold load 1440×900 | Empty answer: “Search a species or pick a place.” Four nav items. One-line banner. No Category D, AphiaID, or later-modes list. |
+-| Yellowfin tuna | Where now = no issued location; Soon = no forecast; How sure = None; Depth unknown. Then 246,964 past reports (1788–2026), coarse cells, license note. |
+-| Pacific oyster from homepage | No issued location. Demo stays on Learn. |
+-| Learn → oyster demo | Working-conditions strip on Nahcotta cell. Expert off hides Category D and the 16 fields. Expert on shows all 16 plus JSON. |
+-| Unknown cell (C05) | Don’t know / no forecast / not absence. |
+-| Measured cell (C13) | “Water temperature (measured): 15.3 °C. This is not a sighting of animals.” |
++| Cold load 1440×900 | Globe + search + purpose line + empty answer (“Search a species or pick a place.”). Four nav items (Find Species / Explore Ocean / Evidence & Data / Learn & Methods). Map hints + 2D/3D · Reset North · Home · zoom. No Category D, AphiaID wall, or oyster demo on first paint. |
++| Species with no model (yellowfin tuna) | Where now = No issued location; Soon = No forecast issued; How sure = None; Depth unknown / not modeled. Past reports may draw as coarse cells with hatch + Past reports legend. |
++| Species with no model (goliath grouper) | Same honesty: no issued location, no forecast; catalog status `no_estimate` / NOT_PUBLISHED. |
++| Species with a model | Only if a card is actually `PUBLISHED` and wired — estimate vs forecast vs unknown stay distinct. **Current fixture count: zero published cards.** |
++| Pacific oyster from homepage search | No issued location. Demo stays on Learn & Methods. |
++| Learn → oyster demo | Working-conditions strip on Nahcotta cell. Expert off hides Category D and the 16 fields (collapsible Expert methodology). |
++| Unknown / past-report cell | Unknown / no forecast / not absence. Past-report click opens plain-language evidence groups. |
++| Measured cell (C13, demo) | “Water temperature (measured): … This is not a sighting of animals.” |
++| Globe interaction | Drag rotate / pan, scroll zoom, tilt; 2D/3D keeps species/place context; Reset North / Home / zoom tools labeled. |
++| Legend | Measured, Estimate, Forecast, Past reports, Unknown — color **and** pattern + micro-explanations. |
+ | Place list keyboard | Native `<select>` with plain place names. |
+ | No matching name | `asdfqwertynotareal` → “No matching name.” |
+-| Dungeness crab | 54,618 past reports (1909–2026), 3 coarse cells, “not where they are now.” |
+-| Narrow ~390px | Search, then answer, then map, then panels. One `h1`, skip to search, `aria-live`, 14px time bar. |
++| Dungeness crab | Past reports (coarse cells), “not where they are now.” |
++| Narrow ~390px | Search, purpose, answer, map, panels stack. One `h1`, skip to search, `aria-live`. |
++| Honesty copy scan | No UI text implies exact tracking, catch guarantees, harvest permissions, or global omniscience. |
+diff --git a/globe/prototype/index.html b/globe/prototype/index.html
+index 1a7d9de14dd2c7a1f1b33b0032246bf1cb3d4de1..2488ac114303af9ae52a09d745d383d1f109db8c 100644
+--- a/globe/prototype/index.html
++++ b/globe/prototype/index.html
+@@ -5,7 +5,7 @@
+     <meta name="viewport" content="width=device-width, initial-scale=1" />
+     <meta
+       name="description"
+-      content="FishAI marine globe. Sample data. Not live tracking. Not harvest or food-safety advice."
++      content="Explore where marine species have been observed and how models estimate their distributions, when available. Sample data. Not live tracking."
+     />
+     <title>FishAI — Marine life globe</title>
+   </head>
+@@ -14,10 +14,10 @@
+ 
+     <div id="first-run" class="first-run" role="dialog" aria-label="How to use this globe">
+       <p>
+-        Spin the Earth. Search a species or a place. The empty ocean is unknown, not a live
+-        animal map. Colored zones, when they appear, are labeled as confirmed observation,
+-        current estimate, forecast, historical pattern, favorable habitat, or unknown.
+-
++        Explore where marine species have been observed and how models estimate their
++        distributions, when available. Most searches show no current location and no forecast.
++        Colored or striped zones are labeled Measured, Estimate, Forecast, Past reports, or
++        Unknown — never live GPS of every animal.
+       </p>
+       <button type="button" id="first-run-dismiss" class="primary">Got it</button>
+     </div>
+@@ -36,14 +36,18 @@
+             />
+             <button type="button" id="species-find" class="primary">Find</button>
+           </div>
++          <p class="purpose-line">
++            Explore where marine species have been observed and how models estimate their
++            distributions, when available.
++          </p>
+           <ul id="species-results" class="results" hidden></ul>
+           <p id="species-empty" class="lede" hidden>No matching name.</p>
+         </section>
+         <nav class="nav" aria-label="Primary">
+-          <button type="button" class="nav-btn is-active" data-nav="find">Find</button>
+-          <button type="button" class="nav-btn" data-nav="explore">Explore</button>
+-          <button type="button" class="nav-btn" data-nav="evidence">Evidence</button>
+-          <button type="button" class="nav-btn" data-nav="learn">Learn</button>
++          <button type="button" class="nav-btn is-active" data-nav="find">Find Species</button>
++          <button type="button" class="nav-btn" data-nav="explore">Explore Ocean</button>
++          <button type="button" class="nav-btn" data-nav="evidence">Evidence &amp; Data</button>
++          <button type="button" class="nav-btn" data-nav="learn">Learn &amp; Methods</button>
+         </nav>
+         <label class="expert-toggle">
+           <input type="checkbox" id="expert-mode" />
+@@ -58,6 +62,20 @@
+     <h1 id="page-h1" class="visually-hidden">Find a saltwater species</h1>
+ 
+     <div id="map" role="region" aria-label="Interactive globe of Earth and marine evidence" tabindex="0"></div>
++
++    <div class="map-tools" role="toolbar" aria-label="Globe view controls">
++      <button type="button" id="tool-projection" class="secondary" aria-pressed="false">
++        3D globe
++      </button>
++      <button type="button" id="tool-north" class="secondary">Reset North</button>
++      <button type="button" id="tool-home" class="secondary">Home view</button>
++      <button type="button" id="tool-zoom-in" class="secondary" aria-label="Zoom in">+</button>
++      <button type="button" id="tool-zoom-out" class="secondary" aria-label="Zoom out">−</button>
++    </div>
++    <p id="map-hints" class="map-hints">
++      Drag to rotate the globe. Scroll or pinch to zoom. Click a highlighted area for details.
++    </p>
++
+     <div id="map-legend" class="map-legend" aria-label="Map legend"></div>
+     <p class="map-stamp" id="map-stamp">3D globe · Not live tracking</p>
+     <p id="map-view-status" class="map-view-status" aria-live="polite">3D globe · Not live tracking</p>
+@@ -72,16 +90,16 @@
+       <section>
+         <h2>This globe</h2>
+         <p class="lede" id="map-scope">
+-          Drag to spin, scroll to zoom, right-drag or Control-drag to tilt. Double-click zooms in.
+-          This is not live animal tracking.
++          Drag to rotate, scroll or pinch to zoom, right-drag or Control-drag to tilt.
++          Double-click zooms in. This is not live animal tracking.
+         </p>
+         <label class="toggle">
+           <input type="checkbox" id="flat-map" />
+-          Use a flat map instead of the globe
++          Use a 2D flat map instead of the 3D globe
+         </label>
+         <p class="camera-row">
+-          <button type="button" id="home-view" class="secondary">Home</button>
+-          <button type="button" id="north-up" class="secondary">North up</button>
++          <button type="button" id="home-view" class="secondary">Home view</button>
++          <button type="button" id="north-up" class="secondary">Reset North</button>
+           <button type="button" id="reset-tilt" class="secondary">Reset tilt</button>
+           <button type="button" id="view-back" class="secondary">Back</button>
+         </p>
+@@ -140,39 +158,54 @@
+         <div id="evidence" class="evidence" tabindex="-1">
+           <h2 class="visually-hidden">Evidence</h2>
+           <p id="evidence-empty" class="lede">
+-            Search a species or pick a place. This panel stays short unless Expert is on.
++            Search a species or click a highlighted area. This panel stays short unless Expert is on.
+           </p>
+           <div id="evidence-body" hidden></div>
+         </div>
+       </details>
+       <aside id="learn" class="evidence learn" hidden tabindex="-1">
+-        <h2>Learn</h2>
+-        <p><strong>Measured</strong> means someone recorded a value (for example water temperature).</p>
+-        <p><strong>Guessed</strong> means a model inferred something. It is not a sighting.</p>
+-        <p><strong>Future</strong> means a forecast for a named time window. It is not live tracking.</p>
++        <h2>Learn &amp; Methods</h2>
++        <p>
++          <strong>Measured</strong> means someone recorded a value (for example water temperature).
++        </p>
++        <p>
++          <strong>Estimate</strong> means a model inferred something when a published card allows it.
++          It is not a sighting.
++        </p>
+         <p>
+-          <strong>Don’t know</strong> (stripes) means we do not have an estimate. It does not mean
+-          the ocean is empty. Unknown is the default scientific status.
++          <strong>Forecast</strong> means a published prediction for a named time window. It is not
++          live tracking.
+         </p>
+         <p>
+-          This globe does not collapse answers into “where the fish are.” Observed presence,
+-          occurrence probability, relative abundance, movement, habitat suitability, and unknown
+-          stay separate. Habitat is favorable conditions — not confirmed presence. Current
+-          estimates and forecasts stay off unless a model card is actually published.
++          <strong>Past reports</strong> = where people recorded this species in the past, not live
++          presence.
+         </p>
+         <p>
+-          The Willapa Bay oyster screen is a <em>working-conditions</em> demo. It is farm air, tide,
+-          and waves — not oyster GPS. Searching yellowfin tuna (or most names) should say we have no
+-          current location and no forecast.
++          <strong>Unknown</strong> (stripes) means we do not have an estimate. It does not mean the
++          ocean is empty. Unknown is the default scientific status.
+         </p>
+         <p>
+-          A species page may show past reports from public databases. Those are a historical
+-          pattern, not where the animals are now. Sensitive taxa (for example white shark) withhold
+-          locations.
++          Observed presence, occurrence probability, relative abundance, movement, habitat
++          suitability, and unknown stay separate. Habitat is favorable conditions — not confirmed
++          presence. Current estimates and forecasts stay off unless a model card is actually
++          published.
+         </p>
+         <p>
+-          <button type="button" id="learn-oyster" class="primary">Open the oyster working-conditions demo</button>
++          Demographics and specialized demos live here — not on the first screen. The Willapa Bay
++          oyster screen is a <em>working-conditions</em> demo (farm air, tide, and waves), not
++          oyster GPS.
+         </p>
++        <section class="demo-section" aria-label="Specialized demos">
++          <h3>Specialized demo</h3>
++          <p class="hint">
++            Optional. Not a species location product. Not harvest or food-safety advice.
++          </p>
++          <p>
++            <button type="button" id="learn-oyster" class="primary">
++              Open the oyster working-conditions demo
++            </button>
++          </p>
++        </section>
+       </aside>
+     </aside>
+ 
+diff --git a/globe/prototype/public/fixtures/taxa.json b/globe/prototype/public/fixtures/taxa.json
+index 6c37c3b014b53b4aa7138266ab9cf5a555d09b16..dff322e314be9bdca8a4a5ceceed319c63e40c1f 100644
+--- a/globe/prototype/public/fixtures/taxa.json
++++ b/globe/prototype/public/fixtures/taxa.json
+@@ -270,6 +270,14 @@
+       "group": "fish",
+       "status": "no_estimate",
+       "note": "Sensitive taxon. Past-report locations withheld. Not a published location model."
++    },
++    {
++      "aphiaId": 159353,
++      "scientificName": "Epinephelus itajara",
++      "commonNames": ["Atlantic goliath grouper", "goliath grouper"],
++      "group": "fish",
++      "status": "no_estimate",
++      "note": "NOT_PUBLISHED. No current estimate or forecast. Past reports only if coarsener allows."
+     }
+   ]
+ }
+diff --git a/globe/prototype/src/answer.ts b/globe/prototype/src/answer.ts
+index 26cc21a89ef1a97b77dcd06656da61a5ef88ef51..19783a86598595392a1e29e2f6e0df3f30d7d8bf 100644
+--- a/globe/prototype/src/answer.ts
++++ b/globe/prototype/src/answer.ts
+@@ -7,13 +7,11 @@ export function emptyAnswer(): AnswerStrip {
+     whereNow: "Search a species or pick a place.",
+     soon: "No forecast issued.",
+     howSure: "None",
+-    depth: "Depth unknown",
++    depth: "Depth unknown / not modeled.",
+     why: "Nothing has been asked yet.",
+     thisIsNot: "Live tracking, a fishing map, or a count of animals.",
+     whatShown: "Empty globe. No species layer. Unknown is the scientific status.",
+     scientificStatus: "Unknown.",
+-    targetsNote:
+-      "Observed presence, occurrence probability, relative abundance, and movement are not issued. Habitat is not a presence claim. Unknown is first-class.",
+   };
+ }
+ 
+@@ -31,8 +29,8 @@ export function renderAnswerStrip(container: HTMLElement, strip: AnswerStrip): v
+       <div class="answer-not"><span class="k">This is not</span><p>${escapeHtml(strip.thisIsNot)}</p></div>
+     </div>
+     ${
+-      strip.targetsNote
+-        ? `<p class="targets-note">${escapeHtml(strip.targetsNote)}</p>`
++      strip.supportLine
++        ? `<p class="support-line">${escapeHtml(strip.supportLine)}</p>`
+         : ""
+     }
+     ${
+@@ -41,8 +39,8 @@ export function renderAnswerStrip(container: HTMLElement, strip: AnswerStrip): v
+         : ""
+     }
+     ${
+-      strip.supportLine
+-        ? `<p class="support-line">${escapeHtml(strip.supportLine)}</p>`
++      strip.targetsNote
++        ? `<p class="targets-note expert-detail">${escapeHtml(strip.targetsNote)}</p>`
+         : ""
+     }
+   `;
+diff --git a/globe/prototype/src/evidence.ts b/globe/prototype/src/evidence.ts
+index 310cf530872f39fcb03a03f825243984e8ef7070..eb90d2ef81cd16d76f174a2aa4dd5e04060df41d 100644
+--- a/globe/prototype/src/evidence.ts
++++ b/globe/prototype/src/evidence.ts
+@@ -14,7 +14,7 @@ const FIELD_TITLES: { key: keyof Evidence16; title: string }[] = [
+   { key: "lastDirectObservation", title: "4. Last direct observation" },
+   { key: "observationCount", title: "5. Observation count in the region" },
+   { key: "observationTypes", title: "6. Observation types" },
+-  { key: "environmentalInputs", title: "7. Environmental inputs" },
++  { key: "environmentalInputs", title: "7. Environmental factors" },
+   { key: "keyModelDrivers", title: "8. Key model drivers" },
+   { key: "comparableHistoricalConditions", title: "9. Comparable historical conditions" },
+   { key: "modelVersion", title: "10. Model version" },
+@@ -83,7 +83,7 @@ function renderAnswers(answers: HonestyAnswers): string {
+     <p><strong>Why this?</strong> ${escapeHtml(answers.why)}</p>
+     <p><strong>How much to trust it?</strong> ${escapeHtml(answers.trust)}</p>
+     <p><strong>What is missing?</strong> ${escapeHtml(answers.missing)}</p>
+-    <p><strong>Measured, guessed, or future?</strong> ${escapeHtml(answers.observedInferredForecast)}</p>
++    <p><strong>Measured, estimate, or forecast?</strong> ${escapeHtml(answers.observedInferredForecast)}</p>
+   </section>`;
+ }
+ 
+@@ -118,6 +118,18 @@ function renderOpsExpert(ops: OpsRiskBlock): string {
+   </section>`;
+ }
+ 
++function envLines(evidence: Evidence16): string {
++  if (evidence.environmentalInputs.length === 0) {
++    return "<p>No environmental factors issued for this cell.</p>";
++  }
++  return evidence.environmentalInputs
++    .map(
++      (row) =>
++        `<p><strong>${escapeHtml(row.name)}</strong>: ${escapeHtml(row.value)} (as-of ${escapeHtml(row.asOf)})</p>`,
++    )
++    .join("");
++}
++
+ export function renderPastReportsHtml(taxon: TaxonRecord, past: PastReportsSummary | null): string {
+   const name = escapeHtml(taxon.commonNames[0] ?? taxon.scientificName);
+   if (!past) {
+@@ -137,13 +149,67 @@ export function renderPastReportsHtml(taxon: TaxonRecord, past: PastReportsSumma
+       ? `${past.total.toLocaleString()} compiled records`
+       : "no compiled records in this lookup";
+   const years = past.yearSpan ? `Years: ${escapeHtml(past.yearSpan)}.` : "Year span unknown.";
+-  return `<p class="lede">${name}</p>
+-    <section class="answers" aria-label="Past reports">
++  const cells = past.cellsDrawn;
++  return `
++    <p class="evidence-summary">
++      This view shows <strong>${escapeHtml(total)}</strong>
++      (${cells} coarse cells drawn), <strong>0</strong> survey encounters listed here,
++      and <strong>no</strong> model-estimated likelihood (no published card).
++      Environmental factors are not issued for this species layer.
++    </p>
++    <section class="evidence-group" aria-label="Observations">
++      <h3>Observations</h3>
+       <p><strong>Past reports</strong> — ${escapeHtml(total)}. ${years}</p>
+-      <p>These cells are where people sampled and recorded this name. This is not where the animals are now.</p>
++      <p>Past reports = where people recorded this species in the past, not live presence.</p>
++      <p>Drawn cells: ${cells} (hidden if fewer than 3 records; at most 80 cells; about 1° / 100 km).</p>
++    </section>
++    <section class="evidence-group" aria-label="Model estimates">
++      <h3>Model estimates</h3>
++      <p>No issued location. No forecast issued. How sure: None.</p>
++    </section>
++    <section class="evidence-group" aria-label="Environment">
++      <h3>Environment</h3>
++      <p>No environmental factors issued for this species search.</p>
++    </section>
++    <section class="evidence-group" aria-label="Methods and limitations">
++      <h3>Methods and limitations</h3>
+       <p><strong>Source:</strong> ${escapeHtml(past.source)}</p>
+       <p><strong>License:</strong> ${escapeHtml(past.licenseNote)}</p>
+-      <p>Drawn cells: ${past.cellsDrawn} (hidden if fewer than 3 records; at most 80 cells; about 1° / 100 km).</p>
++      <p>Coarse public grid only. Not a count of animals. Not live tracking.</p>
++    </section>`;
++}
++
++export function renderPastReportCellHtml(
++  taxon: TaxonRecord | null,
++  cellLabel: string,
++  reportCount: number,
++): string {
++  const species = taxon
++    ? escapeHtml(taxon.commonNames[0] ?? taxon.scientificName)
++    : "Selected species";
++  return `
++    <p class="evidence-summary">
++      This cell shows <strong>${reportCount.toLocaleString()}</strong> past reports for
++      <strong>${species}</strong>, <strong>0</strong> survey encounters listed here,
++      and <strong>no</strong> model-estimated likelihood (if available).
++      Environmental factors are not issued for past-report cells.
++    </p>
++    <section class="evidence-group" aria-label="Observations">
++      <h3>Observations</h3>
++      <p><strong>${escapeHtml(cellLabel)}</strong> — ${reportCount.toLocaleString()} compiled records in this coarse cell.</p>
++      <p>Past reports = where people recorded this species in the past, not live presence.</p>
++    </section>
++    <section class="evidence-group" aria-label="Model estimates">
++      <h3>Model estimates</h3>
++      <p>No issued location. No forecast issued.</p>
++    </section>
++    <section class="evidence-group" aria-label="Environment">
++      <h3>Environment</h3>
++      <p>No environmental factors issued for this cell.</p>
++    </section>
++    <section class="evidence-group" aria-label="Methods and limitations">
++      <h3>Methods and limitations</h3>
++      <p>About 1° / 100 km public coarsening. Zooming in does not sharpen the biology.</p>
+     </section>`;
+ }
+ 
+@@ -155,17 +221,68 @@ export function renderEvidenceHtml(
+   record: CellRecord,
+   expert: boolean,
+ ): string {
+-  const answers = renderAnswers(record.answers);
++  const evidence = record.evidence;
++  const obsN = evidence.observationCount.n;
++  const hasEstimate =
++    evidence.currentEstimate &&
++    !/no issued|none issued|not issued|unknown/i.test(evidence.currentEstimate);
++  const hasForecast =
++    evidence.forecastEstimate &&
++    !/no issued|none issued|not issued|unknown/i.test(evidence.forecastEstimate);
++  const summary = `
++    <p class="evidence-summary">
++      This cell shows <strong>${obsN}</strong> past reports / sample rows,
++      <strong>${hasEstimate ? "a demo" : "no"}</strong> model-estimated likelihood
++      ${hasEstimate ? "(demo encoding — not a published species location)" : "(if available)"},
++      and the following environmental conditions when present.
++      ${hasForecast ? " A forecast encoding is shown for the demo only." : " No forecast issued for a published species product."}
++    </p>`;
++
++  const observations = `
++    <section class="evidence-group" aria-label="Observations">
++      <h3>Observations</h3>
++      <p>Last direct observation: ${
++        evidence.lastDirectObservation.at
++          ? escapeHtml(evidence.lastDirectObservation.at)
++          : "none"
++      }.</p>
++      <p>${escapeHtml(evidence.lastDirectObservation.note)}</p>
++      <p>Sample rows in window: <span class="unit">${obsN}</span> (${escapeHtml(evidence.observationCount.window)}).</p>
++      <p>Types: ${evidence.observationTypes.map((item) => escapeHtml(item)).join("; ") || "none listed"}.</p>
++    </section>`;
++
++  const models = `
++    <section class="evidence-group" aria-label="Model estimates">
++      <h3>Model estimates</h3>
++      <p><strong>Current:</strong> ${escapeHtml(evidence.currentEstimate)}</p>
++      <p><strong>Forecast:</strong> ${escapeHtml(evidence.forecastEstimate)}</p>
++      <p><strong>How sure:</strong> ${escapeHtml(evidence.confidence.category)}</p>
++    </section>`;
++
++  const environment = `
++    <section class="evidence-group" aria-label="Environment">
++      <h3>Environment</h3>
++      ${envLines(evidence)}
++    </section>`;
++
++  const methods = `
++    <section class="evidence-group" aria-label="Methods and limitations">
++      <h3>Methods and limitations</h3>
++      ${renderAnswers(record.answers)}
++      <p>${escapeHtml(evidence.privacyCoarsening)}</p>
++      <ul>${evidence.knownLimitations.map((item) => `<li>${escapeHtml(item)}</li>`).join("")}</ul>
++    </section>`;
++
+   const ops = record.opsRisk
+     ? expert
+       ? renderOpsExpert(record.opsRisk)
+       : renderOpsPlain(record.opsRisk)
+     : "";
+   const fields = expert
+-    ? FIELD_TITLES.map(
++    ? `<details class="expert-methods"><summary>Expert methodology (16 fields)</summary><div class="fields">${FIELD_TITLES.map(
+         ({ key, title }) =>
+           `<article><h3>${escapeHtml(title)}</h3>${renderValue(key, record.evidence)}</article>`,
+-      ).join("")
++      ).join("")}</div></details>`
+     : "";
+   const jsonButton = expert
+     ? `<button type="button" class="copy-json" data-cell="${escapeHtml(cellId)}">Copy cell JSON</button>`
+@@ -181,9 +298,13 @@ export function renderEvidenceHtml(
+   return `
+     <p class="lede">${escapeHtml(label)}</p>
+     ${badges}
++    ${summary}
+     ${ops}
+-    ${answers}
++    ${observations}
++    ${models}
++    ${environment}
++    ${methods}
+     ${jsonButton}
+-    ${expert ? `<div class="fields">${fields}</div>` : ""}
++    ${fields}
+   `;
+ }
+diff --git a/globe/prototype/src/layers.ts b/globe/prototype/src/layers.ts
+index fdabddc53a5eea726538d90eb0f0f99760526d9c..9fbe1455ca50a3b57cf3a98d29726be8bb61e5a5 100644
+--- a/globe/prototype/src/layers.ts
++++ b/globe/prototype/src/layers.ts
+@@ -88,11 +88,13 @@ export function scientificStatusCopy(options: {
+   publishedSoon: boolean;
+   withheld?: boolean;
+ }): string {
+-  if (options.demo) return "Learn demo encodings (measured / guessed / future) — not a published species location.";
+-  if (options.publishedNow) return "Current estimate (published card).";
++  if (options.demo) return "Learn demo encodings (measured / estimate / forecast) — not a published species location.";
++  if (options.publishedNow) return "Model estimate available (experimental).";
+   if (options.publishedSoon) return "Forecast (published card).";
+   if (options.past?.withheld || options.withheld) return "Unknown now. Historical pattern withheld.";
+-  if (options.past && options.past.cellsDrawn > 0) return "Historical pattern (past reports). Unknown as a current estimate.";
++  if (options.past && options.past.cellsDrawn > 0) {
++    return "Past reports (historical pattern). Unknown as a current estimate.";
++  }
+   return "Unknown.";
+ }
+ 
+diff --git a/globe/prototype/src/legend.ts b/globe/prototype/src/legend.ts
+index 79eadc0b35efdb87fdf955396a9825db051ac252..4675dff194ffdafb316513a9aab62d9e4182d833 100644
+--- a/globe/prototype/src/legend.ts
++++ b/globe/prototype/src/legend.ts
+@@ -2,30 +2,67 @@ import type { AppState } from "./types";
+ 
+ export function renderLegend(container: HTMLElement, state: AppState): void {
+   const unknownOn = state.unknownMap;
+-  const items: { cls: string; text: string }[] = [];
++  const items: { cls: string; text: string; note?: string }[] = [];
+ 
+   if (state.showWillapaCells) {
+-    items.push({ cls: "obs", text: "Confirmed observation (demo / measured value)" });
+-    items.push({ cls: "inf", text: "Guessed (demo encoding — not a published estimate)" });
+-    items.push({ cls: "fc", text: "Forecast (demo encoding — not a published forecast)" });
++    items.push({
++      cls: "obs",
++      text: "Measured",
++      note: "A recorded value in the demo (for example water temperature).",
++    });
++    items.push({
++      cls: "inf",
++      text: "Estimate",
++      note: "Demo encoding only — not a published species estimate.",
++    });
++    items.push({
++      cls: "fc",
++      text: "Forecast",
++      note: "Demo encoding only — not a published forecast.",
++    });
+   }
+   if (state.publishedCurrentEstimate) {
+-    items.push({ cls: "inf", text: "Current estimate (published)" });
++    items.push({
++      cls: "inf",
++      text: "Estimate",
++      note: "Model estimate available (experimental).",
++    });
+   }
+   if (state.publishedForecast) {
+-    items.push({ cls: "fc", text: "Forecast (published)" });
++    items.push({
++      cls: "fc",
++      text: "Forecast",
++      note: "Published forecast for a named time window.",
++    });
+   }
+   if (state.pastReportsVisible) {
+-    items.push({ cls: "past", text: "Historical pattern — past reports, not now" });
++    items.push({
++      cls: "past",
++      text: "Past reports",
++      note: "Past reports = where people recorded this species in the past, not live presence.",
++    });
+   }
+   if (state.overlays.habitat && !unknownOn && state.showWillapaCells) {
+-    items.push({ cls: "hab", text: "Favorable conditions — not confirmed presence" });
++    items.push({
++      cls: "hab",
++      text: "Favorable conditions",
++      note: "Habitat suitability — not confirmed presence.",
++    });
+   }
+-  items.push({ cls: "unk", text: "Unknown — not absence" });
++  items.push({
++    cls: "unk",
++    text: "Unknown",
++    note: "Stripes mean we do not know. They do not mean the ocean is empty.",
++  });
+ 
+   const notes: string[] = [];
+-  if (!state.showWillapaCells && !state.pastReportsVisible && !state.publishedCurrentEstimate && !state.publishedForecast) {
+-    notes.push("Empty globe. Imagery is Earth, not a species map.");
++  if (
++    !state.showWillapaCells &&
++    !state.pastReportsVisible &&
++    !state.publishedCurrentEstimate &&
++    !state.publishedForecast
++  ) {
++    notes.push("Empty globe. Imagery is Earth, not a species map. Unknown is the default.");
+   }
+   if (state.overlays.sst && !unknownOn) {
+     notes.push("Blue–yellow dots are water-skin temperature in °C — not animals.");
+@@ -40,12 +77,9 @@ export function renderLegend(container: HTMLElement, state: AppState): void {
+     notes.push("Numbers are sample rows, not a headcount.");
+   }
+   if (unknownOn) {
+-    notes.push("Stripes mean we do not have an estimate. They do not mean the ocean is empty.");
++    notes.push("Gap highlight is on. Stripes = no estimate, not absence.");
+   }
+-  if (state.pastReportsVisible) {
+-    notes.push("Past reports are a historical pattern. They are not measured-now and not a forecast.");
+-  }
+-  if (state.dimWillapa) {
++  if (state.dimWillapa && state.selectedTaxon) {
+     notes.push("No published occurrence, abundance, movement, or forecast layer for this search.");
+   }
+ 
+@@ -55,7 +89,9 @@ export function renderLegend(container: HTMLElement, state: AppState): void {
+       ${items
+         .map(
+           (item) =>
+-            `<div class="swatch"><i class="${item.cls}" aria-hidden="true"></i><span>${item.text}</span></div>`,
++            `<div class="swatch"><i class="${item.cls}" aria-hidden="true"></i><span><strong>${item.text}</strong>${
++              item.note ? `<span class="legend-note">${item.note}</span>` : ""
++            }</span></div>`,
+         )
+         .join("")}
+     </div>
+diff --git a/globe/prototype/src/main.ts b/globe/prototype/src/main.ts
+index ed75a2e6881f6e38ab49a04fad97f80732c7d827..8690765f704a17bcf728b5d2e73d22152cb7f552 100644
+--- a/globe/prototype/src/main.ts
++++ b/globe/prototype/src/main.ts
+@@ -3,7 +3,7 @@ import "./styles.css";
+ import { setWorkerUrl } from "maplibre-gl";
+ import workerUrl from "maplibre-gl/dist/maplibre-gl-worker.mjs?url";
+ import { composeLiveSentence, emptyAnswer, renderAnswerStrip } from "./answer";
+-import { renderEvidenceHtml, renderPastReportsHtml } from "./evidence";
++import { renderEvidenceHtml, renderPastReportCellHtml, renderPastReportsHtml } from "./evidence";
+ import { mayDrawCurrentEstimate, mayDrawForecast, PAST_REPORTS_RESOLUTION, scientificStatusCopy, targetsCopy } from "./layers";
+ import { renderLegend } from "./legend";
+ import { createGlobeMap, resizeLater } from "./mapApp";
+@@ -125,6 +125,12 @@ async function main(): Promise<void> {
+   const coordsEl = document.getElementById("map-coords");
+   const toggleControls = document.getElementById("toggle-controls");
+   const toggleAnswer = document.getElementById("toggle-answer");
++  const toolProjection = document.getElementById("tool-projection");
++  const toolNorth = document.getElementById("tool-north");
++  const toolHome = document.getElementById("tool-home");
++  const toolZoomIn = document.getElementById("tool-zoom-in");
++  const toolZoomOut = document.getElementById("tool-zoom-out");
++  const mapHints = document.getElementById("map-hints");
+   if (
+     !(mapEl instanceof HTMLElement) ||
+     !(evidenceBody instanceof HTMLElement) ||
+@@ -148,7 +154,13 @@ async function main(): Promise<void> {
+     !(resolutionEl instanceof HTMLElement) ||
+     !(coordsEl instanceof HTMLElement) ||
+     !(toggleControls instanceof HTMLButtonElement) ||
+-    !(toggleAnswer instanceof HTMLButtonElement)
++    !(toggleAnswer instanceof HTMLButtonElement) ||
++    !(toolProjection instanceof HTMLButtonElement) ||
++    !(toolNorth instanceof HTMLButtonElement) ||
++    !(toolHome instanceof HTMLButtonElement) ||
++    !(toolZoomIn instanceof HTMLButtonElement) ||
++    !(toolZoomOut instanceof HTMLButtonElement) ||
++    !(mapHints instanceof HTMLElement)
+   ) {
+     throw new Error("Prototype markup is missing required nodes.");
+   }
+@@ -243,8 +255,15 @@ async function main(): Promise<void> {
+   };
+ 
+   const setStrip = (strip: AnswerStrip): void => {
+-    renderAnswerStrip(answerEl, strip);
++    const forUi: AnswerStrip = {
++      ...strip,
++      targetsNote: state.expert ? strip.targetsNote : undefined,
++    };
++    renderAnswerStrip(answerEl, forUi);
+     statusEl.textContent = composeLiveSentence(strip);
++    document.querySelectorAll(".expert-detail").forEach((node) => {
++      if (node instanceof HTMLElement) node.hidden = !state.expert;
++    });
+   };
+ 
+   const speciesAnswer = (taxon: TaxonRecord): AnswerStrip => {
+@@ -270,7 +289,7 @@ async function main(): Promise<void> {
+     }
+     return {
+       species: name,
+-      whereNow: publishedNow ? "A published current estimate is on the map." : "No issued location.",
++      whereNow: publishedNow ? "Model estimate available (experimental)." : "No issued location.",
+       soon: publishedSoon ? "A published forecast is on the map." : "No forecast issued.",
+       howSure: "None",
+       depth: "Depth unknown / not modeled.",
+@@ -352,10 +371,47 @@ async function main(): Promise<void> {
+     cells,
+     stations,
+     onSelect: showCell,
++    onPastReportSelect: (pick) => {
++      evidenceEmpty.hidden = true;
++      evidenceBody.hidden = false;
++      evidenceBody.innerHTML = renderPastReportCellHtml(state.selectedTaxon, pick.label, pick.n);
++      evidenceDetails.open = true;
++      setAnswerOpen(true);
++      setStrip({
++        species: state.selectedTaxon
++          ? `${displayName(state.selectedTaxon)} (${state.selectedTaxon.scientificName})`
++          : "No species selected",
++        whereNow: "No issued location.",
++        soon: "No forecast issued.",
++        howSure: "None",
++        depth: "Depth unknown / not modeled.",
++        why: `Past-report cell “${pick.label}” has ${pick.n.toLocaleString()} compiled records. Past reports are not where the animals are now.`,
++        thisIsNot: "Live tracking, a fishing map, or a count of animals.",
++        whatShown: "Past reports (historical pattern). Not a current estimate.",
++        scientificStatus: scientificStatusCopy({
++          demo: false,
++          past,
++          publishedNow: false,
++          publishedSoon: false,
++        }),
++        supportLine: "Past reports exist. This is not where it is right now.",
++      });
++    },
+   });
+ 
++  const syncProjectionChrome = (): void => {
++    const flat = globe.getProjectionMode() === "mercator";
++    const flatBox = document.getElementById("flat-map");
++    if (flatBox instanceof HTMLInputElement) flatBox.checked = flat;
++    toolProjection.textContent = flat ? "2D flat map" : "3D globe";
++    toolProjection.setAttribute("aria-pressed", flat ? "true" : "false");
++    mapHints.textContent = flat
++      ? "Drag to pan the map. Scroll or pinch to zoom. Click a highlighted area for details."
++      : "Drag to rotate the globe. Scroll or pinch to zoom. Click a highlighted area for details.";
++  };
++
+   const viewLabel = (): string =>
+-    globe.getProjectionMode() === "globe" ? "3D globe" : "Flat map";
++    globe.getProjectionMode() === "globe" ? "3D globe" : "2D flat map";
+ 
+   const refreshResolution = (): void => {
+     let chip = globe.resolutionChip();
+@@ -378,6 +434,7 @@ async function main(): Promise<void> {
+   const applyUi = (): void => {
+     globe.apply(state);
+     renderLegend(legendEl, state);
++    syncProjectionChrome();
+     if (state.selectedTaxon?.status === "oyster_demo" && state.showWillapaCells && state.depth === "intertidal") {
+       depthDisclaimer.textContent =
+         "Tide flat: oysters can be in air at low tide. That is not a stack of swimming animals.";
+@@ -426,10 +483,11 @@ async function main(): Promise<void> {
+       nav === "find"
+         ? "Find a saltwater species"
+         : nav === "explore"
+-          ? "Explore the globe"
++          ? "Explore the ocean"
+           : nav === "evidence"
+-            ? "Evidence"
+-            : "Learn";
++            ? "Evidence and data"
++            : "Learn and methods";
++    // Mode changes must not clear selected species or place.
+     if (nav === "explore") {
+       state.mode = "earth_surface";
+       setControlsOpen(true);
+@@ -492,13 +550,11 @@ async function main(): Promise<void> {
+       whereNow: `${place.name} — geographic view only.`,
+       soon: "No forecast issued.",
+       howSure: "None",
+-      depth: "Depth unknown",
++      depth: "Depth unknown / not modeled.",
+       why: "This is a place on Earth, not a species location estimate.",
+       thisIsNot: "Live tracking, a fishing map, or a count of animals.",
+       whatShown: "Basemap and bathymetry shading only. Unknown as a species map.",
+       scientificStatus: "Unknown.",
+-      targetsNote:
+-        "Observed presence, occurrence probability, relative abundance, and movement are not issued. This is a place, not a species estimate.",
+     });
+     setAnswerOpen(true);
+     refreshViewStatus(`Viewing ${place.name}`);
+@@ -566,6 +622,9 @@ async function main(): Promise<void> {
+     state.dimWillapa = true;
+     state.showWillapaCells = false;
+     state.selectedCellId = null;
++    state.unknownMap = true;
++    const unknownBoxOnSelect = document.getElementById("unknown-map");
++    if (unknownBoxOnSelect instanceof HTMLInputElement) unknownBoxOnSelect.checked = true;
+     globe.select(null);
+     evidenceEmpty.hidden = true;
+     evidenceBody.hidden = false;
+@@ -712,6 +771,24 @@ async function main(): Promise<void> {
+     });
+   }
+ 
++  toolProjection.addEventListener("click", () => {
++    const next = globe.getProjectionMode() === "globe" ? "mercator" : "globe";
++    globe.setProjectionMode(next);
++    applyUi();
++  });
++  toolNorth.addEventListener("click", () => {
++    globe.resetNorth();
++  });
++  toolHome.addEventListener("click", () => {
++    globe.showWorld();
++  });
++  toolZoomIn.addEventListener("click", () => {
++    globe.zoomBy(1);
++  });
++  toolZoomOut.addEventListener("click", () => {
++    globe.zoomBy(-1);
++  });
++
+   document.getElementById("north-up")?.addEventListener("click", () => {
+     globe.resetNorth();
+   });
+diff --git a/globe/prototype/src/mapApp.ts b/globe/prototype/src/mapApp.ts
+index 03e749cefdd6ed36d457f31c187f88d142c9add3..ef302990158ea057d76a22d2816f0ca2e85c47bc 100644
+--- a/globe/prototype/src/mapApp.ts
++++ b/globe/prototype/src/mapApp.ts
+@@ -138,6 +138,11 @@ export function centroidsFromCells(
+   };
+ }
+ 
++export type PastReportPick = {
++  label: string;
++  n: number;
++};
++
+ export interface GlobeMap {
+   map: MapLibreMap;
+   apply: (state: AppState) => void;
+@@ -152,6 +157,7 @@ export interface GlobeMap {
+   goBack: () => boolean;
+   flyToPlace: (center: [number, number], zoom: number, bounds?: [[number, number], [number, number]]) => void;
+   resolutionChip: () => string;
++  zoomBy: (delta: number) => void;
+ }
+ 
+ export async function createGlobeMap(options: {
+@@ -161,6 +167,7 @@ export async function createGlobeMap(options: {
+   cells: FixtureCollection<CellProperties>;
+   stations: FixtureCollection;
+   onSelect: (cellId: string) => void;
++  onPastReportSelect?: (pick: PastReportPick) => void;
+ }): Promise<GlobeMap> {
+   let projectionMode: MapProjectionMode = readFlatPreference() ? "mercator" : "globe";
+   const history = new CameraHistory();
+@@ -508,6 +515,28 @@ export async function createGlobeMap(options: {
+     map.on("click", layer, click);
+   }
+ 
++  const pastClick = (event: MapLayerMouseEvent): void => {
++    if (pointer.wasDrag()) return;
++    const feature = event.features?.[0];
++    const labelRaw = feature?.properties?.["label"];
++    const nRaw = feature?.properties?.["n"];
++    const label = typeof labelRaw === "string" ? labelRaw : "Past-report cell";
++    const n = typeof nRaw === "number" ? nRaw : Number(nRaw);
++    options.onPastReportSelect?.({
++      label,
++      n: Number.isFinite(n) ? n : 0,
++    });
++  };
++  for (const layer of ["past-reports-fill", "past-reports-line"] as const) {
++    map.on("mouseenter", layer, () => {
++      map.getCanvas().style.cursor = "pointer";
++    });
++    map.on("mouseleave", layer, () => {
++      map.getCanvas().style.cursor = "";
++    });
++    map.on("click", layer, pastClick);
++  }
++
+   let selected: string | null = null;
+ 
+   const select = (cellId: string | null) => {
+@@ -711,6 +740,10 @@ export async function createGlobeMap(options: {
+ 
+   const resolutionChip = (): string => resolutionForZoom(map.getZoom()).chip;
+ 
++  const zoomBy = (delta: number): void => {
++    map.easeTo({ zoom: map.getZoom() + delta, duration: motionMs(280) });
++  };
++
+   apply({
+     nav: "find",
+     expert: false,
+@@ -751,6 +784,7 @@ export async function createGlobeMap(options: {
+     goBack,
+     flyToPlace,
+     resolutionChip,
++    zoomBy,
+   };
+ }
+ 
+diff --git a/globe/prototype/src/styles.css b/globe/prototype/src/styles.css
+index 374afd1fcdef108e26de896c32165c11c4eee98d..698edf92d74ecb1e13387a9241e2a2e5c967fa15 100644
+--- a/globe/prototype/src/styles.css
++++ b/globe/prototype/src/styles.css
+@@ -19,7 +19,7 @@
+   --space: 8px;
+   --radius: 8px;
+   --target: 44px;
+-  --chrome-top: 6.4rem;
++  --chrome-top: 7.6rem;
+   --chrome-bottom: 3.1rem;
+ }
+ 
+@@ -490,10 +490,114 @@ body.controls-open .map-legend {
+   background: var(--habitat);
+ }
+ 
++.purpose-line {
++  margin: 0.35rem 0 0;
++  color: #d9cbb0;
++  font-size: 0.82rem;
++  line-height: 1.35;
++  max-width: 36rem;
++}
++
++.map-tools {
++  position: absolute;
++  top: calc(var(--chrome-top) + 0.55rem);
++  left: 50%;
++  transform: translateX(-50%);
++  z-index: 6;
++  display: flex;
++  flex-wrap: wrap;
++  justify-content: center;
++  gap: 0.3rem;
++  max-width: min(36rem, calc(100vw - 10rem));
++}
++
++.map-tools .secondary {
++  min-height: 2.2rem;
++  padding: 0.2rem 0.55rem;
++  background: color-mix(in srgb, var(--panel) 92%, white);
++}
++
++.map-hints {
++  position: absolute;
++  left: 50%;
++  top: calc(var(--chrome-top) + 3.15rem);
++  transform: translateX(-50%);
++  z-index: 5;
++  margin: 0;
++  max-width: min(34rem, calc(100vw - 2rem));
++  text-align: center;
++  font-size: 0.78rem;
++  color: #f4ead7;
++  background: color-mix(in srgb, #2c2418 78%, transparent);
++  border: 1px solid #5c5346;
++  padding: 0.25rem 0.65rem;
++  border-radius: var(--radius);
++  pointer-events: none;
++}
++
++.answer-not {
++  grid-column: 1 / -1;
++  padding: 0.45rem 0.55rem;
++  background: #fff8e8;
++  border: 1px solid #c4a35a;
++  border-radius: var(--radius);
++}
++
++.answer-not .k {
++  color: #6b4f12;
++  font-weight: 650;
++}
++
++.legend-note {
++  display: block;
++  color: var(--muted);
++  font-size: 0.75rem;
++  font-weight: 400;
++  margin-top: 0.1rem;
++}
++
++.swatch strong {
++  font-weight: 650;
++}
++
++.evidence-summary {
++  margin: 0 0 0.75rem;
++  padding: 0.55rem 0.65rem;
++  background: #f4efe3;
++  border: 1px solid var(--rule);
++  border-radius: var(--radius);
++}
++
++.evidence-group {
++  margin: 0 0 0.75rem;
++  padding: 0 0 0.55rem;
++  border-bottom: 1px solid var(--rule);
++}
++
++.evidence-group h3 {
++  margin: 0 0 0.35rem;
++  font-size: 0.95rem;
++}
++
++.demo-section {
++  margin-top: 1rem;
++  padding-top: 0.75rem;
++  border-top: 1px dashed var(--rule);
++}
++
++.demo-section h3 {
++  margin: 0 0 0.35rem;
++  font-size: 1rem;
++}
++
++.expert-methods {
++  margin-top: 0.75rem;
++}
++
+ .map-stamp {
+   position: absolute;
+   left: 50%;
+-  top: calc(var(--chrome-top) + 0.45rem);
++  top: calc(var(--chrome-top) + 5.1rem);
+   transform: translateX(-50%);
+   margin: 0;
+   z-index: 4;
+@@ -675,7 +779,9 @@ details summary {
+   .map-view-status,
+   .resolution-chip,
+   .map-coords,
+-  .first-run {
++  .first-run,
++  .map-tools,
++  .map-hints {
+     position: relative;
+     inset: auto;
+     transform: none;
+@@ -687,6 +793,18 @@ details summary {
+     width: auto;
+   }
+ 
++  .map-tools {
++    max-width: none;
++    justify-content: flex-start;
++    margin: 0.35rem 0.7rem;
++  }
++
++  .map-hints {
++    max-width: none;
++    margin: 0 0.7rem 0.35rem;
++    text-align: left;
++  }
++
+   #map {
+     min-height: 58vh;
+   }
+diff --git a/globe/prototype/src/types.ts b/globe/prototype/src/types.ts
+index e4435e2654ea46583ea13446965590ebf7baac71..424a7011f7fe29ad6b951c0a8ad47dc807945e70 100644
+--- a/globe/prototype/src/types.ts
++++ b/globe/prototype/src/types.ts
+@@ -223,21 +223,21 @@ export const TRUTH_COLORS: Record<VisualTruthState, string> = {
+ 
+ export const TRUTH_LABELS: Record<VisualTruthState, string> = {
+   DIRECT_OBSERVATION: "Measured",
+-  MODEL_INFERENCE: "Guessed",
+-  FORECAST: "Future",
++  MODEL_INFERENCE: "Estimate",
++  FORECAST: "Forecast",
+   HABITAT_SUITABILITY: "Habitat — not a sighting",
+-  UNKNOWN: "Don't know",
+-  DATA_GAP: "Don't know",
++  UNKNOWN: "Unknown",
++  DATA_GAP: "Unknown",
+   RESTRICTED_OR_COARSENED: "Hidden on purpose",
+ };
+ 
+ export const PLAIN_TRUTH: Record<VisualTruthState, string> = {
+   DIRECT_OBSERVATION: "measured",
+-  MODEL_INFERENCE: "guessed",
+-  FORECAST: "future",
++  MODEL_INFERENCE: "estimate",
++  FORECAST: "forecast",
+   HABITAT_SUITABILITY: "habitat, not a sighting",
+-  UNKNOWN: "don't know",
+-  DATA_GAP: "don't know",
++  UNKNOWN: "unknown",
++  DATA_GAP: "unknown",
+   RESTRICTED_OR_COARSENED: "hidden on purpose",
+ };
+ 

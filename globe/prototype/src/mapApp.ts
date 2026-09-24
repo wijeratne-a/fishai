@@ -6,7 +6,7 @@ import {
   ScaleControl,
 } from "maplibre-gl";
 import type { FilterSpecification, MapLayerMouseEvent } from "maplibre-gl";
-import { CUSTOM_ATTRIBUTION, installBasemap, resolutionForZoom } from "./basemap";
+import { CUSTOM_ATTRIBUTION, buildGlobeStyle, installBasemap, resolutionForZoom } from "./basemap";
 import {
   CAMERA,
   CameraHistory,
@@ -138,6 +138,11 @@ export function centroidsFromCells(
   };
 }
 
+export type PastReportPick = {
+  label: string;
+  n: number;
+};
+
 export interface GlobeMap {
   map: MapLibreMap;
   apply: (state: AppState) => void;
@@ -152,6 +157,7 @@ export interface GlobeMap {
   goBack: () => boolean;
   flyToPlace: (center: [number, number], zoom: number, bounds?: [[number, number], [number, number]]) => void;
   resolutionChip: () => string;
+  zoomBy: (delta: number) => void;
 }
 
 export async function createGlobeMap(options: {
@@ -161,13 +167,14 @@ export async function createGlobeMap(options: {
   cells: FixtureCollection<CellProperties>;
   stations: FixtureCollection;
   onSelect: (cellId: string) => void;
+  onPastReportSelect?: (pick: PastReportPick) => void;
 }): Promise<GlobeMap> {
   let projectionMode: MapProjectionMode = readFlatPreference() ? "mercator" : "globe";
   const history = new CameraHistory();
 
   const map = new MapLibreMap({
     container: options.container,
-    style: "https://demotiles.maplibre.org/style.json",
+    style: buildGlobeStyle(projectionMode),
     ...mapCameraOptions(projectionMode),
   });
 
@@ -183,13 +190,18 @@ export async function createGlobeMap(options: {
 
   await map.once("load");
 
-  map.setProjection({ type: projectionMode });
   map.setRenderWorldCopies(projectionMode === "mercator");
   map.setMaxBounds(null);
   tuneNativeHandlers(map);
   bindFlightInterrupt(map);
   const pointer = bindPointerSelectGuard(map);
   installBasemap(map);
+  map.jumpTo({
+    center: CAMERA.WORLD_CENTER,
+    zoom: CAMERA.WORLD_ZOOM,
+    pitch: 0,
+    bearing: 0,
+  });
   recastViewport(map);
 
   const patterns = buildPatterns();
@@ -508,6 +520,28 @@ export async function createGlobeMap(options: {
     map.on("click", layer, click);
   }
 
+  const pastClick = (event: MapLayerMouseEvent): void => {
+    if (pointer.wasDrag()) return;
+    const feature = event.features?.[0];
+    const labelRaw = feature?.properties?.["label"];
+    const nRaw = feature?.properties?.["n"];
+    const label = typeof labelRaw === "string" ? labelRaw : "Past-report cell";
+    const n = typeof nRaw === "number" ? nRaw : Number(nRaw);
+    options.onPastReportSelect?.({
+      label,
+      n: Number.isFinite(n) ? n : 0,
+    });
+  };
+  for (const layer of ["past-reports-fill", "past-reports-line"] as const) {
+    map.on("mouseenter", layer, () => {
+      map.getCanvas().style.cursor = "pointer";
+    });
+    map.on("mouseleave", layer, () => {
+      map.getCanvas().style.cursor = "";
+    });
+    map.on("click", layer, pastClick);
+  }
+
   let selected: string | null = null;
 
   const select = (cellId: string | null) => {
@@ -711,6 +745,10 @@ export async function createGlobeMap(options: {
 
   const resolutionChip = (): string => resolutionForZoom(map.getZoom()).chip;
 
+  const zoomBy = (delta: number): void => {
+    map.easeTo({ zoom: map.getZoom() + delta, duration: motionMs(280) });
+  };
+
   apply({
     nav: "find",
     expert: false,
@@ -730,12 +768,20 @@ export async function createGlobeMap(options: {
   map.jumpTo({
     center: CAMERA.WORLD_CENTER,
     zoom: CAMERA.WORLD_ZOOM,
-    pitch: projectionMode === "globe" ? CAMERA.WORLD_PITCH : 0,
+    pitch: 0,
     bearing: 0,
   });
   scheduleRecast(map);
-  map.once("idle", () => scheduleRecast(map));
+  map.once("idle", () => {
+    scheduleRecast(map);
+    if (projectionMode === "globe") {
+      const duration = motionMs(700);
+      if (duration === 0) map.setPitch(CAMERA.WORLD_PITCH);
+      else map.easeTo({ pitch: CAMERA.WORLD_PITCH, duration, essential: true });
+    }
+  });
   window.visualViewport?.addEventListener("resize", () => scheduleRecast(map));
+  (window as unknown as { __fishaiMap?: MapLibreMap }).__fishaiMap = map;
 
   return {
     map,
@@ -751,6 +797,7 @@ export async function createGlobeMap(options: {
     goBack,
     flyToPlace,
     resolutionChip,
+    zoomBy,
   };
 }
 

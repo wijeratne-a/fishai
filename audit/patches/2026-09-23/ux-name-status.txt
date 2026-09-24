@@ -1,0 +1,12 @@
+M	globe/prototype/README.md
+M	globe/prototype/VERIFICATION.md
+M	globe/prototype/index.html
+M	globe/prototype/public/fixtures/taxa.json
+M	globe/prototype/src/answer.ts
+M	globe/prototype/src/evidence.ts
+M	globe/prototype/src/layers.ts
+M	globe/prototype/src/legend.ts
+M	globe/prototype/src/main.ts
+M	globe/prototype/src/mapApp.ts
+M	globe/prototype/src/styles.css
+M	globe/prototype/src/types.ts

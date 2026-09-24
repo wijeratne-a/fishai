@@ -182,6 +182,7 @@ export interface AnswerStrip {
   supportLine?: string;
   scientificStatus?: string;
   targetsNote?: string;
+  whatCouldBeWrong?: string;
 }
 
 export interface PastReportsSummary {
@@ -223,21 +224,21 @@ export const TRUTH_COLORS: Record<VisualTruthState, string> = {
 
 export const TRUTH_LABELS: Record<VisualTruthState, string> = {
   DIRECT_OBSERVATION: "Measured",
-  MODEL_INFERENCE: "Guessed",
-  FORECAST: "Future",
+  MODEL_INFERENCE: "Estimate",
+  FORECAST: "Forecast",
   HABITAT_SUITABILITY: "Habitat — not a sighting",
-  UNKNOWN: "Don't know",
-  DATA_GAP: "Don't know",
+  UNKNOWN: "Unknown",
+  DATA_GAP: "Unknown",
   RESTRICTED_OR_COARSENED: "Hidden on purpose",
 };
 
 export const PLAIN_TRUTH: Record<VisualTruthState, string> = {
   DIRECT_OBSERVATION: "measured",
-  MODEL_INFERENCE: "guessed",
-  FORECAST: "future",
+  MODEL_INFERENCE: "estimate",
+  FORECAST: "forecast",
   HABITAT_SUITABILITY: "habitat, not a sighting",
-  UNKNOWN: "don't know",
-  DATA_GAP: "don't know",
+  UNKNOWN: "unknown",
+  DATA_GAP: "unknown",
   RESTRICTED_OR_COARSENED: "hidden on purpose",
 };
 
