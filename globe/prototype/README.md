@@ -47,7 +47,7 @@ No backend. No API keys. No `.env`. Willapa cells are static fixtures. Species n
 
 ## Status
 
-Browser results for the 2026-09-23 integration are in [`VERIFICATION.md`](VERIFICATION.md). That file is the only current pass/fail record.
+Browser results are in [`VERIFICATION.md`](VERIFICATION.md). The intermittent camera stall is logged in [`../../audit/bugs/2026-09-23-map-moving-stall.md`](../../audit/bugs/2026-09-23-map-moving-stall.md) and was not reproduced in the stabilization pass. Historical reports are past detections, not where the animals are now. The oyster screen is a synthetic Learn-only demo.
 
 | Bucket | What |
 |---|---|

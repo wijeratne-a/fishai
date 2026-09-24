@@ -583,6 +583,28 @@ async function main(): Promise<void> {
   };
 
   const flyToNamedPlace = (place: NamedPlace): void => {
+    state.selectedTaxon = null;
+    state.selectedCellId = null;
+    state.showWillapaCells = false;
+    state.dimWillapa = false;
+    state.pastReportsVisible = false;
+    state.publishedCurrentEstimate = false;
+    state.publishedForecast = false;
+    past = null;
+    globe.setPastReports(null);
+    globe.select(null);
+    cellSelect.value = "";
+    evidenceEmpty.hidden = true;
+    evidenceBody.hidden = false;
+    evidenceBody.replaceChildren();
+    const title = document.createElement("p");
+    title.className = "lede";
+    title.textContent = place.name;
+    const note = document.createElement("p");
+    note.textContent =
+      "Geographic view only. This is a place on Earth, not a species location, a current estimate, or a forecast.";
+    evidenceBody.append(title, note);
+    applyUi();
     globe.flyToPlace(place.center, place.zoom, place.bounds);
     setStrip({
       species: "No species selected",
@@ -597,6 +619,7 @@ async function main(): Promise<void> {
       targetsNote:
         "Observed presence, occurrence probability, relative abundance, and movement are not issued. This is a place, not a species estimate.",
     });
+    stampEl.textContent = "Geographic view · not a species location";
     setAnswerOpen(true);
     refreshViewStatus(`Viewing ${place.name}`);
   };

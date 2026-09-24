@@ -1,8 +1,10 @@
 # Browser verification — globe + UX integration (2026-09-23)
 
-Checked on branch `integrate/globe-ux-2026-09-23` at base `20db75e50b3ad48a28aff8edd3528792598b908d`, served by Vite from `globe/prototype` at `http://127.0.0.1:5174/` and `http://[::1]:5174/`. Both addresses returned the same HTML (etag `W/"29d5-k9Rzjz5HEZwjyF96nl77H0vPesE"`). Labels below are only for checks run in this integration session.
+Checked on branch `integrate/globe-ux-2026-09-23`. The integration commit is `478983b9c69a0628c8ca135b2627f48b45097671`. Stabilization edits after that commit were checked on the same Vite server, `http://127.0.0.1:5174/` and `http://[::1]:5174/`, which served identical HTML (sha256 `ea0588d06615459bc438c5d2fad600041a5fc6994c2640199de34a2eb8ed042a`).
 
-`npm run build` (`tsc --noEmit && vite build`) exited 0. There is no test or lint script. `generate-fixtures` was not run.
+`npm run build` (`tsc --noEmit && vite build`) exited 0 after the CSS edit and again after the place-view edit. There is no test or lint script. `generate-fixtures` was not run.
+
+Camera rows in the controls table were verified during integration and were not repeated after the stabilization edit. Truth-state rows, the 390px layout, the skip link, and the place view were checked again after that edit.
 
 ## Cold load
 
@@ -23,7 +25,7 @@ Checked on branch `integrate/globe-ux-2026-09-23` at base `20db75e50b3ad48a28aff
 | Yellowfin tuna | VERIFIED | *Thunnus albacares*. “No issued location.” “No forecast issued.” How sure “None.” Depth unknown / not modeled. 246,964 past reports, 1788–2026, 17 drawn cells, “not where the animals are now.” `cells-fill` visibility `none`. No wreck, spawning, or nursery layer. |
 | White shark | VERIFIED | *Carcharodon carcharias*. “No issued location.” “No forecast issued.” How sure “None.” “Past reports exist but locations are withheld.” Past-report feature count 0. |
 | Willapa demo | VERIFIED | Opened only from “Open the oyster working-conditions demo” on Learn. Copy: planted oysters are not counted; 72-hour demo rule; not a species location; not oyster GPS; fixture/synthetic; not food-safety or harvest. Stamp: “Willapa working-conditions demo · not harvest advice.” |
-| Fly to a named place | VERIFIED | “Pacific Ocean” flew to center about `[-160, 5]`, zoom `2.05`. Answer: “geographic view only” and “not a species location estimate.” “No forecast issued.” |
+| Fly to a named place | VERIFIED | After the Willapa demo was open, “Pacific Ocean” flew to about `[-160, 5]`, zoom `2.05`. Answer: “geographic view only” and “No forecast issued.” Stamp: “Geographic view · not a species location.” Evidence no longer described the Willapa cell. Legend returned to the empty-globe Unknown text. `cells-fill` stayed `none`. |
 | Ten Thousand Islands | NOT_TESTED | Not selected in this session. |
 
 ## Globe controls
@@ -42,7 +44,7 @@ Checked on branch `integrate/globe-ux-2026-09-23` at base `20db75e50b3ad48a28aff
 | Drag, pinch, right-drag tilt | NOT_TESTED | A drag on the compass control completed and left bearing at `0`. No pinch and no right-drag tilt were performed. |
 | Drag versus click on a cell | NOT_TESTED | No pointer drag across a past-report cell was performed. |
 
-On one long-lived page, after several projection and tilt actions, `map.isMoving()` stayed true and later Zoom in / Reset tilt clicks did not change zoom or pitch. `jumpTo` still could. A newly loaded page did not show that stall; the button results above are from that fresh page.
+The long-session stall is logged in `audit/bugs/2026-09-23-map-moving-stall.md`. Status this stabilization session: NOT_REPRODUCED_THIS_SESSION. Ten overlapping fly, projection, tilt, and zoom actions still left Zoom in and Reset tilt able to change the camera, and `isMoving()` returned to false.
 
 ## Accessibility
 
@@ -50,9 +52,9 @@ On one long-lived page, after several projection and tilt actions, `map.isMoving
 |---|---|---|
 | Keyboard search | VERIFIED | Typing `Gulf` one character at a time listed “Place — Gulf of Maine”. |
 | Skip link | VERIFIED | Activating “Skip to species search” moved focus to `#species-search`. |
-| Visible focus ring | NOT_TESTED | `:focus-visible` in CSS is a 3px outline. Computed outline style stayed `none` for the search box and the zoom button under this browser automation, so the painted ring was not confirmed. |
+| Visible focus ring | NOT_TESTED | CSS sets `:focus-visible` to a 3px solid `#005f73` outline (2px on the map tool buttons). In this automation, Tab moved focus and `focus({ focusVisible: true })` was called, but `:focus-visible` did not match and the computed outline style stayed `none`. The painted ring was not confirmed. |
 | Legend patterns | VERIFIED | At 390px the legend included Past reports (horizontal stripe) and Unknown (45° stripe) as separate `repeating-linear-gradient` swatches. |
-| 390px viewport | VERIFIED | `innerWidth` 390, `innerHeight` 844, `scrollWidth` 390 (no horizontal page overflow). Purpose line wrapped and stayed readable. Sample-data banner wrapped. Map and zoom controls were visible. With the results list open, that list covered the “Find Species” label (“Find Sp” remained visible). Map tools use `position: relative` at this width. |
+| 390px viewport | VERIFIED | After the results list was placed in normal flow below 1100px, `innerWidth` 390 and `scrollWidth` 390. “Find Species”, “Explore Ocean”, “Evidence & Data”, and “Learn & Methods” were fully visible and did not overlap the open “Place — Gulf of Maine” result. Purpose line and sample-data banner wrapped. Map and zoom controls were visible. |
 
 ## Browser health
 

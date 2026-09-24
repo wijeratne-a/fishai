@@ -807,6 +807,21 @@ details summary {
     grid-template-columns: 1fr;
   }
 
+  .search-home {
+    flex: 1 1 100%;
+    min-width: 0;
+    max-width: none;
+  }
+
+  .results {
+    position: static;
+    right: auto;
+  }
+
+  .nav {
+    flex: 1 1 100%;
+  }
+
   .maplibregl-ctrl-top-right,
   body.answer-open .maplibregl-ctrl-top-right,
   body.controls-open .maplibregl-ctrl-bottom-left {

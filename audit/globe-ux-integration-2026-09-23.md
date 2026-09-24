@@ -116,6 +116,6 @@ At 390px, with search results open, the results list covered part of the “Find
 
 - No species model was fit, validated, or published.
 - Past-report grids are a partial OBIS extract (at most 80 cells, API order, cells with n < 3 hidden, about 1°). Missing cells are not biological absence.
-- After a place search, the evidence panel can still show the previous species’ past-report summary. The answer strip switches to the place wording.
+- A later stabilization edit clears the Willapa demo and the previous evidence text when a named place is chosen. That behavior is recorded in `audit/post-integration-stabilization-2026-09-23.md`.
 - Pointer drag, pinch, and tilt gestures were not confirmed.
 - A stuck `isMoving()` state was observed once on a long-lived page.
