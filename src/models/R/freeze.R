@@ -1,7 +1,9 @@
-#' Freeze fitted model artifact with config and renv hash.
+#' Freeze fitted model artifact with config, renv hash, and training source attributions.
 #' @export
-freeze_model <- function(fit_obj, cfg, path) {
+freeze_model <- function(fit_obj, cfg, path, sources_manifest = NULL) {
   lock_hash <- digest_renv_lock()
+  manifest <- sources_manifest %||% load_sources_manifest()
+  training_sources <- training_sources_metadata(cfg, manifest = manifest)
   artifact <- list(
     fit = fit_obj$fit,
     config = cfg,
@@ -9,6 +11,7 @@ freeze_model <- function(fit_obj, cfg, path) {
     training_end = cfg$training_end %||% NA_character_,
     reference = cfg$reference %||% NULL,
     reference_cols = cfg$reference_cols %||% NULL,
+    training_sources = training_sources,
     frozen_at = format(Sys.time(), tz = "UTC", usetz = TRUE)
   )
   saveRDS(artifact, path)

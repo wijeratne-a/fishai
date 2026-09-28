@@ -9,8 +9,26 @@ fishai_engine_config:
     lon_min: -121.0
     lon_max: -117.0
   training_end: "2021-12-31"
+  training:
+    observation_source_id: calcofi_cufes
+    covariate_forcing_source_id: glorys
   data:
     table_path: src/models/tests/fixtures/synthetic_cufes.csv
+    source_id: calcofi_cufes
+  covariates:
+    forcing_source_id: glorys
+    depth_sample_m: 3
+    dynamic:
+      - temp_3m
+      - sal_3m
+      - mld
+      - sst_grad
+      - dist_front
+      - upwelling
+    static:
+      - log_depth
+    excluded:
+      - bottomT
   response:
     type: density_delta
     column: egg_count
@@ -19,7 +37,10 @@ fishai_engine_config:
     engine: sdmTMB
     family: delta_gamma
     delta_type: standard
-    formula_shared: "~ log_effort + s(sst_z, k = 3) + s(sal_z, k = 3)"
+    formula_shared: >-
+      ~ log_effort + s(temp_3m_z, k = 3) + s(sal_3m_z, k = 3) + s(mld_z, k = 3)
+      + s(sst_grad_z, k = 3) + s(dist_front_z, k = 3) + s(upwelling_z, k = 3)
+      + s(log_depth_z, k = 3)
     spatial: [on, on]
     spatiotemporal: [iid, off]
     share_range: [true, true]
@@ -42,9 +63,10 @@ fishai_engine_config:
     reference_effort: 1.0
     grid_table: src/models/tests/fixtures/synthetic_grid.csv
     physics_cycle: PASS
+    inference_forcing_source_id: glorys
   ood:
     mess_mask_below: -20
     hull_pairs:
-      - [sst_z, sal_z]
+      - [temp_3m_z, sal_3m_z]
   output:
     dir: artifacts/models/sardine

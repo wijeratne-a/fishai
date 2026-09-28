@@ -4,8 +4,15 @@
 #' coordinates (cell identifiers only). Labels describe **egg encounter**
 #' evidence, not adult fish distribution.
 #'
+#' Refuses to return output when training or inference attributions are missing.
+#'
 #' @export
 predict_engine <- function(artifact, grid, cfg, physics_cycle = "PASS", nsim = NULL) {
+  attr_meta <- assert_prediction_attributions(
+    prediction_attribution_metadata(artifact, cfg)
+  )
+  attr_cols <- .flatten_attributions_for_columns(attr_meta)
+
   fit <- artifact$fit
   pred_cfg <- cfg$prediction %||% list()
   nsim <- nsim %||% pred_cfg$nsim %||% 500L
@@ -21,7 +28,7 @@ predict_engine <- function(artifact, grid, cfg, physics_cycle = "PASS", nsim = N
   hull <- convex_hull_flags(
     grid[, cov_cols, drop = FALSE],
     ref,
-    pairs = cfg$ood$hull_pairs %||% list(c("sst_z", "sal_z"))
+    pairs = cfg$ood$hull_pairs %||% list(c("temp_3m_z", "sal_3m_z"))
   )
   ood_level <- classify_ood_level(
     mess$mess,
@@ -44,7 +51,13 @@ predict_engine <- function(artifact, grid, cfg, physics_cycle = "PASS", nsim = N
   )
 
   if (toupper(physics_cycle) == "FAIL") {
-    return(.unknown_prediction_table(grid, ood_level, artifact, cfg, degraded = FALSE))
+    return(.finalize_prediction_table(
+      .unknown_prediction_table(grid, ood_level),
+      attr_cols,
+      artifact,
+      nsim,
+      seed
+    ))
   }
 
   set.seed(seed)
@@ -86,10 +99,16 @@ predict_engine <- function(artifact, grid, cfg, physics_cycle = "PASS", nsim = N
     agg$p_encounter <- pmin(1, agg$p_encounter * w)
   }
 
+  .finalize_prediction_table(agg, attr_cols, artifact, nsim, seed)
+}
+
+.finalize_prediction_table <- function(agg, attr_cols, artifact, nsim, seed) {
   agg$metadata_validated_forcing <- "glorys"
   agg$metadata_training_end <- artifact$training_end %||% NA_character_
   agg$metadata_nsim <- nsim
   agg$metadata_seed <- seed
+  agg$metadata_attribution_training <- attr_cols$metadata_attribution_training
+  agg$metadata_attribution_inference <- attr_cols$metadata_attribution_inference
   agg[, c(
     "cell_id",
     "p_encounter",
@@ -98,11 +117,13 @@ predict_engine <- function(artifact, grid, cfg, physics_cycle = "PASS", nsim = N
     "evidence_state",
     "product_label",
     "metadata_validated_forcing",
-    "metadata_training_end"
+    "metadata_training_end",
+    "metadata_attribution_training",
+    "metadata_attribution_inference"
   )]
 }
 
-.unknown_prediction_table <- function(grid, ood_level, artifact, cfg, degraded) {
+.unknown_prediction_table <- function(grid, ood_level) {
   agg <- stats::aggregate(
     ood_level ~ cell_id,
     cbind(grid, ood_level = ood_level),
@@ -112,7 +133,5 @@ predict_engine <- function(artifact, grid, cfg, physics_cycle = "PASS", nsim = N
   agg$expected_density <- NA_real_
   agg$evidence_state <- "Unknown"
   agg$product_label <- "egg encounter (eggs sampled near 3 m depth along ship tracks)"
-  agg$metadata_validated_forcing <- "glorys"
-  agg$metadata_training_end <- artifact$training_end %||% NA_character_
   agg
 }

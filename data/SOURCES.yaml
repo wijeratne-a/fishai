@@ -32,10 +32,14 @@ sources:
 
   glorys:
     module: fishai.ingestion.physics.glorys
-    product: Copernicus Marine GLORYS
+    product: Copernicus Marine GLORYS12
+    dataset_id: GLORYS12V1
     license: Copernicus Marine Service (account terms)
     license_url: https://marine.copernicus.eu/
-    attribution: "Copernicus Marine Service GLORYS; cite product DOI and download credentials holder."
+    attribution: >-
+      Generated using E.U. Copernicus Marine Service Information; GLORYS12
+      reanalysis (doi:10.48670/moi-00021). Copernicus Marine Service GLORYS;
+      cite product DOI and download credentials holder.
     status: account_required
     enabled: false
 
