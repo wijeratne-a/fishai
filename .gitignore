@@ -6,6 +6,8 @@ dist/
 .env.*
 coverage/
 .vite/
+__pycache__/
+*.pyc
 data/raw/
 data/interim/
 data/restricted/
