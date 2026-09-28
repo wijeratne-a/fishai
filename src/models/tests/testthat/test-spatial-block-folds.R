@@ -1,10 +1,11 @@
 test_that("spatial block params are read from committed model config fields", {
   cfg <- load_sardine_test_cfg()
   p <- spatial_block_cv_params(cfg)
-  expect_equal(p$block_size_km, cfg$mesh$cutoff_km)
+  expect_equal(p$block_size_km, max(cfg$mesh$cutoff_km, cfg$mesh$range_guess_km))
+  expect_equal(p$spatial_range_km, cfg$mesh$range_guess_km)
   expect_equal(p$seed, as.integer(cfg$prediction$seed))
   expect_equal(p$n_folds, cfg$data$spatial_block_cv$n_folds)
-  expect_equal(p$block_size_source, "mesh.cutoff_km")
+  expect_equal(p$block_size_source, "max(mesh.cutoff_km, mesh.range_guess_km)")
 })
 
 test_that("spatial block assignment is deterministic", {
@@ -35,6 +36,19 @@ test_that("each event receives exactly one fold", {
   expect_true(all(nzchar(fa$block_id)))
 })
 
+test_that("spatial blocks are contiguous and at least the pre-registered range", {
+  cfg <- load_sardine_test_cfg()
+  ev <- read.csv(
+    file.path(FISHAI_ROOT, "src/models/tests/fixtures/synthetic_cufes_events.csv"),
+    stringsAsFactors = FALSE
+  )
+  ev$fold_id <- NULL
+  params <- spatial_block_cv_params(cfg)
+  fa <- assign_cufes_spatial_block_folds(ev, params)
+  expect_gte(params$block_size_km, params$spatial_range_km)
+  expect_true(verify_spatial_block_contiguity(fa, ev, params))
+})
+
 test_that("fold assignment is identical across species (events-only)", {
   ev <- read.csv(
     file.path(FISHAI_ROOT, "src/models/tests/fixtures/synthetic_cufes_events.csv"),
@@ -60,6 +74,7 @@ test_that("load_model_data attaches identical folds for sardine and anchovy", {
     stringsAsFactors = FALSE
   )
   base_ev$fold_id <- NULL
+  base_ev$block_id <- NULL
   utils::write.csv(base_ev, ev_path, row.names = FALSE)
 
   cfg_s <- load_sardine_test_cfg()
@@ -72,10 +87,34 @@ test_that("load_model_data attaches identical folds for sardine and anchovy", {
   d_s <- load_model_data(cfg = cfg_s, min_duration_min = 2)
   d_a <- load_model_data(cfg = cfg_a, min_duration_min = 2)
   merged <- merge(
-    d_s[, c("event_id", "fold_id")],
-    d_a[, c("event_id", "fold_id")],
+    d_s[, c("event_id", "fold_id", "block_id")],
+    d_a[, c("event_id", "fold_id", "block_id")],
     by = "event_id",
     suffixes = c("_s", "_a")
   )
   expect_equal(merged$fold_id_s, merged$fold_id_a)
+  expect_equal(merged$block_id_s, merged$block_id_a)
+})
+
+test_that("fold assignment CSV may cover all events while fit scope is a subset", {
+  ev_path <- tempfile(fileext = ".csv")
+  fold_path <- tempfile(fileext = ".csv")
+  on.exit(unlink(c(ev_path, fold_path)), add = TRUE)
+  base_ev <- read.csv(
+    file.path(FISHAI_ROOT, "src/models/tests/fixtures/synthetic_cufes_events.csv"),
+    stringsAsFactors = FALSE
+  )
+  base_ev$fold_id <- NULL
+  base_ev$block_id <- NULL
+  utils::write.csv(base_ev, ev_path, row.names = FALSE)
+
+  cfg <- load_sardine_test_cfg()
+  cfg$data$events_path <- ev_path
+  cfg$data$fold_assignment_path <- fold_path
+  fa <- assign_cufes_spatial_block_folds(base_ev, spatial_block_cv_params(cfg))
+  write_fold_assignment_csv(fa, fold_path)
+
+  dat_fit <- load_model_data(cfg = cfg, min_duration_min = 2, egg_split_scope = "fit")
+  expect_true(all(dat_fit$event_id %in% fa$event_id))
+  expect_false(any(is.na(dat_fit$fold_id)))
 })

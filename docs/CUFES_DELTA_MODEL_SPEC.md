@@ -58,7 +58,7 @@ When bot1 ``cufes_events`` has no ``fold_id`` column, FishAI assigns folds on th
 | Assignment seed | ``prediction.seed`` | **20260928** |
 | Number of folds | ``data.spatial_block_cv.n_folds`` | **4** |
 
-Each event maps to one spatial block ``block_id = bx{floor(X/block)}_by{floor(Y/block)}``; ``fold_id`` is a deterministic function of ``block_id``, the seed, and ``n_folds`` (MD5 of ``seed:block_id``, first seven hex digits mod ``n_folds``). Assignment uses **fit-period events only** (``egg_split.fit_end``). The table is species-agnostic (events only) and written as ``fold_assignment.csv`` (`event_id`, `fold_id`, `block_id`) with SHA-256 recorded in sensitivity run metadata.
+Each event maps to one spatial block ``block_id = bx{floor(X/block)}_by{floor(Y/block)}`` in **EPSG:32611** (km). Block size is ``max(mesh.cutoff_km, mesh.range_guess_km)`` so blocks are at least the pre-registered spatial range. Blocks are sorted by grid row/column and centroid; contiguous segments of that order receive fold IDs ``1 … n_folds`` (deterministic from geometry and ``prediction.seed``). The species-agnostic table covers **all** ``cufes_events`` rows (fit and test windows) and is written as ``fold_assignment.csv`` (`event_id`, `fold_id`, `block_id`) with SHA-256 recorded in sensitivity run metadata. Spatial-block CV trains on fit-period rows only, using the same fold IDs.
 
 ### Egg-model temporal split
 

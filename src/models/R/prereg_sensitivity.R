@@ -360,9 +360,6 @@ run_short_sample_sensitivity <- function(protocol_path = NULL, output_override =
   events_ref <- .read_model_table(cfg_ref$data$events_path)
   events_ref <- .normalize_cufes_events_columns(events_ref)
   .validate_cufes_events_schema(events_ref)
-  if (!is.null(cfg_ref$egg_split)) {
-    events_ref <- .filter_events_table_to_fit_end(events_ref, cfg_ref)
-  }
   spatial_params <- spatial_block_cv_params(cfg_ref)
   fold_assignment <- assign_cufes_spatial_block_folds(events_ref, spatial_params)
   fold_csv <- protocol$output$fold_assignment_csv
