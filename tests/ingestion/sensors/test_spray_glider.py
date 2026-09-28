@@ -7,5 +7,5 @@ from fishai.ingestion.sensors.spray_glider import load_spray_glider_profiles
 
 def test_load_spray_fixture_parquet() -> None:
     df = load_spray_glider_profiles()
-    assert {"depth", "temperature", "mission", "profile"}.issubset(df.columns)
+    assert {"depth", "temperature_c", "mission", "profile"}.issubset(df.columns)
     assert len(df) > 0
