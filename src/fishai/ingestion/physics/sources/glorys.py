@@ -13,6 +13,7 @@ from fishai.ingestion.copernicus_compliance import (
     build_pull_record,
     glorys_attribution_bundle,
 )
+from fishai.ingestion.physics.glorys_catalog import resolve_glorys_dataset_for_date
 from fishai.ingestion.physics.vertical import (
     CUFES_SAMPLE_DEPTH_M,
     interp_at_depth_from_z_levels,
@@ -28,6 +29,7 @@ PRODUCT_ID_MYINT = "cmems_mod_glo_phy_myint_0.083deg_P1D-m"
 PRODUCT_ID = PRODUCT_ID_MYINT
 
 MY_PRODUCT_START = dt.date(1993, 1, 1)
+# Historical calendar split (superseded by live catalogue resolution for pulls).
 MY_PRODUCT_END = dt.date(2021, 6, 30)
 MYINT_PRODUCT_START = dt.date(2021, 7, 1)
 MYINT_PRODUCT_END_DEFAULT = dt.date(2026, 6, 23)
@@ -75,21 +77,16 @@ def glorys_product_for_date(
     """
     Copernicus Marine GLORYS12 dataset id for ``date``.
 
-    Returns the finished reanalysis (``my``) through 2021-06-30 inclusive and the
-    interim product (``myint``) from 2021-07-01 through the configured MYINT end.
+    Resolved from the live Copernicus Marine catalogue time coverage (cached per run).
+    Raises ``GlorysCatalogError`` with a ``reason_code`` when the catalogue cannot be
+    used or no dataset covers ``date``.
     """
-    myint_end = myint_product_end(config)
+    del config  # catalogue coverage is authoritative; config retained for call-site compat
     if date < MY_PRODUCT_START:
         raise ValueError(
             f"glorys: date {date} is before {MY_PRODUCT_START} (my product start)"
         )
-    if date > myint_end:
-        raise ValueError(
-            f"glorys: date {date} is after myint coverage end {myint_end}"
-        )
-    if date <= MY_PRODUCT_END:
-        return PRODUCT_ID_MY
-    return PRODUCT_ID_MYINT
+    return resolve_glorys_dataset_for_date(date).dataset_id
 
 
 def glorys_dataset_id_for_date(
@@ -158,6 +155,7 @@ def fetch_day(
     if dt.date.today() > LICENSE_VALID_UNTIL:
         raise SourceNotApprovedError("glorys: licence validity ended")
 
+    resolution = resolve_glorys_dataset_for_date(date)
     ds_id = glorys_dataset_id_for_date(date, dataset_id, config=config)
     record = build_pull_record(
         dataset_id=ds_id,
@@ -167,6 +165,7 @@ def fetch_day(
         bbox=bbox,
         request_count=1,
     )
+    record.update(resolution.pull_log_fields())
     append_pull_log(record, log_path=log_path or _pull_log_path(entry))
 
     if fetch_fn is None:

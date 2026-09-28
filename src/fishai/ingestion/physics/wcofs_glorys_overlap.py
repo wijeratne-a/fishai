@@ -198,7 +198,7 @@ def build_overlap_metadata(config: dict[str, Any]) -> dict[str, Any]:
         "overlap_start": config["overlap"]["start"],
         "overlap_end": config["overlap"]["end"],
         "expected_days": int(config["overlap"]["expected_days"]),
-        "glorys_product_selection": "date_based_my_vs_myint",
+        "glorys_product_selection": "copernicus_marine_catalog_time_coverage",
         "glorys_product_id_overlap_start": resolve_glorys_product_id(
             _config_date(config["overlap"]["start"]), config
         ),

@@ -110,12 +110,11 @@ def test_surface_definition_and_glorys_reference_dataset() -> None:
     assert "zeta" in surf["vertical_reference"]
     assert surf["sst"]["target_depth_below_surface_m"] == 0.494
     glorys = block["glorys_reference_dataset"]
-    assert glorys["selection_rule"] == "date_based_source_product_column"
-    by_date = glorys["products_by_calendar_date"]
-    assert by_date[0]["through_date"] == "2021-06-30"
-    assert by_date[0]["copernicus_product_id"] == "cmems_mod_glo_phy_my_0.083deg_P1D-m"
-    assert by_date[1]["from_date"] == "2021-07-01"
-    assert by_date[1]["copernicus_product_id"] == "cmems_mod_glo_phy_myint_0.083deg_P1D-m"
+    assert glorys["selection_rule"] == "copernicus_marine_catalog_time_coverage"
+    candidates = glorys["candidate_copernicus_product_ids"]
+    assert candidates[0] == "cmems_mod_glo_phy_my_0.083deg_P1D-m"
+    assert "cmems_mod_glo_phy_myint_0.083deg_P1D-m" in candidates
+    assert glorys["pilot_harmonization_window_uses"] == "cmems_mod_glo_phy_my_0.083deg_P1D-m"
     assert "scoring_nearshore_assignment" in block["nearshore"]
 
 

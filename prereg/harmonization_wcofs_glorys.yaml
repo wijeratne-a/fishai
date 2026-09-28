@@ -90,16 +90,15 @@ harmonization_wcofs_glorys:
         differ only in horizontal grid and mapping.
 
   glorys_reference_dataset:
-    selection_rule: date_based_source_product_column
+    selection_rule: copernicus_marine_catalog_time_coverage
     note: >-
-      Matches the existing CUFES covariate source_product column rule: finished
-      reanalysis through 2021-06-30, interim from 2021-07-01 onward.
-    products_by_calendar_date:
-      - copernicus_product_id: cmems_mod_glo_phy_my_0.083deg_P1D-m
-        through_date: "2021-06-30"
-      - copernicus_product_id: cmems_mod_glo_phy_myint_0.083deg_P1D-m
-        from_date: "2021-07-01"
-    pilot_harmonization_window_uses: cmems_mod_glo_phy_myint_0.083deg_P1D-m
+      Dataset id is resolved at pull time from the live Copernicus Marine catalogue
+      (cached per run). Prefer finished reanalysis (my) when multiple products cover
+      the same calendar date.
+    candidate_copernicus_product_ids:
+      - cmems_mod_glo_phy_my_0.083deg_P1D-m
+      - cmems_mod_glo_phy_myint_0.083deg_P1D-m
+    pilot_harmonization_window_uses: cmems_mod_glo_phy_my_0.083deg_P1D-m
     coverage: every calendar date in fit_start through test_end (fit and test splits)
 
   variables:
@@ -546,14 +545,14 @@ harmonization_wcofs_glorys:
         fit-year rows, not as holdout test-split rows.
     - id: interim_glorys_overlap
       summary: >-
-        Harmonization fit and test splits use interim GLORYS
-        (cmems_mod_glo_phy_myint_0.083deg_P1D-m) through 2026-06-23; finished
-        GLORYS reanalysis (my) ends 2021-06-30.
+        Harmonization fit and test splits resolve GLORYS dataset ids from the live
+        Copernicus Marine catalogue; the overlap window (2024-09-01 through 2026-06-23)
+        is covered by finished reanalysis (cmems_mod_glo_phy_my_0.083deg_P1D-m).
     - id: single_fit_year
       summary: One fitting year (2024-09-01–2025-08-31) does not capture year-to-year variability.
     - id: indirect_buoy_glorys_product_check
       summary: >-
-        Indirect check: finished GLORYS through 2021-06-30 vs interim GLORYS from
-        2021-07-01 on the same long-record buoys, by season.
+        Indirect check: catalogue-resolved GLORYS products on the same long-record
+        buoys, by season, when multiple products overlap in time.
       indirect: true
       excluded_from_pass_rules: true

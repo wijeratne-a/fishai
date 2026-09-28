@@ -21,14 +21,14 @@ GLORYS_SRC = REPO_ROOT / "src" / "fishai" / "ingestion" / "physics"
 
 def test_mismatched_dataset_id_raises() -> None:
     with pytest.raises(ValueError, match="does not match"):
-        glorys_dataset_id_for_date(dt.date(2024, 9, 1), PRODUCT_ID_MY)
+        glorys_dataset_id_for_date(dt.date(2024, 9, 1), PRODUCT_ID_MYINT)
     with pytest.raises(ValueError, match="does not match"):
         glorys_dataset_id_for_date(dt.date(2021, 6, 30), PRODUCT_ID_MYINT)
 
 
 def test_matching_dataset_id_accepted() -> None:
     day = dt.date(2024, 9, 1)
-    assert glorys_dataset_id_for_date(day, PRODUCT_ID_MYINT) == PRODUCT_ID_MYINT
+    assert glorys_dataset_id_for_date(day, PRODUCT_ID_MY) == PRODUCT_ID_MY
     day_my = dt.date(2021, 6, 30)
     assert glorys_dataset_id_for_date(day_my, PRODUCT_ID_MY) == PRODUCT_ID_MY
 
@@ -51,7 +51,7 @@ def test_fetch_day_rejects_wrong_dataset_id(tmp_path: Path) -> None:
             purpose="hindcast",
             fetch_fn=fake_fetch,
             log_path=tmp_path / "log.jsonl",
-            dataset_id=PRODUCT_ID_MY,
+            dataset_id=PRODUCT_ID_MYINT,
         )
 
 
@@ -68,7 +68,7 @@ def test_fetch_day_accepts_correct_dataset_id(tmp_path: Path) -> None:
         purpose="hindcast",
         fetch_fn=fake_fetch,
         log_path=tmp_path / "log.jsonl",
-        dataset_id=PRODUCT_ID_MYINT,
+        dataset_id=PRODUCT_ID_MY,
     )
 
 
