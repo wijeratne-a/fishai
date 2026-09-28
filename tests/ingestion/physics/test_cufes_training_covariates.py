@@ -99,7 +99,7 @@ def test_one_row_per_event_id_and_required_columns(tmp_path: Path) -> None:
     days = unique_event_days(events)
     lat, lon = _small_glorys_axes()
     store = glorys_store_from_synthetic_days(days, lat=lat, lon=lon)
-    out, _qc, _drops = build_cufes_training_covariates_table(events, store, provenance="test")
+    out, _qc, _drops, _floor = build_cufes_training_covariates_table(events, store, provenance="test")
     assert len(out) == len(events)
     assert out["event_id"].tolist() == events["event_id"].tolist()
     assert list(out.columns) == list(TRAINING_OUTPUT_COLUMNS)
@@ -119,7 +119,7 @@ def test_no_zero_filled_nans_for_missing_bottom_depth() -> None:
         lat=lat,
         lon=lon,
     )
-    out, _qc, drops = build_cufes_training_covariates_table(events, store)
+    out, _qc, drops, _floor = build_cufes_training_covariates_table(events, store)
     assert bool(out.iloc[0]["excluded"])
     assert pd.isna(out.iloc[0]["bottom_depth_m"])
     assert out.iloc[0]["bottom_depth_m"] != 0.0
@@ -130,7 +130,7 @@ def test_excluded_reason_nonempty_iff_excluded() -> None:
     events = _synthetic_events()
     lat, lon = _small_glorys_axes()
     store = glorys_store_from_synthetic_days(unique_event_days(events), lat=lat, lon=lon)
-    out, _qc, _drops = build_cufes_training_covariates_table(events, store)
+    out, _qc, _drops, _floor = build_cufes_training_covariates_table(events, store)
     for _, row in out.iterrows():
         if row["excluded"]:
             assert str(row["excluded_reason"]).strip() != ""
@@ -142,7 +142,7 @@ def test_source_product_matches_event_date() -> None:
     events = _synthetic_events()
     lat, lon = _small_glorys_axes()
     store = glorys_store_from_synthetic_days(unique_event_days(events), lat=lat, lon=lon)
-    out, _qc, _drops = build_cufes_training_covariates_table(events, store)
+    out, _qc, _drops, _floor = build_cufes_training_covariates_table(events, store)
     assert out.loc[out["event_id"] == "e1", "source_product"].iloc[0] == PRODUCT_MY_ID
     assert out.loc[out["event_id"] == "e2", "source_product"].iloc[0] == PRODUCT_MYINT_ID
 
@@ -168,9 +168,14 @@ def test_training_parquet_metadata_has_credit_and_doi(tmp_path: Path) -> None:
     events = _synthetic_events().iloc[[0]]
     lat, lon = _small_glorys_axes()
     store = glorys_store_from_synthetic_days(unique_event_days(events), lat=lat, lon=lon)
-    out, _qc, _drops = build_cufes_training_covariates_table(events, store)
+    out, _qc, _drops, _floor = build_cufes_training_covariates_table(events, store)
     path = tmp_path / "out.parquet"
-    write_training_covariates_parquet(out, path, entry=require_approved("glorys", purpose="training"))
+    write_training_covariates_parquet(
+        out,
+        path,
+        entry=require_approved("glorys", purpose="training"),
+        store=store,
+    )
     meta = pq.read_metadata(path).metadata
     raw = meta.get(b"glorys")
     assert raw is not None
@@ -194,11 +199,29 @@ def test_dry_run_prints_batch_count(tmp_path: Path) -> None:
     assert result["input_event_count"] == 3
 
 
+def test_depth_at_model_floor_when_near_roms_hmin() -> None:
+    events = _synthetic_events().iloc[[0]].copy()
+    lat, lon = _small_glorys_axes()
+    hmin = 10.0
+    store = glorys_store_from_synthetic_days(
+        unique_event_days(events),
+        lat=lat,
+        lon=lon,
+        wcofs_h_m=np.full((lat.size, lon.size), hmin + 0.2),
+        roms_hmin_m=hmin,
+        hmin_source="netcdf_global_attr_hmin",
+    )
+    out, _qc, _drops, floor_qc = build_cufes_training_covariates_table(events, store)
+    assert bool(out.iloc[0]["depth_at_model_floor"])
+    assert floor_qc["depth_at_model_floor_count"] == 1
+    assert floor_qc["hmin_source"] == "netcdf_global_attr_hmin"
+
+
 def test_covariates_not_zero_when_present() -> None:
     events = _synthetic_events().iloc[[0]]
     lat, lon = _small_glorys_axes()
     store = glorys_store_from_synthetic_days(unique_event_days(events), lat=lat, lon=lon)
-    out, _qc, _drops = build_cufes_training_covariates_table(events, store)
+    out, _qc, _drops, _floor = build_cufes_training_covariates_table(events, store)
     assert np.isfinite(out.iloc[0]["T3m"])
     for field in CUFES_COVARIATE_FIELDS:
         if np.isfinite(out.iloc[0][field]):

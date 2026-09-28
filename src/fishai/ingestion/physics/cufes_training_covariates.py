@@ -59,6 +59,13 @@ from fishai.ingestion.physics.wcofs_glorys_overlap import (
     coarsen_min_wet_fraction,
     load_overlap_config,
 )
+from fishai.ingestion.physics.wcofs_h_glorys_store import (
+    DEFAULT_MANIFEST_REL,
+    MODEL_FLOOR_TOLERANCE_M,
+    WcofsHGlorysGrid,
+    depth_at_model_floor,
+    load_wcofs_h_manifest,
+)
 from fishai.ingestion.sources import REPO_ROOT, attribution_for, require_approved
 
 DEFAULT_EVENTS_PATH = REPO_ROOT / "data" / "processed" / "calcofi_cufes" / "cufes_events.parquet"
@@ -74,6 +81,7 @@ TRAINING_OUTPUT_COLUMNS: tuple[str, ...] = (
     COL_EVENT_ID,
     *CUFES_COVARIATE_FIELDS,
     "bottom_depth_m",
+    "depth_at_model_floor",
     "source",
     "provenance",
     "excluded",
@@ -82,17 +90,36 @@ TRAINING_OUTPUT_COLUMNS: tuple[str, ...] = (
 )
 
 
-def bottom_depth_metadata(config: dict[str, Any]) -> dict[str, Any]:
+def bottom_depth_metadata(
+    config: dict[str, Any],
+    *,
+    store: GlorysFieldStore | None = None,
+) -> dict[str, Any]:
     bathy = config.get("bathymetry") or {}
-    return {
-        "bottom_depth_m": {
-            "source": WCOFS_BOTTOM_DEPTH_SOURCE,
-            "variable": WCOFS_BOTTOM_DEPTH_VARIABLE,
-            "grid": bathy.get("grid", "glorys_1_12deg"),
-            "coarsen": bathy.get("coarsen", "area_weighted_wet_masked"),
-            "min_wet_fraction": coarsen_min_wet_fraction(config),
-        }
+    manifest_doc: dict[str, Any] = {}
+    try:
+        manifest_doc = load_wcofs_h_manifest()
+    except (FileNotFoundError, json.JSONDecodeError):
+        manifest_doc = {"manifest_path": DEFAULT_MANIFEST_REL, "build_status": "manifest_only"}
+    block: dict[str, Any] = {
+        "source": WCOFS_BOTTOM_DEPTH_SOURCE,
+        "variable": WCOFS_BOTTOM_DEPTH_VARIABLE,
+        "grid": bathy.get("grid", "glorys_1_12deg"),
+        "coarsen": bathy.get("coarsen", "area_weighted_wet_masked"),
+        "min_wet_fraction": coarsen_min_wet_fraction(config),
+        "artifact_manifest": DEFAULT_MANIFEST_REL,
+        "model_floor_tolerance_m": MODEL_FLOOR_TOLERANCE_M,
     }
+    if store is not None:
+        block["roms_hmin_m"] = store.roms_hmin_m
+        block["hmin_source"] = store.hmin_source
+    elif manifest_doc.get("roms_hmin_m") is not None:
+        block["roms_hmin_m"] = manifest_doc["roms_hmin_m"]
+        block["hmin_source"] = manifest_doc.get("hmin_source")
+    if manifest_doc.get("sha256"):
+        block["artifact_sha256"] = manifest_doc["sha256"]
+        block["artifact_path"] = manifest_doc.get("artifact_path")
+    return {"bottom_depth_m": block}
 
 
 @dataclass(frozen=True)
@@ -131,9 +158,24 @@ class GlorysFieldStore:
     has_source: np.ndarray
     wet_fraction: np.ndarray
     min_wet_fraction: float
+    roms_hmin_m: float
+    hmin_source: str
     lat: np.ndarray
     lon: np.ndarray
     days: dict[dt.date, GlorysDayFields] = field(default_factory=dict)
+
+    @classmethod
+    def from_wcofs_h_grid(cls, grid: WcofsHGlorysGrid) -> GlorysFieldStore:
+        return cls(
+            wcofs_h_m=grid.h_m,
+            has_source=grid.has_source,
+            wet_fraction=grid.wet_fraction,
+            min_wet_fraction=grid.min_wet_fraction,
+            roms_hmin_m=grid.roms_hmin_m,
+            hmin_source=grid.hmin_source,
+            lat=grid.lat,
+            lon=grid.lon,
+        )
 
     def field_sampler(self, lat: float, lon: float, when: pd.Timestamp) -> dict[str, Any]:
         if pd.isna(when):
@@ -335,6 +377,8 @@ def _apply_exclusion_state(out: pd.DataFrame, drops: pd.DataFrame) -> pd.DataFra
         for col in CUFES_COVARIATE_FIELDS:
             out.loc[out["excluded"], col] = np.nan
         out.loc[out["excluded"], "bottom_depth_m"] = np.nan
+        if "depth_at_model_floor" in out.columns:
+            out.loc[out["excluded"], "depth_at_model_floor"] = False
     return out
 
 
@@ -347,6 +391,7 @@ def attach_bottom_depth_and_reasons(
     """Add ``bottom_depth_m``, ``source_product``, ``excluded_reason``; extend drops if needed."""
     drop_rows = drops.to_dict(orient="records")
     bottom_depth: list[float] = []
+    at_floor: list[bool] = []
     source_products: list[str] = []
     for _, event in events.iterrows():
         eid = event[COL_EVENT_ID]
@@ -356,11 +401,14 @@ def attach_bottom_depth_and_reasons(
             product_id = ""
             depth_val = float("nan")
             depth_reasons: list[str] = []
+            floor_flag = False
         else:
             product_id, _, _ = glorys_dataset_for_date(mid_t.date())
             depth_val, depth_reasons = mean_bottom_depth_m_along_segment(event, store)
+            floor_flag = depth_at_model_floor(depth_val, store.roms_hmin_m)
         source_products.append(product_id)
         bottom_depth.append(depth_val)
+        at_floor.append(floor_flag)
         if not np.isfinite(depth_val) or depth_val <= 0.0:
             reasons = depth_reasons or [DROP_REASON_WCOFS_LOW_WET_FRACTION]
             for reason in sorted(set(reasons)):
@@ -375,6 +423,7 @@ def attach_bottom_depth_and_reasons(
                 )
     out = covariates.copy()
     out["bottom_depth_m"] = bottom_depth
+    out["depth_at_model_floor"] = at_floor
     out["source_product"] = source_products
     drops_out = pd.DataFrame(drop_rows, columns=list(DROP_TABLE_COLUMNS))
     out = _apply_exclusion_state(out, drops_out)
@@ -390,6 +439,7 @@ def write_training_covariates_parquet(
     *,
     entry: dict[str, Any],
     config: dict[str, Any] | None = None,
+    store: GlorysFieldStore | None = None,
 ) -> Path:
     import pyarrow as pa
     import pyarrow.parquet as pq
@@ -402,7 +452,7 @@ def write_training_covariates_parquet(
         "glorys_derived": True,
         "copernicus_doi": GLORYS_DOI,
         "copernicus_credit": GLORYS_CREDIT_TEXT,
-        **bottom_depth_metadata(cfg),
+        **bottom_depth_metadata(cfg, store=store),
     }
     require_glorys_attribution(metadata)
     meta_json = json.dumps(metadata, sort_keys=True)
@@ -422,7 +472,7 @@ def build_cufes_training_covariates_table(
     provenance: str = "",
     drops_parquet_path: Path | None = None,
     drop_summary_json_path: Path | None = None,
-) -> tuple[pd.DataFrame, dict[str, Any], pd.DataFrame]:
+) -> tuple[pd.DataFrame, dict[str, Any], pd.DataFrame, dict[str, Any]]:
     """Join GLORYS covariates to QC-kept CUFES events (one row per ``event_id``)."""
     cov, qc, drops = join_covariates_to_events(
         events,
@@ -437,7 +487,13 @@ def build_cufes_training_covariates_table(
         if col not in out.columns:
             raise ValueError(f"missing output column: {col}")
     out = out[list(TRAINING_OUTPUT_COLUMNS)]
-    return out, qc, drops
+    floor_qc = {
+        "depth_at_model_floor_count": int(out["depth_at_model_floor"].sum()),
+        "depth_at_model_floor_computed_at_run_time": True,
+        "roms_hmin_m": store.roms_hmin_m,
+        "hmin_source": store.hmin_source,
+    }
+    return out, qc, drops, floor_qc
 
 
 def _sha256_file(path: Path) -> str:
@@ -512,6 +568,8 @@ def glorys_store_from_synthetic_days(
     wet_fraction: np.ndarray | None = None,
     lat: np.ndarray | None = None,
     lon: np.ndarray | None = None,
+    roms_hmin_m: float | None = None,
+    hmin_source: str = "wet_cell_minimum_h",
 ) -> GlorysFieldStore:
     cfg = config or load_overlap_config()
     min_wet = coarsen_min_wet_fraction(cfg)
@@ -523,6 +581,10 @@ def glorys_store_from_synthetic_days(
         wcofs_h_m = np.full((nj, ni), 500.0)
     if has_source is None:
         has_source = np.ones((nj, ni), dtype=bool)
+    if roms_hmin_m is None:
+        wet_vals = wcofs_h_m[has_source]
+        finite = wet_vals[np.isfinite(wet_vals) & (wet_vals > 0)]
+        roms_hmin_m = float(np.min(finite)) if finite.size else float("nan")
     if wet_fraction is None:
         wet_fraction = np.ones((nj, ni), dtype=float)
     store = GlorysFieldStore(
@@ -530,6 +592,8 @@ def glorys_store_from_synthetic_days(
         has_source=has_source,
         wet_fraction=wet_fraction,
         min_wet_fraction=min_wet,
+        roms_hmin_m=float(roms_hmin_m),
+        hmin_source=hmin_source,
         lat=lat,
         lon=lon,
     )
@@ -604,7 +668,7 @@ def run_build_cufes_training_covariates(
     out_path = output_path or DEFAULT_OUTPUT_PATH
     drops_path = out_path.parent / DEFAULT_DROPS_NAME
     summary_path = out_path.parent / DEFAULT_DROP_SUMMARY_NAME
-    table, qc, _drops = build_cufes_training_covariates_table(
+    table, qc, _drops, floor_qc = build_cufes_training_covariates_table(
         events,
         store,
         provenance=str(events_path or DEFAULT_EVENTS_PATH),
@@ -616,7 +680,9 @@ def run_build_cufes_training_covariates(
         out_path,
         entry=require_approved("glorys", purpose="training"),
         config=cfg,
+        store=store,
     )
     result["output_path"] = str(out_path)
     result["qc"] = qc
+    result["bottom_depth_qc"] = floor_qc
     return result
