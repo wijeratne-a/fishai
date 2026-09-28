@@ -254,6 +254,10 @@ def test_nowcast_forcing_grading_blocks() -> None:
     assert grading["verdict_rank_worst_first"][0] == "UNKNOWN"
     buoy = grading["buoy_gate"]
     assert buoy["rmse_ratio_to_glorys"]["pass"]["ratio_max"] == 1.2
+    catch = buoy["catch_all_fail_rule"]
+    assert catch["verdict"] == "UNKNOWN"
+    assert catch["reason"] == "nowcast_forcing_failed_holdout"
+    assert buoy["per_stratum_aggregation"] == "worst_verdict_across_metrics"
     assert buoy["fail_outcome"]["reason"] == "nowcast_forcing_failed_holdout"
     inputs = grading["graded_inputs_gate"]
     assert len(inputs["graded_variable_names"]) == 5

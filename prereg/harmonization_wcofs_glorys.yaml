@@ -437,6 +437,21 @@ harmonization_wcofs_glorys:
         degraded_max_inclusive: 1.0
       pearson_r:
         pass_min_vs_glorys_r: within_0.10
+        degraded_band: none
+      catch_all_fail_rule:
+        applies_when: >-
+          The stratum fails at least one metric PASS test and that metric does not
+          fall inside any defined DEGRADED band for that metric (RMSE ratio, absolute
+          bias, or Pearson r vs GLORYS).
+        verdict: UNKNOWN
+        reason: nowcast_forcing_failed_holdout
+        examples:
+          - >-
+            RMSE ratio point estimate <= 1.2 but bootstrap upper 95% > 1.5 (fails
+            ratio PASS pair; ratio not in (1.2, 1.5] degraded band).
+          - >-
+            Pearson r more than 0.10 below GLORYS r with no pearson_r degraded band.
+      per_stratum_aggregation: worst_verdict_across_metrics
       fail_outcome:
         verdict: UNKNOWN
         reason: nowcast_forcing_failed_holdout
