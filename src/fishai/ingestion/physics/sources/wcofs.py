@@ -19,6 +19,75 @@ THREDDS_BASE = "https://opendap.co-ops.nos.noaa.gov/thredds/dodsC/NOAA/WCOFS/MOD
 
 NOWCAST_LEADS = tuple(f"n{k:03d}" for k in range(3, 25, 3))
 FORECAST_LEADS = tuple(f"f{k:03d}" for k in range(3, 73, 3))
+ALL_FIELD_LEADS = NOWCAST_LEADS + FORECAST_LEADS
+CYCLE_PROBE_LEAD = "n024"
+DEFAULT_SUBSET_MARGIN_CELLS = 2
+
+# Target timeline: hours from requested run time R (03Z) at 3-hourly steps.
+TARGET_VALID_OFFSETS_H = tuple(list(range(-21, 1, 3)) + list(range(3, 73, 3)))
+
+
+def cycle_run_time(cycle_date: dt.date) -> dt.datetime:
+    return dt.datetime.combine(cycle_date, dt.time(3, 0), tzinfo=dt.timezone.utc)
+
+
+def valid_time_for_lead_tag(cycle_date: dt.date, lead_tag: str) -> dt.datetime:
+    """WCOFS fields valid time: nNNN at R-(24-NNN), fNNN at R+NNN."""
+    r = cycle_run_time(cycle_date)
+    suffix = int(lead_tag[1:])
+    if lead_tag.startswith("n"):
+        return r - dt.timedelta(hours=24 - suffix)
+    return r + dt.timedelta(hours=suffix)
+
+
+def valid_time_offset_from_r(cycle_date: dt.date, lead_tag: str, *, requested: dt.date) -> int:
+    valid = valid_time_for_lead_tag(cycle_date, lead_tag)
+    r_req = cycle_run_time(requested)
+    return int((valid - r_req).total_seconds() // 3600)
+
+
+def lead_tag_for_valid_offset(hours_from_requested_r: int) -> str:
+    if hours_from_requested_r <= 0:
+        n = 24 + hours_from_requested_r
+        tag = f"n{n:03d}"
+        if tag not in NOWCAST_LEADS:
+            raise ValueError(f"invalid nowcast offset {hours_from_requested_r}")
+        return tag
+    tag = f"f{hours_from_requested_r:03d}"
+    if tag not in FORECAST_LEADS:
+        raise ValueError(f"invalid forecast offset {hours_from_requested_r}")
+    return tag
+
+
+def lead_tag_for_age_from_source(age_hours: int) -> str:
+    """Map hours from a source cycle's R to the fields lead tag covering that valid time."""
+    if age_hours <= 0:
+        tag = f"n{24 + age_hours:03d}"
+        if tag not in NOWCAST_LEADS:
+            raise ValueError(f"age {age_hours} outside nowcast range")
+        return tag
+    tag = f"f{age_hours:03d}"
+    if tag not in FORECAST_LEADS:
+        raise ValueError(f"age {age_hours} outside forecast range")
+    return tag
+
+
+def operational_lead_tags() -> tuple[str, ...]:
+    return ALL_FIELD_LEADS
+
+
+def lead_hour_from_tag(lead: str) -> int:
+    return int(lead[1:])
+
+
+def lead_tag_for_hour(hour: int) -> str:
+    """Legacy helper: hour is forecast age from source R (nowcast hours map to n*, else f*)."""
+    return lead_tag_for_age_from_source(hour)
+
+
+def fields_s3_key(day: dt.date, lead: str) -> str:
+    ymd = day.strftime("%Y%m%d")
+    return f"wcofs/netcdf/{day:%Y/%m/%d}/wcofs.t03z.{ymd}.fields.{lead}.nc"
 
 
 def _fields_url_s3(day: dt.date, lead: str, *, list_keys=None) -> str:
@@ -58,7 +127,22 @@ def cycle_available(
         return False
 
 
-def _subset_bbox(ds: xr.Dataset, bbox: tuple[float, float, float, float]) -> xr.Dataset:
+def subset_bbox(
+    ds: xr.Dataset,
+    bbox: tuple[float, float, float, float],
+    *,
+    margin_cells: int = DEFAULT_SUBSET_MARGIN_CELLS,
+) -> xr.Dataset:
+    """Subset to pilot bbox on rho grid, expanding indices by ``margin_cells``."""
+    return _subset_bbox(ds, bbox, margin_cells=margin_cells)
+
+
+def _subset_bbox(
+    ds: xr.Dataset,
+    bbox: tuple[float, float, float, float],
+    *,
+    margin_cells: int = 0,
+) -> xr.Dataset:
     la0, la1, lo0, lo1 = bbox
     lat = ds.lat_rho.values
     lon = ds.lon_rho.values
@@ -67,12 +151,21 @@ def _subset_bbox(ds: xr.Dataset, bbox: tuple[float, float, float, float]) -> xr.
     jj, ii = np.where(m)
     if jj.size == 0:
         raise ValueError("bbox does not intersect WCOFS grid")
-    js, ie = slice(int(jj.min()), int(jj.max()) + 1), slice(int(ii.min()), int(ii.max()) + 1)
-    return ds.isel(eta_rho=js, xi_rho=ie)
+    j0, j1 = int(jj.min()), int(jj.max()) + 1
+    i0, i1 = int(ii.min()), int(ii.max()) + 1
+    if margin_cells:
+        j0 = max(0, j0 - margin_cells)
+        i0 = max(0, i0 - margin_cells)
+        j1 = min(ds.sizes["eta_rho"], j1 + margin_cells)
+        i1 = min(ds.sizes["xi_rho"], i1 + margin_cells)
+    return ds.isel(eta_rho=slice(j0, j1), xi_rho=slice(i0, i1))
 
 
 def _open_dataset_from_bytes(data: bytes) -> xr.Dataset:
     return xr.open_dataset(io.BytesIO(data), engine="h5netcdf", decode_times=False)
+
+
+open_dataset_from_bytes = _open_dataset_from_bytes
 
 
 def _fetch_one(
@@ -93,7 +186,7 @@ def _fetch_one(
         try:
             data = get_fn(url, extra_cache_key=f"{day.isoformat()}_{lead}")
             ds = _open_dataset_from_bytes(data)
-            return _subset_bbox(ds, bbox)
+            return _subset_bbox(ds, bbox, margin_cells=DEFAULT_SUBSET_MARGIN_CELLS)
         except Exception as exc:  # noqa: BLE001
             last_err = exc
     raise RuntimeError(f"WCOFS fetch failed for {day} {lead}") from last_err
