@@ -15,11 +15,9 @@ from fishai.ingestion.physics.glorys_catalog import (
     resolve_glorys_dataset_for_date,
     set_catalog_fetch_hook,
 )
-from fishai.ingestion.physics.sources.glorys import (
-    PRODUCT_ID_MY,
-    PRODUCT_ID_MYINT,
-    glorys_product_for_date,
-)
+from fishai.ingestion.physics.sources.glorys import PRODUCT_ID_MY, glorys_product_for_date
+
+DEPRECATED_MYINT_PRODUCT_ID = "cmems_mod_glo_phy_myint_0.083deg_P1D-m"
 
 
 def _entries(*items: GlorysCatalogEntry) -> list[GlorysCatalogEntry]:
@@ -28,7 +26,7 @@ def _entries(*items: GlorysCatalogEntry) -> list[GlorysCatalogEntry]:
 
 def test_only_my_is_catalog_candidate() -> None:
     assert GLORYS_CANDIDATE_DATASET_IDS == (GLORYS_DATASET_ID,)
-    assert PRODUCT_ID_MYINT not in GLORYS_CANDIDATE_DATASET_IDS
+    assert DEPRECATED_MYINT_PRODUCT_ID not in GLORYS_CANDIDATE_DATASET_IDS
 
 
 def test_resolve_never_returns_myint_product_id() -> None:
@@ -51,7 +49,7 @@ def test_resolve_never_returns_myint_product_id() -> None:
     ):
         resolved = glorys_product_for_date(day)
         assert resolved == PRODUCT_ID_MY
-        assert resolved != PRODUCT_ID_MYINT
+        assert resolved != DEPRECATED_MYINT_PRODUCT_ID
 
 
 def test_2024_date_resolves_to_my() -> None:

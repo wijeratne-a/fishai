@@ -9,7 +9,6 @@ import pytest
 
 from fishai.ingestion.physics.sources.glorys import (
     PRODUCT_ID_MY,
-    PRODUCT_ID_MYINT,
     fetch_day,
     glorys_dataset_id_for_date,
     glorys_product_for_date,
@@ -17,13 +16,14 @@ from fishai.ingestion.physics.sources.glorys import (
 
 REPO_ROOT = Path(__file__).resolve().parents[3]
 GLORYS_SRC = REPO_ROOT / "src" / "fishai" / "ingestion" / "physics"
+DEPRECATED_MYINT_PRODUCT_ID = "cmems_mod_glo_phy_myint_0.083deg_P1D-m"
 
 
 def test_mismatched_dataset_id_raises() -> None:
     with pytest.raises(ValueError, match="does not match"):
-        glorys_dataset_id_for_date(dt.date(2024, 9, 1), PRODUCT_ID_MYINT)
+        glorys_dataset_id_for_date(dt.date(2024, 9, 1), DEPRECATED_MYINT_PRODUCT_ID)
     with pytest.raises(ValueError, match="does not match"):
-        glorys_dataset_id_for_date(dt.date(2021, 6, 30), PRODUCT_ID_MYINT)
+        glorys_dataset_id_for_date(dt.date(2021, 6, 30), DEPRECATED_MYINT_PRODUCT_ID)
 
 
 def test_matching_dataset_id_accepted() -> None:
@@ -51,7 +51,7 @@ def test_fetch_day_rejects_wrong_dataset_id(tmp_path: Path) -> None:
             purpose="hindcast",
             fetch_fn=fake_fetch,
             log_path=tmp_path / "log.jsonl",
-            dataset_id=PRODUCT_ID_MYINT,
+            dataset_id=DEPRECATED_MYINT_PRODUCT_ID,
         )
 
 
