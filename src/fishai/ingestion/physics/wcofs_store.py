@@ -128,9 +128,34 @@ def package_wcofs_cycle(merged: xr.Dataset, cycle_date: dt.date) -> xr.Dataset:
     return out
 
 
-def write_wcofs_cycle(merged: xr.Dataset, cycle_date: dt.date, store_root: Path | None = None) -> Path:
+def write_wcofs_cycle(
+    merged: xr.Dataset,
+    cycle_date: dt.date,
+    store_root: Path | None = None,
+    *,
+    extra_attrs: dict[str, Any] | None = None,
+    packaged: xr.Dataset | None = None,
+) -> Path:
     path = cycle_zarr_path(cycle_date, store_root)
     path.parent.mkdir(parents=True, exist_ok=True)
-    packaged = package_wcofs_cycle(merged, cycle_date)
-    packaged.to_zarr(path, mode="w", consolidated=False)
+    packaged = packaged or package_wcofs_cycle(merged, cycle_date)
+    if extra_attrs:
+        packaged.attrs.update(extra_attrs)
+    ny = int(packaged.sizes["eta_rho"])
+    nx = int(packaged.sizes["xi_rho"])
+    ns = int(packaged.sizes["s_rho"])
+    tile = min(16, ny, nx)
+    encoding = {
+        "temp": {"chunks": (1, ns, tile, tile)},
+        "salt": {"chunks": (1, ns, tile, tile)},
+        "z": {"chunks": (1, ns, tile, tile)},
+        "T3m": {"chunks": (1, tile, tile)},
+        "S3m": {"chunks": (1, tile, tile)},
+        "MLD_m": {"chunks": (1, tile, tile)},
+    }
+    packaged.attrs.setdefault(
+        "zarr_chunks",
+        "lead_hours=1, s_rho=full, eta_rho/xi_rho=tile",
+    )
+    packaged.to_zarr(path, mode="w", consolidated=False, encoding=encoding)
     return path
