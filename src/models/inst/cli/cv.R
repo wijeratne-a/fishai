@@ -7,7 +7,7 @@ load_fishaisdm(root)
 parsed <- .parse_model_cli_args(commandArgs(trailingOnly = TRUE))
 cfg <- load_config_yaml(parsed$config)
 dat <- load_model_data(cfg = cfg)
-mesh <- build_fishai_mesh(dat, cfg$mesh)
+mesh <- build_fishai_mesh_with_barrier(dat, cfg)
 fold_ids <- dat$fold_id
 if (is.null(fold_ids)) stop("config data must include fold_id for spatial CV", call. = FALSE)
 cv_sp <- run_cv_spatial(dat, mesh, cfg, fold_ids)

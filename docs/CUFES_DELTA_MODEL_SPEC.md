@@ -73,4 +73,4 @@ Leave-future-out CV trains on the fit window and scores holdout **event dates** 
 
 ### Barrier mesh
 
-Pilot production configs set ``mesh.barrier.enabled: true`` with ``range_fraction: 0.1`` (Bakka land barrier; see ``add_barrier_land()``). Land polygons are loaded from ``mesh.barrier.land_sf_rds``.
+Pilot production configs set ``mesh.barrier.enabled: true`` with ``range_fraction: 0.1`` (Bakka land barrier; see ``add_barrier_land()``). Land polygons are read from the same frozen shoreline GeoJSON as PR #7 harmonization coverage (``mesh.barrier.shoreline.path``). Mesh construction verifies ``mesh.barrier.shoreline.sha256`` against the file bytes and stops on mismatch or while the placeholder hash is unset.
