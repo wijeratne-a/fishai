@@ -124,7 +124,8 @@ def label_support_point(
         return "UNSUPPORTED"
 
     distance = nearest_train_distance(features, rows)
-    assert distance is not None
+    if distance is None:
+        raise ValueError("nearest_train_distance returned None for non-empty training matrix")
     violated = out_of_range_kinds(
         features,
         rows,

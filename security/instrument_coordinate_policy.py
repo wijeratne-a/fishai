@@ -25,8 +25,12 @@ COORDINATE_HIT_PREFIXES = (
     "csv_header:latitude_or_longitude",
     "json_schema:latitude_or_longitude",
     "geojson:coordinate_geometry",
-    "geojson:point_geometry",
     "parquet_schema:latitude_or_longitude",
+)
+
+SCAN_FAILURE_PREFIXES = (
+    "parquet_scan:",
+    "json_parse:",
 )
 
 FISHERY_FIELD_EXACT = frozenset({"species", "count"})
@@ -101,7 +105,12 @@ def apply_instrument_coordinate_exemption(
     if fishery:
         extra = [f"instrument:fishery_field_with_coordinates:{source_id}:{f}" for f in fishery]
         return hits + extra
-    coord_kinds = {h for h in hits if any(h.startswith(p) for p in COORDINATE_HIT_PREFIXES)}
+    failures = {h for h in hits if any(h.startswith(p) for p in SCAN_FAILURE_PREFIXES)}
+    coord_kinds = {
+        h
+        for h in hits
+        if any(h == p or h.startswith(p) for p in COORDINATE_HIT_PREFIXES)
+    }
     if not coord_kinds:
         return hits
-    return [h for h in hits if h not in coord_kinds]
+    return [h for h in hits if h not in coord_kinds or h in failures]
