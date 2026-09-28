@@ -202,8 +202,13 @@ def upwelling_covariate_metadata(wind_source_id: str) -> dict[str, float | str |
         wind_product_audit_summary,
     )
 
+    from fishai.ingestion.physics.wind_shared_forcing import (
+        UPWELLING_STATUS_NO_CONSISTENT_WIND,
+        UPWELLING_WIND_FORCING_ENABLED,
+    )
+
     audit = wind_product_audit_summary()
-    return {
+    meta: dict[str, float | str | bool] = {
         "upwelling_formula": UPWELLING_FORMULA_ID,
         "upwelling_wind_source": wind_source_id,
         "upwelling_coast_angle_deg": PILOT_COAST_ANGLE_DEG,
@@ -212,6 +217,9 @@ def upwelling_covariate_metadata(wind_source_id: str) -> dict[str, float | str |
         "upwelling_wind_product_version": CCMP_NRT_PRODUCT_VERSION,
         "upwelling_wind_audit": audit,
     }
+    if not UPWELLING_WIND_FORCING_ENABLED:
+        meta["upwelling_status"] = UPWELLING_STATUS_NO_CONSISTENT_WIND
+    return meta
 
 
 def ekman_upwelling(

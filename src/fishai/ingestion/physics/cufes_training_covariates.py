@@ -51,7 +51,6 @@ from fishai.ingestion.physics.features import (
     sst_gradient,
     upwelling_covariate_metadata,
 )
-from fishai.ingestion.physics.sources.winds import wind_grids_for_days
 from fishai.ingestion.physics.sources.glorys import (
     VARIABLES,
     glorys_column_features,
@@ -60,6 +59,15 @@ from fishai.ingestion.physics.sources.glorys import (
 from fishai.ingestion.physics.wcofs_glorys_overlap import (
     coarsen_min_wet_fraction,
     load_overlap_config,
+)
+from fishai.ingestion.physics.wind_pull_log import (
+    append_wind_pull_log,
+    build_upwelling_wind_status_record,
+)
+from fishai.ingestion.physics.wind_shared_forcing import (
+    UPWELLING_STATUS_NO_CONSISTENT_WIND,
+    UPWELLING_WIND_FORCING_ENABLED,
+    wind_product_audit_summary,
 )
 from fishai.ingestion.physics.wcofs_h_glorys_store import (
     DEFAULT_MANIFEST_REL,
@@ -82,6 +90,7 @@ PILOT_BBOX = (32.0, 35.0, -121.0, -117.0)
 TRAINING_OUTPUT_COLUMNS: tuple[str, ...] = (
     COL_EVENT_ID,
     *CUFES_COVARIATE_FIELDS,
+    "upwelling_status",
     "bottom_depth_m",
     "depth_at_model_floor",
     "source",
@@ -198,7 +207,10 @@ class GlorysFieldStore:
         out = {k: feats[k] for k in CUFES_COVARIATE_FIELDS if k in feats}
         out["sst_grad"] = float(fields.sst_grad[j, i])
         out["front_distance_km"] = float(fields.front_distance_km[j, i])
-        out["upwelling"] = float(fields.upwelling[j, i])
+        if UPWELLING_WIND_FORCING_ENABLED:
+            out["upwelling"] = float(fields.upwelling[j, i])
+        else:
+            out["upwelling"] = float("nan")
         return out
 
     def sample_bottom_depth_with_reason(self, lat: float, lon: float) -> tuple[float, str | None]:
@@ -473,6 +485,36 @@ def write_training_covariates_parquet(
     return path
 
 
+def apply_upwelling_wind_policy(out: pd.DataFrame) -> pd.DataFrame:
+    """NaN ``upwelling`` with status metadata when no consistent wind product is wired."""
+    out = out.copy()
+    if UPWELLING_WIND_FORCING_ENABLED:
+        if "upwelling_status" not in out.columns:
+            out["upwelling_status"] = ""
+        return out
+    out["upwelling"] = np.nan
+    out["upwelling_status"] = UPWELLING_STATUS_NO_CONSISTENT_WIND
+    return out
+
+
+def record_upwelling_wind_status_pull_log(
+    *,
+    log_path: Path | None = None,
+) -> Path:
+    cfg = load_overlap_config()
+    path = log_path or REPO_ROOT / str(
+        cfg["pull_logs"].get("winds", "data/provenance/wind_pull_log.jsonl")
+    )
+    return append_wind_pull_log(
+        build_upwelling_wind_status_record(
+            upwelling_status=UPWELLING_STATUS_NO_CONSISTENT_WIND,
+            audit=wind_product_audit_summary(),
+            wind_fetch_performed=False,
+        ),
+        log_path=path,
+    )
+
+
 def build_cufes_training_covariates_table(
     events: pd.DataFrame,
     store: GlorysFieldStore,
@@ -492,6 +534,9 @@ def build_cufes_training_covariates_table(
         drop_summary_json_path=drop_summary_json_path,
     )
     out, drops = attach_bottom_depth_and_reasons(events, cov, drops, store)
+    out = apply_upwelling_wind_policy(out)
+    if not UPWELLING_WIND_FORCING_ENABLED:
+        record_upwelling_wind_status_pull_log()
     for col in TRAINING_OUTPUT_COLUMNS:
         if col not in out.columns:
             raise ValueError(f"missing output column: {col}")
@@ -629,7 +674,6 @@ def run_build_cufes_training_covariates(
     output_path: Path | None = None,
     dry_run: bool = False,
     subset_fn: Callable[[GlorysSubsetBatch, Path], Path] | None = None,
-    wind_get_fn: Callable[..., bytes] | None = None,
     max_concurrent: int = 2,
 ) -> dict[str, Any]:
     """
@@ -684,32 +728,8 @@ def run_build_cufes_training_covariates(
         for fut in as_completed(futures):
             fut.result()
 
-    bbox = (
-        float(cfg["pilot_bbox"]["lat_min"]),
-        float(cfg["pilot_bbox"]["lat_max"]),
-        float(cfg["pilot_bbox"]["lon_min"]),
-        float(cfg["pilot_bbox"]["lon_max"]),
-    )
-    wind_log = REPO_ROOT / str(cfg["pull_logs"].get("winds", "data/provenance/wind_pull_log.jsonl"))
-    wind_by_day, wind_source_id = wind_grids_for_days(
-        days,
-        lat,
-        lon,
-        bbox,
-        purpose="training",
-        get_fn=wind_get_fn,
-        log_path=wind_log,
-    )
-    store.wind_source_id = wind_source_id
     for day in days:
-        u10, v10 = wind_by_day.get(day, (None, None))
-        store.days[day] = build_synthetic_day_fields(
-            day,
-            lat,
-            lon,
-            u10_override=u10,
-            v10_override=v10,
-        )
+        store.days[day] = build_synthetic_day_fields(day, lat, lon)
 
     out_path = output_path or DEFAULT_OUTPUT_PATH
     drops_path = out_path.parent / DEFAULT_DROPS_NAME

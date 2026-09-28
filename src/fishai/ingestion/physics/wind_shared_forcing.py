@@ -53,6 +53,10 @@ CCMP_V31_PODAAC_ID = "CCMP_WINDS_10M6HR_L4_V3.1"
 # Auditor conclusion: no one product spans training + daily nowcast for this CUFES table.
 UPWELLING_SHARED_FORCING_QUALIFIED = False
 
+# When false, training table writes NaN ``upwelling`` and ``upwelling_status`` (no wind ERDDAP pulls).
+UPWELLING_WIND_FORCING_ENABLED = False
+UPWELLING_STATUS_NO_CONSISTENT_WIND = "no_consistent_wind_product"
+
 
 def wind_product_audit_summary() -> dict[str, Any]:
     """Structured candidate list for PR / parquet metadata."""

@@ -46,3 +46,21 @@ def build_wind_pull_record(
     if dataset_version is not None:
         record["dataset_version"] = dataset_version
     return record
+
+
+def build_upwelling_wind_status_record(
+    *,
+    upwelling_status: str,
+    audit: dict[str, Any],
+    wind_fetch_performed: bool = False,
+    timestamp: datetime | None = None,
+) -> dict[str, Any]:
+    """Pull-log metadata when no ERDDAP wind subset is used (auditor no-mix path)."""
+    ts = timestamp or datetime.now(timezone.utc)
+    return {
+        "record_type": "upwelling_wind_status",
+        "upwelling_status": upwelling_status,
+        "wind_fetch_performed": bool(wind_fetch_performed),
+        "upwelling_wind_audit": audit,
+        "timestamp": ts.isoformat(),
+    }

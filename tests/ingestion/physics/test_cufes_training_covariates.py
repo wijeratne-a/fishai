@@ -224,5 +224,31 @@ def test_covariates_not_zero_when_present() -> None:
     out, _qc, _drops, _floor = build_cufes_training_covariates_table(events, store)
     assert np.isfinite(out.iloc[0]["T3m"])
     for field in CUFES_COVARIATE_FIELDS:
+        if field == "upwelling":
+            continue
         if np.isfinite(out.iloc[0][field]):
-            assert out.iloc[0][field] != 0.0 or field == "upwelling"
+            assert out.iloc[0][field] != 0.0
+
+
+def test_upwelling_nan_without_excluding_events(tmp_path: Path) -> None:
+    from fishai.ingestion.physics.covariates import DROP_REASON_MISSING_COVARIATE
+    from fishai.ingestion.physics.wind_shared_forcing import (
+        UPWELLING_STATUS_NO_CONSISTENT_WIND,
+    )
+
+    events = _synthetic_events()
+    lat, lon = _small_glorys_axes()
+    store = glorys_store_from_synthetic_days(unique_event_days(events), lat=lat, lon=lon)
+    out, _qc, drops, _floor = build_cufes_training_covariates_table(
+        events,
+        store,
+        drops_parquet_path=tmp_path / "drops.parquet",
+    )
+    assert len(out) == len(events)
+    assert out["upwelling"].isna().all()
+    assert (out["upwelling_status"] == UPWELLING_STATUS_NO_CONSISTENT_WIND).all()
+    assert not out["excluded"].any()
+    upwelling_drops = drops[
+        (drops["reason"] == DROP_REASON_MISSING_COVARIATE) & (drops["covariate"] == "upwelling")
+    ]
+    assert upwelling_drops.empty

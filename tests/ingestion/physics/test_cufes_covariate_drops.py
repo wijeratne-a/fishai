@@ -11,6 +11,7 @@ import pandas as pd
 import pytest
 
 from fishai.ingestion.physics.covariates import (
+    COVARIATE_FIELDS_EXEMPT_FROM_MISSING_EXCLUSION,
     CUFES_COVARIATE_FIELDS,
     COL_START_LAT,
     COL_START_LON,
@@ -127,7 +128,10 @@ def test_drop_summary_counts_unique_events_per_reason() -> None:
     events = _events().iloc[[0]]
     _, qc, drops = join_covariates_to_events(events, field_sampler=lambda *_: {}, source="t")
     missing_rows = drops[drops["reason"] == DROP_REASON_MISSING_COVARIATE]
-    assert len(missing_rows) == len(CUFES_COVARIATE_FIELDS)
+    expected_missing_fields = len(CUFES_COVARIATE_FIELDS) - len(
+        COVARIATE_FIELDS_EXEMPT_FROM_MISSING_EXCLUSION
+    )
+    assert len(missing_rows) == expected_missing_fields
     assert qc["drop_summary"][DROP_REASON_MISSING_COVARIATE] == 1
     assert qc["rows_by_reason"][DROP_REASON_MISSING_COVARIATE] == len(missing_rows)
     assert qc["drop_summary"]["dropped_unique_total"] == 1

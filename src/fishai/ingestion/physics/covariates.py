@@ -40,6 +40,9 @@ CUFES_COVARIATE_FIELDS: tuple[str, ...] = (
     "upwelling",
 )
 
+# Missing values in these fields do not trigger ``missing_covariate`` exclusion.
+COVARIATE_FIELDS_EXEMPT_FROM_MISSING_EXCLUSION: tuple[str, ...] = ("upwelling",)
+
 FEATURE_STORE_EXTRA_FIELDS: tuple[str, ...] = (
     "bottomT",
     "mlotst_crosscheck",
@@ -359,6 +362,8 @@ def join_covariates_to_events(
         rows.append(row)
         if endpoints_present(event):
             for field in CUFES_COVARIATE_FIELDS:
+                if field in COVARIATE_FIELDS_EXEMPT_FROM_MISSING_EXCLUSION:
+                    continue
                 if pd.isna(row[field]):
                     drop_rows.append(
                         {
