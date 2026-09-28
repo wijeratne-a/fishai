@@ -222,6 +222,33 @@ harmonization_wcofs_glorys:
       test_split_jja: >-
         Test-split JJA is 2025-06-01 through 2025-06-23 only (partial June); label
         scores as test_split_jja_partial, not full-season JJA.
+    common_support_scoring:
+      rule: >-
+        All four model rows (native WCOFS, coarsened, coarsened+mapped, GLORYS) are
+        scored only on buoy and HF radar observation matches where every row has a
+        finite model value at the matched time and location.
+      dropped_observations:
+        reason_label: insufficient_model_coverage
+        reporting: >-
+          Observation matches dropped because any model row is blanked are counted
+          in the harmonization score report under insufficient_model_coverage, split
+          nearshore/offshore (using the matched GLORYS cell nearshore flag).
+      pass_fail_scope: >-
+        auditbot1 pass/degraded cutoffs (when set) apply to this common-support
+        observation set only, not to row-specific supersets.
+      test_requirement: >-
+        Scoring tests must assert that every model row uses the same observation
+        count n within each metric stratum (season × nearshore/offshore × variable).
+
+  map_product_labeling:
+    required_label: egg encounter likelihood
+    forbidden_labels:
+      - spawning locations
+      - adult distribution
+      - adult fish presence
+    note: >-
+      Harmonization and nowcast map products describe egg-stage encounter likelihood
+      per the CUFES delta contract, not spawning habitat maps or adult distributions.
 
   nearshore:
     supplied_by: bot2

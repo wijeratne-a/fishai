@@ -39,6 +39,20 @@ def test_area_weighted_min_wet_fraction_matches_overlap_config_if_present() -> N
     assert cfg_min == prereg_min
 
 
+def test_common_support_scoring_and_map_labels() -> None:
+    doc = load_harmonization_prereg(PREREG)
+    metrics = doc["harmonization_wcofs_glorys"]["metrics"]
+    cs = metrics["common_support_scoring"]
+    assert "every row has a finite model value" in cs["rule"]
+    assert cs["dropped_observations"]["reason_label"] == "insufficient_model_coverage"
+    assert "nearshore/offshore" in cs["dropped_observations"]["reporting"]
+    assert "common-support" in cs["pass_fail_scope"]
+    assert "same observation count n" in cs["test_requirement"]
+    maps = doc["harmonization_wcofs_glorys"]["map_product_labeling"]
+    assert maps["required_label"] == "egg encounter likelihood"
+    assert "spawning locations" in maps["forbidden_labels"]
+
+
 def test_buoy_matching_all_models_shared_depth() -> None:
     doc = load_harmonization_prereg(PREREG)
     ndbc = doc["harmonization_wcofs_glorys"]["observations"]["ndbc_hull_temperature"]

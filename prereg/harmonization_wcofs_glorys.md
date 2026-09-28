@@ -47,7 +47,7 @@ Scores use `config/assimilated_sources.yaml` (versioned, cited). Unknown assimil
 
 ## Metrics
 
-Per variable: **bias**, **RMSE**, **Pearson r**, by season (DJF/MAM/JJA/SON), nearshore/offshore, and pooled, each with **n** and a **7-day block bootstrap 95% CI**. **Front-detail loss** is mean coarsened-WCOFS **sst_grad** divided by native WCOFS on the same days. Test-split **JJA** is **1–23 June only** (`test_split_jja_partial`).
+Per variable: **bias**, **RMSE**, **Pearson r**, by season (DJF/MAM/JJA/SON), nearshore/offshore, and pooled, each with **n** and a **7-day block bootstrap 95% CI**. **Common-support scoring:** all four model rows use only buoy/HF matches where **every row has a value**; drops because any row is blanked are reported as **`insufficient_model_coverage`** (nearshore/offshore). **Pass/degraded** (when set) applies to that common set only; tests must verify **equal n per stratum across rows**. **Map labels:** **`egg encounter likelihood`** only — not spawning locations or adult distribution.
 
 Nearshore (bot2 PR #7 @ cc26ab4): `Natural Earth ne_10m_land` v**5.1.1**, public domain, clip lat 31–36 / lon −122 to −116 (Channel Islands), path `data/reference/shoreline/ne_10m_land_pilot_clip.json`, **cutoff_km 20**, geodesic distance on WGS84 from GLORYS cell centre to nearest shoreline. **Scoring strata:** buoys and HF radar cells use the **matched GLORYS cell’s** nearshore flag (same for all four model rows, including native WCOFS). `shoreline_sha256` and `shoreline_simplification_check` remain `TO_BE_SET_BEFORE_SCORING`. auditbot1 cutoffs unchanged.
 
