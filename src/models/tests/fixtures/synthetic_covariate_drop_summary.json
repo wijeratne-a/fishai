@@ -1,12 +1,17 @@
 {
-  "drop_summary": {
-    "input_event_count": 48,
-    "dropped_unique_total": 2,
-    "missing_covariate": 1,
-    "land_mask": 1
+  "schema_version": 1,
+  "input_event_count": 48,
+  "dropped_unique_total": 2,
+  "unique_by_reason": {
+    "missing_endpoint": 0,
+    "land_mask": 1,
+    "too_few_track_points": 0,
+    "missing_covariate": 1
   },
   "rows_by_reason": {
-    "missing_covariate": 1,
-    "land_mask": 1
+    "missing_endpoint": 0,
+    "land_mask": 1,
+    "too_few_track_points": 0,
+    "missing_covariate": 1
   }
 }

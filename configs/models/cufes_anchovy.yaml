@@ -19,6 +19,9 @@ fishai_engine_config:
     covariates_path: src/models/tests/fixtures/synthetic_cufes_covariates.csv
     covariate_drops_path: src/models/tests/fixtures/synthetic_covariate_drops.csv
     covariate_drop_summary_path: src/models/tests/fixtures/synthetic_covariate_drop_summary.json
+    # Pilot production paths (bot2 PR #2; uncomment and disable synthetic fixtures above):
+    # covariate_drops_path: data/processed/cufes/cufes_physics_covariate_drops.parquet
+    # covariate_drop_summary_path: data/processed/cufes/cufes_physics_covariate_drop_summary.json
     source_id: calcofi_cufes
   covariates:
     forcing_source_id: glorys

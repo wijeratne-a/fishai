@@ -278,6 +278,15 @@ load_model_data <- function(
   drops
 }
 
+.covariate_drop_reason_keys <- function() {
+  c(
+    "missing_endpoint",
+    "land_mask",
+    "too_few_track_points",
+    "missing_covariate"
+  )
+}
+
 .read_covariate_drop_summary <- function(path) {
   if (is.null(path) || !nzchar(path)) {
     return(NULL)
@@ -290,14 +299,49 @@ load_model_data <- function(
     stop("covariate_drop_summary_path not found: ", path, call. = FALSE)
   }
   raw <- jsonlite::read_json(path, simplifyVector = TRUE)
-  drop_summary <- raw$drop_summary
-  if (is.null(drop_summary)) {
-    drop_summary <- raw
+  if (is.null(raw$input_event_count)) {
+    stop("covariate drop summary missing input_event_count", call. = FALSE)
   }
-  if (is.null(drop_summary$input_event_count)) {
-    stop("covariate drop summary missing drop_summary$input_event_count", call. = FALSE)
+  raw
+}
+
+.summary_reason_value <- function(summary, block, reason) {
+  obj <- summary[[block]]
+  if (is.null(obj)) {
+    return(NA_integer_)
   }
-  drop_summary
+  if (is.list(obj) || is.vector(obj)) {
+    if (!reason %in% names(obj)) {
+      return(NA_integer_)
+    }
+    return(as.integer(obj[[reason]]))
+  }
+  if (is.data.frame(obj) && reason %in% names(obj)) {
+    return(as.integer(obj[[reason]][[1L]]))
+  }
+  NA_integer_
+}
+
+.assert_covariate_drop_summary_reason_blocks <- function(summary) {
+  keys <- .covariate_drop_reason_keys()
+  for (block in c("unique_by_reason", "rows_by_reason")) {
+    obj <- summary[[block]]
+    if (is.null(obj)) {
+      stop("covariate drop summary missing ", block, call. = FALSE)
+    }
+    got <- sort(names(obj))
+    exp <- sort(keys)
+    if (!identical(got, exp)) {
+      stop(
+        "covariate drop summary ",
+        block,
+        " must include exactly: ",
+        paste(keys, collapse = ", "),
+        call. = FALSE
+      )
+    }
+  }
+  invisible(TRUE)
 }
 
 .assert_bot2_covariate_join_counts <- function(cfg) {
@@ -313,15 +357,37 @@ load_model_data <- function(
       call. = FALSE
     )
   }
-  drop_summary <- .read_covariate_drop_summary(summary_path)
-  input_n <- as.integer(drop_summary$input_event_count)
-  if (input_n != expected) {
+  summary <- .read_covariate_drop_summary(summary_path)
+  schema_version <- summary$schema_version
+  if (is.null(schema_version) || as.integer(schema_version) != 1L) {
     stop(
-      "bot2 drop_summary input_event_count (",
-      input_n,
-      ") != event_count_guard n_events (",
-      expected,
-      "); expected post-QC bot1 events fed to covariate join, not raw ERDDAP pull",
+      "covariate drop summary schema_version must be 1, got ",
+      if (is.null(schema_version)) "NULL" else schema_version,
+      call. = FALSE
+    )
+  }
+  .assert_covariate_drop_summary_reason_blocks(summary)
+  drops_path <- cfg$data$covariate_drops_path
+  if (is.null(drops_path) || !nzchar(drops_path)) {
+    stop(
+      "data.covariate_drops_path is required to validate covariate drop summary",
+      call. = FALSE
+    )
+  }
+  drops <- .read_covariate_drop_table(drops_path)
+  drop_ids <- unique(as.character(drops$event_id))
+  n_unique_drop_events <- length(drop_ids)
+  dropped_total <- as.integer(summary$dropped_unique_total)
+  if (is.na(dropped_total)) {
+    stop("covariate drop summary missing dropped_unique_total", call. = FALSE)
+  }
+  if (dropped_total != n_unique_drop_events) {
+    stop(
+      "covariate drop summary dropped_unique_total (",
+      dropped_total,
+      ") != unique event_id count in drop table (",
+      n_unique_drop_events,
+      ")",
       call. = FALSE
     )
   }
@@ -336,7 +402,64 @@ load_model_data <- function(
   if (!"event_id" %in% names(cov)) {
     stop("covariate table missing event_id column", call. = FALSE)
   }
+  if (!"excluded" %in% names(cov)) {
+    stop("covariate table missing excluded column", call. = FALSE)
+  }
   .assert_unique_keys(cov$event_id, "event_id in covariates")
+  ex <- .parse_excluded_logical(cov$excluded)
+  n_excluded <- sum(ex %in% TRUE)
+  if (dropped_total != n_excluded) {
+    stop(
+      "covariate drop summary dropped_unique_total (",
+      dropped_total,
+      ") != excluded=TRUE row count (",
+      n_excluded,
+      ")",
+      call. = FALSE
+    )
+  }
+  keys <- .covariate_drop_reason_keys()
+  for (reason in keys) {
+    sub <- drops[as.character(drops$reason) == reason, , drop = FALSE]
+    n_unique_reason <- length(unique(as.character(sub$event_id)))
+    u <- .summary_reason_value(summary, "unique_by_reason", reason)
+    if (u != n_unique_reason) {
+      stop(
+        "covariate drop summary unique_by_reason$",
+        reason,
+        " (",
+        u,
+        ") != unique event_id count in drop table (",
+        n_unique_reason,
+        ")",
+        call. = FALSE
+      )
+    }
+    r <- .summary_reason_value(summary, "rows_by_reason", reason)
+    if (r != nrow(sub)) {
+      stop(
+        "covariate drop summary rows_by_reason$",
+        reason,
+        " (",
+        r,
+        ") != drop table row count (",
+        nrow(sub),
+        ")",
+        call. = FALSE
+      )
+    }
+  }
+  input_n <- as.integer(summary$input_event_count)
+  if (input_n != expected) {
+    stop(
+      "covariate drop summary input_event_count (",
+      input_n,
+      ") != event_count_guard n_events (",
+      expected,
+      "); expected post-QC bot1 events fed to covariate join, not raw ERDDAP pull",
+      call. = FALSE
+    )
+  }
   cov_n <- nrow(cov)
   if (cov_n != expected) {
     stop(
