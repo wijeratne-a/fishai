@@ -5,6 +5,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     python3-pip \
     python3-venv \
     cmake \
+    pkg-config \
     libabsl-dev \
     libcurl4-openssl-dev \
     libssl-dev \
