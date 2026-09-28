@@ -1,0 +1,66 @@
+# Sensor ingestion, QC, and validation thresholds (Southern California Bight pilot).
+
+bbox:
+  lat_min: 32.0
+  lat_max: 35.0
+  lon_min: -121.0
+  lon_max: -117.0
+
+paths:
+  hfr_zarr: data/processed/sensors/hfradar/surface_currents.zarr
+  ndbc_parquet_root: data/processed/sensors/ndbc
+  gliders_parquet_root: data/processed/sensors/gliders
+  wcofs_cycle_glob: data/processed/physics/wcofs/wcofs_*_{cycle}_*.nc
+
+erddap:
+  coastwatch: https://coastwatch.pfeg.noaa.gov/erddap
+  glider_dac: https://gliders.ioos.us/erddap
+
+http:
+  min_interval_s: 1.0
+  timeout_s: 120.0
+  max_retries: 4
+  backoff_base_s: 3.0
+  daily_request_budget: 180
+
+qc:
+  radar_hdop_max: 1.25
+  radar_min_sites: 2
+  staleness_hours:
+    hfr: 3
+    ndbc: 6
+    glider: 48
+  range:
+    wtmp_c: [-2.0, 35.0]
+    water_u_ms: [-3.0, 3.0]
+    water_v_ms: [-3.0, 3.0]
+  spike_window: 3
+  spike_threshold_sigma: 4.0
+  flat_line_min_points: 6
+  flat_line_epsilon: 1.0e-4
+
+consistency:
+  current_vector_corr:
+    pass: 0.65
+    degraded: 0.45
+  current_rmse_ms:
+    pass: 0.18
+    degraded: 0.30
+  sst_bias_c:
+    pass: 0.75
+    degraded: 1.25
+  sst_rmse_c:
+    pass: 0.90
+    degraded: 1.40
+
+holdout:
+  independent_confirmed: false
+  mld_delta_c: 0.2
+  mld_reference_depth_m: 10.0
+  depth_bands_m:
+    - [20.0, 50.0]
+    - [50.0, 100.0]
+    - [100.0, 200.0]
+  temperature_rmse_c:
+    pass: 0.60
+    degraded: 1.00
