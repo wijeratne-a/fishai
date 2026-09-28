@@ -31,7 +31,10 @@ def _not_implemented(name: str) -> int:
 
 
 def main_bio(argv: list[str] | None = None) -> int:
-    parser = argparse.ArgumentParser(prog="fishai-bio", description="Biology ingestion (CalCOFI CUFES)")
+    parser = argparse.ArgumentParser(
+        prog="fishai-bio",
+        description="Biology ingestion (CalCOFI CUFES, SWFSC CPS trawl haul catch)",
+    )
     sub = parser.add_subparsers(dest="command")
 
     sync = sub.add_parser("sync", help="Sync a biology source into data/processed/")
@@ -45,6 +48,15 @@ def main_bio(argv: list[str] | None = None) -> int:
         help="Skip ERDDAP download; process existing raw CSV under data/raw/calcofi_cufes/",
     )
     cufes.add_argument("--dwc", action="store_true", help="Also write Darwin Core text files")
+
+    cps = sync_sub.add_parser("cps-trawl", help="SWFSC CPS trawl haul catch (ERDDAP)")
+    cps.add_argument("--start", required=True, type=_parse_date, help="Start date (YYYY-MM-DD, inclusive)")
+    cps.add_argument("--end", required=True, type=_parse_date, help="End date (YYYY-MM-DD, inclusive)")
+    cps.add_argument(
+        "--no-fetch",
+        action="store_true",
+        help="Skip ERDDAP download; process existing raw CSV under data/raw/swfsc_cps_trawl_haul_catch/",
+    )
 
     args = parser.parse_args(argv)
     if args.command == "sync" and args.source == "cufes":
@@ -60,6 +72,23 @@ def main_bio(argv: list[str] | None = None) -> int:
             f"cufes sync: events={result['n_events']} "
             f"occurrence_rows={result['n_occurrence_rows']} "
             f"→ {result['events_path']}"
+        )
+        print(format_qc_summary(result["qc_report"]))
+        print(f"qc report → {result['qc_report_path']}")
+        return 0
+
+    if args.command == "sync" and args.source == "cps-trawl":
+        from fishai.ingestion.biology.cps_trawl import format_qc_summary, sync_cps_trawl_haul_catch
+
+        result = sync_cps_trawl_haul_catch(
+            args.start,
+            args.end,
+            fetch=not args.no_fetch,
+        )
+        print(
+            f"cps-trawl sync: hauls={result['n_hauls']} "
+            f"catch_rows={result['n_catch_rows']} "
+            f"→ {result['hauls_path']}"
         )
         print(format_qc_summary(result["qc_report"]))
         print(f"qc report → {result['qc_report_path']}")

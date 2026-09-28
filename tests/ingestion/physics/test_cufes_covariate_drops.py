@@ -90,6 +90,18 @@ def test_drop_land_mask() -> None:
     assert qc["drop_summary"][DROP_REASON_LAND_MASK] >= 1
 
 
+def test_land_mask_does_not_inflate_missing_by_field_counts() -> None:
+    events = _events().iloc[[0]]
+
+    def sampler(_lat: float, _lon: float, _t: pd.Timestamp) -> dict:
+        vals = {field: 1.0 for field in CUFES_COVARIATE_FIELDS}
+        vals[SAMPLER_LAND_MASK_KEY] = True
+        return vals
+
+    _, qc, _ = join_covariates_to_events(events, field_sampler=sampler, source="t")
+    assert qc["missing_by_field"] == {field: 0 for field in CUFES_COVARIATE_FIELDS}
+
+
 def test_drop_too_few_track_points() -> None:
     events = _events()
     events.loc[2, COL_STOP_LAT] = events.loc[2, COL_START_LAT]

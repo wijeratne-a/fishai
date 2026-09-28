@@ -8,6 +8,8 @@ EARTH_RADIUS_KM = 6371.0
 
 # CUFES egg-stage covariates sample tracers at exactly 3 m (linear in z, never nearest-level).
 CUFES_SAMPLE_DEPTH_M = 3.0
+# GLORYS12 top model level (positive metres below the free surface).
+GLORYS_TOP_LEVEL_DEPTH_M = 0.494
 
 
 def cs_r_vstretching4(s: np.ndarray, theta_s: float, theta_b: float) -> np.ndarray:
@@ -45,6 +47,46 @@ def s_to_z(
     return zeta[None, ...] + (zeta[None, ...] + h[None, ...]) * s_term
 
 
+def depth_below_free_surface(z_roms: np.ndarray, zeta: float) -> np.ndarray:
+    """Positive depth (m) below the moving free surface at each ROMS rho level."""
+    z_roms = np.asarray(z_roms, dtype=float)
+    return float(zeta) - z_roms
+
+
+def interp_tracer_at_depth_below_surface(
+    depth_m: np.ndarray,
+    tracer: np.ndarray,
+    target_m: float,
+    *,
+    extrapolate_above_top: bool = False,
+) -> float:
+    """
+    Linear interpolation on positive depths below the free surface.
+
+    When ``extrapolate_above_top`` is True and ``target_m`` is shallower than the
+    shallowest level, return the top-level tracer (constant extrapolation upward only).
+    Below the deepest level returns NaN.
+    """
+    depth_m = np.asarray(depth_m, dtype=float)
+    tracer = np.asarray(tracer, dtype=float)
+    mask = np.isfinite(depth_m) & np.isfinite(tracer)
+    if mask.sum() < 1:
+        return float("nan")
+    depth_s = depth_m[mask]
+    values_s = tracer[mask]
+    order = np.argsort(depth_s)
+    depth_s = depth_s[order]
+    values_s = values_s[order]
+    target = float(target_m)
+    if target < depth_s[0]:
+        if extrapolate_above_top:
+            return float(values_s[0])
+        return float("nan")
+    if target > depth_s[-1]:
+        return float("nan")
+    return float(np.interp(target, depth_s, values_s))
+
+
 def interp_tracer_at_depth(
     z: np.ndarray,
     tracer: np.ndarray,
@@ -76,10 +118,16 @@ def interp_at_depth_from_z_levels(
     z_levels_m: np.ndarray,
     values: np.ndarray,
     depth_m: float = CUFES_SAMPLE_DEPTH_M,
+    *,
+    extrapolate_above_top: bool = False,
 ) -> float:
     """GLORYS-style fixed z-level columns (depths positive down, e.g. 2.6 m, 3.8 m)."""
     z_levels_m = np.asarray(z_levels_m, dtype=float)
     values = np.asarray(values, dtype=float)
+    if extrapolate_above_top:
+        return interp_tracer_at_depth_below_surface(
+            z_levels_m, values, depth_m, extrapolate_above_top=True
+        )
     return interp_tracer_at_depth(-z_levels_m, values, depth_m=depth_m)
 
 
@@ -101,7 +149,13 @@ def interp_at_depth_from_wcofs_column(
         hc,
         cs_r=cs_r,
     )[:, 0, 0]
-    return interp_tracer_at_depth(z, tracer, depth_m=depth_m)
+    depth_below = depth_below_free_surface(z, zeta)
+    return interp_tracer_at_depth_below_surface(
+        depth_below,
+        tracer,
+        depth_m,
+        extrapolate_above_top=True,
+    )
 
 
 def bottom_layer(temp: np.ndarray, salt: np.ndarray | None = None) -> dict[str, np.ndarray]:
