@@ -326,7 +326,11 @@ def run_holdout_scoring(
                 ratio_ci_upper = m_mapped.rmse_ci95[1] / m_glorys.rmse
 
             input_verdicts, input_rows = build_input_cell_check_summary(
-                doc, input_check_table, stratum, cutoffs
+                doc,
+                input_check_table,
+                stratum,
+                cutoffs,
+                forecast_group=str(forecast_group),
             )
             input_cell_check_summary.extend(input_rows)
 

@@ -47,28 +47,6 @@ class BuoyStratumVerdictResult:
     reason: str | None = None
 
 
-def buoy_gate_thresholds_from_harmonization_cutoffs(
-    cutoffs: dict[str, float | int],
-) -> BuoyGateThresholds:
-    """Map flat holdout ``cutoffs_from_prereg`` keys to buoy gate bands (#9)."""
-    ratio_pass = float(cutoffs["rmse_ratio_pass"])
-    ratio_deg_upper = float(cutoffs["rmse_ratio_degraded_upper"])
-    bias_pass = float(cutoffs["bias_abs_pass_c"])
-    bias_deg = float(cutoffs["bias_abs_degraded_c"])
-    return BuoyGateThresholds(
-        rmse_ratio_pass_max=ratio_pass,
-        rmse_ratio_bootstrap_upper_95_pass_max=float(cutoffs["rmse_ratio_ci_upper_pass"]),
-        rmse_ratio_degraded_min_exclusive=ratio_pass,
-        rmse_ratio_degraded_max_inclusive=ratio_deg_upper,
-        absolute_bias_pass_max_c=bias_pass,
-        absolute_bias_degraded_min_exclusive_c=bias_pass,
-        absolute_bias_degraded_max_inclusive_c=bias_deg,
-        pearson_r_max_deficit_vs_glorys=float(cutoffs["pearson_r_margin_below_glorys"]),
-        fail_verdict="UNKNOWN",
-        fail_reason=FAIL_HOLDOUT_REASON,
-    )
-
-
 def buoy_gate_thresholds_from_prereg(doc: dict[str, Any] | None = None) -> BuoyGateThresholds:
     """Load numeric buoy gate cutoffs from ``prereg/harmonization_wcofs_glorys.yaml``."""
     raw = doc if doc is not None else load_harmonization_prereg()

@@ -3,7 +3,9 @@
 from __future__ import annotations
 
 import copy
+from pathlib import Path
 
+from fishai.evaluation.harmonization_prereg import load_harmonization_prereg
 from fishai.scoring.harmonization.grading import (
     BuoyGradeInput,
     combine_stratum_verdicts,
@@ -22,6 +24,9 @@ from fishai.scoring.harmonization.constants import (
     VERDICT_PASS,
     VERDICT_UNKNOWN,
 )
+
+_PREREG = Path(__file__).resolve().parents[3] / "prereg" / "harmonization_wcofs_glorys.yaml"
+_PREREG_DOC = load_harmonization_prereg(_PREREG)
 
 CUTOFFS = {
     "rmse_ratio_pass": 1.2,
@@ -55,33 +60,39 @@ def _buoy(**kwargs) -> BuoyGradeInput:
 
 
 def test_grade_pass_degraded_fail() -> None:
-    assert grade_buoy_stratum(_buoy(), CUTOFFS)[0] == VERDICT_PASS
+    assert grade_buoy_stratum(_buoy(), CUTOFFS, doc=_PREREG_DOC)[0] == VERDICT_PASS
     assert (
-        grade_buoy_stratum(_buoy(rmse_mapped=1.3, rmse_ratio_ci_upper=1.4), CUTOFFS)[0]
+        grade_buoy_stratum(
+            _buoy(rmse_mapped=1.3, rmse_ratio_ci_upper=1.4), CUTOFFS, doc=_PREREG_DOC
+        )[0]
         == VERDICT_DEGRADED
     )
     verdict, reason = grade_buoy_stratum(
-        _buoy(rmse_mapped=2.0, rmse_ratio_ci_upper=2.0), CUTOFFS
+        _buoy(rmse_mapped=2.0, rmse_ratio_ci_upper=2.0), CUTOFFS, doc=_PREREG_DOC
     )
     assert verdict == VERDICT_UNKNOWN
     assert reason == FAIL_EVIDENCE_REASON
 
 
 def test_insufficient_observations_caps_degraded_never_pass() -> None:
-    verdict, reason = grade_buoy_stratum(_buoy(n=10), CUTOFFS)
+    verdict, reason = grade_buoy_stratum(_buoy(n=10), CUTOFFS, doc=_PREREG_DOC)
     assert verdict == VERDICT_DEGRADED
     assert reason == BUOY_INSUFFICIENT_OBS_REASON
     assert verdict != VERDICT_PASS
 
 
 def test_assimilated_source_not_gradable() -> None:
-    assert grade_buoy_stratum(_buoy(independent_source=False), CUTOFFS)[0] == VERDICT_NOT_GRADABLE
+    assert (
+        grade_buoy_stratum(_buoy(independent_source=False), CUTOFFS, doc=_PREREG_DOC)[0]
+        == VERDICT_NOT_GRADABLE
+    )
 
 
 def test_buoy_holdout_unknown_bootstrap_upper_above_pass_band() -> None:
     verdict, reason = grade_buoy_stratum(
         _buoy(rmse_mapped=1.1, rmse_glorys=1.0, rmse_ratio_ci_upper=1.51),
         CUTOFFS,
+        doc=_PREREG_DOC,
     )
     assert verdict == VERDICT_UNKNOWN
     assert reason == FAIL_EVIDENCE_REASON
@@ -91,6 +102,7 @@ def test_buoy_holdout_unknown_pearson_r_below_glorys_margin() -> None:
     verdict, reason = grade_buoy_stratum(
         _buoy(pearson_r_mapped=0.74, pearson_r_glorys=0.85),
         CUTOFFS,
+        doc=_PREREG_DOC,
     )
     assert verdict == VERDICT_UNKNOWN
     assert reason == FAIL_EVIDENCE_REASON

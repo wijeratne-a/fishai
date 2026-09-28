@@ -7,8 +7,6 @@ from typing import Any
 
 from fishai.evaluation.nowcast_forcing_buoy import (
     BuoyStratumMetrics,
-    buoy_gate_thresholds_from_harmonization_cutoffs,
-    buoy_gate_thresholds_from_prereg,
     evaluate_buoy_stratum_verdict,
 )
 from fishai.scoring.harmonization.constants import (
@@ -78,8 +76,9 @@ def grade_buoy_stratum(
     inp: BuoyGradeInput,
     cutoffs: dict[str, float],
     *,
-    doc: dict[str, Any] | None = None,
+    doc: dict[str, Any],
 ) -> tuple[str, str | None]:
+    """Holdout buoy gate: gradability pre-checks then #9 ``evaluate_buoy_stratum_verdict``."""
     min_n = int(cutoffs["min_matched_daily_values"])
     min_buoys = int(cutoffs["min_buoys"])
     if inp.n < min_n or inp.n_buoys < min_buoys:
@@ -95,11 +94,6 @@ def grade_buoy_stratum(
     ):
         return VERDICT_NOT_GRADABLE, "missing_rmse"
 
-    thresholds = (
-        buoy_gate_thresholds_from_prereg(doc)
-        if doc is not None
-        else buoy_gate_thresholds_from_harmonization_cutoffs(cutoffs)
-    )
     metrics = BuoyStratumMetrics(
         rmse_ratio=inp.rmse_mapped / inp.rmse_glorys,
         rmse_ratio_bootstrap_upper_95=inp.rmse_ratio_ci_upper,
@@ -107,7 +101,7 @@ def grade_buoy_stratum(
         pearson_r=inp.pearson_r_mapped,
         glorys_pearson_r=inp.pearson_r_glorys,
     )
-    result = evaluate_buoy_stratum_verdict(metrics, thresholds=thresholds)
+    result = evaluate_buoy_stratum_verdict(metrics, doc=doc)
     return result.verdict, result.reason
 
 
@@ -149,7 +143,7 @@ def combine_stratum_verdicts(
 
     worst = worst_of_verdicts(pool)
     reason: str | None = None
-    if worst == VERDICT_FAIL:
+    if worst in (VERDICT_FAIL, VERDICT_UNKNOWN):
         reason = FAIL_EVIDENCE_REASON
     return worst, reason
 
