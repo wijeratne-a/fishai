@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import math
 from dataclasses import dataclass
-from typing import Any, Iterable, Mapping
+from typing import Any, Mapping
 
 from fishai.ingestion.biology.cps_trawl.constants import WEIGHT_FLAG_PARTIAL
 
@@ -78,6 +78,66 @@ def estimate_count_raised(
     return int(round(raised)), None
 
 
+def _weight_present_from_components(
+    *,
+    presence_only: bool,
+    subsample_weight_kg: float | None,
+    remaining_weight_kg: float | None,
+) -> bool:
+    if presence_only:
+        return False
+    return subsample_weight_kg is not None or remaining_weight_kg is not None
+
+
+def _both_weight_fields_present(row: CatchValues) -> bool:
+    return row.subsample_weight_kg is not None and row.remaining_weight_kg is not None
+
+
+def _weight_fully_missing(row: CatchValues) -> bool:
+    return (
+        not row.presence_only
+        and row.subsample_weight_kg is None
+        and row.remaining_weight_kg is None
+        and row.weight_flag is None
+    )
+
+
+def _sum_weight_column(rows: list[CatchValues], attr: str) -> float | None:
+    """Sum one weight column only when every row has that field present (min_count semantics)."""
+    values = [getattr(r, attr) for r in rows]
+    if any(v is None for v in values):
+        return None
+    return sum(values)
+
+
+def _merge_combined_weights(
+    weighted: list[CatchValues],
+) -> tuple[float | None, float | None, float | None, str | None, str | None]:
+    """
+    Merge weight fields across collection-split rows.
+
+    Returns (weight_kg, subsample_weight_kg, remaining_weight_kg, weight_flag, weight_null_reason).
+    """
+    if any(r.weight_flag == WEIGHT_FLAG_PARTIAL for r in weighted):
+        sub_out = next((r.subsample_weight_kg for r in weighted if r.subsample_weight_kg is not None), None)
+        rem_out = next((r.remaining_weight_kg for r in weighted if r.remaining_weight_kg is not None), None)
+        return None, sub_out, rem_out, WEIGHT_FLAG_PARTIAL, "weight_partial"
+
+    if len(weighted) > 1 and any(_weight_fully_missing(r) for r in weighted):
+        return None, None, None, None, "weights_missing"
+
+    if len(weighted) > 1 and not all(_both_weight_fields_present(r) for r in weighted):
+        return None, None, None, None, "weights_missing"
+
+    sub_w = _sum_weight_column(weighted, "subsample_weight_kg")
+    rem_w = _sum_weight_column(weighted, "remaining_weight_kg")
+    weight_kg, weight_flag, sub_out, rem_out = resolve_weights(sub_w, rem_w)
+    weight_reason = None if weight_kg is not None else "weights_missing"
+    if weight_flag == WEIGHT_FLAG_PARTIAL:
+        weight_reason = "weight_partial"
+    return weight_kg, sub_out, rem_out, weight_flag, weight_reason
+
+
 @dataclass(frozen=True)
 class CatchValues:
     species: str
@@ -91,6 +151,7 @@ class CatchValues:
     weight_flag: str | None
     presence_only: bool
     weight_null_reason: str | None
+    weight_present: bool
 
 
 def parse_catch_row(row: Mapping[str, Any]) -> CatchValues | None:
@@ -121,6 +182,7 @@ def parse_catch_row(row: Mapping[str, Any]) -> CatchValues | None:
             weight_flag=None,
             presence_only=True,
             weight_null_reason="presence_only",
+            weight_present=False,
         )
 
     weight_kg, weight_flag, sub_out, rem_out = resolve_weights(sub_w, rem_w)
@@ -141,15 +203,12 @@ def parse_catch_row(row: Mapping[str, Any]) -> CatchValues | None:
         weight_flag=weight_flag,
         presence_only=False,
         weight_null_reason=weight_reason if weight_flag != WEIGHT_FLAG_PARTIAL else "weight_partial",
+        weight_present=_weight_present_from_components(
+            presence_only=False,
+            subsample_weight_kg=sub_out,
+            remaining_weight_kg=rem_out,
+        ),
     )
-
-
-def _sum_present_weights(values: Iterable[float | None]) -> float | None:
-    """Sum weight components; return None when no row contributed (never coerce to 0)."""
-    present = [v for v in values if v is not None]
-    if not present:
-        return None
-    return sum(present)
 
 
 def merge_catch_values(rows: list[CatchValues]) -> CatchValues:
@@ -183,30 +242,13 @@ def merge_catch_values(rows: list[CatchValues]) -> CatchValues:
                     weight_flag=single.weight_flag,
                     presence_only=False,
                     weight_null_reason=single.weight_null_reason,
+                    weight_present=single.weight_present,
                 )
             return single
-        any_partial = any(r.weight_flag == WEIGHT_FLAG_PARTIAL for r in weighted)
-        if any_partial:
-            sub_out = next((r.subsample_weight_kg for r in weighted if r.subsample_weight_kg is not None), None)
-            rem_out = next((r.remaining_weight_kg for r in weighted if r.remaining_weight_kg is not None), None)
-            return CatchValues(
-                species=species,
-                itis_tsn=tsn,
-                subsample_count=subsample_count,
-                count_raised_est=None,
-                count_raised_est_null_reason="raising_weights_incomplete",
-                weight_kg=None,
-                subsample_weight_kg=sub_out,
-                remaining_weight_kg=rem_out,
-                weight_flag=WEIGHT_FLAG_PARTIAL,
-                presence_only=False,
-                weight_null_reason="weight_partial",
-            )
-        sub_w = _sum_present_weights(r.subsample_weight_kg for r in weighted)
-        rem_w = _sum_present_weights(r.remaining_weight_kg for r in weighted)
-        weight_kg, weight_flag, sub_out, rem_out = resolve_weights(sub_w, rem_w)
+        weight_kg, sub_out, rem_out, weight_flag, weight_reason = _merge_combined_weights(weighted)
         raised, raised_reason = estimate_count_raised(subsample_count, sub_out, rem_out)
-        weight_reason = None if weight_kg is not None else "weights_missing"
+        if weight_flag == WEIGHT_FLAG_PARTIAL:
+            raised, raised_reason = None, "raising_weights_incomplete"
         return CatchValues(
             species=species,
             itis_tsn=tsn,
@@ -219,6 +261,11 @@ def merge_catch_values(rows: list[CatchValues]) -> CatchValues:
             weight_flag=weight_flag,
             presence_only=False,
             weight_null_reason=weight_reason,
+            weight_present=_weight_present_from_components(
+                presence_only=False,
+                subsample_weight_kg=sub_out,
+                remaining_weight_kg=rem_out,
+            ),
         )
     counts = [r.subsample_count for r in presence if r.subsample_count is not None]
     return CatchValues(
@@ -233,6 +280,7 @@ def merge_catch_values(rows: list[CatchValues]) -> CatchValues:
         weight_flag=None,
         presence_only=True,
         weight_null_reason="presence_only",
+        weight_present=False,
     )
 
 
@@ -279,4 +327,5 @@ def catch_values_to_record(haul_id: str, merged: CatchValues) -> dict[str, Any]:
         "weight_flag": merged.weight_flag,
         "presence_only": merged.presence_only,
         "weight_null_reason": merged.weight_null_reason,
+        "weight_present": merged.weight_present,
     }
