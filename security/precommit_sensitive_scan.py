@@ -42,6 +42,9 @@ SKIP_PREFIXES = (
     "data/processed/",
 )
 
+# Published Natural Earth reference shoreline (public domain); not vessel/survey coordinates.
+SHORELINE_REFERENCE_PREFIX = "data/reference/shoreline/"
+
 TEXT_SUFFIXES = {
     ".py",
     ".md",
@@ -90,6 +93,15 @@ def should_skip(rel: str) -> bool:
     return any(rel == p.rstrip("/") or rel.startswith(p) for p in SKIP_PREFIXES)
 
 
+def read_text_for_scan(rel: str, path: Path, max_bytes: int = 2_000_000) -> str | None:
+    if rel.startswith(SHORELINE_REFERENCE_PREFIX):
+        try:
+            return path.read_text(encoding="utf-8")
+        except OSError:
+            return None
+    return read_text_limited(path, max_bytes=max_bytes)
+
+
 def read_text_limited(path: Path, max_bytes: int = 2_000_000) -> str | None:
     try:
         data = path.read_bytes()[:max_bytes]
@@ -119,7 +131,7 @@ def scan_file(rel: str) -> list[str]:
     if suffix not in TEXT_SUFFIXES and path.name not in {".env", "Makefile"}:
         return []
 
-    text = read_text_limited(path)
+    text = read_text_for_scan(rel, path)
     if text is None:
         return []
 
@@ -127,6 +139,9 @@ def scan_file(rel: str) -> list[str]:
     for kind, pattern in CREDENTIAL_PATTERNS:
         if pattern.search(text):
             hits.append(f"credential:{kind}")
+
+    if rel.startswith(SHORELINE_REFERENCE_PREFIX):
+        return hits
 
     instrument_fixture = rel.startswith("tests/fixtures/instrument_data/")
     if suffix in {".csv", ".tsv"} and (

@@ -15,16 +15,21 @@ from fishai.ingestion.sources import attribution_for, require_approved
 
 SOURCE_MODULE = "wcofs"
 
-S3_BASE = "https://noaa-nos-ofs-pds.s3.amazonaws.com/wcofs/netcdf"
 THREDDS_BASE = "https://opendap.co-ops.nos.noaa.gov/thredds/dodsC/NOAA/WCOFS/MODELS"
 
 NOWCAST_LEADS = tuple(f"n{k:03d}" for k in range(3, 25, 3))
 FORECAST_LEADS = tuple(f"f{k:03d}" for k in range(3, 73, 3))
 
 
-def _fields_url_s3(day: dt.date, lead: str) -> str:
-    ymd = day.strftime("%Y%m%d")
-    return f"{S3_BASE}/{day:%Y/%m/%d}/wcofs.t03z.{ymd}.fields.{lead}.nc"
+def _fields_url_s3(day: dt.date, lead: str, *, list_keys=None) -> str:
+    from fishai.ingestion.physics.wcofs_pds_store import _s3_url, resolve_fields_key
+
+    if list_keys is None:
+        from fishai.ingestion.physics.wcofs_pds_s3_list import list_keys_under_prefix
+
+        list_keys = list_keys_under_prefix
+    key = resolve_fields_key(day, lead, list_keys)
+    return _s3_url(key)
 
 
 def _fields_url_thredds(day: dt.date, lead: str) -> str:
@@ -36,11 +41,21 @@ def cycle_available(
     date: dt.date,
     *,
     head_fn: Callable[[str], bool] | None = None,
+    list_keys=None,
 ) -> bool:
-    """Return True if the 03z cycle ``fields.n024`` is reachable on S3."""
+    """Return True if the 03z cycle ``fields.n024`` is listed on the public PDS."""
     require_approved("wcofs")
+    from fishai.ingestion.physics.wcofs_pds_store import CycleNotAvailable, _s3_url, resolve_fields_key
+
     check = head_fn or head_ok
-    return check(_fields_url_s3(date, "n024"))
+    try:
+        if list_keys is not None:
+            key = resolve_fields_key(date, "n024", list_keys)
+            return check(_s3_url(key))
+        url = _fields_url_s3(date, "n024", list_keys=list_keys)
+        return check(url)
+    except CycleNotAvailable:
+        return False
 
 
 def _subset_bbox(ds: xr.Dataset, bbox: tuple[float, float, float, float]) -> xr.Dataset:
@@ -67,9 +82,10 @@ def _fetch_one(
     *,
     get_fn: Callable[..., bytes] | None = None,
     prefer_s3: bool = True,
+    list_keys=None,
 ) -> xr.Dataset:
     get_fn = get_fn or get_bytes
-    urls = [_fields_url_s3(day, lead), _fields_url_thredds(day, lead)]
+    urls = [_fields_url_s3(day, lead, list_keys=list_keys), _fields_url_thredds(day, lead)]
     if not prefer_s3:
         urls = list(reversed(urls))
     last_err: Exception | None = None
@@ -90,6 +106,7 @@ def fetch_cycle(
     *,
     get_fn: Callable[..., bytes] | None = None,
     head_fn: Callable[[str], bool] | None = None,
+    list_keys=None,
 ) -> xr.Dataset:
     """
     Fetch and merge WCOFS ``fields`` subsets for the pilot bbox.
@@ -98,13 +115,13 @@ def fetch_cycle(
     for the first lead.
     """
     entry = require_approved("wcofs")
-    if not cycle_available(date, head_fn=head_fn):
+    if not cycle_available(date, head_fn=head_fn, list_keys=list_keys):
         raise FileNotFoundError(f"WCOFS cycle not available for {date}")
 
     datasets: list[xr.Dataset] = []
     ref_raw: xr.Dataset | None = None
     for lead in leads:
-        sub = _fetch_one(date, lead, bbox, get_fn=get_fn)
+        sub = _fetch_one(date, lead, bbox, get_fn=get_fn, list_keys=list_keys)
         if ref_raw is None:
             ref_raw = sub
         lh = int(lead[1:])

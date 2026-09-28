@@ -53,9 +53,19 @@ def _write_mini_wcofs_bytes(n_eta: int = 6, n_xi: int = 6, n_s: int = 4) -> byte
     return data
 
 
+def _list_keys_for_day(day: dt.date, lead: str = "n024") -> list[str]:
+    ymd = day.strftime("%Y%m%d")
+    return [f"wcofs/netcdf/{day:%Y/%m/%d}/wcofs.t03z.{ymd}.fields.{lead}.nc"]
+
+
 def test_cycle_available_uses_injected_head() -> None:
-    assert cycle_available(dt.date(2026, 9, 1), head_fn=lambda _u: True)
-    assert not cycle_available(dt.date(2026, 9, 1), head_fn=lambda _u: False)
+    day = dt.date(2026, 9, 1)
+
+    def list_keys(_prefix: str) -> list[str]:
+        return _list_keys_for_day(day)
+
+    assert cycle_available(day, head_fn=lambda _u: True, list_keys=list_keys)
+    assert not cycle_available(day, head_fn=lambda _u: False, list_keys=list_keys)
 
 
 def test_fetch_cycle_subset_and_features() -> None:
@@ -65,12 +75,18 @@ def test_fetch_cycle_subset_and_features() -> None:
     def fake_get(url: str, **kwargs: Any) -> bytes:  # noqa: ARG001
         return payload
 
+    day = dt.date(2026, 9, 28)
+
+    def list_keys(_prefix: str) -> list[str]:
+        return _list_keys_for_day(day, "n024") + _list_keys_for_day(day, "n003")
+
     ds = fetch_cycle(
-        dt.date(2026, 9, 28),
+        day,
         ["n003"],
         bbox,
         get_fn=fake_get,
         head_fn=lambda _u: True,
+        list_keys=list_keys,
     )
     assert "bottom_temp" in ds
     assert "mld_m" in ds
