@@ -12,6 +12,7 @@ from typing import Any
 
 import numpy as np
 import pytest
+import xarray as xr
 
 from fishai.ingestion.physics import http_util
 from fishai.ingestion.physics.sources import wcofs as wcofs_src
@@ -29,9 +30,16 @@ from fishai.ingestion.physics.wcofs_daily import (
     step_provenance_record,
     wait_for_primary_cycle,
 )
-from fishai.ingestion.physics.wcofs_pull_log import DEFAULT_PULL_LOG_DIR, resolve_pull_log_dir, sha256_bytes
-from fishai.ingestion.physics.wcofs_store import DEFAULT_STORE_ROOT, package_wcofs_cycle
+from fishai.ingestion.physics.wcofs_pull_log import (
+    DAY_TOMBSTONE_RECORD_TYPE,
+    DEFAULT_PULL_LOG_DIR,
+    load_day_tombstone,
+    resolve_pull_log_dir,
+    sha256_bytes,
+)
+from fishai.ingestion.physics.wcofs_store import DEFAULT_STORE_ROOT, package_wcofs_cycle, write_wcofs_cycle
 from fishai.ingestion.sources import REPO_ROOT
+from fishai.physics.store import WcofsDayFailed, latest_wcofs_cycle_date, open_wcofs_cycle
 from wcofs_fixtures import write_mini_wcofs_bytes
 
 _FIELDS_URL = re.compile(r"wcofs\.t03z\.(\d{8})\.fields\.(\w+)\.nc")
@@ -556,3 +564,139 @@ def test_cli_wcofs_daily_dry_run(tmp_path: Path, capsys, repo_provenance_snapsho
     assert code == 0
     assert "requests=" in capsys.readouterr().out
     assert _provenance_tree_snapshot() == repo_provenance_snapshot
+
+
+def test_run_wcofs_daily_total_failure_writes_tombstone_not_zarr(tmp_path: Path) -> None:
+    target = dt.date(2026, 9, 28)
+    prev = target - dt.timedelta(days=1)
+    write_wcofs_cycle(_synthetic_merged_for_reader(), prev, tmp_path)
+
+    plan = run_wcofs_daily(
+        target,
+        out_root=tmp_path,
+        dry_run=False,
+        wait_for_cycle=False,
+        head_fn=lambda _u: False,
+    )
+    assert plan.pull_log is not None
+    tombstone = load_day_tombstone(plan.pull_log)
+    assert tombstone is not None
+    assert tombstone["record_type"] == DAY_TOMBSTONE_RECORD_TYPE
+    assert tombstone["status"] == "failed"
+    assert tombstone["reason"] == "wcofs_nowcast_missing"
+    assert plan.zarr_path is not None and not plan.zarr_path.is_dir()
+
+    with pytest.raises(WcofsDayFailed) as excinfo:
+        open_wcofs_cycle(target, store_root=tmp_path)
+    assert excinfo.value.reason == "wcofs_nowcast_missing"
+    with pytest.raises(WcofsDayFailed):
+        latest_wcofs_cycle_date(tmp_path, as_of=target)
+    open_wcofs_cycle(prev, store_root=tmp_path)
+
+
+def test_run_wcofs_daily_partial_failure_still_writes_zarr(tmp_path: Path) -> None:
+    target = dt.date(2026, 9, 28)
+
+    def head(url: str) -> bool:
+        return target.strftime("%Y/%m/%d") in url and "fields.n024.nc" in url
+
+    payload_cache: dict[tuple[dt.date, str], bytes] = {}
+
+    def get_fn(url: str, **kwargs: Any) -> bytes:  # noqa: ARG001
+        day, lead = _parse_fields_url(url)
+        key = (day, lead)
+        if lead == "f003":
+            raise IOError("simulated partial outage")
+        if key not in payload_cache:
+            payload_cache[key] = write_mini_wcofs_bytes(cycle_date=day, lead_tag=lead)
+        return payload_cache[key]
+
+    def head_meta(url: str) -> dict[str, Any]:  # noqa: ARG001
+        return {"status": 200, "etag": "mock", "size_bytes": 100}
+
+    plan = run_wcofs_daily(
+        target,
+        out_root=tmp_path,
+        dry_run=False,
+        wait_for_cycle=False,
+        head_fn=head,
+        get_fn=get_fn,
+        head_meta_fn=head_meta,
+    )
+    assert plan.zarr_path is not None and plan.zarr_path.is_dir()
+    assert plan.pull_log is not None and load_day_tombstone(plan.pull_log) is None
+    import xarray as xr
+
+    packaged = xr.open_zarr(plan.zarr_path, consolidated=False)
+    assert 0 in packaged.valid_offset_h.values
+    assert 3 not in packaged.valid_offset_h.values
+
+
+def test_utc_today_uses_utc_not_local_date(monkeypatch: pytest.MonkeyPatch) -> None:
+    from fishai.ingestion.physics.wcofs_pull_log import utc_today
+
+    fixed = dt.datetime(2026, 9, 28, 23, 30, tzinfo=dt.timezone.utc)
+    monkeypatch.setattr(
+        "fishai.ingestion.physics.wcofs_pull_log.datetime",
+        type(
+            "FakeDatetime",
+            (),
+            {"now": staticmethod(lambda tz=None: fixed)},
+        ),
+    )
+    assert utc_today() == dt.date(2026, 9, 28)
+
+
+def test_cli_wcofs_daily_default_date_is_utc(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    import fishai.ingestion.physics.cli as cli_mod
+
+    captured: list[dt.date] = []
+
+    def _fake_run(target: dt.date, **kwargs: Any) -> DailyPlan:
+        captured.append(target)
+        return plan_daily(
+            target,
+            out_root=kwargs["out_root"],
+            primary_available=True,
+            cycle_exists_fn=lambda _d: True,
+        )
+
+    monkeypatch.setattr("fishai.ingestion.physics.wcofs_daily.run_wcofs_daily", _fake_run)
+    monkeypatch.setattr(
+        "fishai.ingestion.physics.cli.utc_today",
+        lambda: dt.date(2026, 9, 28),
+    )
+
+    code = cli_mod.main(["wcofs-daily", "--out", str(tmp_path), "--dry-run"])
+    assert code == 0
+    assert captured == [dt.date(2026, 9, 28)]
+
+
+def _synthetic_merged_for_reader() -> Any:
+    n_s, n_eta, n_xi = 4, 3, 3
+    s_rho = (np.arange(1, n_s + 1) - n_s - 0.5) / n_s
+    lat = np.linspace(33.0, 33.1, n_eta)
+    lon = np.linspace(-120.0, -119.9, n_xi)
+    lat2d = np.broadcast_to(lat[:, None], (n_eta, n_xi))
+    lon2d = np.broadcast_to(lon[None, :], (n_eta, n_xi))
+    h = np.full((n_eta, n_xi), 100.0)
+    temp = np.linspace(10, 18, n_s)[:, None, None] * np.ones((n_s, n_eta, n_xi))
+    salt = np.full((n_s, n_eta, n_xi), 33.5)
+    base = xr.Dataset(
+        {
+            "temp": (("s_rho", "eta_rho", "xi_rho"), temp),
+            "salt": (("s_rho", "eta_rho", "xi_rho"), salt),
+            "zeta": (("eta_rho", "xi_rho"), np.zeros((n_eta, n_xi))),
+            "h": (("eta_rho", "xi_rho"), h),
+            "mask_rho": (("eta_rho", "xi_rho"), np.ones((n_eta, n_xi))),
+            "lat_rho": (("eta_rho", "xi_rho"), lat2d),
+            "lon_rho": (("eta_rho", "xi_rho"), lon2d),
+            "hc": 50.0,
+            "s_rho": ("s_rho", s_rho),
+            "Cs_r": ("s_rho", np.linspace(-1, 0, n_s)),
+        }
+    )
+    merged = base.expand_dims(lead_hours=[3])
+    merged.attrs["attribution"] = "WCOFS"
+    merged.attrs["source"] = "wcofs"
+    return merged

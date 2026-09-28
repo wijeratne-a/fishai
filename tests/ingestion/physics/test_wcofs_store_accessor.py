@@ -11,7 +11,15 @@ import xarray as xr
 
 from fishai.ingestion.physics.wcofs_store import package_wcofs_cycle, write_wcofs_cycle
 from fishai.ingestion.sources import attribution_for
-from fishai.physics.store import CycleNotAvailable, list_wcofs_cycles, open_wcofs_cycle
+from fishai.ingestion.physics.wcofs_pull_log import build_day_tombstone_record
+from fishai.ingestion.physics.wcofs_pull_log import append_pull_log, pull_log_path, resolve_pull_log_dir
+from fishai.physics.store import (
+    CycleNotAvailable,
+    WcofsDayFailed,
+    latest_wcofs_cycle_date,
+    list_wcofs_cycles,
+    open_wcofs_cycle,
+)
 
 
 def _snapshot_files(root: Path) -> dict[str, tuple[int, int]]:
@@ -91,3 +99,21 @@ def test_open_never_calls_network(tmp_path: Path, monkeypatch: pytest.MonkeyPatc
 def test_package_wcofs_cycle_depth_positive_down() -> None:
     packaged = package_wcofs_cycle(_synthetic_merged(), dt.date(2026, 9, 28))
     assert float(packaged["z"].min()) >= 0
+
+
+def test_tombstoned_day_raises_without_falling_back_to_older_zarr(tmp_path: Path) -> None:
+    prev = dt.date(2026, 9, 27)
+    failed = dt.date(2026, 9, 28)
+    write_wcofs_cycle(_synthetic_merged(), prev, tmp_path)
+    log_dir = resolve_pull_log_dir(tmp_path)
+    log_path = pull_log_path(failed.strftime("%Y%m%d"), log_dir=log_dir)
+    append_pull_log(
+        build_day_tombstone_record(failed, reason="wcofs_nowcast_missing"),
+        log_path=log_path,
+    )
+    with pytest.raises(WcofsDayFailed) as excinfo:
+        open_wcofs_cycle(failed, store_root=tmp_path)
+    assert excinfo.value.reason == "wcofs_nowcast_missing"
+    with pytest.raises(WcofsDayFailed):
+        latest_wcofs_cycle_date(tmp_path, as_of=failed)
+    open_wcofs_cycle(prev, store_root=tmp_path)
