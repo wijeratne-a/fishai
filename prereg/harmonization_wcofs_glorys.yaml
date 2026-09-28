@@ -1,6 +1,6 @@
 # Pre-registration: WCOFS vs GLORYS harmonization holdout scoring (pilot overlap window).
 # Locked before any test-split observational pairing or model scoring runs.
-# Threshold pass/degraded values are owned by auditbot1 and are not set here.
+# Nowcast-forcing PASS/DEGRADED/FAIL gates are defined in nowcast_forcing_grading below.
 
 schema_version: 1
 
@@ -90,36 +90,51 @@ harmonization_wcofs_glorys:
         differ only in horizontal grid and mapping.
 
   glorys_reference_dataset:
-    copernicus_product_id: cmems_mod_glo_phy_myint_0.083deg_P1D-m
-    product_kind: interim
+    selection_rule: date_based_source_product_column
+    note: >-
+      Matches the existing CUFES covariate source_product column rule: finished
+      reanalysis through 2021-06-30, interim from 2021-07-01 onward.
+    products_by_calendar_date:
+      - copernicus_product_id: cmems_mod_glo_phy_my_0.083deg_P1D-m
+        through_date: "2021-06-30"
+      - copernicus_product_id: cmems_mod_glo_phy_myint_0.083deg_P1D-m
+        from_date: "2021-07-01"
+    pilot_harmonization_window_uses: cmems_mod_glo_phy_myint_0.083deg_P1D-m
     coverage: every calendar date in fit_start through test_end (fit and test splits)
-    finished_reanalysis_note: >-
-      Finished GLORYS reanalysis (cmems_mod_glo_phy_my_0.083deg_P1D-m) ends
-      2021-06-30; see known_limitations.
 
   variables:
-    - T3m
-    - S3m
-    - MLD_m
-    - sst_grad
-    - front_distance_km
-    - upwelling
-    - u_surf
-    - v_surf
-
-  input_check_grading:
-    variable_grading_status:
-      T3m: graded
-      S3m: graded
-      MLD_m: graded
-      sst_grad: graded
-      front_distance_km: graded
-      upwelling: shared_forcing
-      u_surf: shared_forcing
-      v_surf: shared_forcing
+    - name: T3m
+      role: graded_input
+    - name: S3m
+      role: graded_input
+    - name: MLD_m
+      role: graded_input
+    - name: sst_grad
+      role: graded_input
+    - name: front_distance_km
+      role: graded_input
+    - name: upwelling
+      role: shared_forcing
+      graded: false
+      note: >-
+        Reported when a single wind product covers CUFES training years and daily
+        nowcasts; never graded because both GLORYS and WCOFS paths use the same wind
+        (comparison would only test regridding).
+      blank_when:
+        reason: no_consistent_wind_product
+        pilot_model_action: drop_upwelling_from_pilot_model
+        exclude_events: false
+    - name: u_surf
+      role: report_only
+    - name: v_surf
+      role: report_only
 
   models_scored:
     scoring_split: test_only
+    graded_model_row_for_forcing_gate: wcofs_coarsened_mapped
+    forcing_gate_note: >-
+      Only wcofs_coarsened_mapped receives PASS/DEGRADED/FAIL nowcast-forcing gates.
+      Other model rows and HF radar remain report-only diagnostics.
     candidates:
       - id: wcofs_native
         description: Native ~4 km WCOFS grid and vertical handling per ingestion store.
@@ -135,6 +150,7 @@ harmonization_wcofs_glorys:
           WCOFS coarsened to the GLORYS grid plus a bias/quantile-style correction
           fitted on the fit split only (fit_start through fit_end).
         correction_fit_window: fit
+        forcing_gate_role: graded
       - id: glorys
         description: GLORYS reanalysis on its native grid (training/hindcast product).
 
@@ -181,6 +197,21 @@ harmonization_wcofs_glorys:
       match:
         spatial: nearest_glorys_cell
         temporal: same_day_daily_mean
+      independence:
+        wcofs_assimilates: false
+        citation: NOAA Tech Report CO-OPS 097, p.17
+        auditor_accepted: true
+      forcing_gate:
+        observation: buoy_temperature_at_0.494_m
+        grades_model_row: wcofs_coarsened_mapped
+        strata:
+          - pooled
+          - nearshore
+          - offshore
+        gradability:
+          min_matched_daily_values: 100
+          min_distinct_buoys: 3
+          not_gradable_label: not_gradable
     sccoos_hf_radar:
       variables:
         - u_surf
@@ -189,37 +220,68 @@ harmonization_wcofs_glorys:
       quality_mask:
         hdop_max: 1.25
         min_sites: 2
-    spray_glider_profiles:
-      erddap:
-        base_url: https://spraydata.ucsd.edu/erddap/tabledap
-        datasets:
-          - binnedCUGN80
-          - binnedCUGN90
-        license: free use and redistribution
-      pilot_bbox:
-        lat_min: 32
-        lat_max: 35
-        lon_min: -121
-        lon_max: -117
-      cache_parquet: artifacts/harmonization/spray_glider/pilot_subset.parquet
-      min_matched_profiles: 100
-      min_distinct_missions: 3
-      grades_model_row: wcofs_coarsened_mapped
+      forcing_gate_role: report_only
+      report_only_reason: >-
+        HF radar is assimilated by WCOFS; u_surf and v_surf are reported but never
+        graded for nowcast forcing.
+    scripps_spray_gliders:
+      datasets:
+        - id: binnedCUGN80
+          license: free_to_use_and_redistribute
+        - id: binnedCUGN90
+          license: free_to_use_and_redistribute
+      independence:
+        accepted_independent_of_wcofs: true
+        citation: NOAA Tech Report CO-OPS 097
+        auditor_accepted: true
+      forcing_gate:
+        grades_model_row: wcofs_coarsened_mapped
+        never_grades_model_rows:
+          - glorys
       variables_graded:
-        MLD_m: graded
-        T3m: proxy_for_3m
-        S3m: proxy_for_3m
-        doxy: reported_only
-      glorys_comparison_label: not_independent_reported_only
-      grading_cutoffs_note: >-
-        Glider pass/degraded uses glider_rmse_ratio_* (same thresholds as buoys),
-        per-variable glider_bias_abs_pass_c_T3m_10m (0.5 C), S3m_10m (0.1), MLD_m (10 m),
-        and pearson_r_margin_below_glorys; recorded in pass_fail_thresholds.cutoffs.
-    ioos_glider_dac:
-      status: excluded
-      reason: >-
-        IOOS Glider DAC remains disabled for harmonization; Spray ERDDAP profiles
-        are used instead (see spray_glider_profiles).
+        - id: MLD_m
+        - id: temperature
+          depth_m: 10
+          label: stand_in_for_T3m
+        - id: salinity
+          depth_m: 10
+          label: stand_in_for_S3m
+      variables_report_only:
+        - doxy
+      model_sampling:
+        rule: >-
+          Model temperature, salinity, and MLD at the glider profile time and
+          position; T and S at 10 m are interpolated from native s-levels (stand-in
+          for 3 m covariates).
+      gradability:
+        min_matched_profiles: 100
+        min_distinct_missions: 3
+      mld_definition:
+        module: fishai.ingestion.physics.vertical
+        function: mld
+        zref_m: 10
+        dT_C: 0.2
+        interpolated_threshold: true
+        profile_not_reaching_drop:
+          value: null
+          reason: mld_not_reached
+          exclude_from_mld_grading: true
+      tests:
+        rmse_ratio_to_glorys:
+          same_rule_as: buoy_gate
+          known_limitation: >-
+            GLORYS may assimilate glider data, making a pass harder for WCOFS
+            (conservative bias).
+        absolute_bias_limits:
+          temperature_10m_C: 0.5
+          salinity_10m: 0.1
+          MLD_m: 10
+          source: auditor_judgment_not_published
+          pass: within_limit
+          degraded: between_1x_and_2x_limit
+          fail: above_2x_limit
+        pearson_r:
+          same_rule_as: buoy_gate
 
   independence:
     assimilated_sources_registry: config/assimilated_sources.yaml
@@ -272,8 +334,8 @@ harmonization_wcofs_glorys:
           in the harmonization score report under insufficient_model_coverage, split
           nearshore/offshore (using the matched GLORYS cell nearshore flag).
       pass_fail_scope: >-
-        auditbot1 pass/degraded cutoffs (when set) apply to this common-support
-        observation set only, not to row-specific supersets.
+        auditbot1 pass/degraded cutoffs apply to this common-support observation
+        set only, not to row-specific supersets.
       test_requirement: >-
         Scoring tests must assert that every model row uses the same observation
         count n within each metric stratum (season × nearshore/offshore × variable).
@@ -281,6 +343,7 @@ harmonization_wcofs_glorys:
   map_product_labeling:
     required_label: egg encounter likelihood
     forbidden_labels:
+      - spawning habitat
       - spawning locations
       - adult distribution
       - adult fish presence
@@ -288,9 +351,21 @@ harmonization_wcofs_glorys:
       Harmonization and nowcast map products describe egg-stage encounter likelihood
       per the CUFES delta contract, not spawning habitat maps or adult distributions.
 
+  frozen_shoreline_reference:
+    path: data/reference/shoreline/ne_10m_land_pilot_clip.json
+    sha256: &frozen_pilot_shoreline_file_sha256 2f677a16aa6c8470846d813eda6d82f2656dea2d697b1511a4c878542d20996c
+    frozen: true
+    pr7_source_commit: 3d49b43
+    pr7_branch: cursor/wcofs-glorys-overlap-missing-by-field-60e8
+    note: >-
+      Auditor-cleared pilot shoreline vendored in PR #7; Bot4 scoring (PR #10) and
+      other consumers must compare against frozen_shoreline_reference.sha256, not
+      hard-coded hashes.
+
   nearshore:
     supplied_by: bot2
-    bot2_pr: "PR #7 @ cc26ab4"
+    bot2_pr: "PR #7 @ 3d49b43"
+    frozen_shoreline_reference_key: frozen_shoreline_reference
     shoreline_source: "Natural Earth ne_10m_land"
     shoreline_version: "5.1.1"
     license: "public domain"
@@ -301,32 +376,129 @@ harmonization_wcofs_glorys:
       lon_max: -116
       includes_channel_islands: true
     shoreline_path: data/reference/shoreline/ne_10m_land_pilot_clip.json
+    shoreline_sha256: *frozen_pilot_shoreline_file_sha256
+    shoreline_simplification_note: >-
+      Natural Earth 10 m land layer (ne_10m_land) clipped to the pilot box. PR #7
+      (3d49b43) uses an unsimplified clip-only shoreline (no Douglas–Peucker); fidelity
+      work reports 0 GLORYS cells whose nearshore flag differs from the full coastline.
     cutoff_km: 20
     distance: >-
       Geodesic on WGS84 from each GLORYS cell centre to nearest mainland or island
       shoreline; nearshore when distance is cutoff_km or less.
-    shoreline_sha256: TO_BE_SET_BEFORE_SCORING
-    shoreline_simplification_check: TO_BE_SET_BEFORE_SCORING
+    shoreline_simplification_check:
+      method: none_bbox_clip_only
+      shoreline_source: Natural Earth ne_10m_land
+      shoreline_version: "5.1.1"
+      note: >-
+        none applied; the full-resolution clip differs from the source by 0 km and
+        changes 0 of the near-coast flags (simplification would have flipped 211 cells,
+        per the #7 check at 3d49b43).
+      max_coastline_displacement_km: 0
+      nearshore_flag_mismatches_vs_full_resolution: 0
+      rejected_trial:
+        description: simplified ~400 vertices
+        nearshore_flag_mismatches: 211
+      file_sha256: *frozen_pilot_shoreline_file_sha256
+      source_commit: 3d49b43
     simplification_check_requirement: >-
-      Records max coastline displacement and the count of GLORYS cells whose
-      nearshore flag differs from full-resolution shoreline; required count is 0.
-      bot2 is still testing whether simplified saved polygons change any nearshore
-      flags; shoreline_sha256 may change until the check is finalized.
+      Production shoreline uses none_bbox_clip_only; nearshore flags must match
+      full-resolution coastline (0 mismatches). file_sha256 must match
+      frozen_shoreline_reference.sha256.
     scoring_gate_note: >-
-      Scoring must refuse while shoreline_sha256 or shoreline_simplification_check
-      remain TO_BE_SET_BEFORE_SCORING.
+      frozen_shoreline_reference and shoreline_simplification_check are locked;
+      path and sha256 are authoritative for PR #10 shoreline checks.
     scoring_nearshore_assignment: >-
       Every NDBC buoy observation and SCCOOS HF radar grid cell inherits the
       nearshore/offshore flag of the GLORYS cell it is matched to for scoring, not
       its own geodesic distance to the coast. This rule applies identically to all
       four model rows in metrics strata, including native ~4 km WCOFS (diagnostic).
 
-  pass_fail_thresholds:
-    owner: auditbot1
-    cutoffs: TO_BE_SET_BEFORE_SCORING
-    gating: >-
-      No production or audit pass/degraded gating until auditbot1 replaces cutoffs;
-      metrics are reported descriptively only while cutoffs remain unset.
+  nowcast_forcing_grading:
+    graded_model_row: wcofs_coarsened_mapped
+    verdict_rank_worst_first:
+      - UNKNOWN
+      - FAIL
+      - DEGRADED
+      - PASS
+    combination_rules:
+      per_stratum: worst_verdict_across_checks
+      no_gradable_independent_check:
+        cap_verdict: DEGRADED
+        reason: no_independent_obs_check
+      no_independent_validation_source:
+        all_strata_verdict: UNKNOWN
+        reason: no_independent_validation
+    buoy_gate:
+      rmse_ratio_to_glorys:
+        pass:
+          ratio_max: 1.2
+          bootstrap_upper_95_max: 1.5
+        degraded:
+          ratio_min_exclusive: 1.2
+          ratio_max_inclusive: 1.5
+      absolute_bias_C:
+        pass_max: 0.5
+        degraded_min_exclusive: 0.5
+        degraded_max_inclusive: 1.0
+      pearson_r:
+        pass_min_vs_glorys_r: within_0.10
+        max_deficit_vs_glorys_r: 0.10
+        degraded_band: none
+      catch_all_fail_rule:
+        applies_when: >-
+          The stratum fails at least one metric PASS test and that metric does not
+          fall inside any defined DEGRADED band for that metric (RMSE ratio, absolute
+          bias, or Pearson r vs GLORYS).
+        verdict: UNKNOWN
+        reason: nowcast_forcing_failed_holdout
+        examples:
+          - >-
+            RMSE ratio point estimate <= 1.2 but bootstrap upper 95% > 1.5 (fails
+            ratio PASS pair; ratio not in (1.2, 1.5] degraded band).
+          - >-
+            Pearson r more than 0.10 below GLORYS r with no pearson_r degraded band.
+      per_stratum_aggregation: worst_verdict_across_metrics
+      fail_outcome:
+        verdict: UNKNOWN
+        reason: nowcast_forcing_failed_holdout
+    glider_gate:
+      inherits_tests_from: observations.scripps_spray_gliders.tests
+    graded_inputs_gate:
+      graded_variable_names:
+        - T3m
+        - S3m
+        - MLD_m
+        - sst_grad
+        - front_distance_km
+      refuse_to_run_if_any_missing_from_variables: true
+      reference_per_stratum: glorys_spatial_sd
+      rmse_vs_glorys_sd:
+        pass_max_multiple: 0.5
+        degraded_max_multiple: 1.0
+        fail_above_multiple: 1.0
+      fail_stratum_verdict: UNKNOWN
+      shared_forcing_variables_never_graded:
+        - upwelling
+      report_only_variables:
+        - u_surf
+        - v_surf
+
+  upwelling_lags:
+    applies_only_when: upwelling present in variables and not blanked
+    candidates:
+      - trailing_mean_days: 0
+      - trailing_mean_days: 7
+      - trailing_mean_days: 14
+      - trailing_mean_days: 28
+    window_end: day_before_event
+    no_other_lags: true
+    selection:
+      method: time_forward_cv_mean_out_of_fold_log_likelihood
+      fit_split_end: "2017-12-31"
+      frozen_before: "2018-01-01"
+      holdout_test_end: "2022-04-27"
+      never_reselect_after_freeze: true
+      auditor_accepted: true
 
   wet_fraction_reporting:
     scope: coarsened_wcofs_only

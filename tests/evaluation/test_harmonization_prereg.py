@@ -8,11 +8,17 @@ import pytest
 import yaml
 
 from fishai.evaluation.harmonization_prereg import (
+    FROZEN_PILOT_SHORELINE_REFERENCE_SHA256,
     HarmonizationPreregNotReadyError,
     PLACEHOLDER_TOKEN,
     assert_harmonization_prereg_ready_for_scoring,
+    assert_shoreline_simplification_check_valid,
+    frozen_shoreline_reference,
+    frozen_shoreline_reference_sha256,
+    is_valid_frozen_shoreline_sha256,
     load_harmonization_prereg,
     run_harmonization_scoring,
+    shoreline_simplification_check,
 )
 
 REPO = Path(__file__).resolve().parents[2]
@@ -104,7 +110,12 @@ def test_surface_definition_and_glorys_reference_dataset() -> None:
     assert "zeta" in surf["vertical_reference"]
     assert surf["sst"]["target_depth_below_surface_m"] == 0.494
     glorys = block["glorys_reference_dataset"]
-    assert glorys["copernicus_product_id"] == "cmems_mod_glo_phy_myint_0.083deg_P1D-m"
+    assert glorys["selection_rule"] == "date_based_source_product_column"
+    by_date = glorys["products_by_calendar_date"]
+    assert by_date[0]["through_date"] == "2021-06-30"
+    assert by_date[0]["copernicus_product_id"] == "cmems_mod_glo_phy_my_0.083deg_P1D-m"
+    assert by_date[1]["from_date"] == "2021-07-01"
+    assert by_date[1]["copernicus_product_id"] == "cmems_mod_glo_phy_myint_0.083deg_P1D-m"
     assert "scoring_nearshore_assignment" in block["nearshore"]
 
 
@@ -154,12 +165,11 @@ def test_native_wcofs_diagnostic_never_through_harmonization_map() -> None:
     assert native.get("role") == "diagnostic_only"
 
 
-def test_scoring_entry_point_raises_while_placeholders_unset() -> None:
+def test_scoring_entry_point_passes_prereg_gate_on_committed_doc() -> None:
     doc = load_harmonization_prereg(PREREG)
-    with pytest.raises(HarmonizationPreregNotReadyError, match="invalid or unset"):
-        assert_harmonization_prereg_ready_for_scoring(doc)
-    with pytest.raises(HarmonizationPreregNotReadyError, match="shoreline_sha256"):
-        run_harmonization_scoring(PREREG)
+    assert_harmonization_prereg_ready_for_scoring(doc)
+    ready = run_harmonization_scoring(PREREG, dry_run=True)
+    assert ready["status"] == "ready"
 
 
 def test_nearshore_bot2_pr7_fields_and_pending_placeholders() -> None:
@@ -172,51 +182,116 @@ def test_nearshore_bot2_pr7_fields_and_pending_placeholders() -> None:
     assert near["clip"]["lon_max"] == -116
     assert near["clip"]["includes_channel_islands"] is True
     assert near["shoreline_path"] == "data/reference/shoreline/ne_10m_land_pilot_clip.json"
+    assert near["shoreline_sha256"] == frozen_shoreline_reference_sha256(doc)
     assert near["cutoff_km"] == 20
     assert "Geodesic on WGS84" in near["distance"]
-    assert near["shoreline_sha256"] == PLACEHOLDER_TOKEN
-    assert near["shoreline_simplification_check"] == PLACEHOLDER_TOKEN
+    ref = frozen_shoreline_reference(doc)
+    assert ref["frozen"] is True
+    assert ref["path"] == near["shoreline_path"]
+    assert ref["pr7_source_commit"] == "3d49b43"
+    assert "Natural Earth 10 m land" in near["shoreline_simplification_note"]
+    assert "0 GLORYS cells" in near["shoreline_simplification_note"]
+    check = near["shoreline_simplification_check"]
+    assert check["method"] == "none_bbox_clip_only"
+    assert check["max_coastline_displacement_km"] == 0
+    assert "211 cells" in check["note"]
+    assert check["nearshore_flag_mismatches_vs_full_resolution"] == 0
 
 
-def test_scoring_entry_point_passes_gate_when_placeholders_replaced(tmp_path: Path) -> None:
+def test_frozen_shoreline_reference_sha256_required_and_well_formed() -> None:
     doc = load_harmonization_prereg(PREREG)
-    block = yaml.safe_load(yaml.dump(doc))["harmonization_wcofs_glorys"]
-    block["nearshore"]["shoreline_sha256"] = "deadbeef"
-    block["nearshore"]["shoreline_simplification_check"] = {
-        "max_coastline_displacement_m": 0.0,
-        "nearshore_flag_diff_cell_count": 0,
-    }
-    block["pass_fail_thresholds"]["cutoffs"] = {
-        "rmse_ratio_pass": 1.2,
-        "rmse_ratio_ci_upper_pass": 1.5,
-        "rmse_ratio_degraded_upper": 1.5,
-        "bias_abs_pass_c": 0.5,
-        "bias_abs_degraded_c": 1.0,
-        "pearson_r_margin_below_glorys": 0.10,
-        "min_matched_daily_values": 100,
-        "min_buoys": 3,
-        "input_rmse_pass_fraction_glorys_sd": 0.5,
-        "input_rmse_degraded_fraction_glorys_sd": 1.0,
-        "bootstrap_seed": 42,
-        "glider_rmse_ratio_pass": 1.2,
-        "glider_rmse_ratio_ci_upper_pass": 1.5,
-        "glider_rmse_ratio_degraded_upper": 1.5,
-        "glider_bias_abs_pass_c_T3m_10m": 0.5,
-        "glider_bias_abs_pass_c_S3m_10m": 0.1,
-        "glider_bias_abs_pass_c_MLD_m": 10.0,
-    }
-    block["pass_fail_thresholds"]["combination_rule"] = "worst-of"
-    patched = {"schema_version": 1, "harmonization_wcofs_glorys": block}
-    path = tmp_path / "prereg.yaml"
-    path.write_text(yaml.dump(patched), encoding="utf-8")
-    assert_harmonization_prereg_ready_for_scoring(patched)
-    ready = run_harmonization_scoring(path, dry_run=True)
-    assert ready["status"] == "ready"
+    sha = frozen_shoreline_reference_sha256(doc)
+    assert is_valid_frozen_shoreline_sha256(sha)
+    assert sha == FROZEN_PILOT_SHORELINE_REFERENCE_SHA256
+    assert sha.startswith("2f677a16") and sha.endswith("20996c")
+    broken = yaml.safe_load(yaml.dump(doc))
+    del broken["harmonization_wcofs_glorys"]["frozen_shoreline_reference"]["sha256"]
+    with pytest.raises((KeyError, ValueError)):
+        frozen_shoreline_reference_sha256(broken)
+    broken2 = yaml.safe_load(yaml.dump(doc))
+    broken2["harmonization_wcofs_glorys"]["frozen_shoreline_reference"]["sha256"] = "not-a-hash"
+    with pytest.raises(ValueError, match="malformed"):
+        frozen_shoreline_reference_sha256(broken2)
 
 
-def test_committed_prereg_still_has_expected_placeholders() -> None:
+def test_shoreline_simplification_check_not_placeholder_and_matches_frozen_hash() -> None:
     doc = load_harmonization_prereg(PREREG)
-    near = doc["harmonization_wcofs_glorys"]["nearshore"]
-    assert near["shoreline_sha256"] == PLACEHOLDER_TOKEN
-    assert near["shoreline_simplification_check"] == PLACEHOLDER_TOKEN
-    assert doc["harmonization_wcofs_glorys"]["pass_fail_thresholds"]["cutoffs"] == PLACEHOLDER_TOKEN
+    check = shoreline_simplification_check(doc)
+    assert check is not PLACEHOLDER_TOKEN
+    assert check["method"] == "none_bbox_clip_only"
+    assert check["source_commit"] == "3d49b43"
+    assert check["rejected_trial"]["nearshore_flag_mismatches"] == 211
+    assert check["file_sha256"] == frozen_shoreline_reference_sha256(doc)
+    assert_shoreline_simplification_check_valid(doc)
+    bad = yaml.safe_load(yaml.dump(doc))
+    bad["harmonization_wcofs_glorys"]["nearshore"]["shoreline_simplification_check"] = (
+        PLACEHOLDER_TOKEN
+    )
+    with pytest.raises(ValueError, match="unset"):
+        shoreline_simplification_check(bad)
+    bad2 = yaml.safe_load(yaml.dump(doc))
+    bad2["harmonization_wcofs_glorys"]["nearshore"]["shoreline_simplification_check"][
+        "nearshore_flag_mismatches_vs_full_resolution"
+    ] = 1
+    with pytest.raises(ValueError, match="must be 0"):
+        assert_shoreline_simplification_check_valid(bad2)
+    bad3 = yaml.safe_load(yaml.dump(doc))
+    bad3["harmonization_wcofs_glorys"]["nearshore"]["shoreline_simplification_check"][
+        "file_sha256"
+    ] = "deadbeef"
+    with pytest.raises(ValueError, match="frozen_shoreline_reference"):
+        assert_shoreline_simplification_check_valid(bad3)
+
+
+def test_committed_prereg_has_no_pass_fail_thresholds_placeholder_block() -> None:
+    doc = load_harmonization_prereg(PREREG)
+    assert "pass_fail_thresholds" not in doc["harmonization_wcofs_glorys"]
+
+
+def test_nowcast_forcing_grading_blocks() -> None:
+    doc = load_harmonization_prereg(PREREG)
+    block = doc["harmonization_wcofs_glorys"]
+    assert block["models_scored"]["graded_model_row_for_forcing_gate"] == "wcofs_coarsened_mapped"
+    grading = block["nowcast_forcing_grading"]
+    assert grading["graded_model_row"] == "wcofs_coarsened_mapped"
+    assert grading["verdict_rank_worst_first"][0] == "UNKNOWN"
+    buoy = grading["buoy_gate"]
+    assert buoy["rmse_ratio_to_glorys"]["pass"]["ratio_max"] == 1.2
+    catch = buoy["catch_all_fail_rule"]
+    assert catch["verdict"] == "UNKNOWN"
+    assert catch["reason"] == "nowcast_forcing_failed_holdout"
+    assert buoy["per_stratum_aggregation"] == "worst_verdict_across_metrics"
+    assert buoy["fail_outcome"]["reason"] == "nowcast_forcing_failed_holdout"
+    inputs = grading["graded_inputs_gate"]
+    assert len(inputs["graded_variable_names"]) == 5
+    assert inputs["rmse_vs_glorys_sd"]["pass_max_multiple"] == 0.5
+    combo = grading["combination_rules"]
+    assert combo["no_gradable_independent_check"]["reason"] == "no_independent_obs_check"
+    maps = block["map_product_labeling"]
+    assert "spawning habitat" in maps["forbidden_labels"]
+
+
+def test_buoy_and_glider_forcing_gate_observations() -> None:
+    doc = load_harmonization_prereg(PREREG)
+    obs = doc["harmonization_wcofs_glorys"]["observations"]
+    gate = obs["ndbc_hull_temperature"]["forcing_gate"]
+    assert gate["grades_model_row"] == "wcofs_coarsened_mapped"
+    assert gate["gradability"]["min_matched_daily_values"] == 100
+    radar = obs["sccoos_hf_radar"]
+    assert radar["forcing_gate_role"] == "report_only"
+    gliders = obs["scripps_spray_gliders"]
+    assert {d["id"] for d in gliders["datasets"]} == {"binnedCUGN80", "binnedCUGN90"}
+    assert gliders["forcing_gate"]["never_grades_model_rows"] == ["glorys"]
+    assert gliders["mld_definition"]["function"] == "mld"
+
+
+def test_upwelling_lags_and_shared_forcing_variable() -> None:
+    doc = load_harmonization_prereg(PREREG)
+    lags = doc["harmonization_wcofs_glorys"]["upwelling_lags"]
+    days = [c["trailing_mean_days"] for c in lags["candidates"]]
+    assert days == [0, 7, 14, 28]
+    assert lags["selection"]["fit_split_end"] == "2017-12-31"
+    assert lags["selection"]["never_reselect_after_freeze"] is True
+    vars_by_name = {v["name"]: v for v in doc["harmonization_wcofs_glorys"]["variables"]}
+    assert vars_by_name["upwelling"]["role"] == "shared_forcing"
+    assert vars_by_name["upwelling"]["blank_when"]["reason"] == "no_consistent_wind_product"

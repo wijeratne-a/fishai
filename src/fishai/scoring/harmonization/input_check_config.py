@@ -26,13 +26,33 @@ VALID_GRADING_STATUSES: frozenset[str] = frozenset(
 )
 
 
+def _role_to_grading_status(role: str) -> str | None:
+    if role == "graded_input":
+        return GRADING_STATUS_GRADED
+    if role == "shared_forcing":
+        return GRADING_STATUS_SHARED_FORCING
+    if role == "report_only":
+        return GRADING_STATUS_ASSIMILATED_REPORTED_ONLY
+    return None
+
+
 def variable_grading_status_map(doc: dict[str, Any]) -> dict[str, str]:
     block = doc.get("harmonization_wcofs_glorys") or {}
     cfg = block.get("input_check_grading") or {}
     raw = cfg.get("variable_grading_status")
     if isinstance(raw, dict):
         return {str(k): str(v) for k, v in raw.items()}
-    return {}
+
+    out: dict[str, str] = {}
+    for item in block.get("variables") or []:
+        if not isinstance(item, dict):
+            continue
+        name = str(item.get("name", ""))
+        role = str(item.get("role", ""))
+        status = _role_to_grading_status(role)
+        if name and status:
+            out[name] = status
+    return out
 
 
 def graded_input_variables_from_prereg(doc: dict[str, Any]) -> list[str]:
@@ -51,14 +71,9 @@ def collect_graded_input_config_violations(doc: dict[str, Any]) -> list[str]:
     if not isinstance(block, dict):
         return violations
 
-    cfg = block.get("input_check_grading")
-    if not isinstance(cfg, dict):
-        violations.append("input_check_grading")
-        return violations
-
     status_map = variable_grading_status_map(doc)
     if not status_map:
-        violations.append("input_check_grading.variable_grading_status")
+        violations.append("variables.variable_grading_roles")
         return violations
 
     for var, status in status_map.items():
@@ -69,10 +84,15 @@ def collect_graded_input_config_violations(doc: dict[str, Any]) -> list[str]:
     if not isinstance(prereg_vars, list):
         violations.append("variables")
         return violations
-    var_set = {str(v) for v in prereg_vars}
+    var_set: set[str] = set()
+    for v in prereg_vars:
+        if isinstance(v, dict):
+            var_set.add(str(v.get("name", "")))
+        else:
+            var_set.add(str(v))
     for name in status_map:
         if name not in var_set:
-            violations.append("input_check_grading.variable_not_in_variables_list")
+            violations.append("variables.variable_not_in_variables_list")
 
     graded = set(graded_input_variables_from_prereg(doc))
     scorer_set = set(SCORER_GRADED_INPUT_VARIABLES)

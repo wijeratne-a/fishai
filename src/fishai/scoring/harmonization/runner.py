@@ -253,14 +253,21 @@ def run_holdout_scoring(
                     rows_out.append(entry)
 
     # Grading (mapped row, buoy temperature, graded strata only)
-    pf = block["pass_fail_thresholds"]
-    combination_rule = str(pf["combination_rule"])
+    grading_cfg = block.get("nowcast_forcing_grading") or {}
+    if grading_cfg:
+        combination_rule = str(
+            grading_cfg.get("combination_rules", {}).get("per_stratum", "worst_verdict_across_checks")
+        ).replace("_", "-")
+    else:
+        combination_rule = str(block["pass_fail_thresholds"]["combination_rule"])
     buoy_var = kept[kept["variable"] == "sea_water_temperature"] if "variable" in kept.columns else kept
     input_cell_check_summary: list[dict[str, Any]] = []
     glider_grading_summary: list[dict[str, Any]] = []
-    spray_cfg = (block.get("observations") or {}).get("spray_glider_profiles") or {}
-    min_glider_profiles = int(spray_cfg.get("min_matched_profiles", 100))
-    min_glider_missions = int(spray_cfg.get("min_distinct_missions", 3))
+    obs_block = block.get("observations") or {}
+    spray_cfg = obs_block.get("spray_glider_profiles") or obs_block.get("scripps_spray_gliders") or {}
+    gradability = spray_cfg.get("gradability") or spray_cfg
+    min_glider_profiles = int(gradability.get("min_matched_profiles", 100))
+    min_glider_missions = int(gradability.get("min_distinct_missions", 3))
 
     for stratum in STRATA_POOL:
         mask = _stratum_mask(buoy_var, stratum)

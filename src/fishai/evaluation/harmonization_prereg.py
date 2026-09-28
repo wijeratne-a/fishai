@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import re
 from pathlib import Path
 from typing import Any
 
@@ -10,6 +11,9 @@ import yaml
 REPO_ROOT = Path(__file__).resolve().parents[3]
 DEFAULT_PREREG_PATH = REPO_ROOT / "prereg" / "harmonization_wcofs_glorys.yaml"
 PLACEHOLDER_TOKEN = "TO_BE_SET_BEFORE_SCORING"
+FROZEN_SHORELINE_SHA256_PREFIX = "2f677a16"
+FROZEN_SHORELINE_SHA256_SUFFIX = "20996c"
+_SHA256_HEX_RE = re.compile(r"^[0-9a-f]{64}$")
 
 
 class HarmonizationPreregNotReadyError(RuntimeError):
@@ -30,6 +34,43 @@ def load_harmonization_prereg(path: Path | str | None = None) -> dict[str, Any]:
     return raw
 
 
+def frozen_shoreline_reference(doc: dict[str, Any] | None = None) -> dict[str, Any]:
+    """Return the auditor-frozen pilot shoreline block from harmonization prereg."""
+    raw = doc if doc is not None else load_harmonization_prereg()
+    block = raw["harmonization_wcofs_glorys"]
+    ref = block.get("frozen_shoreline_reference")
+    if not isinstance(ref, dict):
+        raise ValueError("missing frozen_shoreline_reference in harmonization prereg")
+    return ref
+
+
+def frozen_shoreline_reference_sha256(doc: dict[str, Any] | None = None) -> str:
+    """SHA-256 of ``frozen_shoreline_reference.path`` (single value for Bot4 scoring)."""
+    ref = frozen_shoreline_reference(doc)
+    sha = ref.get("sha256")
+    if not is_valid_frozen_shoreline_sha256(sha):
+        raise ValueError(f"malformed frozen_shoreline_reference.sha256: {sha!r}")
+    if ref.get("frozen") is not True:
+        raise ValueError("frozen_shoreline_reference is not marked frozen")
+    return str(sha)
+
+
+def is_valid_frozen_shoreline_sha256(value: object) -> bool:
+    """True when ``value`` is a 64-char lowercase hex SHA-256 with prereg prefix/suffix."""
+    if not isinstance(value, str):
+        return False
+    lowered = value.lower()
+    if not _SHA256_HEX_RE.match(lowered):
+        return False
+    return lowered.startswith(FROZEN_SHORELINE_SHA256_PREFIX) and lowered.endswith(
+        FROZEN_SHORELINE_SHA256_SUFFIX
+    )
+
+
+# Bot4 PR #10 and other scoring code import this constant instead of hard-coding hashes.
+FROZEN_PILOT_SHORELINE_REFERENCE_SHA256 = frozen_shoreline_reference_sha256()
+
+
 def iter_placeholder_fields(node: object, prefix: str = "") -> list[str]:
     """Return dotted paths whose value equals ``TO_BE_SET_BEFORE_SCORING``."""
     found: list[str] = []
@@ -45,8 +86,49 @@ def iter_placeholder_fields(node: object, prefix: str = "") -> list[str]:
     return found
 
 
+def shoreline_simplification_check(doc: dict[str, Any] | None = None) -> dict[str, Any]:
+    """Return bot2 shoreline simplification fidelity block from nearshore prereg."""
+    raw = doc if doc is not None else load_harmonization_prereg()
+    near = raw["harmonization_wcofs_glorys"]["nearshore"]
+    check = near.get("shoreline_simplification_check")
+    if check == PLACEHOLDER_TOKEN or not isinstance(check, dict):
+        raise ValueError("shoreline_simplification_check is unset or not a mapping")
+    return check
+
+
+def assert_shoreline_simplification_check_valid(doc: dict[str, Any] | None = None) -> None:
+    """Refuse scoring when simplification check is placeholder, mismatched, or wrong hash."""
+    check = shoreline_simplification_check(doc)
+    mismatches = check.get("nearshore_flag_mismatches_vs_full_resolution")
+    if mismatches is None or int(mismatches) > 0:
+        raise ValueError(
+            "shoreline_simplification_check: nearshore_flag_mismatches_vs_full_resolution "
+            f"must be 0, got {mismatches!r}"
+        )
+    file_sha = check.get("file_sha256")
+    frozen_sha = frozen_shoreline_reference_sha256(doc)
+    if file_sha != frozen_sha:
+        raise ValueError(
+            "shoreline_simplification_check.file_sha256 must equal "
+            "frozen_shoreline_reference.sha256"
+        )
+
+
 def assert_harmonization_prereg_ready_for_scoring(doc: dict[str, Any]) -> None:
-    """Refuse holdout scoring until required prereg fields are concrete."""
+    """Refuse holdout scoring until required prereg fields are concrete and consistent."""
+    block = doc.get("harmonization_wcofs_glorys")
+    if not isinstance(block, dict):
+        raise HarmonizationPreregNotReadyError("missing harmonization_wcofs_glorys block")
+    pending = iter_placeholder_fields(block)
+    if pending:
+        fields = ", ".join(sorted(pending))
+        raise HarmonizationPreregNotReadyError(
+            f"harmonization scoring blocked: unset prereg fields ({fields})"
+        )
+    try:
+        assert_shoreline_simplification_check_valid(doc)
+    except ValueError as exc:
+        raise HarmonizationPreregNotReadyError(str(exc)) from exc
     from fishai.scoring.harmonization.prereg_gate import assert_prereg_gate
 
     assert_prereg_gate(doc)

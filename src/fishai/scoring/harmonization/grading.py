@@ -46,7 +46,7 @@ class InputCheckGradeInput:
 
 def normalize_combination_rule(value: str) -> str:
     normalized = value.strip().lower().replace("-", "_").replace(" ", "_")
-    if normalized in ("worst_of", "worstof"):
+    if normalized in ("worst_of", "worstof", "worst_verdict_across_checks", "worstverdictacrosschecks"):
         return "worst_of"
     raise ValueError(f"unsupported combination_rule: {value}")
 
@@ -171,5 +171,43 @@ def np_finite(x: float) -> bool:
 
 def cutoffs_from_prereg(doc: dict[str, Any]) -> dict[str, float]:
     block = doc["harmonization_wcofs_glorys"]
-    raw = block["pass_fail_thresholds"]["cutoffs"]
-    return {k: float(raw[k]) for k in raw}
+    pf = block.get("pass_fail_thresholds") or {}
+    raw = pf.get("cutoffs")
+    if isinstance(raw, dict) and raw and raw != "TO_BE_SET_BEFORE_SCORING":
+        return {k: float(raw[k]) for k in raw}
+
+    grading = block.get("nowcast_forcing_grading") or {}
+    buoy = grading.get("buoy_gate") or {}
+    ratio = buoy.get("rmse_ratio_to_glorys") or {}
+    bias = buoy.get("absolute_bias_C") or {}
+    pearson = buoy.get("pearson_r") or {}
+    ndbc = (block.get("observations") or {}).get("ndbc_hull_temperature") or {}
+    gradability = (ndbc.get("forcing_gate") or {}).get("gradability") or {}
+    inputs = (grading.get("graded_inputs_gate") or {}).get("rmse_vs_glorys_sd") or {}
+    glider_tests = (
+        ((block.get("observations") or {}).get("scripps_spray_gliders") or {}).get("tests") or {}
+    )
+    abs_lim = glider_tests.get("absolute_bias_limits") or {}
+
+    ratio_pass = ratio.get("pass") or {}
+    ratio_deg = ratio.get("degraded") or {}
+    cutoffs: dict[str, float] = {
+        "rmse_ratio_pass": float(ratio_pass["ratio_max"]),
+        "rmse_ratio_ci_upper_pass": float(ratio_pass["bootstrap_upper_95_max"]),
+        "rmse_ratio_degraded_upper": float(ratio_deg["ratio_max_inclusive"]),
+        "bias_abs_pass_c": float(bias["pass_max"]),
+        "bias_abs_degraded_c": float(bias["degraded_max_inclusive"]),
+        "pearson_r_margin_below_glorys": float(pearson["max_deficit_vs_glorys_r"]),
+        "min_matched_daily_values": float(gradability["min_matched_daily_values"]),
+        "min_buoys": float(gradability["min_distinct_buoys"]),
+        "input_rmse_pass_fraction_glorys_sd": float(inputs["pass_max_multiple"]),
+        "input_rmse_degraded_fraction_glorys_sd": float(inputs["degraded_max_multiple"]),
+        "bootstrap_seed": 42.0,
+        "glider_rmse_ratio_pass": float(ratio_pass["ratio_max"]),
+        "glider_rmse_ratio_ci_upper_pass": float(ratio_pass["bootstrap_upper_95_max"]),
+        "glider_rmse_ratio_degraded_upper": float(ratio_deg["ratio_max_inclusive"]),
+        "glider_bias_abs_pass_c_T3m_10m": float(abs_lim["temperature_10m_C"]),
+        "glider_bias_abs_pass_c_S3m_10m": float(abs_lim["salinity_10m"]),
+        "glider_bias_abs_pass_c_MLD_m": float(abs_lim["MLD_m"]),
+    }
+    return cutoffs

@@ -14,7 +14,6 @@ from fishai.ingestion.physics.vertical import GLORYS_TOP_LEVEL_DEPTH_M, interp_t
 from fishai.scoring.harmonization.constants import VERDICT_PASS
 from fishai.scoring.harmonization.input_check_config import SCORER_GRADED_INPUT_VARIABLES
 from fishai.scoring.harmonization.registry import load_assimilated_sources_registry, wcofs_independent_observation_source
-from tests.scoring.harmonization._shoreline_fixtures import pilot_shoreline_sha_for_tests
 from fishai.scoring.harmonization.runner import (
     BUOY_DEPTH_FUNCTION,
     prereg_file_commit,
@@ -44,31 +43,9 @@ def test_registry_marks_ndbc_accepted_independent_for_wcofs() -> None:
 def _small_ready_prereg(tmp_path: Path) -> Path:
     doc = load_harmonization_prereg(PREREG)
     block = yaml.safe_load(yaml.dump(doc))["harmonization_wcofs_glorys"]
-    block["nearshore"]["shoreline_sha256"] = pilot_shoreline_sha_for_tests()
-    block["nearshore"]["shoreline_simplification_check"] = {
-        "max_coastline_displacement_m": 0.0,
-        "nearshore_flag_diff_cell_count": 0,
-    }
-    block["pass_fail_thresholds"]["cutoffs"] = {
-        "rmse_ratio_pass": 1.2,
-        "rmse_ratio_ci_upper_pass": 1.5,
-        "rmse_ratio_degraded_upper": 1.5,
-        "bias_abs_pass_c": 0.5,
-        "bias_abs_degraded_c": 1.0,
-        "pearson_r_margin_below_glorys": 0.10,
-        "min_matched_daily_values": 10,
-        "min_buoys": 3,
-        "input_rmse_pass_fraction_glorys_sd": 0.5,
-        "input_rmse_degraded_fraction_glorys_sd": 1.0,
-        "bootstrap_seed": 7,
-        "glider_rmse_ratio_pass": 1.2,
-        "glider_rmse_ratio_ci_upper_pass": 1.5,
-        "glider_rmse_ratio_degraded_upper": 1.5,
-        "glider_bias_abs_pass_c_T3m_10m": 0.5,
-        "glider_bias_abs_pass_c_S3m_10m": 0.1,
-        "glider_bias_abs_pass_c_MLD_m": 10.0,
-    }
-    block["pass_fail_thresholds"]["combination_rule"] = "worst-of"
+    ndbc = block["observations"]["ndbc_hull_temperature"]["forcing_gate"]["gradability"]
+    ndbc["min_matched_daily_values"] = 10
+    ndbc["min_distinct_buoys"] = 3
     path = tmp_path / "prereg.yaml"
     path.write_text(yaml.dump({"schema_version": 1, "harmonization_wcofs_glorys": block}), encoding="utf-8")
     return path
