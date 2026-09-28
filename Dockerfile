@@ -24,6 +24,9 @@ COPY pyproject.toml README.md ./
 COPY src ./src
 COPY python ./python
 COPY configs ./configs
+COPY tests ./tests
+COPY scripts ./scripts
+COPY security ./security
 COPY renv ./renv
 COPY renv.lock ./renv.lock
 COPY .Rprofile ./.Rprofile
