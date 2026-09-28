@@ -29,6 +29,9 @@ load_config_yaml <- function(path) {
   if (!is.null(cfg$data$covariates_path)) {
     cfg$data$covariates_path <- .abs(cfg$data$covariates_path)
   }
+  if (!is.null(cfg$data$fold_assignment_path)) {
+    cfg$data$fold_assignment_path <- .abs(cfg$data$fold_assignment_path)
+  }
   if (!is.null(cfg$prediction$grid_table)) {
     cfg$prediction$grid_table <- .abs(cfg$prediction$grid_table)
   }

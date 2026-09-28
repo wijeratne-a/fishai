@@ -47,3 +47,15 @@ If `reference_volume_m3` is absent from the frozen config, prediction **refuses*
 ## Cross-validation and held-out scoring
 
 **Held-out events** (spatial CV, LFO, frozen-model scoring) use each row’s own **`log(volume_m3)`** offset—the real sample effort. Only gridded map products use \(V_\text{ref}\).
+
+### Spatial-block fold assignment (real CUFES events)
+
+When bot1 ``cufes_events`` has no ``fold_id`` column, FishAI assigns folds on the modeling side from track midpoints in **EPSG:32611** (km):
+
+| Parameter | Source in model YAML | Pilot value |
+| --- | --- | --- |
+| Block size (km) | ``mesh.cutoff_km`` | **9** |
+| Assignment seed | ``prediction.seed`` | **20260928** |
+| Number of folds | ``data.spatial_block_cv.n_folds`` | **4** |
+
+Each event maps to one spatial block ``block_id = bx{floor(X/block)}_by{floor(Y/block)}``; ``fold_id`` is a deterministic function of ``block_id``, the seed, and ``n_folds`` (MD5 of ``seed:block_id``, first seven hex digits mod ``n_folds``). The table is species-agnostic (events only) and written as ``fold_assignment.csv`` (`event_id`, `fold_id`, `block_id`) with SHA-256 recorded in sensitivity run metadata. Leave-future-out CV continues to use existing ``time_idx`` logic.

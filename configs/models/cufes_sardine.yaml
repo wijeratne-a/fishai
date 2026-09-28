@@ -21,6 +21,9 @@ fishai_engine_config:
     covariate_drop_summary_path: data/processed/cufes/cufes_physics_covariate_drop_summary.json
     nearshore_max_km: 20
     source_id: calcofi_cufes
+    spatial_block_cv:
+      n_folds: 4
+    fold_assignment_path: artifacts/sensitivity/fold_assignment.csv
   covariates:
     forcing_source_id: glorys
     depth_sample_m: 3

@@ -254,6 +254,9 @@ check_cv_design_pass <- function(full_metrics, reduced_metrics, margin_se, metri
 #' @export
 run_short_sample_species <- function(protocol, species_entry) {
   cfg <- load_config_yaml(species_entry$model_config)
+  if (!is.null(protocol$fold_assignment_path)) {
+    cfg$data$fold_assignment_path <- protocol$fold_assignment_path
+  }
   if (!is.null(protocol$event_count_guard)) {
     cfg$data$event_count_guard <- protocol$event_count_guard
   }
@@ -336,6 +339,27 @@ run_short_sample_sensitivity <- function(protocol_path = NULL, output_override =
   git_path <- protocol$prereg_doc_git_path
   sha <- prereg_commit_sha(git_path)
   species <- protocol$species
+
+  root <- Sys.getenv("FISHAI_ROOT", unset = normalizePath(getwd()))
+  cfg_ref <- load_config_yaml(species[[1L]]$model_config)
+  events_ref <- .read_model_table(cfg_ref$data$events_path)
+  events_ref <- .normalize_cufes_events_columns(events_ref)
+  .validate_cufes_events_schema(events_ref)
+  spatial_params <- spatial_block_cv_params(cfg_ref)
+  fold_assignment <- assign_cufes_spatial_block_folds(events_ref, spatial_params)
+  fold_csv <- protocol$output$fold_assignment_csv
+  if (is.null(fold_csv) || !nzchar(fold_csv)) {
+    stop("protocol output.fold_assignment_csv is required", call. = FALSE)
+  }
+  if (!grepl("^/", fold_csv)) {
+    fold_csv <- file.path(root, fold_csv)
+  }
+  write_fold_assignment_csv(fold_assignment, fold_csv)
+  fold_assignment_sha256 <- file_sha256(fold_csv)
+  protocol$fold_assignment_path <- fold_csv
+  protocol$spatial_block_cv <- spatial_params
+  protocol$fold_assignment_sha256 <- fold_assignment_sha256
+
   results <- lapply(species, function(sp) run_short_sample_species(protocol, sp))
 
   pass_fail <- do.call(
@@ -356,7 +380,6 @@ run_short_sample_sensitivity <- function(protocol_path = NULL, output_override =
     })
   )
 
-  root <- Sys.getenv("FISHAI_ROOT", unset = normalizePath(getwd()))
   out_json <- protocol$output$report_json
   out_csv <- protocol$output$pass_fail_csv
   if (!grepl("^/", out_json)) {
@@ -372,6 +395,9 @@ run_short_sample_sensitivity <- function(protocol_path = NULL, output_override =
     prereg_commit_sha = sha,
     prereg_doc = protocol$prereg_doc,
     protocol_config = protocol$config_path,
+    spatial_block_cv = protocol$spatial_block_cv,
+    fold_assignment_csv = fold_csv,
+    fold_assignment_sha256 = protocol$fold_assignment_sha256,
     thresholds = list(
       full_fit_min_duration_min = protocol$full_fit_min_duration_min,
       reduced_fit_exclude_short_events = protocol$reduced_fit_exclude_short_events %||% TRUE,

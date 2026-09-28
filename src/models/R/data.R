@@ -51,6 +51,7 @@ load_model_data <- function(
     events <- .read_model_table(cfg$data$events_path)
     events <- .normalize_cufes_events_columns(events)
     .validate_cufes_events_schema(events)
+    events <- .attach_spatial_fold_ids(events, cfg)
     assert_no_open_review_flags(cfg)
     if (!is.null(cfg$data$event_count_guard)) {
       .assert_event_count_guard(events, cfg$data$event_count_guard, cfg$species$taxon %||% "unknown")

@@ -42,6 +42,7 @@ short_sample_sensitivity:
   output:
     report_json: artifacts/sensitivity/short_sample_refit_report.json
     pass_fail_csv: artifacts/sensitivity/short_sample_pass_fail.csv
+    fold_assignment_csv: artifacts/sensitivity/fold_assignment.csv
 
   # Pre-join guard on bot1 cufes_events (same table for sardine and anchovy models).
   event_count_guard:

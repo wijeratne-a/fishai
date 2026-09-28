@@ -25,3 +25,4 @@ short_sample_sensitivity:
   output:
     report_json: artifacts/sensitivity/test_short_sample_report.json
     pass_fail_csv: artifacts/sensitivity/test_short_sample_pass_fail.csv
+    fold_assignment_csv: artifacts/sensitivity/test_fold_assignment.csv

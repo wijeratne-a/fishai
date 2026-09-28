@@ -20,6 +20,8 @@ fishai_engine_config:
     covariate_drops_path: src/models/tests/fixtures/synthetic_covariate_drops.csv
     covariate_drop_summary_path: src/models/tests/fixtures/synthetic_covariate_drop_summary.json
     source_id: calcofi_cufes
+    spatial_block_cv:
+      n_folds: 4
   covariates:
     forcing_source_id: glorys
     depth_sample_m: 3
