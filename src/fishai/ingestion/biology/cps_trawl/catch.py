@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import math
 from dataclasses import dataclass
-from typing import Any, Mapping
+from typing import Any, Iterable, Mapping
 
 from fishai.ingestion.biology.cps_trawl.constants import WEIGHT_FLAG_PARTIAL
 
@@ -150,6 +150,14 @@ def parse_catch_row(row: Mapping[str, Any]) -> CatchValues | None:
     )
 
 
+def _sum_present_weights(values: Iterable[float | None]) -> float | None:
+    """Sum weight components; return None when no row contributed (never coerce to 0)."""
+    present = [v for v in values if v is not None]
+    if not present:
+        return None
+    return sum(present)
+
+
 def merge_catch_values(rows: list[CatchValues]) -> CatchValues:
     """Merge multiple ERDDAP rows for the same haul and species (e.g. collection splits)."""
     if not rows:
@@ -200,8 +208,8 @@ def merge_catch_values(rows: list[CatchValues]) -> CatchValues:
                 presence_only=False,
                 weight_null_reason="weight_partial",
             )
-        sub_w = sum(r.subsample_weight_kg for r in weighted if r.subsample_weight_kg is not None)
-        rem_w = sum(r.remaining_weight_kg for r in weighted if r.remaining_weight_kg is not None)
+        sub_w = _sum_present_weights(r.subsample_weight_kg for r in weighted)
+        rem_w = _sum_present_weights(r.remaining_weight_kg for r in weighted)
         weight_kg, weight_flag, sub_out, rem_out = resolve_weights(sub_w, rem_w)
         raised, raised_reason = estimate_count_raised(subsample_count, sub_out, rem_out)
         weight_reason = None if weight_kg is not None else "weights_missing"
