@@ -13,7 +13,6 @@ paths:
   hfr_zarr: data/processed/sensors/hfradar/surface_currents.zarr
   ndbc_parquet_root: data/processed/sensors/ndbc
   gliders_parquet_root: data/processed/sensors/gliders
-  wcofs_cycle_glob: data/processed/physics/wcofs/wcofs_*_{cycle}_*.nc
 
 erddap:
   coastwatch: https://coastwatch.pfeg.noaa.gov/erddap
@@ -42,6 +41,7 @@ qc:
   flat_line_min_points: 6
   flat_line_epsilon: 1.0e-4
 
+# pass/degraded values are informational labels in CLI output only (no gating).
 consistency:
   current_vector_corr:
     pass: 0.65
@@ -56,6 +56,7 @@ consistency:
     pass: 0.90
     degraded: 1.40
 
+# pass/degraded on temperature_rmse_c are informational only (no gating).
 holdout:
   independent_confirmed: false
   mld_delta_c: 0.2
