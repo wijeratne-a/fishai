@@ -37,9 +37,7 @@ def main_bio(argv: list[str] | None = None) -> int:
 
     args = parser.parse_args(argv)
     if args.command == "sync" and args.source == "cufes":
-        from fishai.ingestion.biology.cufes_pipeline import sync_cufes
-
-        from fishai.ingestion.biology.cufes_pipeline import format_qc_summary
+        from fishai.ingestion.biology.cufes import format_qc_summary, sync_cufes
 
         result = sync_cufes(
             args.start,

@@ -7,7 +7,7 @@ from dataclasses import dataclass, field
 from datetime import datetime, timezone
 from typing import Any, Iterable, Mapping
 
-from fishai.ingestion.biology.cufes_constants import (
+from fishai.ingestion.biology.cufes.constants import (
     DEFAULT_MAX_DURATION_MIN,
     DEFAULT_MIN_DURATION_MIN,
     EGG_CATEGORIES,

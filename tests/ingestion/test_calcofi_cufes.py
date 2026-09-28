@@ -9,10 +9,9 @@ from datetime import date
 from pathlib import Path
 from unittest import mock
 
-from fishai.ingestion.biology.cufes_constants import EGG_CATEGORIES, QC_DURATION_OUT_OF_RANGE
-from fishai.ingestion.biology.cufes_fetch import BBox, build_erddap_csv_url
-from fishai.ingestion.biology.cufes_pipeline import sync_cufes
-from fishai.ingestion.biology.cufes_transform import (
+from fishai.ingestion.biology.cufes import BBox, build_erddap_csv_url, sync_cufes
+from fishai.ingestion.biology.cufes.constants import EGG_CATEGORIES, QC_DURATION_OUT_OF_RANGE
+from fishai.ingestion.biology.cufes.transform import (
     make_event_id,
     qc_flags_for_row,
     transform_rows,
@@ -173,8 +172,8 @@ class CufesSyncTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as tmp:
             proc = Path(tmp) / "processed"
             with (
-                mock.patch("fishai.ingestion.biology.cufes_pipeline.processed_dir", return_value=proc),
-                mock.patch("fishai.ingestion.biology.cufes_pipeline.load_raw_rows_for_window") as load_rows,
+                mock.patch("fishai.ingestion.biology.cufes.pipeline.processed_dir", return_value=proc),
+                mock.patch("fishai.ingestion.biology.cufes.pipeline.load_raw_rows_for_window") as load_rows,
             ):
                 load_rows.return_value = [row]
                 result = sync_cufes(date(2099, 1, 1), date(2099, 12, 31), fetch=False)

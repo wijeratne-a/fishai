@@ -12,7 +12,7 @@ from pathlib import Path
 from typing import Any, Sequence
 from urllib.parse import quote
 
-from fishai.ingestion.biology.cufes_constants import ERDDAP_FIELDS, ERDDAP_TABLEDAP_BASE, SOURCE_ID
+from fishai.ingestion.biology.cufes.constants import ERDDAP_FIELDS, ERDDAP_TABLEDAP_BASE, SOURCE_ID
 from fishai.ingestion.sources import REPO_ROOT, require_approved
 
 DEFAULT_TIMEOUT_SEC = 120.0

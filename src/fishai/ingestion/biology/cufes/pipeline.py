@@ -7,10 +7,10 @@ from datetime import date
 from pathlib import Path
 from typing import Any
 
-from fishai.ingestion.biology.cufes_constants import SOURCE_ID
-from fishai.ingestion.biology.cufes_dwc import write_dwc_triplet
-from fishai.ingestion.biology.cufes_fetch import BBox, fetch_cufes, iter_yearly_windows, read_cufes_csv
-from fishai.ingestion.biology.cufes_transform import transform_rows
+from fishai.ingestion.biology.cufes.constants import SOURCE_ID
+from fishai.ingestion.biology.cufes.dwc import write_dwc_triplet
+from fishai.ingestion.biology.cufes.fetch import BBox, fetch_cufes, iter_yearly_windows, read_cufes_csv
+from fishai.ingestion.biology.cufes.transform import transform_rows
 from fishai.ingestion.sources import REPO_ROOT, load_sources_manifest, require_approved
 
 try:
