@@ -5,9 +5,19 @@ Summary: Southern California Bight fish egg nowcast pilot skeleton
 License: Proprietary
 Requires-Python: >=3.11
 Description-Content-Type: text/markdown
+Requires-Dist: fsspec==2024.10.0
+Requires-Dist: h5netcdf==1.4.1
 Requires-Dist: jsonschema==4.23.0
+Requires-Dist: netCDF4==1.7.2
+Requires-Dist: numcodecs==0.12.1
 Requires-Dist: numpy==2.1.3
+Requires-Dist: pandas==2.2.3
+Requires-Dist: pyarrow==18.1.0
 Requires-Dist: PyYAML==6.0.2
+Requires-Dist: requests==2.32.3
+Requires-Dist: scipy==1.14.1
+Requires-Dist: xarray==2024.11.0
+Requires-Dist: zarr==2.18.3
 Provides-Extra: dev
 Requires-Dist: pytest==8.3.4; extra == "dev"
 
@@ -34,7 +44,8 @@ Map and API outputs must use one primary evidence state (plus uncertainty), not 
 ```
 src/fishai/
   ingestion/biology/     CalCOFI CUFES (erdCalCOFIcufes) stub
-  ingestion/physics/     WCOFS, GLORYS stubs
+  ingestion/physics/     WCOFS; GLORYS (training/hindcast only; T/S at 3 m linear z)
+  physics/store.py       Read-only ``open_wcofs_cycle`` / ``list_wcofs_cycles`` (Bot4 sensors)
   ingestion/sensors/     SCCOOS HF radar, NDBC, IOOS glider stubs
   models/                Python experiment config, baselines, run manifest
   models/R/              sdmTMB R code (bootstrap via renv)
