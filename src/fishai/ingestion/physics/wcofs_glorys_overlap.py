@@ -20,10 +20,8 @@ import xarray as xr
 from fishai.ingestion.copernicus_compliance import append_pull_log, build_pull_record
 from fishai.ingestion.physics.coast_distance import nearshore_mask, shoreline_path_from_config
 from fishai.ingestion.physics.harmonize import glorys_target_grid
-from fishai.ingestion.physics.sources.glorys import (
-    glorys_column_features,
-    resolve_glorys_product_id,
-)
+from fishai.ingestion.physics.glorys_catalog import resolve_glorys_dataset_for_date
+from fishai.ingestion.physics.sources.glorys import glorys_column_features
 from fishai.ingestion.physics.wcofs_glorys_coverage import (
     CoverageAccumulator,
     build_coverage_report,
