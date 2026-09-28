@@ -15,9 +15,8 @@ from fishai.ingestion.physics.vertical import (
     mld,
     s_to_z,
 )
-from fishai.ingestion.sources import attribution_for
+from fishai.ingestion.sources import REPO_ROOT, attribution_for
 
-REPO_ROOT = Path(__file__).resolve().parents[3]
 DEFAULT_STORE_ROOT = REPO_ROOT / "data" / "processed" / "physics"
 
 

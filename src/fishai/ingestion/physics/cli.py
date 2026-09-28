@@ -55,6 +55,7 @@ def cmd_wcofs_daily(args: argparse.Namespace) -> int:
         out_root=out,
         dry_run=args.dry_run,
         wait_for_cycle=not args.no_wait,
+        provenance_dir=Path(args.provenance_dir) if args.provenance_dir else None,
     )
     if args.dry_run:
         print(f"target_cycle={plan.target_date.isoformat()} primary_available={plan.primary_available}")
@@ -85,6 +86,10 @@ def main(argv: list[str] | None = None) -> int:
     p_wdaily = sub.add_parser("wcofs-daily", help="Operational WCOFS daily pull (nowcast+72h forecast)")
     p_wdaily.add_argument("--date", help="Target cycle date YYYY-MM-DD (default: today UTC)")
     p_wdaily.add_argument("--out", default=str(DEFAULT_OUT), help="Processed physics store root")
+    p_wdaily.add_argument(
+        "--provenance-dir",
+        help="Pull log directory (default: data/provenance for pilot out, else <out>/provenance)",
+    )
     p_wdaily.add_argument("--dry-run", action="store_true", help="List S3 keys and outputs only")
     p_wdaily.add_argument(
         "--no-wait",

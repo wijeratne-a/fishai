@@ -8,8 +8,31 @@ from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
 
-REPO_ROOT = Path(__file__).resolve().parents[3]
+from fishai.ingestion.sources import REPO_ROOT
+
 DEFAULT_PULL_LOG_DIR = REPO_ROOT / "data" / "provenance"
+
+
+def resolve_pull_log_dir(
+    out_root: Path | None = None,
+    provenance_dir: Path | None = None,
+) -> Path:
+    """
+    Pilot layout: ``data/processed/physics`` → ``data/provenance``.
+
+    Any other ``out_root`` (e.g. pytest ``tmp_path``) keeps logs under ``out_root/provenance``.
+    """
+    if provenance_dir is not None:
+        return provenance_dir
+    if out_root is not None:
+        try:
+            rel = out_root.resolve().relative_to(REPO_ROOT.resolve())
+            if len(rel.parts) >= 2 and rel.parts[0] == "data" and rel.parts[1] == "processed":
+                return DEFAULT_PULL_LOG_DIR
+        except ValueError:
+            pass
+        return out_root / "provenance"
+    return DEFAULT_PULL_LOG_DIR
 
 
 def pull_log_path(cycle_date: str, *, log_dir: Path | None = None) -> Path:

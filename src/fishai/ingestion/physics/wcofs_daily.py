@@ -20,6 +20,7 @@ from fishai.ingestion.physics.wcofs_pull_log import (
     build_pull_record,
     load_pull_index,
     pull_log_path,
+    resolve_pull_log_dir,
     sha256_bytes,
 )
 from fishai.ingestion.physics.wcofs_store import cycle_zarr_path, write_wcofs_cycle
@@ -161,6 +162,7 @@ def plan_daily(
     primary_available: bool | None = None,
     head_fn: Callable[[str], bool] | None = None,
     max_missed_cycles: int = DEFAULT_MAX_MISSED_CYCLES,
+    provenance_dir: Path | None = None,
 ) -> DailyPlan:
     if primary_available is None:
         primary_available = wcofs_src.cycle_available(target, head_fn=head_fn)
@@ -170,7 +172,8 @@ def plan_daily(
         max_missed_cycles=max_missed_cycles,
     )
     plan.zarr_path = cycle_zarr_path(target, out_root)
-    plan.pull_log = pull_log_path(target.strftime("%Y%m%d"))
+    log_dir = resolve_pull_log_dir(out_root, provenance_dir)
+    plan.pull_log = pull_log_path(target.strftime("%Y%m%d"), log_dir=log_dir)
     plan.qc_report_path = out_root / f"wcofs_{target:%Y%m%d}_qc.json"
     return plan
 
@@ -396,6 +399,7 @@ def run_wcofs_daily(
     get_fn: Callable[..., bytes] | None = None,
     head_meta_fn: Callable[[str], dict[str, Any]] | None = None,
     now_fn: Callable[[], dt.datetime] | None = None,
+    provenance_dir: Path | None = None,
 ) -> DailyPlan:
     require_approved("wcofs")
     if dry_run:
@@ -404,6 +408,7 @@ def run_wcofs_daily(
             out_root=out_root,
             primary_available=True,
             max_missed_cycles=max_missed_cycles,
+            provenance_dir=provenance_dir,
         )
     primary_available = wcofs_src.cycle_available(target, head_fn=head_fn)
     if wait_for_cycle and not primary_available and not dry_run:
@@ -419,6 +424,7 @@ def run_wcofs_daily(
         primary_available=primary_available,
         head_fn=head_fn,
         max_missed_cycles=max_missed_cycles,
+        provenance_dir=provenance_dir,
     )
 
     zpath = plan.zarr_path

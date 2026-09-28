@@ -19,8 +19,15 @@ from fishai.ingestion.physics.wcofs_daily import (
     run_wcofs_daily,
     wait_for_primary_cycle,
 )
-from fishai.ingestion.physics.wcofs_pull_log import pull_log_path, sha256_bytes
+from fishai.ingestion.physics.wcofs_pull_log import DEFAULT_PULL_LOG_DIR, resolve_pull_log_dir, sha256_bytes
+from fishai.ingestion.physics.wcofs_store import DEFAULT_STORE_ROOT
+from fishai.ingestion.sources import REPO_ROOT
 from wcofs_fixtures import write_mini_wcofs_bytes
+
+
+def test_resolve_pull_log_dir_routes_tmp_path_to_local_provenance(tmp_path: Path) -> None:
+    assert resolve_pull_log_dir(tmp_path) == tmp_path / "provenance"
+    assert resolve_pull_log_dir(DEFAULT_STORE_ROOT) == DEFAULT_PULL_LOG_DIR
 
 
 def test_fields_s3_key_t03z_nowcast_and_forecast() -> None:
@@ -78,6 +85,9 @@ def test_dry_run_lists_keys_and_request_count(tmp_path: Path) -> None:
     assert plan.request_count == len(wcofs_src.OPERATIONAL_LEAD_HOURS)
     assert all(k.startswith("wcofs/netcdf/") for k in plan.s3_keys)
     assert plan.zarr_path == tmp_path / "wcofs_20260928.zarr"
+    assert plan.pull_log == tmp_path / "provenance" / "wcofs_pull_20260928.jsonl"
+    assert plan.qc_report_path == tmp_path / "wcofs_20260928_qc.json"
+    assert not plan.pull_log.parent.exists() or not any(plan.pull_log.parent.iterdir())
 
 
 def test_idempotent_pull_log_skips_duplicate_etag(tmp_path: Path) -> None:
@@ -179,11 +189,73 @@ def test_run_wcofs_daily_dry_run(tmp_path: Path) -> None:
     assert not (tmp_path / "wcofs_20260928.zarr").exists()
 
 
-def test_cli_wcofs_daily_dry_run(capsys) -> None:
+def _provenance_tree_snapshot() -> dict[str, tuple[int, int]]:
+    root = REPO_ROOT / "data" / "provenance"
+    if not root.is_dir():
+        return {}
+    return {
+        str(p.relative_to(root)): (p.stat().st_size, p.stat().st_mtime_ns)
+        for p in root.rglob("*")
+        if p.is_file()
+    }
+
+
+def test_cli_wcofs_daily_dry_run(tmp_path: Path, capsys, repo_provenance_snapshot) -> None:
     from fishai.ingestion.physics.cli import main
 
-    code = main(["wcofs-daily", "--date", "2026-09-28", "--out", "/tmp/out", "--dry-run"])
+    code = main(
+        [
+            "wcofs-daily",
+            "--date",
+            "2026-09-28",
+            "--out",
+            str(tmp_path),
+            "--dry-run",
+        ]
+    )
     assert code == 0
     out = capsys.readouterr().out
     assert "wcofs.t03z.20260928.fields.n003.nc" in out
     assert "requests=" in out
+    assert f"pull_log={tmp_path / 'provenance' / 'wcofs_pull_20260928.jsonl'}" in out
+    assert not (tmp_path / "provenance").exists()
+    assert _provenance_tree_snapshot() == repo_provenance_snapshot
+
+
+def test_wcofs_writes_never_touch_repo_provenance(tmp_path: Path, repo_provenance_snapshot) -> None:
+    from fishai.ingestion.physics.cli import main
+
+    payload = write_mini_wcofs_bytes()
+    plan = build_lead_plan(dt.date(2026, 9, 28), primary_available=True)
+    plan.leads = plan.leads[:1]
+    plan.s3_keys = plan.s3_keys[:1]
+    plan.bbox = (32.0, 35.0, -121.0, -117.0)
+    plan.target_date = dt.date(2026, 9, 28)
+    plan.pull_log = tmp_path / "provenance" / "wcofs_pull_20260928.jsonl"
+    plan.qc_report_path = tmp_path / "wcofs_20260928_qc.json"
+    plan.zarr_path = tmp_path / "wcofs_20260928.zarr"
+
+    def fake_get(url: str, **kwargs: Any) -> bytes:  # noqa: ARG001
+        return payload
+
+    def fake_head(url: str) -> dict[str, Any]:  # noqa: ARG001
+        return {"status": 200, "etag": "abc", "size_bytes": len(payload)}
+
+    fetch_and_log_leads(
+        plan,
+        get_fn=fake_get,
+        head_meta_fn=fake_head,
+        log_path=plan.pull_log,
+        skip_if_etag_matches=False,
+    )
+    run_wcofs_daily(
+        dt.date(2026, 9, 28),
+        out_root=tmp_path,
+        dry_run=True,
+        wait_for_cycle=False,
+    )
+    main(["wcofs-daily", "--date", "2026-09-28", "--out", str(tmp_path), "--dry-run"])
+
+    assert _provenance_tree_snapshot() == repo_provenance_snapshot
+    assert plan.pull_log.is_file()
+    assert plan.pull_log.is_relative_to(tmp_path)

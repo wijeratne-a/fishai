@@ -82,7 +82,7 @@ Batch job (not triggered by API requests) for the pilot bbox. Intended cron insi
 ```
 
 - **Source:** NOAA public S3 `noaa-nos-ofs-pds` (`wcofs/netcdf/.../wcofs.t03z.YYYYMMDD.fields.{n|f}HHH.nc`), one **t03z** cycle per day; nowcast hours 3–24 h plus forecast to **72 h**. CO-OPS THREDDS is a secondary mirror only in the low-level reader. WCOFS has no dissolved oxygen.
-- **Storage:** one Zarr per cycle under `data/processed/physics/wcofs_YYYYMMDD.zarr` with chunks **lead_hours=1**, full **s_rho**, and **16×16** spatial tiles (documented in store attrs). Pull audit: `data/provenance/wcofs_pull_YYYYMMDD.jsonl` (S3 key, ETag, size, sha256, fetch time, cycle, lead hour, status).
+- **Storage:** one Zarr per cycle under `data/processed/physics/wcofs_YYYYMMDD.zarr` with chunks **lead_hours=1**, full **s_rho**, and **16×16** spatial tiles (documented in store attrs). Pull audit: `data/provenance/wcofs_pull_YYYYMMDD.jsonl` when `--out` is the pilot processed path; otherwise logs stay under `<out>/provenance/` (tests and dry-runs must use a temp `--out`, never the repo provenance tree).
 - **Fallback:** if the target t03z cycle is not posted before the wait cutoff (~05:45 UTC), reuse the previous cycle’s forecast at the matching valid time (`fallback=previous_cycle`, `lead_hours_used`). Valid times beyond **72 h** or more than **2** missed cycles are recorded as **UNKNOWN** (`missing_operational_cycle`); partial cycles are flagged, never silently filled.
 - **Ethics:** `http_util` caps **2** concurrent requests per host with exponential backoff (429/503); daily pulls stay well under **200** GETs.
 
