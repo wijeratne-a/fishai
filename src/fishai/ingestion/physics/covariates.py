@@ -202,10 +202,16 @@ def missing_covariate_counts(covariates: pd.DataFrame) -> dict[str, int]:
     return counts
 
 
-def _drop_summary(drops: pd.DataFrame) -> dict[str, int]:
+def _drop_qc_counts(
+    drops: pd.DataFrame,
+) -> tuple[dict[str, int], dict[str, int], int]:
+    """Unique events per reason, drop-table row counts per reason, unique events dropped."""
     if drops.empty:
-        return {}
-    return drops.groupby("reason").size().astype(int).to_dict()
+        return {}, {}, 0
+    rows_by_reason = drops.groupby("reason").size().astype(int).to_dict()
+    drop_summary = drops.groupby("reason")["event_id"].nunique().astype(int).to_dict()
+    dropped_unique_total = int(drops["event_id"].nunique())
+    return drop_summary, rows_by_reason, dropped_unique_total
 
 
 def write_covariate_drop_table(drops: pd.DataFrame, path: Path) -> Path:
@@ -228,7 +234,11 @@ def join_covariates_to_events(
     One covariate row per input ``event_id``.
 
     Covariates are means along the great-circle tow segment (start/stop positions
-    from bot1), sampled at mid-time. Missing endpoints → all-NaN covariates.
+    from bot1), sampled at mid-time. Rows with any drop-table reason get
+    ``excluded=True`` and all model covariates set to NaN; downstream training
+    and evaluation must filter ``excluded == False``.
+
+    Missing endpoints → drop reason ``missing_endpoint`` and excluded row.
     """
     validate_cufes_events(events)
     endpoint_missing = 0
@@ -291,10 +301,18 @@ def join_covariates_to_events(
         raise CufesEventValidationError("output event_id order must match input")
     if set(out[COL_EVENT_ID]) != set(events[COL_EVENT_ID]):
         raise CufesEventValidationError("output event_id set must equal input")
+    drop_summary, rows_by_reason, dropped_unique_total = _drop_qc_counts(drops)
+    excluded_ids: set[Any] = set(drops["event_id"].unique()) if not drops.empty else set()
+    out["excluded"] = out[COL_EVENT_ID].isin(excluded_ids)
+    if excluded_ids:
+        for field in CUFES_COVARIATE_FIELDS:
+            out.loc[out["excluded"], field] = np.nan
     qc: dict[str, Any] = {
         "missing_by_field": missing_covariate_counts(out),
         "events_endpoint_missing": endpoint_missing,
-        "drop_summary": _drop_summary(drops),
+        "drop_summary": drop_summary,
+        "rows_by_reason": rows_by_reason,
+        "dropped_unique_total": dropped_unique_total,
     }
     if drops_parquet_path is not None:
         written = write_covariate_drop_table(drops, Path(drops_parquet_path))
