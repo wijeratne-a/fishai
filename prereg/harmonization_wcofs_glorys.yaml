@@ -334,8 +334,8 @@ harmonization_wcofs_glorys:
           in the harmonization score report under insufficient_model_coverage, split
           nearshore/offshore (using the matched GLORYS cell nearshore flag).
       pass_fail_scope: >-
-        auditbot1 pass/degraded cutoffs (when set) apply to this common-support
-        observation set only, not to row-specific supersets.
+        auditbot1 pass/degraded cutoffs apply to this common-support observation
+        set only, not to row-specific supersets.
       test_requirement: >-
         Scoring tests must assert that every model row uses the same observation
         count n within each metric stratum (season × nearshore/offshore × variable).
@@ -442,6 +442,7 @@ harmonization_wcofs_glorys:
         degraded_max_inclusive: 1.0
       pearson_r:
         pass_min_vs_glorys_r: within_0.10
+        max_deficit_vs_glorys_r: 0.10
         degraded_band: none
       catch_all_fail_rule:
         applies_when: >-

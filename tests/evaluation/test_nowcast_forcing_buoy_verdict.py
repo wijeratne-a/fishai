@@ -2,14 +2,24 @@
 
 from __future__ import annotations
 
+import dataclasses
 import itertools
+import re
 from pathlib import Path
 
+import yaml
+
+from fishai.evaluation.harmonization_prereg import load_harmonization_prereg
 from fishai.evaluation.nowcast_forcing_buoy import (
     FAIL_HOLDOUT_REASON,
+    BuoyGateThresholds,
     BuoyStratumMetrics,
+    buoy_gate_thresholds_from_prereg,
     evaluate_buoy_stratum_verdict,
 )
+
+REPO = Path(__file__).resolve().parents[2]
+PREREG = REPO / "prereg" / "harmonization_wcofs_glorys.yaml"
 
 VERDICTS = frozenset({"PASS", "DEGRADED", "UNKNOWN"})
 
@@ -40,6 +50,53 @@ def test_pearson_r_more_than_010_below_glorys_yields_unknown_holdout() -> None:
     )
     assert result.verdict == "UNKNOWN"
     assert result.reason == FAIL_HOLDOUT_REASON
+
+
+def test_pearson_r_max_deficit_from_yaml_changes_verdict(tmp_path: Path) -> None:
+    doc = yaml.safe_load(yaml.dump(load_harmonization_prereg(PREREG)))
+    base_path = tmp_path / "prereg_base.yaml"
+    base_path.write_text(yaml.dump(doc), encoding="utf-8")
+    base_loaded = load_harmonization_prereg(base_path)
+    metrics = BuoyStratumMetrics(
+        rmse_ratio=1.0,
+        rmse_ratio_bootstrap_upper_95=1.2,
+        absolute_bias_c=0.2,
+        pearson_r=0.78,
+        glorys_pearson_r=0.85,
+    )
+    assert (
+        evaluate_buoy_stratum_verdict(metrics, doc=base_loaded).verdict == "PASS"
+    )
+    tight = yaml.safe_load(yaml.dump(doc))
+    tight["harmonization_wcofs_glorys"]["nowcast_forcing_grading"]["buoy_gate"]["pearson_r"][
+        "max_deficit_vs_glorys_r"
+    ] = 0.05
+    tight_path = tmp_path / "prereg_tight.yaml"
+    tight_path.write_text(yaml.dump(tight), encoding="utf-8")
+    tight_loaded = load_harmonization_prereg(tight_path)
+    result = evaluate_buoy_stratum_verdict(metrics, doc=tight_loaded)
+    assert result.verdict == "UNKNOWN"
+    assert result.reason == FAIL_HOLDOUT_REASON
+
+
+def test_buoy_evaluator_has_no_hardcoded_numeric_cutoff_literals() -> None:
+    module_path = REPO / "src" / "fishai" / "evaluation" / "nowcast_forcing_buoy.py"
+    source = module_path.read_text(encoding="utf-8")
+    for field in dataclasses.fields(BuoyGateThresholds):
+        assert field.default is dataclasses.MISSING
+        assert field.default_factory is dataclasses.MISSING
+    numeric_field_defaults = re.findall(
+        r"^\s+(?:rmse_ratio|absolute_bias|pearson_r)[^\n]*=\s*[\d.]+",
+        source,
+        flags=re.MULTILINE,
+    )
+    assert numeric_field_defaults == []
+    thresholds = buoy_gate_thresholds_from_prereg()
+    assert thresholds.pearson_r_max_deficit_vs_glorys == float(
+        load_harmonization_prereg(PREREG)["harmonization_wcofs_glorys"][
+            "nowcast_forcing_grading"
+        ]["buoy_gate"]["pearson_r"]["max_deficit_vs_glorys_r"]
+    )
 
 
 def test_buoy_verdict_grid_is_exhaustive_without_exceptions(tmp_path: Path) -> None:

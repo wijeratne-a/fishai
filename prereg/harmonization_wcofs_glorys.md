@@ -65,7 +65,7 @@ Per variable: **bias**, **RMSE**, **Pearson r**, by season (DJF/MAM/JJA/SON), ne
 
 ## Shoreline (bot2 PR #7)
 
-**Frozen shoreline** (`frozen_shoreline_reference` in YAML): path `data/reference/shoreline/ne_10m_land_pilot_clip.json`, SHA-256 frozen at PR #7 commit **3d49b43** (import **`FROZEN_PILOT_SHORELINE_REFERENCE_SHA256`** from `fishai.evaluation.harmonization_prereg` for scoring). **`nearshore.shoreline_sha256`** aliases the same value. **`shoreline_simplification_check`:** method **`none_bbox_clip_only`** — none applied; full-resolution clip differs from source by **0 km** and changes **0** near-coast flags (simplification trial would flip **211** cells, bot2 check at **3d49b43**). **cutoff_km 20**, geodesic WGS84 from GLORYS cell centre. Scoring strata inherit the matched GLORYS cell nearshore flag. **auditbot1** pass/degraded cutoffs remain unset in prereg.
+**Frozen shoreline** (`frozen_shoreline_reference` in YAML): path `data/reference/shoreline/ne_10m_land_pilot_clip.json`, SHA-256 frozen at PR #7 commit **3d49b43** (import **`FROZEN_PILOT_SHORELINE_REFERENCE_SHA256`** from `fishai.evaluation.harmonization_prereg` for scoring). **`nearshore.shoreline_sha256`** aliases the same value. **`shoreline_simplification_check`:** method **`none_bbox_clip_only`** — none applied; full-resolution clip differs from source by **0 km** and changes **0** near-coast flags (simplification trial would flip **211** cells, bot2 check at **3d49b43**). **cutoff_km 20**, geodesic WGS84 from GLORYS cell centre. Scoring strata inherit the matched GLORYS cell nearshore flag.
 
 ## Timing
 

@@ -20,16 +20,16 @@ class _MetricBand(Enum):
 
 @dataclass(frozen=True)
 class BuoyGateThresholds:
-    rmse_ratio_pass_max: float = 1.2
-    rmse_ratio_bootstrap_upper_95_pass_max: float = 1.5
-    rmse_ratio_degraded_min_exclusive: float = 1.2
-    rmse_ratio_degraded_max_inclusive: float = 1.5
-    absolute_bias_pass_max_c: float = 0.5
-    absolute_bias_degraded_min_exclusive_c: float = 0.5
-    absolute_bias_degraded_max_inclusive_c: float = 1.0
-    pearson_r_max_deficit_vs_glorys: float = 0.10
-    fail_verdict: NowcastForcingVerdict = "UNKNOWN"
-    fail_reason: str = FAIL_HOLDOUT_REASON
+    rmse_ratio_pass_max: float
+    rmse_ratio_bootstrap_upper_95_pass_max: float
+    rmse_ratio_degraded_min_exclusive: float
+    rmse_ratio_degraded_max_inclusive: float
+    absolute_bias_pass_max_c: float
+    absolute_bias_degraded_min_exclusive_c: float
+    absolute_bias_degraded_max_inclusive_c: float
+    pearson_r_max_deficit_vs_glorys: float
+    fail_verdict: NowcastForcingVerdict
+    fail_reason: str
 
 
 @dataclass(frozen=True)
@@ -53,6 +53,7 @@ def buoy_gate_thresholds_from_prereg(doc: dict[str, Any] | None = None) -> BuoyG
     gate = raw["harmonization_wcofs_glorys"]["nowcast_forcing_grading"]["buoy_gate"]
     rmse = gate["rmse_ratio_to_glorys"]
     bias = gate["absolute_bias_C"]
+    pearson = gate["pearson_r"]
     fail = gate["fail_outcome"]
     return BuoyGateThresholds(
         rmse_ratio_pass_max=float(rmse["pass"]["ratio_max"]),
@@ -62,6 +63,7 @@ def buoy_gate_thresholds_from_prereg(doc: dict[str, Any] | None = None) -> BuoyG
         absolute_bias_pass_max_c=float(bias["pass_max"]),
         absolute_bias_degraded_min_exclusive_c=float(bias["degraded_min_exclusive"]),
         absolute_bias_degraded_max_inclusive_c=float(bias["degraded_max_inclusive"]),
+        pearson_r_max_deficit_vs_glorys=float(pearson["max_deficit_vs_glorys_r"]),
         fail_verdict=str(fail["verdict"]),
         fail_reason=str(fail["reason"]),
     )
