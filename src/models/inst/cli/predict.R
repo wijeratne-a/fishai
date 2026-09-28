@@ -8,6 +8,9 @@ args <- commandArgs(trailingOnly = TRUE)
 if (length(args) < 2) stop("usage: predict.R <config.yaml> <artifact.rds>", call. = FALSE)
 cfg <- load_config_yaml(args[[1]])
 artifact <- readRDS(args[[2]])
+  if (.inference_requires_harmonization(cfg)) {
+  assert_harmonization_for_predict(artifact, cfg)
+}
 grid <- read.csv(cfg$prediction$grid_table, stringsAsFactors = FALSE)
 physics <- cfg$prediction$physics_cycle %||% "PASS"
 out <- predict_engine(artifact, grid, cfg, physics_cycle = physics)
