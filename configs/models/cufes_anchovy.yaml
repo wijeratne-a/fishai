@@ -50,7 +50,7 @@ fishai_engine_config:
       sst_grad: sst_grad
       dist_front: front_distance_km
       upwelling: upwelling
-      log_depth: log_depth_z
+      log_depth: bottom_depth_m
   response:
     type: density_delta
     column: egg_count

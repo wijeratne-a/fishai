@@ -38,6 +38,7 @@ assert_shared_delta_formula <- function(formula_list) {
 #'
 #' @export
 fit_delta_engine <- function(dat, mesh, cfg) {
+  .assert_training_covariate_table_from_cfg(cfg)
   model <- cfg$model
   family <- resolve_delta_family(cfg)
 

@@ -102,6 +102,8 @@ load_model_data <- function(
     if (!"event_id" %in% names(cov)) {
       stop("covariate table missing event_id", call. = FALSE)
     }
+    .assert_training_covariate_table_schema(cov, cfg)
+    .assert_bottom_depth_m_positive(cov, cfg)
     if (!"excluded" %in% names(cov)) {
       stop("covariate table missing excluded column", call. = FALSE)
     }
@@ -767,6 +769,16 @@ fishai_data_prep_qc <- function(dat) {
     if (is.null(upstream) || (length(upstream) == 1L && is.na(upstream))) {
       upstream <- model_col
     }
+    if (identical(slug, "log_depth")) {
+      if (upstream %in% names(dat)) {
+        dat <- .map_log_depth_z_from_bottom_depth(dat, upstream, model_col)
+      } else if (model_col %in% names(dat)) {
+        # Legacy single-table fixtures may already ship model-ready log_depth_z.
+      } else {
+        stop("missing covariate column: ", upstream, " (model ", model_col, ")", call. = FALSE)
+      }
+      next
+    }
     if (upstream %in% names(dat)) {
       dat[[model_col]] <- dat[[upstream]]
     } else if (!model_col %in% names(dat)) {
@@ -774,6 +786,118 @@ fishai_data_prep_qc <- function(dat) {
     }
   }
   dat
+}
+
+.map_log_depth_z_from_bottom_depth <- function(dat, depth_col, model_col) {
+  if (!depth_col %in% names(dat)) {
+    stop("missing covariate column: ", depth_col, " (model ", model_col, ")", call. = FALSE)
+  }
+  depth <- as.numeric(dat[[depth_col]])
+  ex <- if ("excluded" %in% names(dat)) {
+    .parse_excluded_logical(dat$excluded)
+  } else {
+    rep(FALSE, length(depth))
+  }
+  use <- !(ex %in% TRUE)
+  bad <- use & (is.na(depth) | !is.finite(depth) | depth <= 0)
+  if (any(bad)) {
+    n_bad <- sum(bad)
+    ids <- as.character(dat$event_id[bad])
+    stop(
+      "bottom_depth_m must be finite and > 0 for non-excluded events (found ",
+      n_bad,
+      " invalid row(s)); event_id: ",
+      paste(head(ids, 10L), collapse = ", "),
+      if (n_bad > 10L) " ..." else "",
+      call. = FALSE
+    )
+  }
+  log_d <- rep(NA_real_, length(depth))
+  if (any(use)) {
+    log_d[use] <- log(depth[use])
+    mu <- mean(log_d[use], na.rm = TRUE)
+    sdv <- stats::sd(log_d[use], na.rm = TRUE)
+    dat[[model_col]] <- rep(NA_real_, length(depth))
+    if (!is.finite(sdv) || sdv <= 0) {
+      dat[[model_col]][use] <- 0
+    } else {
+      dat[[model_col]][use] <- (log_d[use] - mu) / sdv
+    }
+  } else {
+    dat[[model_col]] <- log_d
+  }
+  dat
+}
+
+.required_training_covariate_columns <- function(cfg) {
+  upstream_map <- cfg$covariates$upstream_fields %||% .default_upstream_covariate_map()
+  unique(c(
+    unname(unlist(upstream_map, use.names = FALSE)),
+    "source_product",
+    "excluded_reason"
+  ))
+}
+
+#' @export
+assert_training_covariate_table_schema <- function(cov, cfg) {
+  .assert_training_covariate_table_schema(cov, cfg)
+}
+
+.assert_training_covariate_table_schema <- function(cov, cfg) {
+  required <- .required_training_covariate_columns(cfg)
+  missing <- setdiff(required, names(cov))
+  if (length(missing)) {
+    stop(
+      "covariate training table missing columns: ",
+      paste(missing, collapse = ", "),
+      call. = FALSE
+    )
+  }
+  invisible(TRUE)
+}
+
+.assert_bottom_depth_m_positive <- function(cov, cfg) {
+  static <- cfg$covariates$static %||% character()
+  if (!"log_depth" %in% static) {
+    return(invisible(TRUE))
+  }
+  upstream_map <- cfg$covariates$upstream_fields %||% .default_upstream_covariate_map()
+  col <- upstream_map[["log_depth"]] %||% "bottom_depth_m"
+  if (!col %in% names(cov)) {
+    return(invisible(TRUE))
+  }
+  depth <- as.numeric(cov[[col]])
+  ex <- if ("excluded" %in% names(cov)) {
+    .parse_excluded_logical(cov$excluded)
+  } else {
+    rep(FALSE, length(depth))
+  }
+  use <- !(ex %in% TRUE)
+  bad <- use & is.finite(depth) & depth <= 0
+  if (!any(bad)) {
+    return(invisible(TRUE))
+  }
+  ids <- as.character(cov$event_id[bad])
+  stop(
+    "bottom_depth_m must be > 0 for non-excluded events; invalid event_id: ",
+    paste(head(ids, 10L), collapse = ", "),
+    if (sum(bad) > 10L) " ..." else "",
+    call. = FALSE
+  )
+}
+
+.assert_training_covariate_table_from_cfg <- function(cfg) {
+  cov_path <- cfg$data$covariates_path
+  if (is.null(cov_path) || !nzchar(cov_path)) {
+    return(invisible(TRUE))
+  }
+  if (!file.exists(cov_path)) {
+    stop("covariates_path not found: ", cov_path, call. = FALSE)
+  }
+  cov <- .read_model_table(cov_path)
+  .assert_training_covariate_table_schema(cov, cfg)
+  .assert_bottom_depth_m_positive(cov, cfg)
+  invisible(TRUE)
 }
 
 .assert_non_excluded_covariates_complete <- function(dat, cfg) {
@@ -946,7 +1070,7 @@ fishai_data_prep_qc <- function(dat) {
     sst_grad = "sst_grad",
     dist_front = "front_distance_km",
     upwelling = "upwelling",
-    log_depth = "log_depth_z"
+    log_depth = "bottom_depth_m"
   )
 }
 

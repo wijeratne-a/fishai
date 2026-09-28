@@ -74,3 +74,7 @@ Leave-future-out CV trains on the fit window and scores holdout **event dates** 
 ### Barrier mesh
 
 Pilot production configs set ``mesh.barrier.enabled: true`` with ``range_fraction: 0.1`` (Bakka land barrier; see ``add_barrier_land()``). Land polygons are read from the same frozen shoreline GeoJSON as PR #7 harmonization coverage (``mesh.barrier.shoreline.path``). Mesh construction verifies ``mesh.barrier.shoreline.sha256`` against the file bytes and stops on mismatch or while the placeholder hash is unset.
+
+### Covariate upstream columns
+
+``covariates.upstream_fields`` maps model slugs to bot2 training-table columns. Dynamic inputs use GLORYS-derived fields (``T3m``, ``MLD_m``, etc.). Static ``log_depth`` maps to raw ``bottom_depth_m``; FishAI computes ``log(bottom_depth_m)``, standardizes to ``log_depth_z``, and refuses non-excluded rows with ``bottom_depth_m <= 0``. Before fit, ``fit_delta_engine()`` verifies the covariate table includes every upstream field plus ``source_product`` and ``excluded_reason``.

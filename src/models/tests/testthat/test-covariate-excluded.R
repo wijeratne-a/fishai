@@ -106,7 +106,7 @@ test_that("NaN covariate on non-excluded row stops with error", {
   writeLines(
     paste(
       cufes_covariates_csv_header(),
-      "CUFES:T:AK:ok,NaN,0,0,0,0,0,0,FALSE",
+      cufes_covariate_row("CUFES:T:AK:ok", values = c(NA, 0, 0, 0, 0, 0), bottom_depth_m = 20),
       sep = "\n"
     ),
     cov
@@ -137,7 +137,7 @@ test_that("covariate table without excluded column stops with error", {
   )
   writeLines("event_id,taxon,count\nCUFES:T:AK:ok,sardine,1", ct)
   writeLines(
-    "event_id,T3m,S3m,MLD_m,sst_grad,front_distance_km,upwelling,log_depth_z\nCUFES:T:AK:ok,0,0,0,0,0,0,0",
+    "event_id,T3m,S3m,MLD_m,sst_grad,front_distance_km,upwelling,bottom_depth_m,source_product,excluded_reason\nCUFES:T:AK:ok,0,0,0,0,0,0,20,cmems_mod_glo_phy_my_0.083deg_P1D-m,",
     cov
   )
   cfg <- list(
