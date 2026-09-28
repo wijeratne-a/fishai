@@ -7,7 +7,7 @@ This report uses the **quality-checked CUFES event table** produced by bot1 calc
 | Field | Value |
 | --- | --- |
 | File path (repo-relative) | `data/processed/calcofi_cufes/cufes_events.parquet` |
-| Git commit (checkout used to read the file) | `0358c71a259df4479cf80c7bcff712ec45be3c40` |
+| Git commit (checkout used to read the file) | `9cb155fec24fb186213cdb42dfd1644ce1f090cb` |
 | Row count | **14,592** (confirmed; matches `event_count_guard.n_events` in `configs/sensitivity_short_samples.yaml`) |
 
 No additional filters were applied for the counts below: **no** `duration_min` threshold, **no** `short_event` exclusion, and **no** ocean-covariate / GLORYS availability filter.
