@@ -5,6 +5,7 @@ from __future__ import annotations
 import datetime as dt
 import json
 import math
+import re
 import threading
 from pathlib import Path
 from typing import Any
@@ -32,6 +33,20 @@ from fishai.ingestion.physics.wcofs_pull_log import DEFAULT_PULL_LOG_DIR, resolv
 from fishai.ingestion.physics.wcofs_store import DEFAULT_STORE_ROOT, package_wcofs_cycle
 from fishai.ingestion.sources import REPO_ROOT
 from wcofs_fixtures import write_mini_wcofs_bytes
+
+_FIELDS_URL = re.compile(r"wcofs\.t03z\.(\d{8})\.fields\.(\w+)\.nc")
+
+
+def _parse_fields_url(url: str) -> tuple[dt.date, str]:
+    match = _FIELDS_URL.search(url)
+    assert match is not None, url
+    ymd = match.group(1)
+    day = dt.date(int(ymd[:4]), int(ymd[4:6]), int(ymd[6:8]))
+    return day, match.group(2)
+
+
+def _three_hour_offsets(start_h: int, end_h: int) -> set[int]:
+    return set(range(start_h, end_h + 1, 3))
 
 
 def test_resolve_pull_log_dir_routes_tmp_path_to_local_provenance(tmp_path: Path) -> None:
@@ -185,10 +200,6 @@ def test_walkback_skips_missing_runs(tmp_path: Path) -> None:
     )
     assert plan.leads
     assert all(lp.cycle_date == dt.date(2026, 9, 26) for lp in plan.leads)
-
-
-def _three_hour_offsets(start_h: int, end_h: int) -> set[int]:
-    return set(range(start_h, end_h + 1, 3))
 
 
 def test_two_missing_operational_days_walkback_or_unknown() -> None:
@@ -362,6 +373,7 @@ def test_dry_run_lists_keys_and_request_count(tmp_path: Path) -> None:
         dt.date(2026, 9, 28),
         out_root=tmp_path,
         primary_available=True,
+        cycle_exists_fn=lambda _d: True,
     )
     assert plan.request_count == len(wcofs_src.TARGET_VALID_OFFSETS_H)
     assert plan.pull_log == tmp_path / "provenance" / "wcofs_pull_20260928.jsonl"
@@ -412,6 +424,104 @@ def test_wait_for_cycle_respects_cutoff() -> None:
 
 def test_max_concurrent_per_host_is_two() -> None:
     assert http_util.MAX_CONCURRENT_PER_HOST == 2
+
+
+def test_plan_daily_defaults_cycle_exists_from_availability_probe(tmp_path: Path) -> None:
+    """Walk-back uses cycle availability probes unless cycle_exists_fn is injected."""
+    target = dt.date(2026, 9, 28)
+    source_day = dt.date(2026, 9, 26)
+
+    def head(url: str) -> bool:
+        if "fields.n024.nc" not in url:
+            return False
+        return source_day.strftime("%Y/%m/%d") in url
+
+    plan = plan_daily(
+        target,
+        out_root=tmp_path,
+        primary_available=False,
+        head_fn=head,
+    )
+    assert {lp.valid_offset_h for lp in plan.leads} == _three_hour_offsets(-21, 24)
+    assert all(lp.cycle_date == source_day for lp in plan.leads)
+    unknown = [u for u in plan.unknown_slots if u["reason"] == "missing_operational_cycle"]
+    assert {u["valid_offset_h"] for u in unknown} == _three_hour_offsets(27, 72)
+
+
+def test_run_wcofs_daily_walkback_via_mocked_http_only(tmp_path: Path) -> None:
+    target = dt.date(2026, 9, 28)
+    source_day = dt.date(2026, 9, 26)
+    source_r = requested_cycle_time(source_day)
+    head_lock = threading.Lock()
+    head_inflight = {"n": 0, "max": 0}
+
+    def head(url: str) -> bool:
+        with head_lock:
+            head_inflight["n"] += 1
+            head_inflight["max"] = max(head_inflight["max"], head_inflight["n"])
+        try:
+            if "fields.n024.nc" not in url:
+                return False
+            day, _lead = _parse_fields_url(url)
+            return day == source_day
+        finally:
+            with head_lock:
+                head_inflight["n"] -= 1
+
+    payload_cache: dict[tuple[dt.date, str], bytes] = {}
+
+    def get_fn(url: str, **kwargs: Any) -> bytes:  # noqa: ARG001
+        day, lead = _parse_fields_url(url)
+        key = (day, lead)
+        if key not in payload_cache:
+            payload_cache[key] = write_mini_wcofs_bytes(cycle_date=day, lead_tag=lead)
+        return payload_cache[key]
+
+    def head_meta(url: str) -> dict[str, Any]:
+        with head_lock:
+            head_inflight["n"] += 1
+            head_inflight["max"] = max(head_inflight["max"], head_inflight["n"])
+        try:
+            return {"status": 200, "etag": "mock-etag", "size_bytes": 100}
+        finally:
+            with head_lock:
+                head_inflight["n"] -= 1
+
+    plan = run_wcofs_daily(
+        target,
+        out_root=tmp_path,
+        dry_run=False,
+        wait_for_cycle=False,
+        head_fn=head,
+        get_fn=get_fn,
+        head_meta_fn=head_meta,
+    )
+    assert head_inflight["max"] <= http_util.MAX_CONCURRENT_PER_HOST
+    assert plan.zarr_path is not None and plan.zarr_path.is_dir()
+    assert {lp.valid_offset_h for lp in plan.leads} == _three_hour_offsets(-21, 24)
+    assert all(lp.cycle_date == source_day for lp in plan.leads)
+    missing = [u for u in plan.unknown_slots if u["reason"] == "missing_operational_cycle"]
+    assert {u["valid_offset_h"] for u in missing} == _three_hour_offsets(27, 72)
+    assert not any(u.get("reason") == "download_failed" for u in plan.unknown_slots)
+
+    import xarray as xr
+
+    packaged = xr.open_zarr(plan.zarr_path, consolidated=False)
+    for off in _three_hour_offsets(-21, 24):
+        assert str(packaged["source_run_time"].sel(valid_offset_h=off).values)[:19] == source_r.strftime(
+            "%Y-%m-%dT%H:%M:%S"
+        )
+        assert packaged["evidence_state_hint"].sel(valid_offset_h=off).values == "forecast"
+
+    log_path = plan.pull_log
+    assert log_path is not None
+    records = [json.loads(line) for line in log_path.read_text(encoding="utf-8").strip().splitlines()]
+    assert records
+    assert all(r["status"] == "ok" for r in records)
+    assert all(r.get("reason") != "download_failed" for r in records)
+    assert all(r["source_run_time"] == source_r.isoformat() for r in records)
+    assert all(r["fallback_used"] is True for r in records)
+    assert all(r["forecast_age_hours"] == r["lead_hour"] + 48 for r in records)
 
 
 def test_run_wcofs_daily_dry_run(tmp_path: Path) -> None:

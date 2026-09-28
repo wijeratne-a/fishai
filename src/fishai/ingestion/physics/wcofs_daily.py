@@ -315,7 +315,7 @@ def plan_daily(
 ) -> DailyPlan:
     if primary_available is None:
         primary_available = wcofs_src.cycle_available(target, head_fn=head_fn)
-    if cycle_exists_fn is None and head_fn is not None:
+    if cycle_exists_fn is None:
         cycle_exists_fn = lambda d: wcofs_src.cycle_available(d, head_fn=head_fn)
     plan = build_lead_plan(
         target,
@@ -542,7 +542,11 @@ def run_cycle_qc(
 
     def _nan_frac(da: xr.DataArray) -> float:
         arr = da.values
-        mask = wet.values if wet.ndim == arr.ndim[-2:] else np.ones(arr.shape[-2:], dtype=bool)
+        mask = (
+            wet.values
+            if wet.ndim == len(arr.shape[-2:])
+            else np.ones(arr.shape[-2:], dtype=bool)
+        )
         if arr.ndim == 4:
             flat = arr[:, :, mask]
         elif arr.ndim == 3:
@@ -624,6 +628,7 @@ def run_wcofs_daily(
             primary_available=True,
             max_missed_cycles=max_missed_cycles,
             provenance_dir=provenance_dir,
+            cycle_exists_fn=lambda _d: True,
         )
     primary_available = wcofs_src.cycle_available(target, head_fn=head_fn)
     if wait_for_cycle and not primary_available and not dry_run:

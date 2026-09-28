@@ -38,8 +38,6 @@ src/fishai/ingestion/physics/harmonize.py
 src/fishai/ingestion/physics/http_util.py
 src/fishai/ingestion/physics/store.py
 src/fishai/ingestion/physics/vertical.py
-src/fishai/ingestion/physics/wcofs_daily.py
-src/fishai/ingestion/physics/wcofs_pull_log.py
 src/fishai/ingestion/physics/wcofs_store.py
 src/fishai/ingestion/physics/sources/__init__.py
 src/fishai/ingestion/physics/sources/altimetry.py
