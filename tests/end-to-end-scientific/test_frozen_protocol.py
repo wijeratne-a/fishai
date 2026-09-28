@@ -14,10 +14,9 @@ from pathlib import Path
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(REPO_ROOT / "tests" / "models" / "config"))
-sys.path.insert(0, str(REPO_ROOT / "scripts" / "modeling"))
 
 from test_config_rules import valid_config, validate_experiment_config  # noqa: E402
-from write_run_manifest import build_manifest, validate_manifest, write_manifest  # noqa: E402
+from fishai.models.run_manifest import build_manifest, validate_manifest, write_manifest  # noqa: E402
 
 
 def _load(name: str, rel: str):

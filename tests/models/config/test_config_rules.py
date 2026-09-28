@@ -11,7 +11,7 @@ import jsonschema
 import yaml
 
 REPO_ROOT = Path(__file__).resolve().parents[3]
-CONFIG_DIR = REPO_ROOT / "models" / "config"
+CONFIG_DIR = REPO_ROOT / "src" / "fishai" / "models" / "config"
 SCHEMA_PATH = CONFIG_DIR / "MODEL_EXPERIMENT_SCHEMA.json"
 TEMPLATE_PATH = CONFIG_DIR / "EXPERIMENT_TEMPLATE.yaml"
 

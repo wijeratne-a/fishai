@@ -1,0 +1,116 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://fishai.local/schemas/source.schema.json",
+  "title": "Source",
+  "description": "Registry record for a data source. Protocols stay distinct; environmental products are never fish observations.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "source_id",
+    "source_name",
+    "source_family",
+    "record_kind",
+    "protocol_id",
+    "rights_status",
+    "license",
+    "coordinate_policy"
+  ],
+  "properties": {
+    "source_id": {
+      "type": "string",
+      "minLength": 1,
+      "description": "Stable slug identifying the source."
+    },
+    "source_name": {
+      "type": "string",
+      "minLength": 1
+    },
+    "source_family": {
+      "type": "string",
+      "enum": [
+        "STRUCTURED_SURVEY",
+        "COMPILED_OCCURRENCE",
+        "IN_SITU_SENSOR",
+        "REMOTE_ENVIRONMENTAL",
+        "OCEAN_MODEL",
+        "TAXONOMY_AUTHORITY",
+        "OPERATIONAL_CATCH_OR_EFFORT",
+        "OTHER"
+      ]
+    },
+    "record_kind": {
+      "type": "string",
+      "enum": [
+        "BIOLOGICAL_EVENT",
+        "BIOLOGICAL_OBSERVATION",
+        "ENVIRONMENTAL_CONDITION",
+        "TAXONOMY",
+        "MODEL_OUTPUT",
+        "OTHER"
+      ],
+      "description": "SST and other ocean fields are ENVIRONMENTAL_CONDITION, never BIOLOGICAL_OBSERVATION."
+    },
+    "protocol_id": {
+      "type": "string",
+      "minLength": 1,
+      "description": "Named protocol or product method. Different protocols must not be merged without an explicit bridge."
+    },
+    "protocol_version": {
+      "type": ["string", "null"]
+    },
+    "owner": {
+      "type": ["string", "null"]
+    },
+    "documentation_url": {
+      "type": ["string", "null"],
+      "format": "uri"
+    },
+    "rights_status": {
+      "type": "string",
+      "enum": [
+        "APPROVED_OPEN_COMMERCIAL",
+        "APPROVED_WITH_ATTRIBUTION",
+        "APPROVED_INTERNAL_ONLY",
+        "APPROVED_PARTNER_CONSENT",
+        "CONDITIONAL_REVIEW_REQUIRED",
+        "PAID_LICENSE_REQUIRED",
+        "RESEARCH_ONLY",
+        "NONCOMMERCIAL_ONLY",
+        "RESTRICTED",
+        "REJECTED",
+        "UNKNOWN"
+      ]
+    },
+    "license": {
+      "type": "string",
+      "minLength": 1
+    },
+    "attribution_text": {
+      "type": ["string", "null"]
+    },
+    "presence_only": {
+      "type": "boolean",
+      "default": false,
+      "description": "True when the source cannot supply verified non-detections. Presence-only is not absence."
+    },
+    "supports_survey_nondetection": {
+      "type": "boolean",
+      "default": false,
+      "description": "True only when a complete protocol frame can construct SURVEY_NONDETECTION."
+    },
+    "coordinate_policy": {
+      "type": "string",
+      "enum": [
+        "NATIVE_PRIVATE_ONLY",
+        "COARSEN_BEFORE_PUBLIC",
+        "PUBLIC_CELL_ONLY",
+        "NEVER_PUBLISH_NATIVE",
+        "UNKNOWN"
+      ],
+      "description": "Globe and public products must not emit raw coordinates."
+    },
+    "notes": {
+      "type": ["string", "null"]
+    }
+  }
+}

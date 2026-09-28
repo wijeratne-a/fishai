@@ -1,0 +1,34 @@
+name: CI
+
+on:
+  push:
+    branches: [main, "feature/**", "cursor/**"]
+  pull_request:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install package
+        run: pip install -e ".[dev]"
+
+      - name: Sensitive data scan
+        run: python security/precommit_sensitive_scan.py
+
+      - name: No committed data binaries
+        run: python scripts/ci/check_no_committed_data.py
+
+      - name: Ingestion SOURCES manifest
+        run: python scripts/ci/check_sources_manifest.py
+
+      - name: Fishery-dependent schema fields
+        run: python scripts/ci/check_fishery_schema_fields.py
+
+      - name: Pytest
+        run: pytest

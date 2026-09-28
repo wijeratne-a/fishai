@@ -1,0 +1,69 @@
+# Runtime license manifest for pilot ingestion modules.
+# Every ingestion source module must have a matching entry (CI-enforced).
+
+pilot:
+  name: Southern California Bight 50-mile nowcast
+  bbox:
+    lat_min: 32.0
+    lat_max: 35.0
+    lon_min: -121.0
+    lon_max: -117.0
+
+sources:
+  calcofi_cufes:
+    module: fishai.ingestion.biology.calcofi_cufes
+    erddap_dataset: erdCalCOFIcufes
+    provider: CalCOFI / SCCOOS ERDDAP
+    license: CC-BY-4.0
+    license_url: https://creativecommons.org/licenses/by/4.0/
+    attribution: "CalCOFI and SCCOOS; cite ERDDAP dataset erdCalCOFIcufes and original CalCOFI data providers."
+    status: approved
+    enabled: true
+    notes: Egg-stage evidence only; not adult presence.
+
+  wcofs:
+    module: fishai.ingestion.physics.wcofs
+    endpoint_family: NOAA WCOFS public S3
+    license: U.S. Government Work
+    license_url: https://www.noaa.gov/information-technology/foia
+    attribution: "NOAA National Ocean Service WCOFS; cite model run and retrieval time."
+    status: approved
+    enabled: true
+
+  glorys:
+    module: fishai.ingestion.physics.glorys
+    product: Copernicus Marine GLORYS
+    license: Copernicus Marine Service (account terms)
+    license_url: https://marine.copernicus.eu/
+    attribution: "Copernicus Marine Service GLORYS; cite product DOI and download credentials holder."
+    status: account_required
+    enabled: false
+
+  sccoos_hfr:
+    module: fishai.ingestion.sensors.sccoos_hfr
+    erddap_dataset: ucsdHfrW6
+    provider: SCCOOS HF radar
+    license: Open access with citation (SCCOOS)
+    license_url: https://sccoos.org/data/usage-policy/
+    attribution: "SCCOOS HF radar (ucsdHfrW6); cite SCCOOS and generating institution."
+    status: approved
+    enabled: true
+
+  ndbc_met:
+    module: fishai.ingestion.sensors.ndbc_met
+    erddap_dataset: cwwcNDBCMet
+    provider: NDBC via ERDDAP
+    license: U.S. Government Work
+    license_url: https://www.ndbc.noaa.gov/
+    attribution: "NOAA National Data Buoy Center; cite station IDs and retrieval time."
+    status: approved
+    enabled: true
+
+  ioos_glider_dac:
+    module: fishai.ingestion.sensors.ioos_glider_dac
+    provider: IOOS Glider DAC
+    license: Pending IOOS DAC terms review
+    license_url: https://gliders.ioos.us/
+    attribution: "IOOS Glider DAC; cite glider id and deployment metadata when approved."
+    status: pending
+    enabled: false

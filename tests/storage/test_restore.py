@@ -7,7 +7,7 @@ import unittest
 from pathlib import Path
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
-AUDIT = REPO_ROOT / "audit" / "storage"
+AUDIT = REPO_ROOT / "docs" / "archive" / "audit" / "storage"
 
 
 class RestoreVerificationTests(unittest.TestCase):

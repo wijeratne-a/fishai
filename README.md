@@ -1,54 +1,81 @@
-# FishAI
+# FishAI — Southern California Bight pilot
 
-> **Current scientific/product context (2026-09-27):** [`PROJECT_CONTEXT.md`](PROJECT_CONTEXT.md).  
-> This README is the **2026-09-18 paused commercial-wedge track**. It is not the operator runbook for the survey-detection program.
+FishAI is a **50-mile nowcast skeleton** for the Southern California Bight pilot domain (**32–35°N, 121–117°W**). The active program ingests **CalCOFI CUFES sardine/anchovy egg-stage evidence**, **WCOFS/GLORYS-class physics**, and **SCCOOS HF radar / NDBC / IOOS glider consistency checks**, then fits **sdmTMB delta-lognormal** models in R. This branch provides installable layout, CI, and contracts—not live ingestion or published nowcasts.
 
-Working name for an Ocean Intelligence Builder research project. Long-term vision: a **trusted intelligence layer** for biological, environmental, operational, regulatory, and commercial ocean conditions.
+## Evidence-state vocabulary
 
-This is **not** a world map, generic dashboard, generic AI agent, or a dump of public ocean datasets.
+Map and API outputs must use one primary evidence state (plus uncertainty), not conflated labels:
 
-**Research problem (canonical):** [`RESEARCH_PROBLEM.md`](RESEARCH_PROBLEM.md) — given a species, location, depth, and time, estimate presence and (where evidence permits) concentration, then how that may change, with uncertainty and evidence. Do not mistake habitat or Copernicus ocean state for an observed animal. The six research programs are not claimed as built. Publication is earned.
+| State | Meaning |
+| --- | --- |
+| **Direct Observation** | Structured survey or instrument detection at known effort (for the pilot: **egg-stage CUFES counts**, not adult fish presence). |
+| **Historical Pattern** | Learned or climatological pattern without a contemporaneous detection. |
+| **Current Nowcast** | Model or fused estimate for the valid nowcast window with documented inputs. |
+| **Forecast** | Forward-looking statement with explicit issue time and valid window. |
+| **Unknown** | Insufficient evidence to assign a stronger state. |
 
-The first commercial product, when a founder locks it, must still be:
+**CUFES labels are egg-stage evidence.** They support spawning-habitat and egg-density questions; they must **not** be displayed or modeled as adult fish presence without a separate life-stage contract.
 
-**ONE SPECIES × ONE GEOGRAPHY × ONE CUSTOMER TYPE × ONE RECURRING DECISION**
-
-## Status (2026-09-18)
-
-**Paused for founder decision.** Configuration was not supplied. All Section 2 fields are `UNRESOLVED` except the working project name and default autonomous-work budget.
-
-Read, in order:
-
-1. [`decision_required.md`](decision_required.md) — exact questions the founder must answer
-2. [`artifacts/requirements_and_wedge/recommended_initial_wedge.md`](artifacts/requirements_and_wedge/recommended_initial_wedge.md) — recommendation, labeled **RECOMMENDED not DECIDED**
-3. [`artifacts/requirements_and_wedge/wedge_options.md`](artifacts/requirements_and_wedge/wedge_options.md) — three viable narrow wedges
-4. [`config/project_config.json`](config/project_config.json) and [`project_state.json`](project_state.json)
-
-Current state machine value: `STATE_10_PAUSED_FOR_HUMAN_DECISION`.
-
-## Canonical first prototype (not decided)
-
-Independent tracks recommend the same first cell: **`P0-WILLAPA-MGIGAS-OSI72`** — Pacific oyster × Willapa Bay DOH growing areas × farm operator × 24–72h Category D ops-stress / work-window. This is **RECOMMENDED, not DECIDED**; it does not lock W1/W2/W3. Alignment note: [`P0_WILLAPA_MGIGAS_OSI72.md`](P0_WILLAPA_MGIGAS_OSI72.md). Next human action remains [`decision_required.md`](decision_required.md). State stays paused.
-
-## Non-negotiables
-
-- No ingestion until a data-rights review approves a source.
-- No ML until wedge, label, ground truth, baseline, validation, rights, and red-team gates are met.
-- No food-safety, navigation, weather-safety, or legal-harvest authorization claims.
-- No exact private fishing locations, farm performance, Indigenous knowledge, or protected-species locations.
-- Catalog and cite official sources only; do not scrape paywalls or bypass licenses.
-
-## Layout
+## Repository layout
 
 ```
-artifacts/          specialist agent outputs (one folder per agent)
-config/             project_config.json
-data_dictionary/    reserved
-ingestion_pipeline/ reserved (do not ingest yet)
-model_registry/     reserved (no models)
-evaluation_reports/ reserved
-iteration_reports/  iteration cards
-checkpoints/        pause / score checkpoints
+src/fishai/
+  ingestion/biology/     CalCOFI CUFES (erdCalCOFIcufes) stub
+  ingestion/physics/     WCOFS, GLORYS stubs
+  ingestion/sensors/     SCCOOS HF radar, NDBC, IOOS glider stubs
+  models/                Python experiment config, baselines, run manifest
+  models/R/              sdmTMB R code (bootstrap via renv)
+  evaluation/            Metrics and numeric support mask (reusable)
+  validation/            Survey file eligibility gate
+  api/                   Future nowcast API stub
+  schemas/               JSON schemas for observations and provenance
+data/SOURCES.yaml        License manifest (CI-enforced for ingestion modules)
+labels/                  Label validation rules (YAML/JSON)
+science/                 Measurement and temporal integrity rules
+security/                Sensitive-data pre-commit scanner
+tests/                   Unit and synthetic protocol tests (no network)
+docs/archive/            Archived planning, audit, and legacy scripts
 ```
 
-Founder organization is **UNRESOLVED**. Related repos under `~/dev` (HiveClaw, Atlas, NeuroClaw) do not define a FishAI operating company or marine-product choice.
+Legacy one-off modeling and acquisition code lives under `docs/archive/legacy_scripts/`. **`ingest.py` event hashing (ship_code omitted) and SEAMAP `zero_fill.py` were not ported.**
+
+## Setup
+
+```bash
+python -m venv .venv
+source .venv/bin/activate
+pip install -e ".[dev]"
+pytest
+```
+
+CLI entrypoints (stubs exit non-zero):
+
+```bash
+fishai-bio
+fishai-physics
+fishai-sensors
+fishai-models
+```
+
+### R / sdmTMB
+
+```bash
+Rscript renv/scripts/bootstrap.R   # network required; refreshes renv.lock
+```
+
+Target packages: **sdmTMB**, **fmesher**, **sdmTMBextra**.
+
+### Docker
+
+```bash
+docker build -t fishai-pilot .
+docker run --rm fishai-pilot
+```
+
+## CI
+
+GitHub Actions runs: editable install, `pytest`, `security/precommit_sensitive_scan.py`, checks for committed data under `data/raw`/`data/processed` and forbidden binary extensions, and ingestion coverage in `data/SOURCES.yaml`.
+
+## Data policy
+
+Do not commit raw coordinates, telemetry, or grid binaries (see `.gitignore`). Tests use synthetic fixtures only.

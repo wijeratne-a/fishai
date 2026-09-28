@@ -1,0 +1,35 @@
+[build-system]
+requires = ["setuptools>=69", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "fishai"
+version = "0.1.0"
+description = "Southern California Bight fish egg nowcast pilot skeleton"
+readme = "README.md"
+requires-python = ">=3.11"
+license = { text = "Proprietary" }
+dependencies = [
+  "jsonschema==4.23.0",
+  "numpy==2.1.3",
+  "PyYAML==6.0.2",
+]
+
+[project.optional-dependencies]
+dev = [
+  "pytest==8.3.4",
+]
+
+[project.scripts]
+fishai-bio = "fishai.cli:main_bio"
+fishai-physics = "fishai.cli:main_physics"
+fishai-sensors = "fishai.cli:main_sensors"
+fishai-models = "fishai.cli:main_models"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["src"]
+addopts = "-q"
