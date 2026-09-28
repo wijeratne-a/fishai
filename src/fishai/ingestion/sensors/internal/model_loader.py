@@ -20,13 +20,8 @@ def load_wcofs_cycle(cycle_yyyymmdd: str) -> xr.Dataset | None:
         raise ValueError(f"cycle must be YYYYMMDD, got {cycle_yyyymmdd!r}") from exc
     try:
         return open_wcofs_cycle(cycle_date)
-    except WcofsDayFailed as exc:
-        logger.warning(
-            "WCOFS cycle %s failed (%s); skipping",
-            cycle_yyyymmdd,
-            exc.reason,
-        )
-        return None
+    except WcofsDayFailed:
+        raise
     except CycleNotAvailable:
         logger.warning("WCOFS cycle %s not available in local store; skipping", cycle_yyyymmdd)
         return None

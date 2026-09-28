@@ -18,9 +18,10 @@ from fishai.ingestion.physics.http_util import get_bytes, head_metadata
 from fishai.ingestion.physics.sources import wcofs as wcofs_src
 from fishai.ingestion.physics.wcofs_pull_log import (
     append_pull_log,
+    build_day_success_record,
     build_day_tombstone_record,
     build_pull_record,
-    load_day_tombstone,
+    load_day_outcome,
     load_pull_index,
     pull_log_path,
     resolve_pull_log_dir,
@@ -719,9 +720,12 @@ def run_wcofs_daily(
 
     zpath = plan.zarr_path
     assert zpath is not None
-    if plan.pull_log and load_day_tombstone(plan.pull_log):
-        return plan
-    if zpath.is_dir() and _pull_complete(plan.pull_log, plan.s3_keys):
+    day_outcome, _ = load_day_outcome(plan.pull_log) if plan.pull_log else (None, None)
+    if (
+        zpath.is_dir()
+        and _pull_complete(plan.pull_log, plan.s3_keys)
+        and day_outcome != "failed"
+    ):
         return plan
 
     lead_slices, failed = fetch_and_log_leads(
@@ -766,4 +770,6 @@ def run_wcofs_daily(
         qc["missing_leads"] = [f["valid_offset_h"] for f in failed]
     write_wcofs_cycle(merged, target, out_root, extra_attrs=extra_attrs, packaged=packaged)
     write_qc_report(qc, plan.qc_report_path or out_root / f"wcofs_{target:%Y%m%d}_qc.json")
+    assert plan.pull_log is not None
+    append_pull_log(build_day_success_record(target), log_path=plan.pull_log)
     return plan

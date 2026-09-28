@@ -34,7 +34,7 @@ from typing import Sequence
 
 import xarray as xr
 
-from fishai.ingestion.physics.wcofs_pull_log import day_tombstone_for_date, utc_today
+from fishai.ingestion.physics.wcofs_pull_log import day_outcome_for_date, utc_today
 from fishai.ingestion.physics.wcofs_store import DEFAULT_STORE_ROOT, cycle_zarr_path
 
 __all__ = [
@@ -80,13 +80,13 @@ def list_wcofs_cycles(store_root: Path | str | None = None) -> list[dt.date]:
     return dates
 
 
-def _raise_if_tombstoned(cycle_date: dt.date, store_root: Path) -> None:
-    tombstone = day_tombstone_for_date(cycle_date, out_root=store_root)
-    if tombstone is None:
+def _raise_if_day_failed(cycle_date: dt.date, store_root: Path) -> None:
+    outcome, record = day_outcome_for_date(cycle_date, out_root=store_root)
+    if outcome != "failed":
         return
-    reason = str(tombstone.get("reason", "wcofs_nowcast_missing"))
+    reason = str((record or {}).get("reason", "wcofs_nowcast_missing"))
     raise WcofsDayFailed(
-        f"WCOFS cycle {cycle_date.isoformat()} is tombstoned ({reason})",
+        f"WCOFS cycle {cycle_date.isoformat()} failed on last daily attempt ({reason})",
         reason=reason,
         target_date=cycle_date,
     )
@@ -105,7 +105,7 @@ def latest_wcofs_cycle_date(
     """
     root = _resolve_store_root(store_root)
     day = as_of or utc_today()
-    _raise_if_tombstoned(day, root)
+    _raise_if_day_failed(day, root)
     path = cycle_zarr_path(day, root)
     if path.is_dir():
         return day
@@ -122,7 +122,7 @@ def open_wcofs_cycle_for_operational_day(
     """Open WCOFS for an operational calendar day without substituting an older cycle."""
     root = _resolve_store_root(store_root)
     day = cycle_date or utc_today()
-    _raise_if_tombstoned(day, root)
+    _raise_if_day_failed(day, root)
     return open_wcofs_cycle(
         day,
         store_root=root,
@@ -158,7 +158,7 @@ def open_wcofs_cycle(
         If the cycle Zarr store does not exist locally.
     """
     root = _resolve_store_root(store_root)
-    _raise_if_tombstoned(cycle_date, root)
+    _raise_if_day_failed(cycle_date, root)
     path = cycle_zarr_path(cycle_date, root)
     if not path.is_dir():
         raise CycleNotAvailable(f"no processed WCOFS cycle at {path}")

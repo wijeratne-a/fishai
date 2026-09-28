@@ -11,6 +11,7 @@ from typing import Any, Sequence
 from fishai.ingestion.sources import REPO_ROOT
 
 DAY_TOMBSTONE_RECORD_TYPE = "day_tombstone"
+DAY_SUCCESS_RECORD_TYPE = "day_success"
 
 DEFAULT_PULL_LOG_DIR = REPO_ROOT / "data" / "provenance"
 DEFAULT_WCOFS_PULL_LOG = DEFAULT_PULL_LOG_DIR / "wcofs_pull_log.jsonl"
@@ -140,6 +141,48 @@ def build_day_tombstone_record(
     return rec
 
 
+def build_day_success_record(
+    target: date,
+    *,
+    run_time_utc: datetime | None = None,
+) -> dict[str, Any]:
+    ts = run_time_utc or datetime.now(timezone.utc)
+    cycle = f"{target.strftime('%Y%m%d')}T03Z"
+    return {
+        "record_type": DAY_SUCCESS_RECORD_TYPE,
+        "target_date": target.isoformat(),
+        "target_cycle": cycle,
+        "cycle": cycle,
+        "status": "ok",
+        "fetch_time_utc": ts.isoformat(),
+    }
+
+
+def load_day_outcome(log_path: Path) -> tuple[str | None, dict[str, Any] | None]:
+    """
+    Return the latest day-level outcome in ``log_path`` (append order wins).
+
+    ``failed`` means the most recent day-level record is a tombstone; ``success``
+    means the most recent record is a successful daily completion.
+    """
+    if not log_path.is_file():
+        return None, None
+    status: str | None = None
+    record: dict[str, Any] | None = None
+    for line in log_path.read_text(encoding="utf-8").splitlines():
+        if not line.strip():
+            continue
+        rec = json.loads(line)
+        record_type = rec.get("record_type")
+        if record_type == DAY_TOMBSTONE_RECORD_TYPE:
+            status = "failed"
+            record = rec
+        elif record_type == DAY_SUCCESS_RECORD_TYPE:
+            status = "success"
+            record = rec
+    return status, record
+
+
 def load_day_tombstone(log_path: Path) -> dict[str, Any] | None:
     """Return the latest day-level tombstone in ``log_path``, if any."""
     if not log_path.is_file():
@@ -154,15 +197,34 @@ def load_day_tombstone(log_path: Path) -> dict[str, Any] | None:
     return tombstone
 
 
+def pull_log_path_for_date(
+    target: date,
+    *,
+    out_root: Path | None = None,
+    provenance_dir: Path | None = None,
+) -> Path:
+    log_dir = resolve_pull_log_dir(out_root, provenance_dir)
+    return pull_log_path(target.strftime("%Y%m%d"), log_dir=log_dir)
+
+
+def day_outcome_for_date(
+    target: date,
+    *,
+    out_root: Path | None = None,
+    provenance_dir: Path | None = None,
+) -> tuple[str | None, dict[str, Any] | None]:
+    return load_day_outcome(pull_log_path_for_date(target, out_root=out_root, provenance_dir=provenance_dir))
+
+
 def day_tombstone_for_date(
     target: date,
     *,
     out_root: Path | None = None,
     provenance_dir: Path | None = None,
 ) -> dict[str, Any] | None:
-    log_dir = resolve_pull_log_dir(out_root, provenance_dir)
-    log_path = pull_log_path(target.strftime("%Y%m%d"), log_dir=log_dir)
-    return load_day_tombstone(log_path)
+    return load_day_tombstone(
+        pull_log_path_for_date(target, out_root=out_root, provenance_dir=provenance_dir)
+    )
 
 
 def append_wcofs_pull_log(record: dict[str, Any], *, log_path: Path | None = None) -> Path:
