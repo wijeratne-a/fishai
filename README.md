@@ -20,7 +20,7 @@ Map and API outputs must use one primary evidence state (plus uncertainty), not 
 
 ```
 src/fishai/
-  ingestion/biology/     CalCOFI CUFES (erdCalCOFIcufes) stub
+  ingestion/biology/     CalCOFI CUFES (erdCalCOFIcufes); SWFSC CPS trawl haul catch (FRDCPSTrawlLHHaulCatch)
   ingestion/physics/     WCOFS; GLORYS (training/hindcast only; T/S at 3 m linear z)
   physics/store.py       Read-only ``open_wcofs_cycle`` / ``list_wcofs_cycles`` (Bot4 sensors)
   ingestion/sensors/     SCCOOS HF radar, NDBC, IOOS glider stubs
@@ -80,3 +80,19 @@ GitHub Actions runs: editable install, `pytest`, `security/precommit_sensitive_s
 ## Data policy
 
 Do not commit raw coordinates, telemetry, or grid binaries (see `.gitignore`). Tests use synthetic fixtures only.
+
+## SWFSC CPS trawl haul catch (`FRDCPSTrawlLHHaulCatch`)
+
+**Provenance:** NOAA SWFSC Fisheries Resources Division coastal pelagic species (CPS) mid-water trawl surveys (DEPM, acoustic-trawl, SaKe), served on CoastWatch ERDDAP (`oceanview.pfeg.noaa.gov`). Related tables: `FRDCPSTrawlLHSpecimen`, `FRDCPSTrawlLHLengthFrequency` (individuals/length bins for subsets of catches).
+
+**License:** ERDDAP `NC_GLOBAL.license` (recorded verbatim as `license_text` in `data/SOURCES.yaml` and `cps_trawl_metadata.json` after sync).
+
+**Outputs:** `data/processed/swfsc_cps_trawl_haul_catch/cps_trawl_hauls.parquet` (tow metadata and effort) and `cps_trawl_catch.parquet` (long catch). Haul key: `CPSTrawl:{cruise}:{ship}:{haul}`.
+
+**Effort fields:** Tow duration (minutes) and great-circle distance (nautical miles) are computed from start/stop times and coordinates when present. **Net mouth area is not in the dataset** — `net_mouth_area_m2` is always null with reason `not_in_source_dataset`. Ship speed uses `ship_spd_through_water` when reported.
+
+**Catch semantics:** `subsample_count` is the source subsample count (not a raised haul total). Optional `count_raised_est` is computed only when both weight fields are present and `subsample_weight > 0`. If exactly one of `subsample_weight` / `remaining_weight` is present, `weight_kg` is null and `weight_flag=weight_partial` (partial values kept in separate columns).
+
+**Zero-catch gate:** Implied zeros require a per-cruise+ship entry in `config/cps_trawl_zero_frame_evidence.yaml` (shipped empty). A cruise is VERIFIED only when the entry lists `expected_hauls` equal to `report_haul_log` minus `aborted_tows`. `expand_haul_species_matrix()` refuses zeros otherwise (`zero_frame_unverified`, `haul_not_in_verified_frame`, etc.). Hauls whose only catch is `Animalia` are always excluded (`animalia_only_undocumented`). `presence_only=Y` never receives weight; missing weights are never zero.
+
+**CLI:** `fishai-bio sync cps-trawl --start YYYY-MM-DD --end YYYY-MM-DD` (batched yearly ERDDAP CSV → raw cache → parquet).

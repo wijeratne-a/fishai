@@ -94,7 +94,7 @@ def test_overlap_never_passes_glorys_dataset_id_override() -> None:
     assert "fetch_day(" not in text
     forbidden = (
         "glorys_dataset_id_for_date(day, PRODUCT_ID",
-        "glorys_dataset_id_for_date(day, \"cmems",
+        'glorys_dataset_id_for_date(day, "cmems',
         "dataset_id=PRODUCT_ID",
     )
     for token in forbidden:
