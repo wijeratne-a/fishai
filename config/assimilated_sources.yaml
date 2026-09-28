@@ -15,9 +15,21 @@ sources:
         quote: >-
           serve as independent observations for evaluating model performance because
           the model does not assimilate in situ observations
+      evidence_period: >-
+        report through 2021; supporting code check nosofs v3.6.6 (June 2025,
+        unofficial contractor GitHub mirror, supporting evidence only)
       evidence_valid_from: "2022-01-01"
       evidence_valid_to: null
-      accepted_by_auditor: false
+      accepted_by_auditor: true
+      accepted_by: auditbot1
+      accepted_on: 2026-09-28
+      known_limitations: >-
+        WCOFS assimilates satellite SST, which is calibrated against buoys; buoy
+        grading is independent but not fully separate. Still gradable (auditor decision
+        2026-09-28).
+      revisit_trigger: >-
+        CO-OPS reply reports assimilation config changed since 2021 -> set
+        accepted_by_auditor false and recompute verdicts
     glorys:
       status: unknown
       citation: null

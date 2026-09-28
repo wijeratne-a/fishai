@@ -40,6 +40,16 @@ def _ready_block() -> dict:
         "bootstrap_seed": 42,
     }
     block["pass_fail_thresholds"]["combination_rule"] = "worst-of"
+    if "input_check_grading" not in block:
+        block["input_check_grading"] = {
+            "graded_variables": list(
+                __import__(
+                    "fishai.scoring.harmonization.input_check_config",
+                    fromlist=["SCORER_GRADED_INPUT_VARIABLES"],
+                ).SCORER_GRADED_INPUT_VARIABLES
+            ),
+            "reported_not_graded": ["u_surf", "v_surf"],
+        }
     return block
 
 

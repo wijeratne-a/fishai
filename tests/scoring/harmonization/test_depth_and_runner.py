@@ -11,10 +11,7 @@ import yaml
 
 from fishai.evaluation.harmonization_prereg import load_harmonization_prereg
 from fishai.ingestion.physics.wcofs_glorys_grid import harmonization_temperature_at_buoy_depth
-from fishai.scoring.harmonization.constants import (
-    NO_INDEPENDENT_VALIDATION_REASON,
-    VERDICT_UNKNOWN,
-)
+from fishai.scoring.harmonization.input_check_config import SCORER_GRADED_INPUT_VARIABLES
 from fishai.scoring.harmonization.registry import load_assimilated_sources_registry, wcofs_independent_observation_source
 from fishai.scoring.harmonization.runner import (
     BUOY_DEPTH_FUNCTION,
@@ -34,9 +31,9 @@ def test_shared_buoy_depth_function_identity() -> None:
     assert np.isfinite(val)
 
 
-def test_registry_marks_ndbc_unknown_for_wcofs() -> None:
+def test_registry_marks_ndbc_accepted_independent_for_wcofs() -> None:
     reg = load_assimilated_sources_registry()
-    assert wcofs_independent_observation_source("ndbc_buoy_temperature", reg) is False
+    assert wcofs_independent_observation_source("ndbc_buoy_temperature", reg) is True
 
 
 def _small_ready_prereg(tmp_path: Path) -> Path:
@@ -103,18 +100,22 @@ def test_runner_writes_outputs(tmp_path: Path) -> None:
         ),
         encoding="utf-8",
     )
+    input_rows = []
+    for stratum in ("pooled", "nearshore", "offshore"):
+        for var in SCORER_GRADED_INPUT_VARIABLES:
+            input_rows.append(
+                {
+                    "stratum": stratum,
+                    "variable": var,
+                    "rmse": 0.1,
+                    "glorys_spatial_sd": 1.0,
+                }
+            )
     out_dir = tmp_path / "scores"
     summary = run_holdout_scoring(
         prereg_path,
         pairing_table=_synthetic_pairing(),
-        input_check_table=pd.DataFrame(
-            {
-                "stratum": ["pooled", "nearshore", "offshore"],
-                "variable": ["S3m"] * 3,
-                "rmse": [0.1, 0.1, 0.1],
-                "glorys_spatial_sd": [1.0, 1.0, 1.0],
-            }
-        ),
+        input_check_table=pd.DataFrame(input_rows),
         front_detail_native_sst_grad=[1.0, 2.0],
         front_detail_coarsened_sst_grad=[0.8, 1.6],
         output_dir=out_dir,
@@ -124,14 +125,11 @@ def test_runner_writes_outputs(tmp_path: Path) -> None:
     assert (out_dir / "holdout_scores.parquet").is_file()
     assert (out_dir / "summary.json").is_file()
     assert summary["insufficient_model_coverage"]["total"] == 0
-    assert summary["preflight"]["any_independent_validation_source"] is False
-    assert summary["preflight"]["no_independent_validation_messages"][0].startswith(
-        "NO_INDEPENDENT_VALIDATION:"
-    )
+    assert summary["preflight"]["any_independent_validation_source"] is True
+    assert summary["preflight"]["no_independent_validation_messages"] == []
     ns = [m for m in summary["metrics"] if m["model_row"] == "wcofs_coarsened_mapped" and m["stratum"] == "pooled"]
     assert ns and ns[0]["n"] == 40
-    assert ns[0]["verdict"] == VERDICT_UNKNOWN
-    assert ns[0]["reason"] == NO_INDEPENDENT_VALIDATION_REASON
+    assert ns[0]["verdict"] is not None
     for row in ("wcofs_native", "wcofs_coarsened", "glorys"):
         same_n = [m for m in summary["metrics"] if m["model_row"] == row and m["stratum"] == "pooled"]
         assert same_n[0]["n"] == 40

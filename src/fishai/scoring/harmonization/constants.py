@@ -16,13 +16,10 @@ ALL_MODEL_ROWS: tuple[str, ...] = (
 
 GRADED_MODEL_ROW = MODEL_ROW_WCOFS_COARSENED_MAPPED
 
-INPUT_CHECK_VARIABLES: tuple[str, ...] = (
-    "S3m",
-    "MLD_m",
-    "sst_grad",
-    "front_distance_km",
-    "upwelling",
-)
+# Re-export for callers; canonical list lives in input_check_config.
+from fishai.scoring.harmonization.input_check_config import SCORER_GRADED_INPUT_VARIABLES
+
+INPUT_CHECK_VARIABLES = SCORER_GRADED_INPUT_VARIABLES
 
 VERDICT_PASS = "PASS"
 VERDICT_DEGRADED = "DEGRADED"

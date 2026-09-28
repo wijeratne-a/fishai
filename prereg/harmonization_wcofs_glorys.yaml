@@ -103,8 +103,21 @@ harmonization_wcofs_glorys:
     - MLD_m
     - sst_grad
     - front_distance_km
+    - upwelling
     - u_surf
     - v_surf
+
+  input_check_grading:
+    graded_variables:
+      - T3m
+      - S3m
+      - MLD_m
+      - sst_grad
+      - front_distance_km
+      - upwelling
+    reported_not_graded:
+      - u_surf
+      - v_surf
 
   models_scored:
     scoring_split: test_only

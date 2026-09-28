@@ -20,16 +20,14 @@ from fishai.scoring.harmonization.common_support import (
 from fishai.scoring.harmonization.constants import (
     ALL_MODEL_ROWS,
     GRADED_MODEL_ROW,
-    INPUT_CHECK_VARIABLES,
     MODEL_ROW_GLORYS,
     MODEL_ROW_WCOFS_COARSENED,
     MODEL_ROW_WCOFS_COARSENED_MAPPED,
     MODEL_ROW_WCOFS_NATIVE,
-)
-from fishai.scoring.harmonization.constants import (
     NO_INDEPENDENT_VALIDATION_REASON,
     VERDICT_UNKNOWN,
 )
+from fishai.scoring.harmonization.input_check_config import graded_input_variables_from_prereg
 from fishai.scoring.harmonization.grading import (
     BuoyGradeInput,
     InputCheckGradeInput,
@@ -236,6 +234,7 @@ def run_holdout_scoring(
     # Grading (mapped row, buoy temperature, graded strata only)
     pf = block["pass_fail_thresholds"]
     combination_rule = str(pf["combination_rule"])
+    graded_input_variables = graded_input_variables_from_prereg(doc)
     buoy_var = kept[kept["variable"] == "sea_water_temperature"] if "variable" in kept.columns else kept
 
     for stratum in STRATA_POOL:
@@ -279,7 +278,7 @@ def run_holdout_scoring(
             input_verdicts: list[str] = []
             if input_check_table is not None:
                 ic = input_check_table.loc[input_check_table.get("stratum", "pooled") == stratum]
-                for var in INPUT_CHECK_VARIABLES:
+                for var in graded_input_variables:
                     part = ic[ic["variable"] == var]
                     if part.empty:
                         input_verdicts.append("not_gradable")

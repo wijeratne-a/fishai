@@ -6,6 +6,7 @@ from typing import Any
 
 from fishai.evaluation.harmonization_prereg import PLACEHOLDER_TOKEN
 from fishai.scoring.harmonization.grading import normalize_combination_rule
+from fishai.scoring.harmonization.input_check_config import collect_graded_input_config_violations
 
 REQUIRED_CUTOFF_NUMERIC_KEYS: tuple[str, ...] = (
     "rmse_ratio_pass",
@@ -87,6 +88,8 @@ def collect_prereg_gate_violations(doc: dict[str, Any]) -> list[str]:
             normalize_combination_rule(combo)
         except ValueError:
             violations.append("pass_fail_thresholds.combination_rule")
+
+    violations.extend(collect_graded_input_config_violations(doc))
 
     return sorted(violations)
 
