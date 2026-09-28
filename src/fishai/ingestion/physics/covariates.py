@@ -379,13 +379,14 @@ def join_covariates_to_events(
         "dropped_unique_total": dropped_unique_total,
         **reason_counts,
     }
+    missing_by_field = missing_covariate_counts(out)
     excluded_ids: set[Any] = set(drops["event_id"].unique()) if not drops.empty else set()
     out["excluded"] = out[COL_EVENT_ID].isin(excluded_ids)
     if excluded_ids:
         for field in CUFES_COVARIATE_FIELDS:
             out.loc[out["excluded"], field] = np.nan
     qc: dict[str, Any] = {
-        "missing_by_field": missing_covariate_counts(out),
+        "missing_by_field": missing_by_field,
         "events_endpoint_missing": endpoint_missing,
         "drop_summary": drop_summary,
         "rows_by_reason": rows_by_reason,

@@ -1,0 +1,73 @@
+# WCOFS avg.nowcast × GLORYS daily overlap pairing (pilot Southern California Bight).
+pilot_bbox:
+  lat_min: 32.0
+  lat_max: 35.0
+  lon_min: -121.0
+  lon_max: -117.0
+
+overlap:
+  start: 2024-09-01
+  end: 2026-06-23
+  expected_days: 661
+
+split:
+  fit_end: 2025-08-31
+  test_start: 2025-09-01
+
+nearshore_km: 20.0
+
+regrid:
+  min_wet_fraction: 0.5
+
+coverage_report:
+  json_path: artifacts/harmonization/wcofs_glorys_overlap/coverage_report.json
+  csv_path: artifacts/harmonization/wcofs_glorys_overlap/coverage_cells.csv
+  cufes_events_fixture: tests/fixtures/cufes_coverage_event_index.csv
+  expected_kept_event_count: 14592
+  expected_reduced_event_count: 13326
+
+shoreline:
+  path: data/reference/shoreline/ne_10m_land_pilot_clip.json
+  natural_earth_dataset: ne_10m_land
+  natural_earth_version: 5.1.1
+  source_url: https://www.naturalearthdata.com/downloads/10m-physical-vectors/10m-land/
+  license: public_domain
+  densify_spacing_km: 1.0
+  distance_method: pyproj_geod_fwd
+  simplification_method: none_bbox_clip_only
+  simplification_max_vertices_per_polygon: null
+
+# Simplified polyline for unit tests only (not used in production nearshore).
+coastline_fixture: tests/fixtures/pilot_coastline_vertices.csv
+
+glorys:
+  product_time_end: 2026-06-23
+  copernicus_doi: 10.48670/moi-00021
+  production_status: interim
+  products:
+    my:
+      id: cmems_mod_glo_phy_my_0.083deg_P1D-m
+      date_end: 2021-06-30
+    myint:
+      id: cmems_mod_glo_phy_myint_0.083deg_P1D-m
+      date_end: 2026-06-23
+
+wcofs:
+  product: avg.nowcast
+  cycle: t03z
+
+depth_grid_m:
+  start: 0
+  end: 200
+  step: 1
+
+rate_limits:
+  max_concurrent_per_host: 2
+  max_requests_per_day: 200
+
+pull_logs:
+  wcofs: data/provenance/wcofs_pull_log.jsonl
+  glorys: data/provenance/copernicus_pull_log.jsonl
+
+output:
+  parquet_name: wcofs_glorys_overlap_pilot.parquet
