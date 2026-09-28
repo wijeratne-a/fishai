@@ -71,7 +71,7 @@ fishai_engine_config:
       range_fraction: 0.1
       shoreline:
         path: data/reference/shoreline/ne_10m_land_pilot_clip.json
-        sha256: TO_BE_SET_FROM_PR7
+        sha256: 2f677a16aa6c8470846d813eda6d82f2656dea2d697b1511a4c878542d20996c
   prediction:
     nsim: 50
     seed: 20260928
