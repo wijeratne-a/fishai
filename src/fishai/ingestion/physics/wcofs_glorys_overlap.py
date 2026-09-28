@@ -49,6 +49,33 @@ from fishai.ingestion.sources import REPO_ROOT, attribution_for
 
 DEFAULT_CONFIG = REPO_ROOT / "data" / "config" / "wcofs_glorys_overlap.yaml"
 
+REASON_GLORYS_DATASET_RESOLUTION = "glorys_dataset_resolution_failed"
+
+
+class OverlapGlorysDayMissingError(Exception):
+    """Overlap pairing could not resolve a Copernicus dataset id for one UTC day."""
+
+    def __init__(self, utc_day: dt.date, reason_code: str, message: str) -> None:
+        super().__init__(message)
+        self.utc_day = utc_day
+        self.reason_code = reason_code
+
+
+def glorys_dataset_id_for_overlap_day(day: dt.date, config: dict[str, Any]) -> str:
+    """
+    Resolve GLORYS via the shared ``glorys_dataset_id_for_date`` (main); no local id rules.
+
+    ``ValueError`` from the shared helper becomes a missing overlap day with a reason code.
+    """
+    try:
+        return glorys_dataset_id_for_date(day, config=config)
+    except ValueError as exc:
+        raise OverlapGlorysDayMissingError(
+            day,
+            REASON_GLORYS_DATASET_RESOLUTION,
+            str(exc),
+        ) from exc
+
 
 class DailyRequestBudgetExceeded(RuntimeError):
     """Raised when the configured daily HTTP request cap is exceeded."""
@@ -258,10 +285,9 @@ def build_overlap_metadata(config: dict[str, Any]) -> dict[str, Any]:
         "overlap_start": config["overlap"]["start"],
         "overlap_end": config["overlap"]["end"],
         "expected_days": int(config["overlap"]["expected_days"]),
-        "glorys_product_selection": "copernicusmarine_catalog_coverage",
-        "glorys_catalog": (config.get("glorys") or {}).get("catalog"),
-        "glorys_product_id_overlap_start": glorys_dataset_id_for_date(
-            _config_date(config["overlap"]["start"]), config=config
+        "glorys_product_selection": "shared_glorys_dataset_id_for_date",
+        "glorys_product_id_overlap_start": glorys_dataset_id_for_overlap_day(
+            _config_date(config["overlap"]["start"]), config
         ),
         "wcofs_avg_nowcast_missing_fit_days": wcofs_avg_nowcast_missing_fit_day_records(config),
         "glorys_production_status": glorys_cfg["production_status"],
@@ -416,7 +442,7 @@ def run_overlap_pairing(
             raise RuntimeError("glorys_fetch is required for live overlap pairing")
         budget.charge(day, 1)
         glorys_payload = glorys_fetch(day)
-        glorys_dataset_id = glorys_dataset_id_for_date(day, config=config)
+        glorys_dataset_id = glorys_dataset_id_for_overlap_day(day, config)
         append_pull_log(
             build_pull_record(
                 dataset_id=glorys_dataset_id,

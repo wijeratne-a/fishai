@@ -9,7 +9,7 @@ import numpy as np
 import xarray as xr
 
 from fishai.ingestion.physics.sources.glorys import (
-    PRODUCT_ID_MY,
+    PRODUCT_ID_MYINT,
     glorys_dataset_id_for_date,
     glorys_product_for_date,
 )
@@ -93,4 +93,4 @@ def test_run_overlap_pairing_calls_glorys_dataset_id_for_date(tmp_path) -> None:
             glorys_log=tmp_path / "copernicus_pull_log.jsonl",
         )
         mocked.assert_called_with(dt.date(2024, 9, 1), config=cfg)
-        assert glorys_product_for_date(dt.date(2024, 9, 1), config=cfg) == PRODUCT_ID_MY
+        assert glorys_product_for_date(dt.date(2024, 9, 1), config=cfg) == PRODUCT_ID_MYINT

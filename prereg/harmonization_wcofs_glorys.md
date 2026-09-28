@@ -45,7 +45,7 @@ The WCOFS-to-GLORYS map is fit by **bot3** on the **fit split only**, then froze
 
 **GLORYS:** Copernicus P1D-m daily mean for calendar day **D** (UTC).
 
-**GLORYS product ids (item 7):** Dataset selection uses `glorys.catalog.products` time coverage recorded from `copernicusmarine describe` (v2.5.0+). Preference order `my` then `myint`; a date with no covering catalog entry raises `GlorysDatasetNotCoveredError` (`glorys_date_not_covered`). Live preview: `myint` id absent from catalog; `my` covers overlap through 2026-06-23.
+**GLORYS product ids (item 7):** Overlap pairing calls the shared `glorys_dataset_id_for_date` from `main` only (catalog-aware fixes land in a separate PR). PR #14 wraps shared `ValueError` as `OverlapGlorysDayMissingError` (`glorys_dataset_resolution_failed`) — no local id/cutoff logic and no silent fallback.
 
 **WCOFS avg.nowcast gaps:** `wcofs.avg_nowcast_unavailable` records 44 fit-window days without avg.nowcast on PDS (`CycleNotAvailable`); exposed in overlap metadata as `wcofs_avg_nowcast_missing_fit_days`.
 

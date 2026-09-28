@@ -14,32 +14,28 @@ from fishai.ingestion.physics.sources.glorys import (
     glorys_dataset_id_for_date,
     glorys_product_for_date,
 )
-from fishai.ingestion.physics.wcofs_glorys_overlap import load_overlap_config
 
 REPO_ROOT = Path(__file__).resolve().parents[3]
 GLORYS_SRC = REPO_ROOT / "src" / "fishai" / "ingestion" / "physics"
 
 
 def test_mismatched_dataset_id_raises() -> None:
-    cfg = load_overlap_config()
     with pytest.raises(ValueError, match="does not match"):
-        glorys_dataset_id_for_date(dt.date(2024, 9, 1), PRODUCT_ID_MYINT, config=cfg)
+        glorys_dataset_id_for_date(dt.date(2024, 9, 1), PRODUCT_ID_MY)
     with pytest.raises(ValueError, match="does not match"):
-        glorys_dataset_id_for_date(dt.date(2021, 6, 30), PRODUCT_ID_MYINT, config=cfg)
+        glorys_dataset_id_for_date(dt.date(2021, 6, 30), PRODUCT_ID_MYINT)
 
 
 def test_matching_dataset_id_accepted() -> None:
-    cfg = load_overlap_config()
     day = dt.date(2024, 9, 1)
-    assert glorys_dataset_id_for_date(day, PRODUCT_ID_MY, config=cfg) == PRODUCT_ID_MY
+    assert glorys_dataset_id_for_date(day, PRODUCT_ID_MYINT) == PRODUCT_ID_MYINT
     day_my = dt.date(2021, 6, 30)
-    assert glorys_dataset_id_for_date(day_my, PRODUCT_ID_MY, config=cfg) == PRODUCT_ID_MY
+    assert glorys_dataset_id_for_date(day_my, PRODUCT_ID_MY) == PRODUCT_ID_MY
 
 
 def test_none_uses_date_rule() -> None:
-    cfg = load_overlap_config()
     day = dt.date(1998, 1, 1)
-    assert glorys_dataset_id_for_date(day, None, config=cfg) == glorys_product_for_date(day, config=cfg)
+    assert glorys_dataset_id_for_date(day, None) == glorys_product_for_date(day)
 
 
 def test_fetch_day_rejects_wrong_dataset_id(tmp_path: Path) -> None:
@@ -48,7 +44,6 @@ def test_fetch_day_rejects_wrong_dataset_id(tmp_path: Path) -> None:
     def fake_fetch() -> dict:
         return {"variables": ["thetao"]}
 
-    cfg = load_overlap_config()
     with pytest.raises(ValueError, match="does not match"):
         fetch_day(
             dt.date(2024, 9, 1),
@@ -56,8 +51,7 @@ def test_fetch_day_rejects_wrong_dataset_id(tmp_path: Path) -> None:
             purpose="hindcast",
             fetch_fn=fake_fetch,
             log_path=tmp_path / "log.jsonl",
-            dataset_id=PRODUCT_ID_MYINT,
-            config=cfg,
+            dataset_id=PRODUCT_ID_MY,
         )
 
 
@@ -68,15 +62,13 @@ def test_fetch_day_accepts_correct_dataset_id(tmp_path: Path) -> None:
     def fake_fetch() -> dict:
         return {"variables": ["thetao"]}
 
-    cfg = load_overlap_config()
     fetch_day(
         day,
         bbox,
         purpose="hindcast",
         fetch_fn=fake_fetch,
         log_path=tmp_path / "log.jsonl",
-        dataset_id=PRODUCT_ID_MY,
-        config=cfg,
+        dataset_id=PRODUCT_ID_MYINT,
     )
 
 
