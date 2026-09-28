@@ -7,7 +7,8 @@ from datetime import date
 from pathlib import Path
 from typing import Any
 
-from fishai.ingestion.biology.cps_trawl.constants import DEFAULT_ZERO_FRAME_STATUS, SOURCE_ID
+from fishai.ingestion.biology.cps_trawl.constants import SOURCE_ID
+from fishai.ingestion.biology.cps_trawl.zero_frame import DEFAULT_EVIDENCE_PATH
 from fishai.ingestion.biology.cps_trawl.fetch import (
     BBox,
     fetch_cps_trawl_haul_catch,
@@ -109,7 +110,6 @@ def sync_cps_trawl_haul_catch(
     fetch: bool = True,
     bbox: BBox | None = None,
     manifest_path: Path | None = None,
-    zero_frame_status: str = DEFAULT_ZERO_FRAME_STATUS,
 ) -> dict[str, Any]:
     """Fetch (optional), transform, and write processed parquet under data/processed/."""
     require_approved(SOURCE_ID, path=manifest_path)
@@ -130,7 +130,6 @@ def sync_cps_trawl_haul_catch(
     hauls = transformed.hauls
     catch = transformed.catch
     qc_report = transformed.qc_report
-    qc_report["zero_frame_status"] = zero_frame_status
     out = processed_dir()
     hauls_path, catch_path = write_parquet_contracts(hauls, catch, out)
     qc_path = write_qc_report(qc_report, out)
@@ -140,7 +139,7 @@ def sync_cps_trawl_haul_catch(
         "license_text": source_entry.get("license_text"),
         "license_url": source_entry.get("license_url"),
         "attribution": source_entry.get("attribution"),
-        "zero_frame_status": zero_frame_status,
+        "zero_frame_evidence_path": str(DEFAULT_EVIDENCE_PATH.relative_to(REPO_ROOT)),
         "effort_fields": {
             "net_mouth_area_m2": "not_in_source_dataset",
             "tow_distance_nm": "computed_from_start_stop_coordinates_when_present",

@@ -91,6 +91,8 @@ Do not commit raw coordinates, telemetry, or grid binaries (see `.gitignore`). T
 
 **Effort fields:** Tow duration (minutes) and great-circle distance (nautical miles) are computed from start/stop times and coordinates when present. **Net mouth area is not in the dataset** — `net_mouth_area_m2` is always null with reason `not_in_source_dataset`. Ship speed uses `ship_spd_through_water` when reported.
 
-**Zero-catch gate:** The catch table only contains species with rows in ERDDAP. Implied zeros for absent species require a **verified complete haul frame**. `zero_frame_status` defaults to `UNVERIFIED`; `expand_haul_species_matrix()` refuses numeric zeros (raises or returns NA with `fill_reason=zero_frame_unverified`) until humans audit and set `VERIFIED`. `presence_only=Y` rows never receive weights and must not be treated as zero catch for other taxa. Missing weights are never coerced to zero.
+**Catch semantics:** `subsample_count` is the source subsample count (not a raised haul total). Optional `count_raised_est` is computed only when both weight fields are present and `subsample_weight > 0`. If exactly one of `subsample_weight` / `remaining_weight` is present, `weight_kg` is null and `weight_flag=weight_partial` (partial values kept in separate columns).
+
+**Zero-catch gate:** Implied zeros require a per-cruise+ship entry in `config/cps_trawl_zero_frame_evidence.yaml` (shipped empty). A cruise is VERIFIED only when the entry lists `expected_hauls` equal to `report_haul_log` minus `aborted_tows`. `expand_haul_species_matrix()` refuses zeros otherwise (`zero_frame_unverified`, `haul_not_in_verified_frame`, etc.). Hauls whose only catch is `Animalia` are always excluded (`animalia_only_undocumented`). `presence_only=Y` never receives weight; missing weights are never zero.
 
 **CLI:** `fishai-bio sync cps-trawl --start YYYY-MM-DD --end YYYY-MM-DD` (batched yearly ERDDAP CSV → raw cache → parquet).

@@ -54,7 +54,7 @@ sources:
     enabled: true
     notes: >-
       Adult/juvenile trawl catch weights and counts (DEPM, ATM, SaKe). Implied zero-catch
-      requires human verification of a complete haul frame (zero_frame_status).
+      requires per-cruise evidence in config/cps_trawl_zero_frame_evidence.yaml.
 
   wcofs:
     module: fishai.ingestion.physics.sources.wcofs

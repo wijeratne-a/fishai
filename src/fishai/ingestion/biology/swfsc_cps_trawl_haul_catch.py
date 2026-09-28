@@ -4,7 +4,7 @@ Mid-water surface trawl catch weights and counts from DEPM, acoustic-trawl (ATM)
 SaKe surveys (2003–present on ERDDAP). Processed tables:
 
 - ``cps_trawl_hauls.parquet`` — one row per tow (``haul_id`` = ``CPSTrawl:{cruise}:{ship}:{haul}``)
-- ``cps_trawl_catch.parquet`` — long catch by species (no implied zeros unless the zero frame is verified)
+- ``cps_trawl_catch.parquet`` — long catch by species (no implied zeros without per-cruise evidence YAML)
 
 Net mouth area is not in the source dataset; effort columns are explicit nulls with reasons.
 License on ERDDAP: NOAA free-use disclaimer; see ``data/SOURCES.yaml`` ``license_text``.

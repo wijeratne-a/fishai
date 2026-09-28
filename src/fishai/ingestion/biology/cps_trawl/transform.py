@@ -7,7 +7,12 @@ from dataclasses import dataclass, field
 from datetime import datetime, timezone
 from typing import Any, Iterable, Mapping
 
-from fishai.ingestion.biology.cps_trawl.catch import catch_row_invalid, merge_catch_values, parse_catch_row
+from fishai.ingestion.biology.cps_trawl.catch import (
+    catch_row_invalid,
+    catch_values_to_record,
+    merge_catch_values,
+    parse_catch_row,
+)
 from fishai.ingestion.biology.cps_trawl.constants import (
     MAX_TOW_DURATION_MIN,
     MIN_TOW_DURATION_MIN,
@@ -200,7 +205,7 @@ def _empty_qc_report() -> dict[str, Any]:
         "catch_rows_kept": 0,
         "dropped_by_rule": {label: 0 for label, _ in QC_RULE_LABELS},
         "units_rows_skipped": 0,
-        "zero_frame_status": "UNVERIFIED",
+        "zero_frame_evidence_path": "config/cps_trawl_zero_frame_evidence.yaml",
         "zero_frame_investigation": {
             "empty_haul_metadata_dataset_on_erddap": False,
             "animalia_only_hauls_in_catch_table": None,
@@ -268,8 +273,6 @@ def transform_rows(
             _record_drop(QC_TIME_INVALID, report["dropped_by_rule"])
             continue
 
-        result.hauls.append(haul_row_to_event(row, duration))
-
         by_species: dict[str, list] = {}
         for catch_row in haul_rows:
             parsed = parse_catch_row(catch_row)
@@ -281,21 +284,18 @@ def transform_rows(
         for species, parsed_rows in sorted(by_species.items()):
             merged = merge_catch_values(parsed_rows)
             species_seen.add(species)
-            result.catch.append(
-                {
-                    "haul_id": haul_id,
-                    "species": merged.species,
-                    "itis_tsn": merged.itis_tsn,
-                    "count": merged.count,
-                    "weight_kg": merged.weight_kg,
-                    "presence_only": merged.presence_only,
-                    "weight_null_reason": merged.weight_null_reason,
-                }
-            )
+            result.catch.append(catch_values_to_record(haul_id, merged))
             report["catch_rows_kept"] += 1
 
-        if species_seen == {"Animalia"}:
+        animalia_only_haul = species_seen == {"Animalia"}
+        if animalia_only_haul:
             animalia_only += 1
+        event = haul_row_to_event(row, duration)
+        event["animalia_only_haul"] = animalia_only_haul
+        event["zero_frame_exclude_reason"] = (
+            "animalia_only_undocumented" if animalia_only_haul else None
+        )
+        result.hauls.append(event)
 
     report["hauls_kept"] = len(result.hauls)
     report["zero_frame_investigation"]["animalia_only_hauls_in_catch_table"] = animalia_only

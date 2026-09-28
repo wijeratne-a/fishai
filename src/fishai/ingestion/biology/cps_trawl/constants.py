@@ -32,12 +32,10 @@ ERDDAP_FIELDS: Final = (
     "presence_only",
 )
 
-# Zero-catch expansion gate (human audit required before emitting implied zeros).
-ZERO_FRAME_STATUS_UNVERIFIED: Final = "UNVERIFIED"
-ZERO_FRAME_STATUS_VERIFIED: Final = "VERIFIED"
-DEFAULT_ZERO_FRAME_STATUS: Final = ZERO_FRAME_STATUS_UNVERIFIED
-
+# Zero-catch expansion gate (per-cruise evidence in config/cps_trawl_zero_frame_evidence.yaml).
 ZERO_FRAME_UNVERIFIED_REASON: Final = "zero_frame_unverified"
+ANIMALIA_ONLY_ZERO_FRAME_REASON: Final = "animalia_only_undocumented"
+WEIGHT_FLAG_PARTIAL: Final = "weight_partial"
 
 # Effort fields not present in FRDCPSTrawlLHHaulCatch.
 NET_MOUTH_AREA_NULL_REASON: Final = "not_in_source_dataset"

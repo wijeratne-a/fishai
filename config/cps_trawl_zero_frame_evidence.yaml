@@ -1,0 +1,8 @@
+# Per-cruise+ship evidence for CPS trawl zero-catch frame verification.
+# A frame is VERIFIED only when an entry exists and expected_hauls equals
+# report_haul_log minus aborted_tows (see zero_frame.py).
+#
+# Empty by default — all cruises remain UNVERIFIED until humans add audited entries.
+
+version: 1
+cruise_frames: []
