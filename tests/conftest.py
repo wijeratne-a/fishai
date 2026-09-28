@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import hashlib
+import sys
 from pathlib import Path
 
 import pytest
@@ -12,6 +13,10 @@ _TRACKED_PREFIXES = (
     REPO_ROOT / "data" / "provenance",
     REPO_ROOT / "artifacts",
 )
+
+_PHYSICS_TEST_DIR = Path(__file__).resolve().parent / "ingestion" / "physics"
+if str(_PHYSICS_TEST_DIR) not in sys.path:
+    sys.path.insert(0, str(_PHYSICS_TEST_DIR))
 
 
 def _tracked_repo_files() -> dict[Path, str]:
@@ -24,6 +29,16 @@ def _tracked_repo_files() -> dict[Path, str]:
                 rel = path.relative_to(REPO_ROOT)
                 out[rel] = hashlib.sha256(path.read_bytes()).hexdigest()
     return out
+
+
+def _tree_snapshot(root: Path) -> dict[str, tuple[int, int]]:
+    if not root.is_dir():
+        return {}
+    return {
+        str(p.relative_to(root)): (p.stat().st_size, p.stat().st_mtime_ns)
+        for p in root.rglob("*")
+        if p.is_file()
+    }
 
 
 @pytest.fixture(autouse=True)
@@ -60,3 +75,10 @@ def _provenance_and_artifacts_unchanged_by_tests() -> None:
             "data/provenance or artifacts file content changed during tests: "
             + ", ".join(str(p) for p in sorted(changed))
         )
+
+
+@pytest.fixture
+def repo_provenance_snapshot() -> dict[str, tuple[int, int]]:
+    """Snapshot of committed provenance files for per-test assertions."""
+    root = REPO_ROOT / "data" / "provenance"
+    return _tree_snapshot(root)

@@ -20,7 +20,7 @@ Map and API outputs must use one primary evidence state (plus uncertainty), not 
 
 ```
 src/fishai/
-  ingestion/biology/     CalCOFI CUFES (erdCalCOFIcufes) stub
+  ingestion/biology/     CalCOFI CUFES (erdCalCOFIcufes); SWFSC CPS trawl haul catch (FRDCPSTrawlLHHaulCatch)
   ingestion/physics/     WCOFS; GLORYS (training/hindcast only; T/S at 3 m linear z)
   physics/store.py       Read-only ``open_wcofs_cycle`` / ``list_wcofs_cycles`` (Bot4 sensors)
   ingestion/sensors/     SCCOOS HF radar, NDBC, IOOS glider stubs
@@ -73,6 +73,23 @@ docker build -t fishai-pilot .
 docker run --rm fishai-pilot
 ```
 
+## WCOFS daily operational pull
+
+Batch job (not triggered by API requests) for the pilot bbox. Intended cron inside **00:00–06:00 UTC**:
+
+```cron
+15 4 * * * cd /path/to/fishai && fishai-physics wcofs-daily --date $(date -u +\\%F) --out data/processed/physics
+```
+
+- **Source:** NOAA public S3 `noaa-nos-ofs-pds` (`wcofs/netcdf/.../wcofs.t03z.YYYYMMDD.fields.{n|f}HHH.nc`), one **t03z** cycle per day; nowcast hours 3–24 h plus forecast to **72 h**. CO-OPS THREDDS is a secondary mirror only in the low-level reader. WCOFS has no dissolved oxygen.
+- **Storage:** one Zarr per cycle under `data/processed/physics/wcofs_YYYYMMDD.zarr` with chunks **lead_hours=1**, full **s_rho**, and **16×16** spatial tiles (documented in store attrs). Pull audit: `data/provenance/wcofs_pull_YYYYMMDD.jsonl` when `--out` is the pilot processed path; otherwise logs stay under `<out>/provenance/` (tests and dry-runs must use a temp `--out`, never the repo provenance tree).
+- **Fallback:** if the target t03z cycle is not posted before the wait cutoff (~05:45 UTC), reuse the previous cycle’s forecast at the matching valid time (`fallback=previous_cycle`, `lead_hours_used`). Valid times beyond **72 h** or more than **2** missed cycles are recorded as **UNKNOWN** (`missing_operational_cycle`); partial cycles are flagged, never silently filled.
+- **Ethics:** `http_util` caps **2** concurrent requests per host with exponential backoff (429/503); daily pulls stay well under **200** GETs.
+
+```bash
+fishai-physics wcofs-daily --date 2026-09-28 --out data/processed/physics --dry-run
+```
+
 ## CI
 
 GitHub Actions runs: editable install, `pytest`, `security/precommit_sensitive_scan.py`, checks for committed data under `data/raw`/`data/processed` and forbidden binary extensions, and ingestion coverage in `data/SOURCES.yaml`.
@@ -80,3 +97,19 @@ GitHub Actions runs: editable install, `pytest`, `security/precommit_sensitive_s
 ## Data policy
 
 Do not commit raw coordinates, telemetry, or grid binaries (see `.gitignore`). Tests use synthetic fixtures only.
+
+## SWFSC CPS trawl haul catch (`FRDCPSTrawlLHHaulCatch`)
+
+**Provenance:** NOAA SWFSC Fisheries Resources Division coastal pelagic species (CPS) mid-water trawl surveys (DEPM, acoustic-trawl, SaKe), served on CoastWatch ERDDAP (`oceanview.pfeg.noaa.gov`). Related tables: `FRDCPSTrawlLHSpecimen`, `FRDCPSTrawlLHLengthFrequency` (individuals/length bins for subsets of catches).
+
+**License:** ERDDAP `NC_GLOBAL.license` (recorded verbatim as `license_text` in `data/SOURCES.yaml` and `cps_trawl_metadata.json` after sync).
+
+**Outputs:** `data/processed/swfsc_cps_trawl_haul_catch/cps_trawl_hauls.parquet` (tow metadata and effort) and `cps_trawl_catch.parquet` (long catch). Haul key: `CPSTrawl:{cruise}:{ship}:{haul}`.
+
+**Effort fields:** Tow duration (minutes) and great-circle distance (nautical miles) are computed from start/stop times and coordinates when present. **Net mouth area is not in the dataset** — `net_mouth_area_m2` is always null with reason `not_in_source_dataset`. Ship speed uses `ship_spd_through_water` when reported.
+
+**Catch semantics:** `subsample_count` is the source subsample count (not a raised haul total). Optional `count_raised_est` is computed only when both weight fields are present and `subsample_weight > 0`. If exactly one of `subsample_weight` / `remaining_weight` is present, `weight_kg` is null and `weight_flag=weight_partial` (partial values kept in separate columns).
+
+**Zero-catch gate:** Implied zeros require a per-cruise+ship entry in `config/cps_trawl_zero_frame_evidence.yaml` (shipped empty). A cruise is VERIFIED only when the entry lists `expected_hauls` equal to `report_haul_log` minus `aborted_tows`. `expand_haul_species_matrix()` refuses zeros otherwise (`zero_frame_unverified`, `haul_not_in_verified_frame`, etc.). Hauls whose only catch is `Animalia` are always excluded (`animalia_only_undocumented`). `presence_only=Y` never receives weight; missing weights are never zero.
+
+**CLI:** `fishai-bio sync cps-trawl --start YYYY-MM-DD --end YYYY-MM-DD` (batched yearly ERDDAP CSV → raw cache → parquet).

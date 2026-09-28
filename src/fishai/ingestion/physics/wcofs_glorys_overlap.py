@@ -116,7 +116,7 @@ def depth_grid_m(config: dict[str, Any]) -> np.ndarray:
 
 
 def coarsen_min_wet_fraction(config: dict[str, Any]) -> float:
-    """Wet-fraction gate for WCOFS→GLORYS coarsening (config ``regrid`` or legacy block)."""
+    """Wet-fraction gate for WCOFS→GLORYS coarsening (legacy ``wcofs_glorys_coarsen`` block)."""
     block = config.get("wcofs_glorys_coarsen") or {}
     if "min_wet_fraction" in block:
         return float(block["min_wet_fraction"])
@@ -138,9 +138,6 @@ def wcofs_covariate_arrays_on_glorys_grid(
     lat_dst: np.ndarray,
     lon_dst: np.ndarray,
     config: dict[str, Any],
-    *,
-    u10: np.ndarray | None = None,
-    v10: np.ndarray | None = None,
 ) -> dict[str, np.ndarray]:
     """Shared WCOFS covariates on the GLORYS grid (overlap uses ``wcofs_`` prefixes in rows)."""
     depth = depth_grid_m(config)
@@ -151,7 +148,7 @@ def wcofs_covariate_arrays_on_glorys_grid(
         depth,
         min_wet_fraction=min_wet_fraction_from_config(config),
     )
-    return compute_wcofs_covariates_on_glorys_grid(gridded, u10=u10, v10=v10)
+    return compute_wcofs_covariates_on_glorys_grid(gridded)
 
 
 def glorys_profiles_on_depth_grid(

@@ -64,6 +64,36 @@ def cmd_build_cufes_training_covariates(args: argparse.Namespace) -> int:
     return 0
 
 
+def cmd_wcofs_daily(args: argparse.Namespace) -> int:
+    from fishai.ingestion.physics.wcofs_daily import run_wcofs_daily
+
+    run_date = dt.date.fromisoformat(args.date) if args.date else dt.date.today()
+    out = Path(args.out)
+    plan = run_wcofs_daily(
+        run_date,
+        out_root=out,
+        dry_run=args.dry_run,
+        wait_for_cycle=not args.no_wait,
+        provenance_dir=Path(args.provenance_dir) if args.provenance_dir else None,
+    )
+    if args.dry_run:
+        print(f"target_cycle={plan.target_date.isoformat()} primary_available={plan.primary_available}")
+        print(f"requests={plan.request_count}")
+        for key in plan.s3_keys:
+            print(key)
+        if plan.zarr_path:
+            print(f"zarr={plan.zarr_path}")
+        if plan.pull_log:
+            print(f"pull_log={plan.pull_log}")
+        if plan.qc_report_path:
+            print(f"qc_report={plan.qc_report_path}")
+        if plan.unknown_slots:
+            print(f"unknown={plan.unknown_slots}")
+        return 0
+    print(f"wrote {plan.zarr_path}")
+    return 0
+
+
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(prog="fishai-physics", description="Physics ingestion")
     sub = parser.add_subparsers(dest="command", required=True)
@@ -72,6 +102,20 @@ def main(argv: list[str] | None = None) -> int:
     p_daily.add_argument("--leads", help="Comma-separated leads e.g. n003,n024")
     p_daily.add_argument("--output", default=str(DEFAULT_OUT))
     p_daily.set_defaults(func=cmd_daily)
+    p_wdaily = sub.add_parser("wcofs-daily", help="Operational WCOFS daily pull (nowcast+72h forecast)")
+    p_wdaily.add_argument("--date", help="Target cycle date YYYY-MM-DD (default: today UTC)")
+    p_wdaily.add_argument("--out", default=str(DEFAULT_OUT), help="Processed physics store root")
+    p_wdaily.add_argument(
+        "--provenance-dir",
+        help="Pull log directory (default: data/provenance for pilot out, else <out>/provenance)",
+    )
+    p_wdaily.add_argument("--dry-run", action="store_true", help="List S3 keys and outputs only")
+    p_wdaily.add_argument(
+        "--no-wait",
+        action="store_true",
+        help="Do not retry for same-day t03z cycle (use fallback immediately)",
+    )
+    p_wdaily.set_defaults(func=cmd_wcofs_daily)
     p_hind = sub.add_parser("hindcast", help="Historical physics backfill (stub)")
     p_hind.set_defaults(func=cmd_hindcast)
     p_cufes = sub.add_parser(

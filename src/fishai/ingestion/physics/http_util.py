@@ -105,12 +105,23 @@ def get_bytes(
 
 
 def head_ok(url: str, *, session: requests.Session | None = None) -> bool:
+    return head_metadata(url, session=session).get("status") == 200
+
+
+def head_metadata(url: str, *, session: requests.Session | None = None) -> dict[str, Any]:
+    """HEAD request returning status, ETag, and Content-Length when present."""
     host = urlparse(url).netloc or "default"
     limiter = _host_limiters[host]
     sess = session or requests.Session()
     limiter.acquire()
     try:
         resp = sess.head(url, timeout=(_CONNECT_TIMEOUT, _READ_TIMEOUT))
-        return resp.status_code == 200
+        etag = resp.headers.get("ETag", "").strip('"')
+        length = resp.headers.get("Content-Length")
+        return {
+            "status": resp.status_code,
+            "etag": etag or None,
+            "size_bytes": int(length) if length and length.isdigit() else None,
+        }
     finally:
         limiter.release()

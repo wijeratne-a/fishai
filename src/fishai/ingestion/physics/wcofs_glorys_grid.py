@@ -12,7 +12,7 @@ from typing import Any
 import numpy as np
 import xarray as xr
 
-from fishai.ingestion.physics.features import compute_upwelling, front_distance_km, sst_gradient
+from fishai.ingestion.physics.features import ekman_upwelling, front_distance_km, sst_gradient
 from fishai.ingestion.physics.harmonize import area_weighted_regrid
 from fishai.ingestion.physics.vertical import (
     CUFES_SAMPLE_DEPTH_M,
@@ -239,7 +239,8 @@ def compute_wcofs_covariates_on_glorys_grid(
     lat2d, lon2d = np.meshgrid(gridded.lat, gridded.lon, indexing="ij")
     front_km = front_distance_km(grad, lat2d, lon2d)
     if u10 is not None and v10 is not None:
-        upwelling = compute_upwelling(u10, v10, lat2d)
+        ek = ekman_upwelling(u10, v10, lat2d)
+        upwelling = ek.get("coastal_upwelling_index", ek["ekman_pumping"])
     else:
         upwelling = np.full((nj, ni), np.nan, dtype=float)
     k0 = 0

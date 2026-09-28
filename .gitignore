@@ -17,6 +17,7 @@ __pycache__/
 .mypy_cache/
 .venv/
 venv/
+*.egg-info/
 
 # Data trees (never commit raw/processed survey or grid files)
 data/raw/

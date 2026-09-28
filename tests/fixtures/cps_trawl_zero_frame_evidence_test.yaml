@@ -1,0 +1,8 @@
+version: 1
+cruise_frames:
+  - cruise: "209901"
+    ship: "SY"
+    source_report_citation: "Synthetic unit-test cruise report (fixture only)."
+    report_haul_log: [1, 2]
+    aborted_tows: []
+    expected_hauls: [1, 2]

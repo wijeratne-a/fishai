@@ -32,6 +32,30 @@ sources:
       Egg-stage evidence only; not adult presence. SOURCES.yaml previously listed
       CC-BY-4.0; ERDDAP metadata for erdCalCOFIcufes carries the NOAA disclaimer above.
 
+  swfsc_cps_trawl_haul_catch:
+    module: fishai.ingestion.biology.swfsc_cps_trawl_haul_catch
+    erddap_dataset: FRDCPSTrawlLHHaulCatch
+    provider: NOAA SWFSC FRD Coastal Pelagic Species Life History (ERDDAP FRDCPSTrawlLHHaulCatch)
+    license: >-
+      NOAA ERDDAP free-use (not CC): data may be used and redistributed for free
+      but is not intended for legal use; no warranty of accuracy or fitness.
+    license_url: https://oceanview.pfeg.noaa.gov/erddap/info/FRDCPSTrawlLHHaulCatch/index.html
+    license_text: >-
+      The data may be used and redistributed for free but is not intended for
+      legal use, since it may contain inaccuracies. Neither the data Contributor,
+      ERD, NOAA, nor the United States Government, nor any of their employees or
+      contractors, makes any warranty, express or implied, including warranties of
+      merchantability and fitness for a particular purpose, or assumes any legal
+      liability for the accuracy, completeness, or usefulness, of this information.
+    attribution: >-
+      NOAA SWFSC Coastal Pelagic Species Life History Program, FRDCPSTrawlLHHaulCatch;
+      https://oceanview.pfeg.noaa.gov/erddap/tabledap/FRDCPSTrawlLHHaulCatch.html
+    status: approved
+    enabled: true
+    notes: >-
+      Adult/juvenile trawl catch weights and counts (DEPM, ATM, SaKe). Implied zero-catch
+      requires per-cruise evidence in config/cps_trawl_zero_frame_evidence.yaml.
+
   wcofs:
     module: fishai.ingestion.physics.sources.wcofs
     endpoint_family: NOAA WCOFS public S3

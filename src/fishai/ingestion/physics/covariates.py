@@ -403,6 +403,8 @@ def join_covariates_to_events(
             for field in CUFES_COVARIATE_FIELDS:
                 if field in COVARIATE_FIELDS_EXEMPT_FROM_MISSING_EXCLUSION:
                     continue
+                if DROP_REASON_LAND_MASK in segment_reasons:
+                    continue
                 if pd.isna(row[field]):
                     drop_rows.append(
                         {
@@ -427,7 +429,15 @@ def join_covariates_to_events(
         "dropped_unique_total": dropped_unique_total,
         **reason_counts,
     }
-    missing_by_field = missing_covariate_counts(out)
+    land_mask_event_ids = (
+        set(drops.loc[drops["reason"] == DROP_REASON_LAND_MASK, "event_id"].unique())
+        if not drops.empty
+        else set()
+    )
+    missing_count_df = (
+        out[~out[COL_EVENT_ID].isin(land_mask_event_ids)] if land_mask_event_ids else out
+    )
+    missing_by_field = missing_covariate_counts(missing_count_df)
     excluded_ids: set[Any] = set(drops["event_id"].unique()) if not drops.empty else set()
     out["excluded"] = out[COL_EVENT_ID].isin(excluded_ids)
     if excluded_ids:
