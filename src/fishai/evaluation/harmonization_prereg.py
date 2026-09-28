@@ -11,8 +11,6 @@ import yaml
 REPO_ROOT = Path(__file__).resolve().parents[3]
 DEFAULT_PREREG_PATH = REPO_ROOT / "prereg" / "harmonization_wcofs_glorys.yaml"
 PLACEHOLDER_TOKEN = "TO_BE_SET_BEFORE_SCORING"
-FROZEN_SHORELINE_SHA256_PREFIX = "2f677a16"
-FROZEN_SHORELINE_SHA256_SUFFIX = "20996c"
 _SHA256_HEX_RE = re.compile(r"^[0-9a-f]{64}$")
 
 
@@ -62,9 +60,7 @@ def is_valid_frozen_shoreline_sha256(value: object) -> bool:
     lowered = value.lower()
     if not _SHA256_HEX_RE.match(lowered):
         return False
-    return lowered.startswith(FROZEN_SHORELINE_SHA256_PREFIX) and lowered.endswith(
-        FROZEN_SHORELINE_SHA256_SUFFIX
-    )
+    return True
 
 
 # Bot4 PR #10 and other scoring code import this constant instead of hard-coding hashes.

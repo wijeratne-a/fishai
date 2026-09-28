@@ -12,7 +12,7 @@ import numpy as np
 import pandas as pd
 
 from fishai.evaluation.harmonization_prereg import DEFAULT_PREREG_PATH, load_harmonization_prereg
-from fishai.ingestion.physics.sources.glorys import resolve_glorys_product_id
+from fishai.ingestion.physics.sources.glorys import glorys_product_for_date
 from fishai.ingestion.physics.vertical import GLORYS_TOP_LEVEL_DEPTH_M, interp_tracer_at_depth_below_surface
 from fishai.ingestion.physics.wcofs_glorys_overlap import load_overlap_config
 from fishai.scoring.harmonization.common_support import (
@@ -170,7 +170,11 @@ def run_holdout_scoring(
     prereg_commit = prereg_file_commit(prereg_file)
     prereg_sha = prereg_file_sha256(prereg_file)
     overlap_cfg = load_overlap_config()
-    glorys_product_id = resolve_glorys_product_id(test_start, config=overlap_cfg)
+    glorys_product_selection = {
+        "resolver": f"{glorys_product_for_date.__module__}.{glorys_product_for_date.__name__}",
+        "test_start_product_id": glorys_product_for_date(test_start, config=overlap_cfg),
+        "test_end_product_id": glorys_product_for_date(test_end, config=overlap_cfg),
+    }
 
     if verify_map:
         verify_mapping_manifest(map_dir, expected_prereg_commit=prereg_commit)
@@ -371,7 +375,7 @@ def run_holdout_scoring(
         "model_rows": list(ALL_MODEL_ROWS),
         "preflight": preflight,
         "insufficient_model_coverage": coverage_drop,
-        "glorys_reference_product_id": glorys_product_id,
+        "glorys_product_selection": glorys_product_selection,
         "front_detail_loss": front_loss,
         "metrics": summary_metrics,
         "input_cell_check": input_cell_check_summary,
