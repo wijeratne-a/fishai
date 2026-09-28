@@ -54,8 +54,15 @@ harmonization_wcofs_glorys:
         For each GLORYS cell and depth level, wet_fraction is the sum of WCOFS cell
         areas (same 1/(pm*pn) weights) that are wet (mask_rho) and reach that depth,
         divided by the box total area including land.
-      nan_rule: Values are set to NaN where wet_fraction < min_wet_fraction.
+      nan_rule: >-
+        Applies to coarsened WCOFS only (not GLORYS). Values are set to NaN where
+        wet_fraction < min_wet_fraction.
       min_wet_fraction: 0.5
+      applies_to: coarsened_wcofs_only
+      glorys_training_note: >-
+        CUFES training covariates come from GLORYS; min_wet_fraction never modifies
+        GLORYS fields. No CUFES training event is excluded because of this rule; PR
+        #5 must still load 14,592 kept events with GLORYS ocean data.
       config_equality: >-
         min_wet_fraction must equal regrid.min_wet_fraction in
         data/config/wcofs_glorys_overlap.yaml when that file is present in the repo.
@@ -257,40 +264,40 @@ harmonization_wcofs_glorys:
       metrics are reported descriptively only while cutoffs remain unset.
 
   wet_fraction_reporting:
-    overlap_output_required_fields:
-      - id: nan_cell_count_nearshore
-        description: >-
-          GLORYS ocean cells where wet_fraction < min_wet_fraction (0.5) and values
-          are set to NaN, nearshore stratum.
-      - id: nan_cell_count_offshore
-        description: Same cell count, offshore stratum.
-      - id: cufes_events_in_nan_cells_full
-        description: >-
-          CUFES kept events (bot1 QC) whose matched GLORYS cell is in the NaN set;
-          denominator reference n_events = 14592.
-      - id: cufes_events_in_nan_cells_reduced
-        description: >-
-          Same event count restricted to short_event == FALSE; denominator reference
-          n_long_event = 13326.
-    cufes_drop_contract:
-      drop_reason: insufficient_model_coverage
-      excluded: true
-      rule: >-
-        Events landing in min_wet_fraction-blanked cells keep covariate rows with
-        excluded = TRUE and reason insufficient_model_coverage in the drop summary;
-        they are never converted to absences and never silently removed from the
-        input event table or drop accounting.
-    bot5_sdmTMB_guard_note: >-
-      When PR #5 runs real-data fits, freeze/load_model_data drop-summary schema and
-      input-event checks must tolerate insufficient_model_coverage rows (present,
-      excluded=TRUE) alongside the four PR #2 bot2 reason keys; do not treat them as
-      schema errors or silent drops.
+    scope: coarsened_wcofs_only
+    read_only: true
+    coverage_report_path: artifacts/harmonization/wcofs_glorys_overlap/coverage_report.json
+    writer: bot2 overlap harmonization run
+    report_contents: >-
+      GLORYS-ocean cells where coarsened WCOFS is blanked by min_wet_fraction (0.5),
+      split nearshore/offshore, at the surface and at each covariate depth level;
+      CUFES kept events whose matched GLORYS cell falls in those cells, listed by
+      event_id, counted against 14,592 kept events and separately against 13,326
+      reduced-set events (short_event == FALSE). Counts are diagnostic only and do
+      not change training exclusions or drop summaries.
+    required_report_fields:
+      - id: wcofs_nan_cell_count_nearshore
+        description: Coarsened-WCOFS NaN cells (wet_fraction rule), nearshore, by level.
+      - id: wcofs_nan_cell_count_offshore
+        description: Same, offshore stratum.
+      - id: cufes_events_in_wcofs_nan_cells_full
+        description: Matched event_id list/count vs n_events = 14592 (read-only).
+      - id: cufes_events_in_wcofs_nan_cells_reduced
+        description: Same vs n_long_event = 13326 (short_event == FALSE, read-only).
+
+  ocean_data_missing_rows:
+    rule: >-
+      Any covariate or training row whose own ocean forcing is actually missing (for
+      any reason other than the coarsened-WCOFS wet_fraction diagnostic) stays in the
+      table with excluded = TRUE and its documented drop reason; it is never converted
+      to a zero count or silently removed.
 
   nowcast_insufficient_coverage:
+    applies_to: coarsened_wcofs_wet_fraction_blanked_cells
     render_rule: >-
-      Any nowcast grid cell blanked by the wet_fraction < min_wet_fraction rule
-      renders as evidence state UNKNOWN with reason 'insufficient model coverage',
-      never as a blank or missing tile.
+      Any nowcast grid cell blanked by the coarsened-WCOFS wet_fraction <
+      min_wet_fraction rule carries evidence_state = UNKNOWN with reason
+      insufficient_model_coverage, never a blank or missing tile.
     test_requirement: >-
       Automated test required in bot2/nowcast code (not in this prereg repo); this
       pre-registration records the requirement only.

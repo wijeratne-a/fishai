@@ -51,27 +51,35 @@ def test_buoy_matching_all_models_shared_depth() -> None:
     assert match["spatial"] == "nearest_glorys_cell"
 
 
-def test_wet_fraction_reporting_and_cufes_drop_contract() -> None:
+def test_wet_fraction_coverage_report_read_only() -> None:
     doc = load_harmonization_prereg(PREREG)
     wf = doc["harmonization_wcofs_glorys"]["wet_fraction_reporting"]
-    field_ids = {f["id"] for f in wf["overlap_output_required_fields"]}
-    assert field_ids == {
-        "nan_cell_count_nearshore",
-        "nan_cell_count_offshore",
-        "cufes_events_in_nan_cells_full",
-        "cufes_events_in_nan_cells_reduced",
-    }
-    contract = wf["cufes_drop_contract"]
-    assert contract["drop_reason"] == "insufficient_model_coverage"
-    assert contract["excluded"] is True
-    assert "never silently removed" in contract["rule"]
+    assert wf["scope"] == "coarsened_wcofs_only"
+    assert wf["read_only"] is True
+    assert wf["coverage_report_path"] == (
+        "artifacts/harmonization/wcofs_glorys_overlap/coverage_report.json"
+    )
+    field_ids = {f["id"] for f in wf["required_report_fields"]}
+    assert "cufes_events_in_wcofs_nan_cells_full" in field_ids
+    assert "do not change training exclusions" in wf["report_contents"]
+    aw = doc["harmonization_wcofs_glorys"]["horizontal_processing"]["area_weighted_definition"]
+    assert aw["applies_to"] == "coarsened_wcofs_only"
+    assert "14,592" in aw["glorys_training_note"]
+
+
+def test_ocean_data_missing_rows_never_zero() -> None:
+    doc = load_harmonization_prereg(PREREG)
+    rule = doc["harmonization_wcofs_glorys"]["ocean_data_missing_rows"]["rule"]
+    assert "excluded = TRUE" in rule
+    assert "never converted" in rule
+    assert "bot5_sdmTMB" not in yaml.dump(doc)
 
 
 def test_nowcast_insufficient_coverage_requirement() -> None:
     doc = load_harmonization_prereg(PREREG)
     nc = doc["harmonization_wcofs_glorys"]["nowcast_insufficient_coverage"]
-    assert "UNKNOWN" in nc["render_rule"]
-    assert "insufficient model coverage" in nc["render_rule"]
+    assert "evidence_state = UNKNOWN" in nc["render_rule"]
+    assert nc["render_rule"].count("insufficient_model_coverage") >= 1
     assert "bot2/nowcast" in nc["test_requirement"]
 
 
