@@ -1,0 +1,84 @@
+{
+  "code_version": "0.1.0",
+  "coefficients": {
+    "MLD_m": {
+      "nearshore": {
+        "a": 0.4849439736975736,
+        "b": 1.0213188188469307,
+        "n": 602
+      },
+      "offshore": {
+        "a": 0.5022211972039159,
+        "b": 1.0199255507431635,
+        "n": 598
+      }
+    },
+    "S3m": {
+      "nearshore": {
+        "a": 0.48115015213251944,
+        "b": 1.0216462694205164,
+        "n": 602
+      },
+      "offshore": {
+        "a": 0.4994621644877011,
+        "b": 1.0202795502346984,
+        "n": 598
+      }
+    },
+    "T3m": {
+      "nearshore": {
+        "a": 0.4859729788411009,
+        "b": 1.0211937700608167,
+        "n": 602
+      },
+      "offshore": {
+        "a": 0.5021187745520717,
+        "b": 1.0200629165409132,
+        "n": 598
+      }
+    },
+    "front_distance_km": {
+      "nearshore": {
+        "a": 0.48474061510728106,
+        "b": 1.0211433027442691,
+        "n": 602
+      },
+      "offshore": {
+        "a": 0.5024399604084309,
+        "b": 1.01996353971753,
+        "n": 598
+      }
+    },
+    "sst_grad": {
+      "nearshore": {
+        "a": 0.48373649907295935,
+        "b": 1.0214350346535284,
+        "n": 602
+      },
+      "offshore": {
+        "a": 0.49800159400070854,
+        "b": 1.0205917324114882,
+        "n": 598
+      }
+    }
+  },
+  "fit_date_range": {
+    "fit_end": "2025-08-31",
+    "fit_start": "2024-09-01"
+  },
+  "functional_form": "per_variable_per_stratum_linear_ols",
+  "metadata": {
+    "fit_split_parquet_sha256": "c7c8068397006b29fcbb7e4539096a844c9f63c9e729e333b35908311e728e24",
+    "fitting_commit_sha": "11330db6e28cc4148f4aca7a52bbfd58286dc587",
+    "prereg_commit_sha": "5d8a2e71cb9b8dbda7a5b0ab5f604b96e81764c6"
+  },
+  "schema_version": 1,
+  "seasonal_harmonic": false,
+  "variables_mapped": [
+    "T3m",
+    "S3m",
+    "MLD_m",
+    "sst_grad",
+    "front_distance_km"
+  ]
+}

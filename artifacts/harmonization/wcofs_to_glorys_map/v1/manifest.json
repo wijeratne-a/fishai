@@ -1,0 +1,21 @@
+{
+  "code_version": "0.1.0",
+  "correction_map_file": "correction_map.json",
+  "correction_map_sha256": "3fb87668ba36183e743b4f4947d76ceb12c97ab906679b47daba47485f50915a",
+  "fit_date_range": {
+    "fit_end": "2025-08-31",
+    "fit_start": "2024-09-01"
+  },
+  "fit_split_parquet_sha256": "c7c8068397006b29fcbb7e4539096a844c9f63c9e729e333b35908311e728e24",
+  "fitting_commit_sha": "11330db6e28cc4148f4aca7a52bbfd58286dc587",
+  "functional_form": "per_variable_per_stratum_linear_ols",
+  "prereg_commit_sha": "5d8a2e71cb9b8dbda7a5b0ab5f604b96e81764c6",
+  "seasonal_harmonic": false,
+  "variables_mapped": [
+    "T3m",
+    "S3m",
+    "MLD_m",
+    "sst_grad",
+    "front_distance_km"
+  ]
+}
