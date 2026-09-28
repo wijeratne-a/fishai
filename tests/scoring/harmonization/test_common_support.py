@@ -25,7 +25,13 @@ def test_common_support_and_insufficient_coverage_counts() -> None:
     assert len(kept) == 2
     assert len(dropped) == 1
     counts = insufficient_coverage_counts(dropped)
-    assert counts == {"nearshore": 1, "offshore": 0, "total": 1}
+    assert counts == {
+        "reason_label": "insufficient_model_coverage",
+        "nearshore": 1,
+        "offshore": 0,
+        "total": 1,
+    }
+    assert dropped["coverage_drop_reason"].iloc[0] == "insufficient_model_coverage"
 
 
 def test_all_rows_share_nearshore_and_n() -> None:

@@ -7,11 +7,13 @@ import datetime as dt
 import numpy as np
 import pandas as pd
 
-from fishai.ingestion.physics.vertical import MLD_NOT_REACHED, mld_from_profile
-from fishai.ingestion.physics.wcofs_glorys_grid import (
-    HARMONIZATION_GLIDER_PROXY_DEPTH_M,
-    harmonization_tracer_at_depth_below_surface,
+from fishai.ingestion.physics.vertical import (
+    MLD_NOT_REACHED,
+    interp_tracer_at_depth_below_surface,
+    mld_from_profile,
 )
+
+GLIDER_HOLDOUT_PROXY_DEPTH_M = 10.0
 
 GLIDER_PROXY_LABEL = "proxy_for_3m"
 DOXY_REPORTED_ONLY = "assimilated_reported_only"
@@ -30,11 +32,11 @@ def spray_profile_observation_rows(profiles: pd.DataFrame) -> pd.DataFrame:
         temp = grp["temperature_c"].astype(float).values
         salt = grp["salinity_psu"].astype(float).values if "salinity_psu" in grp else np.full_like(temp, np.nan)
         mld_m, mld_reason = mld_from_profile(depth, temp)
-        t10 = harmonization_tracer_at_depth_below_surface(
-            depth, temp, depth_m=HARMONIZATION_GLIDER_PROXY_DEPTH_M
+        t10 = interp_tracer_at_depth_below_surface(
+            depth, temp, GLIDER_HOLDOUT_PROXY_DEPTH_M, extrapolate_above_top=True
         )
-        s10 = harmonization_tracer_at_depth_below_surface(
-            depth, salt, depth_m=HARMONIZATION_GLIDER_PROXY_DEPTH_M
+        s10 = interp_tracer_at_depth_below_surface(
+            depth, salt, GLIDER_HOLDOUT_PROXY_DEPTH_M, extrapolate_above_top=True
         )
         doxy = float(np.nanmean(grp["doxy"])) if "doxy" in grp.columns else float("nan")
         day = pd.to_datetime(grp["time"].iloc[0]).date()

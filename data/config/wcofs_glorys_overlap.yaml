@@ -16,6 +16,16 @@ split:
 
 nearshore_km: 20.0
 
+regrid:
+  min_wet_fraction: 0.5
+
+coverage_report:
+  json_path: artifacts/harmonization/wcofs_glorys_overlap/coverage_report.json
+  csv_path: artifacts/harmonization/wcofs_glorys_overlap/coverage_cells.csv
+  cufes_events_fixture: tests/fixtures/cufes_coverage_event_index.csv
+  expected_kept_event_count: 14592
+  expected_reduced_event_count: 13326
+
 shoreline:
   path: data/reference/shoreline/ne_10m_land_pilot_clip.json
   natural_earth_dataset: ne_10m_land
@@ -31,9 +41,16 @@ shoreline:
 coastline_fixture: tests/fixtures/pilot_coastline_vertices.csv
 
 glorys:
-  product_id: cmems_mod_glo_phy_my_0.083deg_P1D-m
+  product_time_end: 2026-06-23
   copernicus_doi: 10.48670/moi-00021
   production_status: interim
+  products:
+    my:
+      id: cmems_mod_glo_phy_my_0.083deg_P1D-m
+      date_end: 2021-06-30
+    myint:
+      id: cmems_mod_glo_phy_myint_0.083deg_P1D-m
+      date_end: 2026-06-23
 
 wcofs:
   product: avg.nowcast

@@ -10,10 +10,11 @@ import pandas as pd
 import yaml
 
 from fishai.evaluation.harmonization_prereg import load_harmonization_prereg
-from fishai.ingestion.physics.wcofs_glorys_grid import harmonization_temperature_at_buoy_depth
+from fishai.ingestion.physics.vertical import GLORYS_TOP_LEVEL_DEPTH_M, interp_tracer_at_depth_below_surface
 from fishai.scoring.harmonization.constants import VERDICT_PASS
 from fishai.scoring.harmonization.input_check_config import SCORER_GRADED_INPUT_VARIABLES
 from fishai.scoring.harmonization.registry import load_assimilated_sources_registry, wcofs_independent_observation_source
+from tests.scoring.harmonization._shoreline_fixtures import pilot_shoreline_sha_for_tests
 from fishai.scoring.harmonization.runner import (
     BUOY_DEPTH_FUNCTION,
     prereg_file_commit,
@@ -25,10 +26,13 @@ PREREG = REPO / "prereg" / "harmonization_wcofs_glorys.yaml"
 
 
 def test_shared_buoy_depth_function_identity() -> None:
-    assert BUOY_DEPTH_FUNCTION is harmonization_temperature_at_buoy_depth
     depth = np.array([0.0, 0.494, 1.0, 5.0])
     temp = np.array([18.0, 17.5, 17.0, 14.0])
     val = BUOY_DEPTH_FUNCTION(depth, temp)
+    expected = interp_tracer_at_depth_below_surface(
+        depth, temp, GLORYS_TOP_LEVEL_DEPTH_M, extrapolate_above_top=True
+    )
+    assert val == expected
     assert np.isfinite(val)
 
 
@@ -40,7 +44,7 @@ def test_registry_marks_ndbc_accepted_independent_for_wcofs() -> None:
 def _small_ready_prereg(tmp_path: Path) -> Path:
     doc = load_harmonization_prereg(PREREG)
     block = yaml.safe_load(yaml.dump(doc))["harmonization_wcofs_glorys"]
-    block["nearshore"]["shoreline_sha256"] = "abc"
+    block["nearshore"]["shoreline_sha256"] = pilot_shoreline_sha_for_tests()
     block["nearshore"]["shoreline_simplification_check"] = {
         "max_coastline_displacement_m": 0.0,
         "nearshore_flag_diff_cell_count": 0,

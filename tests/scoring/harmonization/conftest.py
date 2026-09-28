@@ -9,6 +9,8 @@ import yaml
 
 from fishai.evaluation.harmonization_prereg import load_harmonization_prereg
 
+from tests.scoring.harmonization._shoreline_fixtures import pilot_shoreline_sha_for_tests
+
 REPO = Path(__file__).resolve().parents[3]
 PREREG = REPO / "prereg" / "harmonization_wcofs_glorys.yaml"
 
@@ -17,7 +19,7 @@ PREREG = REPO / "prereg" / "harmonization_wcofs_glorys.yaml"
 def ready_prereg_path(tmp_path: Path) -> Path:
     doc = load_harmonization_prereg(PREREG)
     block = yaml.safe_load(yaml.dump(doc))["harmonization_wcofs_glorys"]
-    block["nearshore"]["shoreline_sha256"] = "abc123"
+    block["nearshore"]["shoreline_sha256"] = pilot_shoreline_sha_for_tests()
     block["nearshore"]["shoreline_simplification_check"] = {
         "max_coastline_displacement_m": 0.0,
         "nearshore_flag_diff_cell_count": 0,

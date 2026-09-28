@@ -8,6 +8,7 @@ from fishai.evaluation.harmonization_prereg import PLACEHOLDER_TOKEN
 from fishai.scoring.harmonization.grading import normalize_combination_rule
 from fishai.scoring.harmonization.glider_grading import collect_glider_cutoff_gate_violations
 from fishai.scoring.harmonization.input_check_config import collect_graded_input_config_violations
+from fishai.scoring.harmonization.shoreline_gate import collect_shoreline_sha256_gate_violations
 
 REQUIRED_CUTOFF_NUMERIC_KEYS: tuple[str, ...] = (
     "rmse_ratio_pass",
@@ -70,6 +71,8 @@ def collect_prereg_gate_violations(doc: dict[str, Any]) -> list[str]:
                 violations.append(f"nearshore.shoreline_simplification_check.{sk}")
     if _is_blank_or_pending(near.get("cutoff_km")):
         violations.append("nearshore.cutoff_km")
+    if not _is_blank_or_pending(near.get("shoreline_sha256")):
+        violations.extend(collect_shoreline_sha256_gate_violations(doc))
 
     pf = block.get("pass_fail_thresholds") or {}
     cutoffs = pf.get("cutoffs")
