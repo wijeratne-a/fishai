@@ -2,10 +2,14 @@
 
 from __future__ import annotations
 
+import json
 import tempfile
 import unittest
+from datetime import date
 from pathlib import Path
+from unittest import mock
 
+import pyarrow.parquet as pq
 import yaml
 
 from fishai.ingestion.biology.cps_trawl.catch import (
@@ -19,6 +23,7 @@ from fishai.ingestion.biology.cps_trawl.constants import (
     WEIGHT_FLAG_PARTIAL,
 )
 from fishai.ingestion.biology.cps_trawl.fetch import read_cps_trawl_csv
+from fishai.ingestion.biology.cps_trawl.pipeline import sync_cps_trawl_haul_catch
 from fishai.ingestion.biology.cps_trawl.matrix import ZeroFrameUnverifiedError, expand_haul_species_matrix
 from fishai.ingestion.biology.cps_trawl.transform import (
     make_haul_id,
@@ -242,6 +247,88 @@ class CpsTrawlMergeSpeciesTests(unittest.TestCase):
         self.assertEqual(merged.subsample_count, 47)
         self.assertIsNone(merged.weight_kg)
         self.assertEqual(merged.weight_flag, WEIGHT_FLAG_PARTIAL)
+
+    def test_collection_split_missing_weights_stays_null_not_zero(self) -> None:
+        """Regression: empty sum() used to pass 0+0 into resolve_weights → weight_kg=0.0."""
+        split_a = parse_catch_row(
+            {
+                "scientific_name": "Sardinops sagax",
+                "subsample_count": "5",
+                "subsample_weight": "NaN",
+                "remaining_weight": "NaN",
+                "presence_only": "N",
+            }
+        )
+        split_b = parse_catch_row(
+            {
+                "scientific_name": "Sardinops sagax",
+                "subsample_count": "3",
+                "subsample_weight": "NaN",
+                "remaining_weight": "NaN",
+                "presence_only": "N",
+            }
+        )
+        assert split_a is not None and split_b is not None
+        merged = merge_catch_values([split_a, split_b])
+        self.assertEqual(merged.subsample_count, 8)
+        self.assertIsNone(merged.weight_kg)
+        self.assertNotEqual(merged.weight_kg, 0.0)
+        self.assertEqual(merged.weight_null_reason, "weights_missing")
+
+
+def _collection_split_missing_weight_rows() -> list[dict[str, str]]:
+    base = {
+        "cruise": "209901",
+        "ship": "SY",
+        "haul": "1",
+        "latitude": "33.0",
+        "longitude": "-120.0",
+        "stop_latitude": "33.02",
+        "stop_longitude": "-119.98",
+        "time": "2099-06-01T12:00:00Z",
+        "haulback_time": "2099-06-01T12:30:00Z",
+        "scientific_name": "Sardinops sagax",
+        "itis_tsn": "161996",
+        "subsample_weight": "NaN",
+        "remaining_weight": "NaN",
+        "presence_only": "N",
+    }
+    return [
+        {**base, "collection": "1", "subsample_count": "5"},
+        {**base, "collection": "2", "subsample_count": "3"},
+    ]
+
+
+class CpsTrawlSyncMissingWeightTests(unittest.TestCase):
+    def test_sync_collection_merge_missing_weight_stays_null(self) -> None:
+        rows = _collection_split_missing_weight_rows()
+        with tempfile.TemporaryDirectory() as tmp:
+            proc = Path(tmp) / "processed"
+            with (
+                mock.patch(
+                    "fishai.ingestion.biology.cps_trawl.pipeline.processed_dir",
+                    return_value=proc,
+                ),
+                mock.patch(
+                    "fishai.ingestion.biology.cps_trawl.pipeline.load_raw_rows_for_window",
+                ) as load_rows,
+            ):
+                load_rows.return_value = (rows, 0)
+                result = sync_cps_trawl_haul_catch(
+                    date(2099, 1, 1),
+                    date(2099, 12, 31),
+                    fetch=False,
+                )
+            catch_path = Path(result["catch_path"])
+            self.assertTrue(catch_path.is_file())
+            table = pq.read_table(catch_path)
+            records = table.to_pylist()
+            sard = next(r for r in records if r["species"] == "Sardinops sagax")
+            self.assertIsNone(sard["weight_kg"])
+            self.assertNotEqual(sard["weight_kg"], 0.0)
+            self.assertEqual(sard["subsample_count"], 8)
+            qc = json.loads(Path(result["qc_report_path"]).read_text(encoding="utf-8"))
+            self.assertEqual(qc["catch_rows_kept"], 1)
 
 
 class CpsTrawlMissingWeightTests(unittest.TestCase):
