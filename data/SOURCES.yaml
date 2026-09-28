@@ -114,29 +114,33 @@ sources:
 
   sccoos_hfr:
     module: fishai.ingestion.sensors.sccoos_hfr
+    record_type: instrument
     erddap_dataset: ucsdHfrW6
-    provider: SCCOOS HF radar
-    license: Open access with citation (SCCOOS)
-    license_url: https://sccoos.org/data/usage-policy/
-    attribution: "SCCOOS HF radar (ucsdHfrW6); cite SCCOOS and generating institution."
+    provider: NOAA IOOS Surface Currents Program (CoastWatch ERDDAP)
+    license: ERDDAP dataset license (free use/redistribution; not for legal use)
+    license_url: https://coastwatch.pfeg.noaa.gov/erddap/info/ucsdHfrW6/index.html
+    attribution: "NOAA IOOS Surface Currents Program — Currents, HF Radar, US West Coast, RTV, Near-Real Time, Hourly, 6km (ERDDAP ucsdHfrW6, CoastWatch)."
     status: approved
     enabled: true
 
   ndbc_met:
     module: fishai.ingestion.sensors.ndbc_met
+    record_type: instrument
     erddap_dataset: cwwcNDBCMet
-    provider: NDBC via ERDDAP
-    license: U.S. Government Work
-    license_url: https://www.ndbc.noaa.gov/
-    attribution: "NOAA National Data Buoy Center; cite station IDs and retrieval time."
+    provider: NOAA NDBC / NOAA NMFS SWFSC ERD (CoastWatch ERDDAP)
+    license: ERDDAP dataset license (free use/redistribution; not for legal use)
+    license_url: https://coastwatch.pfeg.noaa.gov/erddap/info/cwwcNDBCMet/index.html
+    attribution: "NOAA National Data Buoy Center — NDBC Standard Meteorological Buoy Data, 1970-present (ERDDAP cwwcNDBCMet; contributor NOAA NDBC, NOAA NMFS SWFSC ERD)."
     status: approved
     enabled: true
 
   ioos_glider_dac:
     module: fishai.ingestion.sensors.ioos_glider_dac
+    record_type: instrument
+    erddap_base: https://gliders.ioos.us/erddap
     provider: IOOS Glider DAC
-    license: Pending IOOS DAC terms review
-    license_url: https://gliders.ioos.us/
-    attribution: "IOOS Glider DAC; cite glider id and deployment metadata when approved."
+    license: Pending ERDDAP NC_GLOBAL license confirmation
+    license_url: https://gliders.ioos.us/erddap/info/index.html
+    attribution: "Ingestion disabled until per-dataset ERDDAP NC_GLOBAL creator_name attribution is confirmed at enable time."
     status: pending
     enabled: false
