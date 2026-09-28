@@ -579,6 +579,11 @@ harmonization_wcofs_glorys:
       holdout_test_end: "2022-04-27"
       never_reselect_after_freeze: true
       auditor_accepted: true
+      note: >-
+        Lag candidates are chosen by time-forward CV on the fit split only
+        (through 2017-12-31). The winning trailing mean is frozen before any
+        2018-01-01+ test scoring; lags must not be re-selected after test
+        results or holdout diagnostics are seen.
 
   wet_fraction_reporting:
     scope: coarsened_wcofs_only

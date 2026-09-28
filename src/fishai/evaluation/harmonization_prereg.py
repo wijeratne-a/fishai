@@ -92,6 +92,64 @@ def combination_rule_blocks_scoring(cutoffs: dict[str, Any]) -> bool:
 
 PASS_FAIL_GRADED_INPUT_COUNT = 5
 
+UPWELLING_LAG_TRAILING_MEAN_DAYS = (0, 7, 14, 28)
+UPWELLING_LAG_SELECTION_METHOD = "time_forward_cv_mean_out_of_fold_log_likelihood"
+UPWELLING_LAG_FIT_SPLIT_END = "2017-12-31"
+UPWELLING_LAG_FROZEN_BEFORE = "2018-01-01"
+UPWELLING_LAG_HOLDOUT_TEST_END = "2022-04-27"
+
+
+def upwelling_lags_prereg(doc: dict[str, Any] | None = None) -> dict[str, Any]:
+    """Return the ``upwelling_lags`` block (CUFES pilot; applies only if upwelling survives)."""
+    raw = doc if doc is not None else load_harmonization_prereg()
+    block = raw["harmonization_wcofs_glorys"].get("upwelling_lags")
+    if not isinstance(block, dict):
+        raise ValueError("missing upwelling_lags in harmonization prereg")
+    return block
+
+
+def upwelling_survives_in_pilot_variables(doc: dict[str, Any] | None = None) -> bool:
+    """True when ``upwelling`` is declared and not marked for drop when wind product is missing."""
+    raw = doc if doc is not None else load_harmonization_prereg()
+    vars_by_name = {v["name"]: v for v in raw["harmonization_wcofs_glorys"]["variables"]}
+    up = vars_by_name.get("upwelling")
+    if not isinstance(up, dict):
+        return False
+    blank = up.get("blank_when")
+    if isinstance(blank, dict) and blank.get("exclude_events") is False:
+        return True
+    return up.get("role") == "graded_input"
+
+
+def assert_upwelling_lags_prereg(doc: dict[str, Any] | None = None) -> None:
+    """Validate preregistered upwelling lag candidates and frozen selection policy."""
+    lags = upwelling_lags_prereg(doc)
+    if lags.get("window_end") != "day_before_event":
+        raise ValueError("upwelling_lags.window_end must be day_before_event")
+    if lags.get("no_other_lags") is not True:
+        raise ValueError("upwelling_lags.no_other_lags must be true")
+    days = tuple(c["trailing_mean_days"] for c in lags["candidates"])
+    if days != UPWELLING_LAG_TRAILING_MEAN_DAYS:
+        raise ValueError(
+            f"upwelling_lags candidates must be {UPWELLING_LAG_TRAILING_MEAN_DAYS}, got {days!r}"
+        )
+    sel = lags.get("selection")
+    if not isinstance(sel, dict):
+        raise ValueError("upwelling_lags.selection must be a mapping")
+    if sel.get("method") != UPWELLING_LAG_SELECTION_METHOD:
+        raise ValueError("upwelling_lags.selection.method mismatch")
+    if sel.get("fit_split_end") != UPWELLING_LAG_FIT_SPLIT_END:
+        raise ValueError("upwelling_lags.selection.fit_split_end mismatch")
+    if sel.get("frozen_before") != UPWELLING_LAG_FROZEN_BEFORE:
+        raise ValueError("upwelling_lags.selection.frozen_before mismatch")
+    if sel.get("holdout_test_end") != UPWELLING_LAG_HOLDOUT_TEST_END:
+        raise ValueError("upwelling_lags.selection.holdout_test_end mismatch")
+    if sel.get("never_reselect_after_freeze") is not True:
+        raise ValueError("upwelling_lags.selection.never_reselect_after_freeze must be true")
+    note = sel.get("note")
+    if not isinstance(note, str) or "re-select" not in note.lower():
+        raise ValueError("upwelling_lags.selection.note must forbid post-test re-selection")
+
 
 def pass_fail_graded_input_names(doc: dict[str, Any] | None = None) -> tuple[str, ...]:
     """Return cell-gate graded input names from ``pass_fail_thresholds.cutoffs``."""
