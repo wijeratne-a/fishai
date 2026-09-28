@@ -35,6 +35,8 @@ def _synthetic_wcofs(n_eta: int = 4, n_xi: int = 4, n_s: int = 5) -> xr.Dataset:
             "mask_rho": (("eta_rho", "xi_rho"), np.ones((n_eta, n_xi))),
             "lat_rho": (("eta_rho", "xi_rho"), lat2d),
             "lon_rho": (("eta_rho", "xi_rho"), lon2d),
+            "pm": (("eta_rho", "xi_rho"), np.full((n_eta, n_xi), 1.0 / 3500.0)),
+            "pn": (("eta_rho", "xi_rho"), np.full((n_eta, n_xi), 1.0 / 3500.0)),
             "hc": 50.0,
             "s_rho": ("s_rho", s_rho),
             "Cs_r": ("s_rho", np.linspace(-1, 0, n_s)),

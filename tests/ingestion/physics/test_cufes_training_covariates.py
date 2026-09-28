@@ -35,9 +35,9 @@ from fishai.ingestion.physics.cufes_training_covariates import (
     write_training_covariates_parquet,
 )
 from fishai.ingestion.physics.sources.glorys import (
-    PRODUCT_MYINT_ID,
-    PRODUCT_MY_ID,
-    glorys_dataset_for_date,
+    PRODUCT_ID_MY,
+    PRODUCT_ID_MYINT,
+    glorys_product_for_date,
 )
 from fishai.ingestion.sources import require_approved
 
@@ -77,8 +77,49 @@ def _synthetic_events() -> pd.DataFrame:
 
 
 def test_glorys_product_switch_at_my_myint_boundary() -> None:
-    assert glorys_dataset_for_date(dt.date(2021, 6, 30))[0] == PRODUCT_MY_ID
-    assert glorys_dataset_for_date(dt.date(2021, 7, 1))[0] == PRODUCT_MYINT_ID
+    assert glorys_product_for_date(dt.date(2021, 6, 30)) == PRODUCT_ID_MY
+    assert glorys_product_for_date(dt.date(2021, 7, 1)) == PRODUCT_ID_MYINT
+
+
+def test_training_glorys_product_ids_track_glorys_product_for_date(tmp_path: Path) -> None:
+    """CUFES training pulls and source_product must match PR #7 date-based product choice."""
+    start = dt.date(1996, 3, 16)
+    end = dt.date(2022, 4, 19)
+    sample_days: list[dt.date] = [start, end, dt.date(2021, 6, 30), dt.date(2021, 7, 1)]
+    cur = start
+    while cur <= end:
+        sample_days.append(cur)
+        cur += dt.timedelta(days=45)
+    sample_days = sorted(set(sample_days))
+
+    for day in sample_days:
+        expected = glorys_product_for_date(day)
+        batches = plan_glorys_subset_batches([day])
+        assert len(batches) == 1
+        assert batches[0].dataset_id == expected
+
+    events = pd.DataFrame(
+        {
+            "event_id": [f"e_{d.isoformat()}" for d in sample_days[:6]],
+            "start_time": pd.to_datetime(
+                [f"{d.isoformat()}T12:00:00Z" for d in sample_days[:6]], utc=True
+            ),
+            "stop_time": pd.to_datetime(
+                [f"{d.isoformat()}T12:10:00Z" for d in sample_days[:6]], utc=True
+            ),
+            "start_latitude": [33.0] * 6,
+            "start_longitude": [-120.0] * 6,
+            "stop_latitude": [33.01] * 6,
+            "stop_longitude": [-119.99] * 6,
+        }
+    )
+    lat, lon = _small_glorys_axes()
+    store = glorys_store_from_synthetic_days(unique_event_days(events), lat=lat, lon=lon)
+    out, _qc, _drops, _floor = build_cufes_training_covariates_table(events, store)
+    for _, ev in events.iterrows():
+        mid_day = pd.Timestamp(ev["start_time"]).date()
+        expected = glorys_product_for_date(mid_day)
+        assert out.loc[out["event_id"] == ev["event_id"], "source_product"].iloc[0] == expected
 
 
 def test_plan_batches_splits_my_and_myint_months() -> None:
@@ -90,8 +131,8 @@ def test_plan_batches_splits_my_and_myint_months() -> None:
     ]
     batches = plan_glorys_subset_batches(days)
     assert len(batches) == 2
-    assert batches[0].dataset_id == PRODUCT_MY_ID
-    assert batches[1].dataset_id == PRODUCT_MYINT_ID
+    assert batches[0].dataset_id == PRODUCT_ID_MY
+    assert batches[1].dataset_id == PRODUCT_ID_MYINT
 
 
 def test_one_row_per_event_id_and_required_columns(tmp_path: Path) -> None:
@@ -143,14 +184,18 @@ def test_source_product_matches_event_date() -> None:
     lat, lon = _small_glorys_axes()
     store = glorys_store_from_synthetic_days(unique_event_days(events), lat=lat, lon=lon)
     out, _qc, _drops, _floor = build_cufes_training_covariates_table(events, store)
-    assert out.loc[out["event_id"] == "e1", "source_product"].iloc[0] == PRODUCT_MY_ID
-    assert out.loc[out["event_id"] == "e2", "source_product"].iloc[0] == PRODUCT_MYINT_ID
+    assert out.loc[out["event_id"] == "e1", "source_product"].iloc[0] == glorys_product_for_date(
+        dt.date(2021, 6, 30)
+    )
+    assert out.loc[out["event_id"] == "e2", "source_product"].iloc[0] == glorys_product_for_date(
+        dt.date(2021, 7, 1)
+    )
 
 
 def test_pull_log_includes_version_and_sha256(tmp_path: Path) -> None:
     log_path = tmp_path / "copernicus_pull_log.jsonl"
     rec = build_pull_record(
-        dataset_id=PRODUCT_MY_ID,
+        dataset_id=PRODUCT_ID_MY,
         date_start="2020-06-01",
         date_end="2020-06-30",
         variables=("thetao",),

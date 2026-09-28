@@ -18,24 +18,30 @@ from fishai.ingestion.physics.vertical import (
     interp_at_depth_from_z_levels,
     mld,
 )
-from fishai.ingestion.sources import SourceNotApprovedError, require_approved
+from fishai.ingestion.sources import SourceNotApprovedError, get_source_entry, require_approved
 
 SOURCE_MODULE = "glorys"
 
-PRODUCT_MY_ID = "cmems_mod_glo_phy_my_0.083deg_P1D-m"
-PRODUCT_MYINT_ID = "cmems_mod_glo_phy_myint_0.083deg_P1D-m"
-PRODUCT_STATIC_ID = "cmems_mod_glo_phy_my_0.083deg_static"
+PRODUCT_ID_MY = "cmems_mod_glo_phy_my_0.083deg_P1D-m"
+PRODUCT_ID_MYINT = "cmems_mod_glo_phy_myint_0.083deg_P1D-m"
+# Back-compat alias for interim-era default (use ``glorys_product_for_date`` for pulls).
+PRODUCT_ID = PRODUCT_ID_MYINT
 
-# Back-compat alias (multiyear reanalysis product id).
-PRODUCT_ID = PRODUCT_MY_ID
+MY_PRODUCT_START = dt.date(1993, 1, 1)
+MY_PRODUCT_END = dt.date(2021, 6, 30)
+MYINT_PRODUCT_START = dt.date(2021, 7, 1)
+MYINT_PRODUCT_END_DEFAULT = dt.date(2026, 6, 23)
 
-PRODUCT_MY_TIME_START = dt.date(1993, 1, 1)
-PRODUCT_MY_TIME_END = dt.date(2021, 6, 30)
-PRODUCT_MYINT_TIME_START = dt.date(2021, 7, 1)
-PRODUCT_MYINT_TIME_END = dt.date(2026, 6, 23)
+PRODUCT_TIME_START = MY_PRODUCT_START
+PRODUCT_TIME_END = MYINT_PRODUCT_END_DEFAULT
 
-PRODUCT_TIME_START = PRODUCT_MY_TIME_START
-PRODUCT_TIME_END = PRODUCT_MYINT_TIME_END
+# Back-compat aliases (prefer ``glorys_product_for_date`` for date-based product choice).
+PRODUCT_MY_ID = PRODUCT_ID_MY
+PRODUCT_MYINT_ID = PRODUCT_ID_MYINT
+PRODUCT_MY_TIME_START = MY_PRODUCT_START
+PRODUCT_MY_TIME_END = MY_PRODUCT_END
+PRODUCT_MYINT_TIME_START = MYINT_PRODUCT_START
+PRODUCT_MYINT_TIME_END = MYINT_PRODUCT_END_DEFAULT
 
 LICENSE_VALID_UNTIL = dt.date(2028, 6, 30)
 
@@ -44,13 +50,86 @@ VARIABLES = ("thetao", "so", "bottomT", "mlotst", "uo", "vo", "zos")
 ALLOWED_PURPOSES = frozenset({"training", "hindcast"})
 
 
-def glorys_dataset_for_date(day: dt.date) -> tuple[str, dt.date, dt.date]:
-    """Return Copernicus dataset id and that dataset's inclusive coverage for ``day``."""
-    if day <= PRODUCT_MY_TIME_END:
-        return PRODUCT_MY_ID, PRODUCT_MY_TIME_START, PRODUCT_MY_TIME_END
-    if day >= PRODUCT_MYINT_TIME_START:
-        return PRODUCT_MYINT_ID, PRODUCT_MYINT_TIME_START, PRODUCT_MYINT_TIME_END
-    raise ValueError(f"glorys: date {day} falls in gap between my and myint coverage")
+def _config_date(value: Any) -> dt.date:
+    if isinstance(value, dt.date):
+        return value
+    return dt.date.fromisoformat(str(value))
+
+
+def myint_product_end(config: dict[str, Any] | None = None) -> dt.date:
+    """Last calendar day covered by the MYINT product (from config or SOURCES default)."""
+    if config is not None:
+        glorys_cfg = config.get("glorys") or {}
+        if "product_time_end" in glorys_cfg:
+            return _config_date(glorys_cfg["product_time_end"])
+        products = glorys_cfg.get("products") or {}
+        myint = products.get("myint") or {}
+        if "date_end" in myint:
+            return _config_date(myint["date_end"])
+    entry = get_source_entry("glorys")
+    products = entry.get("products") or {}
+    myint = products.get("myint") or {}
+    if "date_end" in myint:
+        return _config_date(myint["date_end"])
+    if "product_time_end" in entry:
+        return _config_date(entry["product_time_end"])
+    return MYINT_PRODUCT_END_DEFAULT
+
+
+def glorys_product_for_date(
+    date: dt.date,
+    *,
+    config: dict[str, Any] | None = None,
+) -> str:
+    """
+    Copernicus Marine GLORYS12 dataset id for ``date``.
+
+    Returns the finished reanalysis (``my``) through 2021-06-30 inclusive and the
+    interim product (``myint``) from 2021-07-01 through the configured MYINT end.
+    """
+    myint_end = myint_product_end(config)
+    if date < MY_PRODUCT_START:
+        raise ValueError(
+            f"glorys: date {date} is before {MY_PRODUCT_START} (my product start)"
+        )
+    if date > myint_end:
+        raise ValueError(
+            f"glorys: date {date} is after myint coverage end {myint_end}"
+        )
+    if date <= MY_PRODUCT_END:
+        return PRODUCT_ID_MY
+    return PRODUCT_ID_MYINT
+
+
+def glorys_dataset_id_for_date(
+    date: dt.date,
+    dataset_id: str | None = None,
+    *,
+    config: dict[str, Any] | None = None,
+) -> str:
+    """
+    Canonical Copernicus dataset id for ``date``.
+
+    When ``dataset_id`` is provided it must equal ``glorys_product_for_date(date)``;
+    otherwise ``ValueError`` is raised.
+    """
+    expected = glorys_product_for_date(date, config=config)
+    if dataset_id is not None and dataset_id != expected:
+        raise ValueError(
+            f"glorys: dataset_id {dataset_id!r} does not match glorys_product_for_date("
+            f"{date!r}) (expected {expected!r})"
+        )
+    return expected
+
+
+def resolve_glorys_product_id(
+    day: dt.date,
+    config: dict[str, Any] | None = None,
+    *,
+    dataset_id: str | None = None,
+) -> str:
+    """Resolve GLORYS dataset id for overlap pairing and pull logs (date-based)."""
+    return glorys_dataset_id_for_date(day, dataset_id, config=config)
 
 
 def _pull_log_path(entry: dict[str, Any]) -> Path:
@@ -72,8 +151,8 @@ def fetch_day(
     fetch_fn: Callable[[], Any] | None = None,
     log_path: Path | None = None,
     path: Path | None = None,
-    dataset_version: str | None = None,
-    file_sha256: str | None = None,
+    dataset_id: str | None = None,
+    config: dict[str, Any] | None = None,
 ) -> Any:
     """
     Fetch GLORYS for ``date`` (Copernicus Toolbox on runtime hosts only).
@@ -85,21 +164,17 @@ def fetch_day(
     entry = require_approved("glorys", purpose=purpose, path=path)
     if purpose not in ALLOWED_PURPOSES:
         raise SourceNotApprovedError(f"glorys: unsupported purpose {purpose!r}")
-    dataset_id, cov_start, cov_end = glorys_dataset_for_date(date)
-    if date < cov_start or date > cov_end:
-        raise ValueError(f"glorys: date {date} outside {dataset_id} coverage")
     if dt.date.today() > LICENSE_VALID_UNTIL:
         raise SourceNotApprovedError("glorys: licence validity ended")
 
+    ds_id = glorys_dataset_id_for_date(date, dataset_id, config=config)
     record = build_pull_record(
-        dataset_id=dataset_id,
+        dataset_id=ds_id,
         date_start=date.isoformat(),
         date_end=date.isoformat(),
         variables=variables,
         bbox=bbox,
         request_count=1,
-        dataset_version=dataset_version,
-        file_sha256=file_sha256,
     )
     append_pull_log(record, log_path=log_path or _pull_log_path(entry))
 

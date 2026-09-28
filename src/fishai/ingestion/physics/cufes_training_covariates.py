@@ -54,7 +54,7 @@ from fishai.ingestion.physics.features import (
 from fishai.ingestion.physics.sources.glorys import (
     VARIABLES,
     glorys_column_features,
-    glorys_dataset_for_date,
+    glorys_product_for_date,
 )
 from fishai.ingestion.physics.wcofs_glorys_overlap import (
     coarsen_min_wet_fraction,
@@ -276,7 +276,7 @@ def plan_glorys_subset_batches(
     """Group unique event days into monthly Copernicus subset requests per dataset id."""
     by_key: dict[tuple[str, int, int], list[dt.date]] = defaultdict(list)
     for day in days:
-        product_id, _, _ = glorys_dataset_for_date(day)
+        product_id = glorys_product_for_date(day)
         by_key[(product_id, day.year, day.month)].append(day)
     batches: list[GlorysSubsetBatch] = []
     for (product_id, _year, _month), month_days in sorted(by_key.items()):
@@ -364,7 +364,7 @@ def build_synthetic_day_fields(
         u10 = np.asarray(u10_override, dtype=float)
     if v10_override is not None:
         v10 = np.asarray(v10_override, dtype=float)
-    product_id, _, _ = glorys_dataset_for_date(day)
+    product_id = glorys_product_for_date(day)
     return _compute_day_surface_fields(
         day,
         product_id,
@@ -423,7 +423,7 @@ def attach_bottom_depth_and_reasons(
             depth_reasons: list[str] = []
             floor_flag = False
         else:
-            product_id, _, _ = glorys_dataset_for_date(mid_t.date())
+            product_id = glorys_product_for_date(mid_t.date())
             depth_val, depth_reasons = mean_bottom_depth_m_along_segment(event, store)
             floor_flag = depth_at_model_floor(depth_val, store.roms_hmin_m)
         source_products.append(product_id)
@@ -523,6 +523,7 @@ def build_cufes_training_covariates_table(
     provenance: str = "",
     drops_parquet_path: Path | None = None,
     drop_summary_json_path: Path | None = None,
+    wind_status_log_path: Path | None = None,
 ) -> tuple[pd.DataFrame, dict[str, Any], pd.DataFrame, dict[str, Any]]:
     """Join GLORYS covariates to QC-kept CUFES events (one row per ``event_id``)."""
     cov, qc, drops = join_covariates_to_events(
@@ -536,7 +537,7 @@ def build_cufes_training_covariates_table(
     out, drops = attach_bottom_depth_and_reasons(events, cov, drops, store)
     out = apply_upwelling_wind_policy(out)
     if not UPWELLING_WIND_FORCING_ENABLED:
-        record_upwelling_wind_status_pull_log()
+        record_upwelling_wind_status_pull_log(log_path=wind_status_log_path)
     for col in TRAINING_OUTPUT_COLUMNS:
         if col not in out.columns:
             raise ValueError(f"missing output column: {col}")

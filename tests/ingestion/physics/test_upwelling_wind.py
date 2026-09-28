@@ -22,7 +22,7 @@ from fishai.ingestion.physics.features import (
     UPWELLING_FORMULA_ID,
     compute_upwelling,
 )
-from fishai.ingestion.physics.sources.glorys import glorys_dataset_for_date
+from fishai.ingestion.physics.sources.glorys import glorys_product_for_date
 from fishai.ingestion.physics.sources.winds import CCMP_DATASET_ID, fetch_winds_for_day
 from fishai.ingestion.physics.wcofs_glorys_overlap import (
     glorys_grid_from_config,
@@ -60,7 +60,7 @@ def test_glorys_and_wcofs_paths_use_same_compute_upwelling_and_wind() -> None:
         return compute_upwelling(u, v, la, **kwargs)
 
     day = dt.date(2020, 6, 1)
-    product_id, _, _ = glorys_dataset_for_date(day)
+    product_id = glorys_product_for_date(day)
     nz = 5
     depth_levels = np.array([50.0, 20.0, 10.0, 5.0, 0.0])
     nj, ni = lat.size, lon.size
