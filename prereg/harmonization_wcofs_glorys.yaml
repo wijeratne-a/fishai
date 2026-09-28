@@ -90,12 +90,17 @@ harmonization_wcofs_glorys:
         differ only in horizontal grid and mapping.
 
   glorys_reference_dataset:
-    copernicus_product_id: cmems_mod_glo_phy_myint_0.083deg_P1D-m
-    product_kind: interim
+    selection_rule: date_based_source_product_column
+    note: >-
+      Matches the existing CUFES covariate source_product column rule: finished
+      reanalysis through 2021-06-30, interim from 2021-07-01 onward.
+    products_by_calendar_date:
+      - copernicus_product_id: cmems_mod_glo_phy_my_0.083deg_P1D-m
+        through_date: "2021-06-30"
+      - copernicus_product_id: cmems_mod_glo_phy_myint_0.083deg_P1D-m
+        from_date: "2021-07-01"
+    pilot_harmonization_window_uses: cmems_mod_glo_phy_myint_0.083deg_P1D-m
     coverage: every calendar date in fit_start through test_end (fit and test splits)
-    finished_reanalysis_note: >-
-      Finished GLORYS reanalysis (cmems_mod_glo_phy_my_0.083deg_P1D-m) ends
-      2021-06-30; see known_limitations.
 
   variables:
     - name: T3m
@@ -346,9 +351,21 @@ harmonization_wcofs_glorys:
       Harmonization and nowcast map products describe egg-stage encounter likelihood
       per the CUFES delta contract, not spawning habitat maps or adult distributions.
 
+  frozen_shoreline_reference:
+    path: data/reference/shoreline/ne_10m_land_pilot_clip.json
+    sha256: 2f677a16aa6c8470846d813eda6d82f2656dea2d697b1511a4c878542d20996c
+    frozen: true
+    pr7_source_commit: 8d4bfae
+    pr7_branch: cursor/wcofs-glorys-overlap-missing-by-field-60e8
+    note: >-
+      Auditor-cleared pilot shoreline vendored in PR #7; Bot4 scoring (PR #10) and
+      other consumers must compare against frozen_shoreline_reference.sha256, not
+      hard-coded hashes.
+
   nearshore:
     supplied_by: bot2
-    bot2_pr: "PR #7 @ cc26ab4"
+    bot2_pr: "PR #7 @ 8d4bfae"
+    frozen_shoreline_reference_key: frozen_shoreline_reference
     shoreline_source: "Natural Earth ne_10m_land"
     shoreline_version: "5.1.1"
     license: "public domain"
@@ -360,24 +377,21 @@ harmonization_wcofs_glorys:
       includes_channel_islands: true
     shoreline_path: data/reference/shoreline/ne_10m_land_pilot_clip.json
     shoreline_simplification_note: >-
-      Natural Earth 10 m land layer (ne_10m_land) clipped to the pilot box; not a
-      further simplified geometry for production nearshore flags.
+      Natural Earth 10 m land layer (ne_10m_land) clipped to the pilot box. PR #7
+      (8d4bfae) uses an unsimplified clip-only shoreline (no Douglas–Peucker); fidelity
+      work reports 0 GLORYS cells whose nearshore flag differs from the full coastline.
     cutoff_km: 20
     distance: >-
       Geodesic on WGS84 from each GLORYS cell centre to nearest mainland or island
       shoreline; nearshore when distance is cutoff_km or less.
-    shoreline_sha256: 2f677a16aa6c8470846d813eda6d82f2656dea2d697b1511a4c878542d20996c
-    shoreline_sha256_provisional: true
-    shoreline_sha256_provisional_until: PR #7 audit pass
-    shoreline_sha256_source: PR #7 branch (ne_10m_land_pilot_clip.json)
     shoreline_simplification_check: TO_BE_SET_BEFORE_SCORING
     simplification_check_requirement: >-
       Records max coastline displacement and the count of GLORYS cells whose
       nearshore flag differs from full-resolution shoreline; required count is 0.
     scoring_gate_note: >-
       Scoring must refuse while shoreline_simplification_check remains
-      TO_BE_SET_BEFORE_SCORING. shoreline_sha256 is provisional until PR #7 passes
-      audit and may be updated if the vendored clip changes.
+      TO_BE_SET_BEFORE_SCORING (bot2-owned). frozen_shoreline_reference is frozen;
+      path and sha256 are authoritative for PR #10 shoreline checks.
     scoring_nearshore_assignment: >-
       Every NDBC buoy observation and SCCOOS HF radar grid cell inherits the
       nearshore/offshore flag of the GLORYS cell it is matched to for scoring, not

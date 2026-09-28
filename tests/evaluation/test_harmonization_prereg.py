@@ -8,9 +8,13 @@ import pytest
 import yaml
 
 from fishai.evaluation.harmonization_prereg import (
+    FROZEN_PILOT_SHORELINE_REFERENCE_SHA256,
     HarmonizationPreregNotReadyError,
     PLACEHOLDER_TOKEN,
     assert_harmonization_prereg_ready_for_scoring,
+    frozen_shoreline_reference,
+    frozen_shoreline_reference_sha256,
+    is_valid_frozen_shoreline_sha256,
     load_harmonization_prereg,
     run_harmonization_scoring,
 )
@@ -104,7 +108,12 @@ def test_surface_definition_and_glorys_reference_dataset() -> None:
     assert "zeta" in surf["vertical_reference"]
     assert surf["sst"]["target_depth_below_surface_m"] == 0.494
     glorys = block["glorys_reference_dataset"]
-    assert glorys["copernicus_product_id"] == "cmems_mod_glo_phy_myint_0.083deg_P1D-m"
+    assert glorys["selection_rule"] == "date_based_source_product_column"
+    by_date = glorys["products_by_calendar_date"]
+    assert by_date[0]["through_date"] == "2021-06-30"
+    assert by_date[0]["copernicus_product_id"] == "cmems_mod_glo_phy_my_0.083deg_P1D-m"
+    assert by_date[1]["from_date"] == "2021-07-01"
+    assert by_date[1]["copernicus_product_id"] == "cmems_mod_glo_phy_myint_0.083deg_P1D-m"
     assert "scoring_nearshore_assignment" in block["nearshore"]
 
 
@@ -174,11 +183,29 @@ def test_nearshore_bot2_pr7_fields_and_pending_placeholders() -> None:
     assert near["shoreline_path"] == "data/reference/shoreline/ne_10m_land_pilot_clip.json"
     assert near["cutoff_km"] == 20
     assert "Geodesic on WGS84" in near["distance"]
-    sha = near["shoreline_sha256"]
-    assert sha.startswith("2f677a16") and sha.endswith("0996c")
-    assert near["shoreline_sha256_provisional"] is True
+    ref = frozen_shoreline_reference(doc)
+    assert ref["frozen"] is True
+    assert ref["path"] == near["shoreline_path"]
+    assert ref["pr7_source_commit"] == "8d4bfae"
     assert "Natural Earth 10 m land" in near["shoreline_simplification_note"]
+    assert "0 GLORYS cells" in near["shoreline_simplification_note"]
     assert near["shoreline_simplification_check"] == PLACEHOLDER_TOKEN
+
+
+def test_frozen_shoreline_reference_sha256_required_and_well_formed() -> None:
+    doc = load_harmonization_prereg(PREREG)
+    sha = frozen_shoreline_reference_sha256(doc)
+    assert is_valid_frozen_shoreline_sha256(sha)
+    assert sha == FROZEN_PILOT_SHORELINE_REFERENCE_SHA256
+    assert sha.startswith("2f677a16") and sha.endswith("20996c")
+    broken = yaml.safe_load(yaml.dump(doc))
+    del broken["harmonization_wcofs_glorys"]["frozen_shoreline_reference"]["sha256"]
+    with pytest.raises((KeyError, ValueError)):
+        frozen_shoreline_reference_sha256(broken)
+    broken2 = yaml.safe_load(yaml.dump(doc))
+    broken2["harmonization_wcofs_glorys"]["frozen_shoreline_reference"]["sha256"] = "not-a-hash"
+    with pytest.raises(ValueError, match="malformed"):
+        frozen_shoreline_reference_sha256(broken2)
 
 
 def test_scoring_entry_point_passes_gate_when_placeholders_replaced(tmp_path: Path) -> None:
