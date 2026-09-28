@@ -45,10 +45,44 @@ harmonization_wcofs_glorys:
       area_weights: true
       wet_mask: true
       resolution: "WCOFS coarsened to GLORYS grid, area-weighted, wet-masked"
+    area_weighted_definition:
+      cell_weight: "1 / (pm * pn) for each WCOFS rho cell (ROMS curvilinear metric area)."
+      glorys_boxes: >-
+        Half-open GLORYS grid boxes so each WCOFS cell centre falls in exactly one
+        destination box.
+      wet_fraction: >-
+        For each GLORYS cell and depth level, wet_fraction is the sum of WCOFS cell
+        areas (same 1/(pm*pn) weights) that are wet (mask_rho) and reach that depth,
+        divided by the box total area including land.
+      nan_rule: Values are set to NaN where wet_fraction < min_wet_fraction.
+      min_wet_fraction: 0.5
+      config_equality: >-
+        min_wet_fraction must equal regrid.min_wet_fraction in
+        data/config/wcofs_glorys_overlap.yaml when that file is present in the repo.
     front_features:
       rule: >-
         WCOFS is coarsened to the GLORYS grid (area weights, wet mask) before
         front-related features (including sst_grad and front_distance_km) are computed.
+
+  surface_definition:
+    vertical_reference: >-
+      SST, T3m, and S3m are measured as depth below the moving sea surface
+      (zeta minus z_rho), not below the geoid datum.
+    sst:
+      target_depth_below_surface_m: 0.494
+      glorys_note: GLORYS top model level (0.49 m) is the reference SST level.
+      wcofs_rule: >-
+        Where the top ROMS s_rho level is deeper than 0.494 m below the surface,
+        use the top-level value at that level.
+    t3m_s3m: Same moving-surface vertical reference as SST before interpolation to 3 m.
+
+  glorys_reference_dataset:
+    copernicus_product_id: cmems_mod_glo_phy_myint_0.083deg_P1D-m
+    product_kind: interim
+    coverage: every calendar date in fit_start through test_end (fit and test splits)
+    finished_reanalysis_note: >-
+      Finished GLORYS reanalysis (cmems_mod_glo_phy_my_0.083deg_P1D-m) ends
+      2021-06-30; see known_limitations.
 
   variables:
     - T3m
@@ -192,6 +226,11 @@ harmonization_wcofs_glorys:
     scoring_gate_note: >-
       Scoring must refuse while shoreline_sha256 or shoreline_simplification_check
       remain TO_BE_SET_BEFORE_SCORING.
+    scoring_nearshore_assignment: >-
+      Every NDBC buoy observation and SCCOOS HF radar grid cell inherits the
+      nearshore/offshore flag of the GLORYS cell it is matched to for scoring, not
+      its own geodesic distance to the coast. This rule applies identically to all
+      four model rows in metrics strata, including native ~4 km WCOFS (diagnostic).
 
   pass_fail_thresholds:
     owner: auditbot1
@@ -208,8 +247,9 @@ harmonization_wcofs_glorys:
         fit-year rows, not as holdout test-split rows.
     - id: interim_glorys_overlap
       summary: >-
-        The scored overlap window uses interim GLORYS product coverage through
-        2026-06-23; finished GLORYS reanalysis ends 2021-06-30.
+        Harmonization fit and test splits use interim GLORYS
+        (cmems_mod_glo_phy_myint_0.083deg_P1D-m) through 2026-06-23; finished
+        GLORYS reanalysis (my) ends 2021-06-30.
     - id: single_fit_year
       summary: One fitting year (2024-09-01–2025-08-31) does not capture year-to-year variability.
     - id: indirect_buoy_glorys_product_check

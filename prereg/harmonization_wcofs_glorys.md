@@ -22,7 +22,7 @@ Correction models for mapped WCOFS are fit on the fit window only; reported hold
 
 ## Fields and grids
 
-Seven harmonized variables: **T3m**, **S3m**, **MLD_m**, **sst_grad**, **front_distance_km**, and surface **u** and **v**. WCOFS is coarsened to the GLORYS horizontal grid with area weights and a wet mask before front features; both models share a **0–200 m, 1 m** vertical grid before T3m, S3m, and MLD are derived.
+Seven harmonized variables: **T3m**, **S3m**, **MLD_m**, **sst_grad**, **front_distance_km**, and surface **u** and **v**. WCOFS is coarsened to the GLORYS horizontal grid with **area-weighted** regridding (WCOFS cell weight `1/(pm*pn)`, half-open GLORYS boxes, `wet_fraction` with `min_wet_fraction: 0.5` matching `data/config/wcofs_glorys_overlap.yaml` when present). SST/T3m/S3m use depth below the **moving surface** (`zeta - z_rho`); SST at **0.494 m** below surface (GLORYS top level). Reference GLORYS product: **`cmems_mod_glo_phy_myint_0.083deg_P1D-m`** for all fit and test dates.
 
 ## Models compared
 
@@ -49,7 +49,7 @@ Scores use `config/assimilated_sources.yaml` (versioned, cited). Unknown assimil
 
 Per variable: **bias**, **RMSE**, **Pearson r**, by season (DJF/MAM/JJA/SON), nearshore/offshore, and pooled, each with **n** and a **7-day block bootstrap 95% CI**. **Front-detail loss** is mean coarsened-WCOFS **sst_grad** divided by native WCOFS on the same days. Test-split **JJA** is **1–23 June only** (`test_split_jja_partial`).
 
-Nearshore (bot2 PR #7 @ cc26ab4): `Natural Earth ne_10m_land` v**5.1.1**, public domain, clip lat 31–36 / lon −122 to −116 (Channel Islands), path `data/reference/shoreline/ne_10m_land_pilot_clip.json`, **cutoff_km 20**, geodesic distance on WGS84 from GLORYS cell centre to nearest shoreline. `shoreline_sha256` and `shoreline_simplification_check` remain `TO_BE_SET_BEFORE_SCORING` (simplification must report 0 cells with changed nearshore flags vs full resolution). Scoring refuses while any placeholder remains. auditbot1 cutoffs unchanged.
+Nearshore (bot2 PR #7 @ cc26ab4): `Natural Earth ne_10m_land` v**5.1.1**, public domain, clip lat 31–36 / lon −122 to −116 (Channel Islands), path `data/reference/shoreline/ne_10m_land_pilot_clip.json`, **cutoff_km 20**, geodesic distance on WGS84 from GLORYS cell centre to nearest shoreline. **Scoring strata:** buoys and HF radar cells use the **matched GLORYS cell’s** nearshore flag (same for all four model rows, including native WCOFS). `shoreline_sha256` and `shoreline_simplification_check` remain `TO_BE_SET_BEFORE_SCORING`. auditbot1 cutoffs unchanged.
 
 ## Timing
 

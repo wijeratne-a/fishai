@@ -20,6 +20,36 @@ PREREG = REPO / "prereg" / "harmonization_wcofs_glorys.yaml"
 RESOLUTION_EXACT = "WCOFS coarsened to GLORYS grid, area-weighted, wet-masked"
 
 
+WCOFS_GLORYS_OVERLAP_CONFIG = REPO / "data" / "config" / "wcofs_glorys_overlap.yaml"
+
+
+def test_area_weighted_min_wet_fraction_matches_overlap_config_if_present() -> None:
+    doc = load_harmonization_prereg(PREREG)
+    prereg_min = doc["harmonization_wcofs_glorys"]["horizontal_processing"][
+        "area_weighted_definition"
+    ]["min_wet_fraction"]
+    assert prereg_min == 0.5
+    if not WCOFS_GLORYS_OVERLAP_CONFIG.is_file():
+        pytest.skip(
+            f"{WCOFS_GLORYS_OVERLAP_CONFIG} not present on this branch; "
+            "cannot assert equality with regrid.min_wet_fraction"
+        )
+    cfg = yaml.safe_load(WCOFS_GLORYS_OVERLAP_CONFIG.read_text(encoding="utf-8"))
+    cfg_min = cfg.get("regrid", {}).get("min_wet_fraction")
+    assert cfg_min == prereg_min
+
+
+def test_surface_definition_and_glorys_reference_dataset() -> None:
+    doc = load_harmonization_prereg(PREREG)
+    block = doc["harmonization_wcofs_glorys"]
+    surf = block["surface_definition"]
+    assert "zeta" in surf["vertical_reference"]
+    assert surf["sst"]["target_depth_below_surface_m"] == 0.494
+    glorys = block["glorys_reference_dataset"]
+    assert glorys["copernicus_product_id"] == "cmems_mod_glo_phy_myint_0.083deg_P1D-m"
+    assert "scoring_nearshore_assignment" in block["nearshore"]
+
+
 def test_prereg_temporal_split_dates_resolution_and_shared_functions() -> None:
     doc = load_harmonization_prereg(PREREG)
     split = doc["harmonization_wcofs_glorys"]["temporal_split"]
