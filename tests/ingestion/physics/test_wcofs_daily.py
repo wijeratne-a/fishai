@@ -20,7 +20,7 @@ from fishai.ingestion.physics.wcofs_daily import (
     wait_for_primary_cycle,
 )
 from fishai.ingestion.physics.wcofs_pull_log import pull_log_path, sha256_bytes
-from tests.ingestion.physics.test_wcofs_synthetic import _write_mini_wcofs_bytes
+from wcofs_fixtures import write_mini_wcofs_bytes
 
 
 def test_fields_s3_key_t03z_nowcast_and_forecast() -> None:
@@ -38,7 +38,7 @@ def test_fields_s3_key_t03z_nowcast_and_forecast() -> None:
 def test_subset_bbox_margin_expands_indices() -> None:
     import xarray as xr
 
-    payload = _write_mini_wcofs_bytes(n_eta=6, n_xi=6)
+    payload = write_mini_wcofs_bytes(n_eta=6, n_xi=6)
     ds = wcofs_src.open_dataset_from_bytes(payload)
     tight = wcofs_src.subset_bbox(ds, (32.0, 35.0, -121.0, -117.0), margin_cells=0)
     loose = wcofs_src.subset_bbox(ds, (32.0, 35.0, -121.0, -117.0), margin_cells=2)
@@ -81,7 +81,7 @@ def test_dry_run_lists_keys_and_request_count(tmp_path: Path) -> None:
 
 
 def test_idempotent_pull_log_skips_duplicate_etag(tmp_path: Path) -> None:
-    payload = _write_mini_wcofs_bytes()
+    payload = write_mini_wcofs_bytes()
     plan = build_lead_plan(dt.date(2026, 9, 28), primary_available=True)
     plan.bbox = (32.0, 35.0, -121.0, -117.0)
     plan.target_date = dt.date(2026, 9, 28)
@@ -103,7 +103,7 @@ def test_idempotent_pull_log_skips_duplicate_etag(tmp_path: Path) -> None:
 
 
 def test_partial_cycle_flags_missing_lead(tmp_path: Path) -> None:
-    payload = _write_mini_wcofs_bytes()
+    payload = write_mini_wcofs_bytes()
     plan = build_lead_plan(dt.date(2026, 9, 28), primary_available=True)
     plan.leads = plan.leads[:2]
     plan.s3_keys = plan.s3_keys[:2]
