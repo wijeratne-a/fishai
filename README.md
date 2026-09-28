@@ -21,7 +21,7 @@ Map and API outputs must use one primary evidence state (plus uncertainty), not 
 ```
 src/fishai/
   ingestion/biology/     CalCOFI CUFES (erdCalCOFIcufes) stub
-  ingestion/physics/     WCOFS, GLORYS stubs
+  ingestion/physics/     WCOFS, GLORYS (``cmems_mod_glo_phy_my_0.083deg_P1D-m``; ``bottomT`` not ``tob``; disabled)
   ingestion/sensors/     SCCOOS HF radar, NDBC, IOOS glider stubs
   models/                Python experiment config, baselines, run manifest
   models/R/              sdmTMB R code (bootstrap via renv)
