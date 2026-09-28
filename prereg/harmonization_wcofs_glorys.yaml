@@ -72,6 +72,29 @@ harmonization_wcofs_glorys:
       - id: glorys
         description: GLORYS reanalysis on its native grid (training/hindcast product).
 
+  mapping_artifact:
+    fitted_by: bot3
+    delivery: later_pull_request
+    summary: >-
+      The WCOFS-to-GLORYS correction map is fitted by bot3 on the fit split only,
+      in a later PR, then frozen for all downstream use.
+    frozen_directory: artifacts/harmonization/wcofs_to_glorys_map/v1/
+    manifest:
+      filename: manifest.json
+      location: artifacts/harmonization/wcofs_to_glorys_map/v1/manifest.json
+      records:
+        - fitting_commit_sha
+        - fit_split_parquet_sha256
+        - prereg_commit_sha
+        - variables_mapped
+        - fit_date_range
+    fit_date_range:
+      fit_start: "2024-09-01"
+      fit_end: "2025-08-31"
+    load_policy: >-
+      Holdout scoring and the daily nowcast path may only load this frozen map;
+      they must never refit or mutate it.
+
   observations:
     ndbc_hull_temperature:
       stations_manifest: docs/archive/legacy_data/globe_fixtures/stations.json

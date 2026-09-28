@@ -35,6 +35,26 @@ def test_prereg_temporal_split_dates_and_resolution() -> None:
     assert split["notes"]["first_test_day"] == "2025-09-01"
 
 
+def test_mapping_artifact_section_and_fit_date_range_matches_split() -> None:
+    doc = load_harmonization_prereg(PREREG)
+    block = doc["harmonization_wcofs_glorys"]
+    split = block["temporal_split"]
+    artifact = block.get("mapping_artifact")
+    assert isinstance(artifact, dict)
+    assert artifact.get("fitted_by") == "bot3"
+    assert "wcofs_to_glorys_map/v1" in artifact.get("frozen_directory", "")
+    manifest = artifact.get("manifest") or {}
+    assert manifest.get("filename") == "manifest.json"
+    assert "fitting_commit_sha" in manifest.get("records", [])
+    assert "fit_split_parquet_sha256" in manifest.get("records", [])
+    assert "prereg_commit_sha" in manifest.get("records", [])
+    assert "variables_mapped" in manifest.get("records", [])
+    assert "fit_date_range" in manifest.get("records", [])
+    fit_range = artifact.get("fit_date_range") or {}
+    assert fit_range.get("fit_start") == split["fit_start"]
+    assert fit_range.get("fit_end") == split["fit_end"]
+
+
 def test_native_wcofs_diagnostic_never_through_harmonization_map() -> None:
     doc = load_harmonization_prereg(PREREG)
     candidates = doc["harmonization_wcofs_glorys"]["models_scored"]["candidates"]

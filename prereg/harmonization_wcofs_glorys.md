@@ -31,6 +31,10 @@ Seven harmonized variables: **T3m**, **S3m**, **MLD_m**, **sst_grad**, **front_d
 3. Coarsened WCOFS plus a correction fit on the fit split only  
 4. GLORYS  
 
+## Frozen mapping artifact (bot3, later PR)
+
+The WCOFS-to-GLORYS map is fit by **bot3** on the **fit split only**, then frozen under `artifacts/harmonization/wcofs_to_glorys_map/v1/` with a sidecar **`manifest.json`** recording: fitting commit SHA, SHA-256 of the fit-split Parquet, this pre-registration file’s commit SHA, variables mapped, and the fit date range (`fit_start`–`fit_end`). **Scoring and the nowcast path load only this frozen map and never refit it.**
+
 ## Observations
 
 - **NDBC** hull water temperature: stations from `docs/archive/legacy_data/globe_fixtures/stations.json`, nearest cell, same-day daily mean; GLORYS at **0.49 m**, WCOFS nearest level to **1 m**.  
