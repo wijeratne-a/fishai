@@ -77,8 +77,11 @@ def _synthetic_events() -> pd.DataFrame:
 
 
 def test_glorys_product_switch_at_my_myint_boundary() -> None:
-    assert glorys_product_for_date(dt.date(2021, 6, 30)) == PRODUCT_ID_MY
-    assert glorys_product_for_date(dt.date(2021, 7, 1)) == PRODUCT_ID_MYINT
+    my_id = glorys_product_for_date(dt.date(2021, 6, 30))
+    myint_id = glorys_product_for_date(dt.date(2021, 7, 1))
+    assert my_id == PRODUCT_ID_MY
+    assert myint_id == PRODUCT_ID_MYINT
+    assert my_id != myint_id
 
 
 def test_training_glorys_product_ids_track_glorys_product_for_date(tmp_path: Path) -> None:
