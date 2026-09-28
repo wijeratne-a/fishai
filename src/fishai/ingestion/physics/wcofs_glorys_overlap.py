@@ -20,7 +20,9 @@ import xarray as xr
 from fishai.ingestion.physics.coast_distance import nearshore_mask, shoreline_path_from_config
 from fishai.ingestion.physics.harmonize import glorys_target_grid
 from fishai.ingestion.physics.glorys_catalog import (
-    append_glorys_pull_log_record,
+    ensure_glorys_dataset_version_allowed,
+    resolve_glorys_dataset_for_date,
+    write_glorys_pull_log_record,
 )
 from fishai.ingestion.physics.sources.glorys import glorys_column_features, resolve_glorys_product_id
 from fishai.ingestion.physics.wcofs_glorys_coverage import (
@@ -350,9 +352,12 @@ def run_overlap_pairing(
         if glorys_fetch is None:
             raise RuntimeError("glorys_fetch is required for live overlap pairing")
         budget.charge(day, 1)
+        glorys_resolution = resolve_glorys_dataset_for_date(day)
+        ensure_glorys_dataset_version_allowed(glorys_resolution, log_path=glorys_log)
         glorys_payload = glorys_fetch(day)
-        append_glorys_pull_log_record(
+        write_glorys_pull_log_record(
             day,
+            glorys_resolution,
             variables=("thetao", "so"),
             bbox=(
                 float(config["pilot_bbox"]["lat_min"]),

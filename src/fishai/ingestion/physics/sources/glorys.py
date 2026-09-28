@@ -9,7 +9,11 @@ from typing import Any, Callable
 import numpy as np
 
 from fishai.ingestion.copernicus_compliance import glorys_attribution_bundle
-from fishai.ingestion.physics.glorys_catalog import append_glorys_pull_log_record
+from fishai.ingestion.physics.glorys_catalog import (
+    ensure_glorys_dataset_version_allowed,
+    resolve_glorys_dataset_for_date,
+    write_glorys_pull_log_record,
+)
 from fishai.ingestion.physics.vertical import (
     CUFES_SAMPLE_DEPTH_M,
     interp_at_depth_from_z_levels,
@@ -20,9 +24,6 @@ from fishai.ingestion.sources import SourceNotApprovedError, require_approved
 SOURCE_MODULE = "glorys"
 
 PRODUCT_ID_MY = "cmems_mod_glo_phy_my_0.083deg_P1D-m"
-# Deprecated interim id (not in live catalogue); kept for explicit mismatch tests only.
-PRODUCT_ID_MYINT = "cmems_mod_glo_phy_myint_0.083deg_P1D-m"
-PRODUCT_ID = PRODUCT_ID_MY
 
 MY_PRODUCT_START = dt.date(1993, 1, 1)
 MY_COVERAGE_END_DEFAULT = dt.date(2026, 6, 23)
@@ -59,8 +60,6 @@ def glorys_product_for_date(
         raise ValueError(
             f"glorys: date {date} is before {MY_PRODUCT_START} (my product start)"
         )
-    from fishai.ingestion.physics.glorys_catalog import resolve_glorys_dataset_for_date
-
     return resolve_glorys_dataset_for_date(date).dataset_id
 
 
@@ -130,20 +129,23 @@ def fetch_day(
     if dt.date.today() > LICENSE_VALID_UNTIL:
         raise SourceNotApprovedError("glorys: licence validity ended")
 
-    ds_id = glorys_dataset_id_for_date(date, dataset_id, config=config)
+    glorys_dataset_id_for_date(date, dataset_id, config=config)
     pull_log = log_path or _pull_log_path(entry)
-    append_glorys_pull_log_record(
-        date,
-        variables=variables,
-        bbox=bbox,
-        log_path=pull_log,
-    )
+    resolution = resolve_glorys_dataset_for_date(date)
+    ensure_glorys_dataset_version_allowed(resolution, log_path=pull_log)
 
     if fetch_fn is None:
         raise RuntimeError(
             "glorys: live Copernicus client not invoked from unit tests; inject fetch_fn"
         )
     payload = fetch_fn()
+    write_glorys_pull_log_record(
+        date,
+        resolution,
+        variables=variables,
+        bbox=bbox,
+        log_path=pull_log,
+    )
     attrs = glorys_attribution_bundle(entry)
     if isinstance(payload, dict):
         payload.setdefault("metadata", {}).update(attrs)
