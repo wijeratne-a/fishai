@@ -90,8 +90,11 @@ def combination_rule_blocks_scoring(cutoffs: dict[str, Any]) -> bool:
     return isinstance(rule, str) and rule.startswith(PENDING_COMBINATION_RULE_PREFIX)
 
 
+PASS_FAIL_GRADED_INPUT_COUNT = 5
+
+
 def pass_fail_graded_input_names(doc: dict[str, Any] | None = None) -> tuple[str, ...]:
-    """Return the six cell-gate graded input names from ``pass_fail_thresholds.cutoffs``."""
+    """Return cell-gate graded input names from ``pass_fail_thresholds.cutoffs``."""
     cutoffs = pass_fail_thresholds_cutoffs(doc)
     names = cutoffs.get("graded_inputs")
     if not isinstance(names, list) or not names:
@@ -99,12 +102,19 @@ def pass_fail_graded_input_names(doc: dict[str, Any] | None = None) -> tuple[str
     return tuple(str(n) for n in names)
 
 
+def _variable_is_never_cell_graded(entry: dict[str, Any]) -> bool:
+    if entry.get("grading") == "shared_forcing":
+        return True
+    return entry.get("role") == "report_only"
+
+
 def assert_graded_inputs_declared_in_variables(doc: dict[str, Any]) -> None:
     """Every ``graded_inputs`` name must appear in harmonization ``variables``."""
     expected = pass_fail_graded_input_names(doc)
-    if len(expected) != 6:
+    if len(expected) != PASS_FAIL_GRADED_INPUT_COUNT:
         raise ValueError(
-            f"pass_fail_thresholds.cutoffs.graded_inputs must list exactly 6 names, got {len(expected)}"
+            "pass_fail_thresholds.cutoffs.graded_inputs must list exactly "
+            f"{PASS_FAIL_GRADED_INPUT_COUNT} names, got {len(expected)}"
         )
     block = doc["harmonization_wcofs_glorys"]
     vars_by_name = {v["name"]: v for v in block["variables"]}
@@ -112,8 +122,16 @@ def assert_graded_inputs_declared_in_variables(doc: dict[str, Any]) -> None:
     if missing:
         raise ValueError(f"graded_inputs missing from variables list: {missing}")
     for name in expected:
-        if vars_by_name[name].get("role") != "graded_input":
+        entry = vars_by_name[name]
+        if _variable_is_never_cell_graded(entry):
+            raise ValueError(f"graded_inputs must not include never-graded variable {name!r}")
+        if entry.get("role") != "graded_input":
             raise ValueError(f"variables.{name}.role must be graded_input for cell gate")
+    for name, entry in vars_by_name.items():
+        if not _variable_is_never_cell_graded(entry):
+            continue
+        if name in expected:
+            raise ValueError(f"shared_forcing/report_only variable {name!r} is in graded_inputs")
 
 
 def assert_pass_fail_thresholds_ready_for_scoring(doc: dict[str, Any]) -> None:

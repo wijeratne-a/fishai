@@ -114,14 +114,13 @@ harmonization_wcofs_glorys:
     - name: front_distance_km
       role: graded_input
     - name: upwelling
-      role: graded_input
+      grading: shared_forcing
+      role: report_only
       source_field: upwelling
-      units: m s-1
       note: >-
-        Same column and units as the GLORYS CUFES covariate table field upwelling.
-        WCOFS wcofs_coarsened_mapped values must be computed with the identical
-        formula bot2 uses for GLORYS in fishai.ingestion.physics.covariates
-        (including wind product and trailing-mean window when upwelling is present).
+        Both GLORYS and WCOFS paths use the same outside wind product; a
+        WCOFS-vs-GLORYS comparison would only test regridding, so upwelling is
+        reported but never cell-gate graded.
       blank_when:
         reason: no_consistent_wind_product
         pilot_model_action: drop_upwelling_from_pilot_model
@@ -465,7 +464,6 @@ harmonization_wcofs_glorys:
         - MLD_m
         - sst_grad
         - front_distance_km
-        - upwelling
       graded_inputs_cell_gate:
         model_row: wcofs_coarsened_mapped
         reference_row: glorys
@@ -483,7 +481,7 @@ harmonization_wcofs_glorys:
         - DEGRADED
         - PASS
       combination_rule_note: >-
-        Each stratum verdict is the worst of the buoy verdict and all six
+        Each stratum verdict is the worst of the buoy verdict and all five
         graded_inputs cell-gate verdicts (UNKNOWN, FAIL, DEGRADED, PASS).
       failed_input_stratum_verdict: UNKNOWN
       not_gradable_cap:
@@ -552,7 +550,6 @@ harmonization_wcofs_glorys:
         - MLD_m
         - sst_grad
         - front_distance_km
-        - upwelling
       refuse_to_run_if_any_missing_from_variables: true
       reference_per_stratum: glorys_spatial_sd
       rmse_vs_glorys_sd:
@@ -560,6 +557,8 @@ harmonization_wcofs_glorys:
         degraded_max_multiple: 1.0
         fail_above_multiple: 1.0
       fail_stratum_verdict: UNKNOWN
+      shared_forcing_variables_never_graded:
+        - upwelling
       report_only_variables:
         - u_surf
         - v_surf

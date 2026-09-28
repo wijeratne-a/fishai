@@ -34,7 +34,7 @@ def _all_pass_inputs(rules) -> dict[str, str]:
     return {name: "PASS" for name in rules.graded_inputs}
 
 
-def test_cutoffs_combination_rule_worst_of_and_six_graded_inputs() -> None:
+def test_cutoffs_combination_rule_worst_of_and_five_graded_inputs() -> None:
     doc = load_harmonization_prereg(PREREG)
     cutoffs = pass_fail_thresholds_cutoffs(doc)
     assert cutoffs["combination_rule"] == "worst_of"
@@ -46,9 +46,8 @@ def test_cutoffs_combination_rule_worst_of_and_six_graded_inputs() -> None:
         "MLD_m",
         "sst_grad",
         "front_distance_km",
-        "upwelling",
     ]
-    assert len(cutoffs["graded_inputs"]) == 6
+    assert len(cutoffs["graded_inputs"]) == 5
     assert cutoffs["not_gradable_cap"]["verdict"] == "DEGRADED"
     assert cutoffs["not_gradable_cap"]["reason"] == NO_INDEPENDENT_OBS_CHECK
     niv = cutoffs["no_independent_validation"]
@@ -61,14 +60,24 @@ def test_cutoffs_combination_rule_worst_of_and_six_graded_inputs() -> None:
 def test_every_graded_input_appears_in_variables() -> None:
     doc = load_harmonization_prereg(PREREG)
     names = pass_fail_graded_input_names(doc)
-    assert len(names) == 6
+    assert len(names) == 5
     assert_graded_inputs_declared_in_variables(doc)
     vars_by_name = {v["name"]: v for v in doc["harmonization_wcofs_glorys"]["variables"]}
-    assert vars_by_name["upwelling"]["source_field"] == "upwelling"
-    assert vars_by_name["upwelling"]["units"] == "m s-1"
-    assert "fishai.ingestion.physics.covariates" in vars_by_name["upwelling"]["note"]
+    assert "upwelling" not in names
+    assert vars_by_name["upwelling"]["grading"] == "shared_forcing"
+    assert vars_by_name["upwelling"]["role"] == "report_only"
+    assert "same outside wind product" in vars_by_name["upwelling"]["note"]
     assert vars_by_name["u_surf"]["role"] == "report_only"
     assert vars_by_name["v_surf"]["role"] == "report_only"
+
+
+def test_shared_forcing_and_report_only_variables_never_graded() -> None:
+    doc = load_harmonization_prereg(PREREG)
+    graded = set(pass_fail_graded_input_names(doc))
+    for entry in doc["harmonization_wcofs_glorys"]["variables"]:
+        name = entry["name"]
+        if entry.get("grading") == "shared_forcing" or entry.get("role") == "report_only":
+            assert name not in graded
 
 
 def test_scoring_entry_point_passes_prereg_gate_on_committed_doc() -> None:

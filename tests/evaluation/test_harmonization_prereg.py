@@ -277,7 +277,7 @@ def test_pass_fail_thresholds_cutoffs_auditbot1_numeric_values() -> None:
     assert buoy["fail"]["reason"] == "nowcast_forcing_failed_holdout"
     graded = cutoffs["graded_inputs"]
     assert graded == list(pass_fail_graded_input_names(doc))
-    assert len(graded) == 6
+    assert len(graded) == 5
     cell = cutoffs["graded_inputs_cell_gate"]
     assert cell["model_row"] == "wcofs_coarsened_mapped"
     assert cell["reference_row"] == "glorys"
@@ -330,8 +330,9 @@ def test_nowcast_forcing_grading_blocks() -> None:
     assert buoy["per_stratum_aggregation"] == "worst_verdict_across_metrics"
     assert buoy["fail_outcome"]["reason"] == "nowcast_forcing_failed_holdout"
     inputs = grading["graded_inputs_gate"]
-    assert len(inputs["graded_variable_names"]) == 6
-    assert "upwelling" in inputs["graded_variable_names"]
+    assert len(inputs["graded_variable_names"]) == 5
+    assert "upwelling" not in inputs["graded_variable_names"]
+    assert inputs["shared_forcing_variables_never_graded"] == ["upwelling"]
     assert inputs["rmse_vs_glorys_sd"]["pass_max_multiple"] == 0.5
     combo = grading["combination_rules"]
     assert combo["no_gradable_independent_check"]["reason"] == "no_independent_obs_check"
@@ -361,5 +362,6 @@ def test_upwelling_lags_and_shared_forcing_variable() -> None:
     assert lags["selection"]["fit_split_end"] == "2017-12-31"
     assert lags["selection"]["never_reselect_after_freeze"] is True
     vars_by_name = {v["name"]: v for v in doc["harmonization_wcofs_glorys"]["variables"]}
-    assert vars_by_name["upwelling"]["role"] == "graded_input"
-    assert vars_by_name["upwelling"]["source_field"] == "upwelling"
+    assert vars_by_name["upwelling"]["grading"] == "shared_forcing"
+    assert vars_by_name["upwelling"]["role"] == "report_only"
+    assert vars_by_name["upwelling"]["blank_when"]["reason"] == "no_consistent_wind_product"
