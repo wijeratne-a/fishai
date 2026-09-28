@@ -24,6 +24,8 @@ def area_weighted_regrid(
     lon_src: np.ndarray,
     lat_dst: np.ndarray,
     lon_dst: np.ndarray,
+    *,
+    wet_mask: np.ndarray | None = None,
 ) -> np.ndarray:
     """
     Conservative area-weighted remap from curvilinear/irregular source cells to
@@ -32,6 +34,9 @@ def area_weighted_regrid(
     field = np.asarray(field, dtype=float)
     lat_src = np.asarray(lat_src, dtype=float)
     lon_src = np.asarray(lon_src, dtype=float)
+    if wet_mask is not None:
+        wet_mask = np.asarray(wet_mask, dtype=bool)
+        field = np.where(wet_mask, field, np.nan)
     out = np.full((lat_dst.size, lon_dst.size), np.nan, dtype=float)
     dlat = np.median(np.diff(lat_dst)) if lat_dst.size > 1 else 1.0 / 12.0
     dlon = np.median(np.diff(lon_dst)) if lon_dst.size > 1 else 1.0 / 12.0

@@ -38,6 +38,7 @@ sources:
     license: U.S. Government Work
     license_url: https://www.noaa.gov/information-technology/foia
     attribution: "NOAA NOS CO-OPS West Coast Operational Forecast System (WCOFS)"
+    pull_log_path: data/provenance/wcofs_pull_log.jsonl
     status: approved
     enabled: true
 

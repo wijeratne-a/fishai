@@ -1,0 +1,43 @@
+# WCOFS avg.nowcast × GLORYS daily overlap pairing (pilot Southern California Bight).
+pilot_bbox:
+  lat_min: 32.0
+  lat_max: 35.0
+  lon_min: -121.0
+  lon_max: -117.0
+
+overlap:
+  start: 2024-09-01
+  end: 2026-06-23
+  expected_days: 661
+
+split:
+  fit_end: 2025-08-31
+  test_start: 2025-09-01
+
+nearshore_km: 20.0
+coastline_fixture: tests/fixtures/pilot_coastline_vertices.csv
+
+glorys:
+  product_id: cmems_mod_glo_phy_my_0.083deg_P1D-m
+  copernicus_doi: 10.48670/moi-00021
+  production_status: interim
+
+wcofs:
+  product: avg.nowcast
+  cycle: t03z
+
+depth_grid_m:
+  start: 0
+  end: 200
+  step: 1
+
+rate_limits:
+  max_concurrent_per_host: 2
+  max_requests_per_day: 200
+
+pull_logs:
+  wcofs: data/provenance/wcofs_pull_log.jsonl
+  glorys: data/provenance/copernicus_pull_log.jsonl
+
+output:
+  parquet_name: wcofs_glorys_overlap_pilot.parquet
