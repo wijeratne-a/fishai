@@ -42,20 +42,20 @@ sources:
   sccoos_hfr:
     module: fishai.ingestion.sensors.sccoos_hfr
     erddap_dataset: ucsdHfrW6
-    provider: SCCOOS HF radar via NOAA CoastWatch ERDDAP
-    license: U.S. Government Work (NOAA CoastWatch/SCCOOS open data)
-    license_url: https://www.noaa.gov/information-technology/foia
-    attribution: "SCCOOS HF radar (ucsdHfrW6); cite SCCOOS, generating institution, and CoastWatch ERDDAP."
+    provider: NOAA IOOS Surface Currents Program (CoastWatch ERDDAP)
+    license: ERDDAP dataset license (free use/redistribution; not for legal use)
+    license_url: https://coastwatch.pfeg.noaa.gov/erddap/info/ucsdHfrW6/index.html
+    attribution: "NOAA IOOS Surface Currents Program — Currents, HF Radar, US West Coast, RTV, Near-Real Time, Hourly, 6km (ERDDAP ucsdHfrW6, CoastWatch)."
     status: approved
     enabled: true
 
   ndbc_met:
     module: fishai.ingestion.sensors.ndbc_met
     erddap_dataset: cwwcNDBCMet
-    provider: NOAA NDBC via CoastWatch ERDDAP
-    license: U.S. Government Work
-    license_url: https://www.noaa.gov/disclaimer
-    attribution: "NOAA National Data Buoy Center; cite station IDs and retrieval time."
+    provider: NOAA NDBC / NOAA NMFS SWFSC ERD (CoastWatch ERDDAP)
+    license: ERDDAP dataset license (free use/redistribution; not for legal use)
+    license_url: https://coastwatch.pfeg.noaa.gov/erddap/info/cwwcNDBCMet/index.html
+    attribution: "NOAA National Data Buoy Center — NDBC Standard Meteorological Buoy Data, 1970-present (ERDDAP cwwcNDBCMet; contributor NOAA NDBC, NOAA NMFS SWFSC ERD)."
     status: approved
     enabled: true
 
@@ -63,8 +63,8 @@ sources:
     module: fishai.ingestion.sensors.ioos_glider_dac
     erddap_base: https://gliders.ioos.us/erddap
     provider: IOOS Glider DAC
-    license: Pending verification (IOOS/NCEI archive terms not confirmed in-repo)
-    license_url: https://www.ncei.noaa.gov/products/ocean-carbon-acidification-data-system
-    attribution: "IOOS Glider DAC; cite glider id and deployment metadata when approved."
+    license: Pending ERDDAP NC_GLOBAL license confirmation
+    license_url: https://gliders.ioos.us/erddap/info/index.html
+    attribution: "Ingestion disabled until per-dataset ERDDAP NC_GLOBAL creator_name attribution is confirmed at enable time."
     status: pending
     enabled: false
