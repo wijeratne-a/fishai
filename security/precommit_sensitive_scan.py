@@ -24,6 +24,7 @@ SKIP_PREFIXES = (
     "data/restricted/",
     "data/quarantine/",
     "data/processed/",
+    "src/models/tests/fixtures/",
 )
 
 TEXT_SUFFIXES = {
