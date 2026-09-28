@@ -441,7 +441,6 @@ harmonization_wcofs_glorys:
         degraded_min_exclusive: 0.5
         degraded_max_inclusive: 1.0
       pearson_r:
-        pass_min_vs_glorys_r: within_0.10
         max_deficit_vs_glorys_r: 0.10
         degraded_band: none
       catch_all_fail_rule:
