@@ -19,23 +19,20 @@ from fishai.ingestion.physics.vertical import (
     interp_at_depth_from_z_levels,
     mld,
 )
-from fishai.ingestion.sources import SourceNotApprovedError, get_source_entry, require_approved
+from fishai.ingestion.sources import SourceNotApprovedError, require_approved
 
 SOURCE_MODULE = "glorys"
 
 PRODUCT_ID_MY = "cmems_mod_glo_phy_my_0.083deg_P1D-m"
+# Deprecated interim id (not in live catalogue); kept for explicit mismatch tests only.
 PRODUCT_ID_MYINT = "cmems_mod_glo_phy_myint_0.083deg_P1D-m"
-# Back-compat alias for interim-era default (use ``glorys_product_for_date`` for pulls).
-PRODUCT_ID = PRODUCT_ID_MYINT
+PRODUCT_ID = PRODUCT_ID_MY
 
 MY_PRODUCT_START = dt.date(1993, 1, 1)
-# Historical calendar split (superseded by live catalogue resolution for pulls).
-MY_PRODUCT_END = dt.date(2021, 6, 30)
-MYINT_PRODUCT_START = dt.date(2021, 7, 1)
-MYINT_PRODUCT_END_DEFAULT = dt.date(2026, 6, 23)
+MY_COVERAGE_END_DEFAULT = dt.date(2026, 6, 23)
 
 PRODUCT_TIME_START = MY_PRODUCT_START
-PRODUCT_TIME_END = MYINT_PRODUCT_END_DEFAULT
+PRODUCT_TIME_END = MY_COVERAGE_END_DEFAULT
 LICENSE_VALID_UNTIL = dt.date(2028, 6, 30)
 
 VARIABLES = ("thetao", "so", "bottomT", "mlotst", "uo", "vo", "zos")
@@ -47,26 +44,6 @@ def _config_date(value: Any) -> dt.date:
     if isinstance(value, dt.date):
         return value
     return dt.date.fromisoformat(str(value))
-
-
-def myint_product_end(config: dict[str, Any] | None = None) -> dt.date:
-    """Last calendar day covered by the MYINT product (from config or SOURCES default)."""
-    if config is not None:
-        glorys_cfg = config.get("glorys") or {}
-        if "product_time_end" in glorys_cfg:
-            return _config_date(glorys_cfg["product_time_end"])
-        products = glorys_cfg.get("products") or {}
-        myint = products.get("myint") or {}
-        if "date_end" in myint:
-            return _config_date(myint["date_end"])
-    entry = get_source_entry("glorys")
-    products = entry.get("products") or {}
-    myint = products.get("myint") or {}
-    if "date_end" in myint:
-        return _config_date(myint["date_end"])
-    if "product_time_end" in entry:
-        return _config_date(entry["product_time_end"])
-    return MYINT_PRODUCT_END_DEFAULT
 
 
 def glorys_product_for_date(

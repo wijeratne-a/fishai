@@ -14,10 +14,8 @@ CLIENTS_CONFIG_URLS = (
     "https://stac.marine.copernicus.eu/clients-config-v1",
 )
 
-GLORYS_CANDIDATE_DATASET_IDS: tuple[str, ...] = (
-    "cmems_mod_glo_phy_my_0.083deg_P1D-m",
-    "cmems_mod_glo_phy_myint_0.083deg_P1D-m",
-)
+GLORYS_DATASET_ID = "cmems_mod_glo_phy_my_0.083deg_P1D-m"
+GLORYS_CANDIDATE_DATASET_IDS: tuple[str, ...] = (GLORYS_DATASET_ID,)
 
 _REASON_GLORYS_DATASET_NOT_IN_CATALOG = "glorys_dataset_not_in_catalog"
 _REASON_GLORYS_DATE_NOT_COVERED = "glorys_date_not_covered"
@@ -233,8 +231,6 @@ def _pick_entry_for_date(
             _REASON_GLORYS_DATE_NOT_COVERED,
             f"glorys: no live catalogue dataset covers {day}",
         )
-    order = {dataset_id: index for index, dataset_id in enumerate(GLORYS_CANDIDATE_DATASET_IDS)}
-    covering.sort(key=lambda entry: order.get(entry.dataset_id, len(order)))
     return covering[0]
 
 

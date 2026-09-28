@@ -7,6 +7,8 @@ import datetime as dt
 import pytest
 
 from fishai.ingestion.physics.glorys_catalog import (
+    GLORYS_CANDIDATE_DATASET_IDS,
+    GLORYS_DATASET_ID,
     GlorysCatalogEntry,
     GlorysCatalogError,
     clear_glorys_catalog_cache,
@@ -22,6 +24,34 @@ from fishai.ingestion.physics.sources.glorys import (
 
 def _entries(*items: GlorysCatalogEntry) -> list[GlorysCatalogEntry]:
     return list(items)
+
+
+def test_only_my_is_catalog_candidate() -> None:
+    assert GLORYS_CANDIDATE_DATASET_IDS == (GLORYS_DATASET_ID,)
+    assert PRODUCT_ID_MYINT not in GLORYS_CANDIDATE_DATASET_IDS
+
+
+def test_resolve_never_returns_myint_product_id() -> None:
+    clear_glorys_catalog_cache()
+    set_catalog_fetch_hook(
+        lambda: _entries(
+            GlorysCatalogEntry(
+                dataset_id=PRODUCT_ID_MY,
+                dataset_version="202311",
+                coverage_start=dt.date(1993, 1, 1),
+                coverage_end=dt.date(2026, 6, 23),
+            )
+        )
+    )
+    for day in (
+        dt.date(1998, 3, 15),
+        dt.date(2021, 7, 1),
+        dt.date(2024, 9, 1),
+        dt.date(2025, 9, 1),
+    ):
+        resolved = glorys_product_for_date(day)
+        assert resolved == PRODUCT_ID_MY
+        assert resolved != PRODUCT_ID_MYINT
 
 
 def test_2024_date_resolves_to_my() -> None:
@@ -78,24 +108,3 @@ def test_missing_candidates_raise_not_in_catalog() -> None:
     with pytest.raises(GlorysCatalogError) as exc:
         resolve_glorys_dataset_for_date(dt.date(2020, 1, 1))
     assert exc.value.reason_code == "glorys_dataset_not_in_catalog"
-
-
-def test_prefers_my_when_both_cover_date() -> None:
-    clear_glorys_catalog_cache()
-    set_catalog_fetch_hook(
-        lambda: _entries(
-            GlorysCatalogEntry(
-                dataset_id=PRODUCT_ID_MYINT,
-                dataset_version="202406",
-                coverage_start=dt.date(2021, 7, 1),
-                coverage_end=dt.date(2026, 6, 23),
-            ),
-            GlorysCatalogEntry(
-                dataset_id=PRODUCT_ID_MY,
-                dataset_version="202311",
-                coverage_start=dt.date(1993, 1, 1),
-                coverage_end=dt.date(2026, 6, 23),
-            ),
-        )
-    )
-    assert resolve_glorys_dataset_for_date(dt.date(2024, 9, 1)).dataset_id == PRODUCT_ID_MY

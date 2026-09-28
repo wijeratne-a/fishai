@@ -48,9 +48,6 @@ glorys:
     my:
       id: cmems_mod_glo_phy_my_0.083deg_P1D-m
       date_end: 2026-06-23
-    myint:
-      id: cmems_mod_glo_phy_myint_0.083deg_P1D-m
-      date_end: 2026-06-23
 
 wcofs:
   product: avg.nowcast

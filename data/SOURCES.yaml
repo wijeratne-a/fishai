@@ -84,10 +84,6 @@ sources:
         date_start: 1993-01-01
         date_end: 2026-06-23
         note: live catalogue coverage; pulls resolve via glorys_catalog
-      myint:
-        id: cmems_mod_glo_phy_myint_0.083deg_P1D-m
-        date_start: 2021-07-01
-        date_end: 2026-06-23
     variables: [thetao, so, bottomT, mlotst, uo, vo, zos]
     pull_log_path: data/provenance/copernicus_pull_log.jsonl
     credentials_policy: personal_non_transferable_runtime_only

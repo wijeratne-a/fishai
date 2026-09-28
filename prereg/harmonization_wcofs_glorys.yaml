@@ -92,12 +92,11 @@ harmonization_wcofs_glorys:
   glorys_reference_dataset:
     selection_rule: copernicus_marine_catalog_time_coverage
     note: >-
-      Dataset id is resolved at pull time from the live Copernicus Marine catalogue
-      (cached per run). Prefer finished reanalysis (my) when multiple products cover
-      the same calendar date.
-    candidate_copernicus_product_ids:
-      - cmems_mod_glo_phy_my_0.083deg_P1D-m
-      - cmems_mod_glo_phy_myint_0.083deg_P1D-m
+      Training pulls use finished reanalysis (my) only; dataset id and catalogue
+      version are resolved at pull time from the live Copernicus Marine catalogue
+      (cached per run).
+    copernicus_product_id: cmems_mod_glo_phy_my_0.083deg_P1D-m
+    pinned_catalog_version: "202311"
     pilot_harmonization_window_uses: cmems_mod_glo_phy_my_0.083deg_P1D-m
     coverage: every calendar date in fit_start through test_end (fit and test splits)
 
