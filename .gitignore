@@ -10,6 +10,7 @@ dist/
 coverage/
 .vite/
 __pycache__/
+*.egg-info/
 *.pyc
 .pytest_cache/
 .ruff_cache/

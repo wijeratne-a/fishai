@@ -1,5 +1,0 @@
-[console_scripts]
-fishai-bio = fishai.cli:main_bio
-fishai-models = fishai.cli:main_models
-fishai-physics = fishai.cli:main_physics
-fishai-sensors = fishai.cli:main_sensors

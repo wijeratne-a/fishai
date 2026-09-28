@@ -16,6 +16,7 @@ sys.path.insert(0, str(REPO / "security"))
 from instrument_coordinate_policy import (  # noqa: E402
     apply_instrument_coordinate_exemption,
     instrument_source_ids,
+    parquet_fishai_source_id,
     resolve_source_id,
 )
 from precommit_sensitive_scan import scan_file  # noqa: E402
@@ -118,6 +119,60 @@ class InstrumentCoordinateExceptionTests(unittest.TestCase):
         try:
             hits = scan_file(rel)
             self.assertNotIn("parquet_schema:latitude_or_longitude", hits)
+        finally:
+            full.unlink(missing_ok=True)
+
+    def test_untagged_parquet_in_folder_resolves_to_folder_source(self) -> None:
+        rel = "tests/fixtures/instrument_data/ndbc_met/_tmp_untagged_resolve.parquet"
+        full = REPO / rel
+        full.parent.mkdir(parents=True, exist_ok=True)
+        table = pa.table({"lat": [33.0], "lon": [-120.0], "WTMP": [18.0]})
+        pq.write_table(table, full)
+        try:
+            self.assertIsNone(parquet_fishai_source_id(full))
+            self.assertEqual(resolve_source_id(rel, path=full), "ndbc_met")
+        finally:
+            full.unlink(missing_ok=True)
+
+    def test_untagged_parquet_allowlisted_columns_exempt_under_instrument_path(self) -> None:
+        rel = "tests/fixtures/instrument_data/ndbc_met/_tmp_untagged_allowlisted.parquet"
+        full = REPO / rel
+        full.parent.mkdir(parents=True, exist_ok=True)
+        table = pa.table(
+            {
+                "station": ["46086"],
+                "time": ["2024-01-01T00:00:00Z"],
+                "lat": [33.0],
+                "lon": [-120.0],
+                "depth": [0.0],
+                "WTMP": [18.0],
+            }
+        )
+        pq.write_table(table, full)
+        try:
+            hits = scan_file(rel)
+            self.assertNotIn("parquet_schema:latitude_or_longitude", hits)
+            self.assertFalse(any(h.startswith("instrument:disallowed_column:") for h in hits))
+        finally:
+            full.unlink(missing_ok=True)
+
+    def test_untagged_parquet_disallowed_column_revokes_exemption(self) -> None:
+        rel = "tests/fixtures/instrument_data/ndbc_met/_tmp_untagged_bad_cols.parquet"
+        full = REPO / rel
+        full.parent.mkdir(parents=True, exist_ok=True)
+        table = pa.table(
+            {
+                "station": ["46086"],
+                "lat": [33.0],
+                "lon": [-120.0],
+                "individualCount": [5],
+            }
+        )
+        pq.write_table(table, full)
+        try:
+            hits = scan_file(rel)
+            self.assertIn("parquet_schema:latitude_or_longitude", hits)
+            self.assertTrue(any(h.startswith("instrument:disallowed_column:ndbc_met:") for h in hits))
         finally:
             full.unlink(missing_ok=True)
 

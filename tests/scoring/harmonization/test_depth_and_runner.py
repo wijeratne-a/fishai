@@ -46,6 +46,9 @@ def _small_ready_prereg(tmp_path: Path) -> Path:
     ndbc = block["observations"]["ndbc_hull_temperature"]["forcing_gate"]["gradability"]
     ndbc["min_matched_daily_values"] = 10
     ndbc["min_distinct_buoys"] = 3
+    strata = block["pass_fail_thresholds"]["cutoffs"]["strata"]["gradability"]
+    strata["min_matched_daily_values"] = 10
+    strata["min_distinct_buoys"] = 3
     path = tmp_path / "prereg.yaml"
     path.write_text(yaml.dump({"schema_version": 1, "harmonization_wcofs_glorys": block}), encoding="utf-8")
     return path
@@ -124,7 +127,13 @@ def test_runner_writes_outputs(tmp_path: Path) -> None:
     assert summary["insufficient_model_coverage"]["total"] == 0
     assert summary["preflight"]["any_independent_validation_source"] is True
     assert summary["preflight"]["no_independent_validation_messages"] == []
-    ns = [m for m in summary["metrics"] if m["model_row"] == "wcofs_coarsened_mapped" and m["stratum"] == "pooled"]
+    ns = [
+        m
+        for m in summary["metrics"]
+        if m["model_row"] == "wcofs_coarsened_mapped"
+        and m["stratum"] == "pooled"
+        and m.get("forecast_group") == "nowcast"
+    ]
     assert ns and ns[0]["n"] == 40
     assert ns[0]["verdict"] == VERDICT_PASS
     up_rows = [r for r in summary["input_cell_check"] if r["variable"] == "upwelling"]

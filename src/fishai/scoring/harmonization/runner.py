@@ -12,7 +12,12 @@ import numpy as np
 import pandas as pd
 
 from fishai.evaluation.harmonization_prereg import DEFAULT_PREREG_PATH, load_harmonization_prereg
-from fishai.ingestion.physics.sources.glorys import glorys_product_for_date
+from fishai.ingestion.physics.sources.glorys import glorys_dataset_id_for_date
+from fishai.scoring.harmonization.forecast_age import (
+    assert_not_grouped_by_valid_offset_h,
+    enrich_pairing_forecast_metadata,
+    grouping_keys_for_scores,
+)
 from fishai.ingestion.physics.vertical import GLORYS_TOP_LEVEL_DEPTH_M, interp_tracer_at_depth_below_surface
 from fishai.ingestion.physics.wcofs_glorys_overlap import load_overlap_config
 from fishai.scoring.harmonization.common_support import (
@@ -72,6 +77,20 @@ BUOY_DEPTH_FUNCTION = buoy_temperature_at_harmonization_depth
 
 STRATA_POOL = ("pooled", "nearshore", "offshore")
 SEASONAL_STRATA = True
+
+
+def _ensure_pairing_forecast_columns(df: pd.DataFrame) -> pd.DataFrame:
+    """Synthetic tables may omit forecast metadata; default to same-day nowcast."""
+    out = df.copy()
+    if "ocean_time" not in out.columns:
+        out["ocean_time"] = pd.to_datetime(out["date"]).dt.strftime("%Y-%m-%dT12:00:00Z")
+    if "forecast_age_hours" not in out.columns:
+        out["forecast_age_hours"] = 0.0
+    if "source_run_time" not in out.columns:
+        out["source_run_time"] = out["ocean_time"]
+    if "fallback_used" not in out.columns:
+        out["fallback_used"] = False
+    return out
 
 
 def prereg_file_sha256(path: Path) -> str:
@@ -171,9 +190,9 @@ def run_holdout_scoring(
     prereg_sha = prereg_file_sha256(prereg_file)
     overlap_cfg = load_overlap_config()
     glorys_product_selection = {
-        "resolver": f"{glorys_product_for_date.__module__}.{glorys_product_for_date.__name__}",
-        "test_start_product_id": glorys_product_for_date(test_start, config=overlap_cfg),
-        "test_end_product_id": glorys_product_for_date(test_end, config=overlap_cfg),
+        "resolver": f"{glorys_dataset_id_for_date.__module__}.{glorys_dataset_id_for_date.__name__}",
+        "test_start_product_id": glorys_dataset_id_for_date(test_start, None, config=overlap_cfg),
+        "test_end_product_id": glorys_dataset_id_for_date(test_end, None, config=overlap_cfg),
     }
 
     if verify_map:
@@ -185,6 +204,9 @@ def run_holdout_scoring(
         raise ValueError("pairing_table is required unless dry_run=True")
 
     work = _filter_test_split(pairing_table, test_start, test_end)
+    work = _ensure_pairing_forecast_columns(work)
+    work = enrich_pairing_forecast_metadata(work)
+    assert_not_grouped_by_valid_offset_h(grouping_keys_for_scores())
     kept, dropped = apply_common_support(work)
     coverage_drop = insufficient_coverage_counts(dropped)
 
@@ -193,35 +215,42 @@ def run_holdout_scoring(
 
     for variable, var_df in kept.groupby("variable"):
         for model_row in ALL_MODEL_ROWS:
-            for stratum in STRATA_POOL:
-                mask = _stratum_mask(var_df, stratum)
-                sub = var_df.loc[mask]
-                dates = pd.to_datetime(sub["date"]).values.astype("datetime64[D]")
-                obs = sub["obs_value"].astype(float).values
-                pred = sub[model_row].astype(float).values
-                m = compute_metrics(obs, pred, dates, block_days=block_days, seed=seed)
-                entry = {
-                    "model_row": model_row,
-                    "stratum": stratum,
-                    "season": None,
-                    "variable": variable,
-                    "graded": model_row == GRADED_MODEL_ROW and stratum in STRATA_POOL,
-                    "n": m.n,
-                    "bias": m.bias,
-                    "rmse": m.rmse,
-                    "pearson_r": m.pearson_r,
-                    "bias_ci95_lo": m.bias_ci95[0],
-                    "bias_ci95_hi": m.bias_ci95[1],
-                    "rmse_ci95_lo": m.rmse_ci95[0],
-                    "rmse_ci95_hi": m.rmse_ci95[1],
-                    "pearson_r_ci95_lo": m.pearson_r_ci95[0],
-                    "pearson_r_ci95_hi": m.pearson_r_ci95[1],
-                    "verdict": None,
-                    "reason": None,
-                    "indirect": False,
-                }
-                rows_out.append(entry)
-                summary_metrics.append(entry)
+            for forecast_group, fg_df in var_df.groupby("forecast_group", sort=True):
+                meta_row = fg_df.iloc[0]
+                for stratum in STRATA_POOL:
+                    mask = _stratum_mask(fg_df, stratum)
+                    sub = fg_df.loc[mask]
+                    dates = pd.to_datetime(sub["date"]).values.astype("datetime64[D]")
+                    obs = sub["obs_value"].astype(float).values
+                    pred = sub[model_row].astype(float).values
+                    m = compute_metrics(obs, pred, dates, block_days=block_days, seed=seed)
+                    entry = {
+                        "model_row": model_row,
+                        "stratum": stratum,
+                        "forecast_group": forecast_group,
+                        "lead_days": meta_row.get("lead_days"),
+                        "forecast_age_hours": float(meta_row["forecast_age_hours"]),
+                        "source_run_time": meta_row.get("source_run_time"),
+                        "fallback_used": bool(meta_row["fallback_used"]),
+                        "season": None,
+                        "variable": variable,
+                        "graded": model_row == GRADED_MODEL_ROW and stratum in STRATA_POOL,
+                        "n": m.n,
+                        "bias": m.bias,
+                        "rmse": m.rmse,
+                        "pearson_r": m.pearson_r,
+                        "bias_ci95_lo": m.bias_ci95[0],
+                        "bias_ci95_hi": m.bias_ci95[1],
+                        "rmse_ci95_lo": m.rmse_ci95[0],
+                        "rmse_ci95_hi": m.rmse_ci95[1],
+                        "pearson_r_ci95_lo": m.pearson_r_ci95[0],
+                        "pearson_r_ci95_hi": m.pearson_r_ci95[1],
+                        "verdict": None,
+                        "reason": None,
+                        "indirect": False,
+                    }
+                    rows_out.append(entry)
+                    summary_metrics.append(entry)
 
             if SEASONAL_STRATA:
                 season_key = var_df["date"].map(
@@ -274,80 +303,86 @@ def run_holdout_scoring(
     min_glider_profiles = int(gradability.get("min_matched_profiles", 100))
     min_glider_missions = int(gradability.get("min_distinct_missions", 3))
 
-    for stratum in STRATA_POOL:
-        mask = _stratum_mask(buoy_var, stratum)
-        sub = buoy_var.loc[mask]
-        source_id = primary_buoy_validation_registry_id()
-        independent = wcofs_independent_observation_source(source_id, registry)
-        n_buoys = int(sub["obs_id"].nunique()) if "obs_id" in sub.columns else 0
-        dates = pd.to_datetime(sub["date"]).values.astype("datetime64[D]")
-        obs = sub["obs_value"].astype(float).values
-        mapped_pred = sub[MODEL_ROW_WCOFS_COARSENED_MAPPED].astype(float).values
-        glorys_pred = sub[MODEL_ROW_GLORYS].astype(float).values
-        m_mapped = compute_metrics(obs, mapped_pred, dates, block_days=block_days, seed=seed)
-        m_glorys = compute_metrics(obs, glorys_pred, dates, block_days=block_days, seed=seed)
-        ratio_ci_upper = (
-            m_mapped.rmse / m_glorys.rmse * 1.0
-            if m_glorys.rmse and np.isfinite(m_glorys.rmse)
-            else float("nan")
-        )
-        if np.isfinite(m_mapped.rmse_ci95[1]) and m_glorys.rmse > 0:
-            ratio_ci_upper = m_mapped.rmse_ci95[1] / m_glorys.rmse
-
-        input_verdicts, input_rows = build_input_cell_check_summary(
-            doc, input_check_table, stratum, cutoffs
-        )
-        input_cell_check_summary.extend(input_rows)
-
-        if force_unknown_verdicts:
-            combined = VERDICT_UNKNOWN
-            combined_reason = NO_INDEPENDENT_VALIDATION_REASON
-        else:
-            buoy_grade = grade_buoy_stratum(
-                BuoyGradeInput(
-                    n=m_mapped.n,
-                    n_buoys=n_buoys,
-                    bias_c=m_mapped.bias,
-                    rmse_mapped=m_mapped.rmse,
-                    rmse_glorys=m_glorys.rmse,
-                    rmse_ratio_ci_upper=ratio_ci_upper,
-                    pearson_r_mapped=m_mapped.pearson_r,
-                    pearson_r_glorys=m_glorys.pearson_r,
-                    independent_source=independent,
-                ),
-                cutoffs,
+    for forecast_group, fg_buoy in buoy_var.groupby("forecast_group", sort=True):
+        meta_row = fg_buoy.iloc[0]
+        for stratum in STRATA_POOL:
+            mask = _stratum_mask(fg_buoy, stratum)
+            sub = fg_buoy.loc[mask]
+            source_id = primary_buoy_validation_registry_id()
+            independent = wcofs_independent_observation_source(source_id, registry)
+            n_buoys = int(sub["obs_id"].nunique()) if "obs_id" in sub.columns else 0
+            dates = pd.to_datetime(sub["date"]).values.astype("datetime64[D]")
+            obs = sub["obs_value"].astype(float).values
+            mapped_pred = sub[MODEL_ROW_WCOFS_COARSENED_MAPPED].astype(float).values
+            glorys_pred = sub[MODEL_ROW_GLORYS].astype(float).values
+            m_mapped = compute_metrics(obs, mapped_pred, dates, block_days=block_days, seed=seed)
+            m_glorys = compute_metrics(obs, glorys_pred, dates, block_days=block_days, seed=seed)
+            ratio_ci_upper = (
+                m_mapped.rmse / m_glorys.rmse * 1.0
+                if m_glorys.rmse and np.isfinite(m_glorys.rmse)
+                else float("nan")
             )
-            glider_verdict: str | None = None
-            if glider_match_table is not None and not glider_match_table.empty:
-                glider_grade = grade_glider_stratum(
-                    glider_match_table,
-                    stratum=stratum,
-                    cutoffs=cutoffs,
-                    block_days=block_days,
-                    seed=seed,
-                    registry=registry,
-                    min_profiles=min_glider_profiles,
-                    min_missions=min_glider_missions,
+            if np.isfinite(m_mapped.rmse_ci95[1]) and m_glorys.rmse > 0:
+                ratio_ci_upper = m_mapped.rmse_ci95[1] / m_glorys.rmse
+
+            input_verdicts, input_rows = build_input_cell_check_summary(
+                doc, input_check_table, stratum, cutoffs
+            )
+            input_cell_check_summary.extend(input_rows)
+
+            if force_unknown_verdicts:
+                combined = VERDICT_UNKNOWN
+                combined_reason = NO_INDEPENDENT_VALIDATION_REASON
+            else:
+                buoy_grade = grade_buoy_stratum(
+                    BuoyGradeInput(
+                        n=m_mapped.n,
+                        n_buoys=n_buoys,
+                        bias_c=m_mapped.bias,
+                        rmse_mapped=m_mapped.rmse,
+                        rmse_glorys=m_glorys.rmse,
+                        rmse_ratio_ci_upper=ratio_ci_upper,
+                        pearson_r_mapped=m_mapped.pearson_r,
+                        pearson_r_glorys=m_glorys.pearson_r,
+                        independent_source=independent,
+                    ),
+                    cutoffs,
                 )
-                glider_verdict = glider_grade.verdict
-                for gm in glider_grade.metrics:
-                    gm["stratum_combined_reason"] = glider_grade.reason
-                    glider_grading_summary.append(gm)
-            combined, combined_reason = combine_stratum_verdicts(
-                buoy_grade[0],
-                input_verdicts,
-                combination_rule=combination_rule,
-                glider_verdict=glider_verdict,
-            )
-        for entry in summary_metrics:
-            if (
-                entry["model_row"] == GRADED_MODEL_ROW
-                and entry["stratum"] == stratum
-                and entry["variable"] == "sea_water_temperature"
-                and entry.get("season") is None
-            ):
-                entry["verdict"] = combined
-                entry["reason"] = combined_reason
+                glider_verdict: str | None = None
+                if glider_match_table is not None and not glider_match_table.empty:
+                    glider_grade = grade_glider_stratum(
+                        glider_match_table,
+                        stratum=stratum,
+                        cutoffs=cutoffs,
+                        block_days=block_days,
+                        seed=seed,
+                        registry=registry,
+                        min_profiles=min_glider_profiles,
+                        min_missions=min_glider_missions,
+                    )
+                    glider_verdict = glider_grade.verdict
+                    for gm in glider_grade.metrics:
+                        gm["stratum_combined_reason"] = glider_grade.reason
+                        glider_grading_summary.append(gm)
+                combined, combined_reason = combine_stratum_verdicts(
+                    buoy_grade[0],
+                    input_verdicts,
+                    combination_rule=combination_rule,
+                    glider_verdict=glider_verdict,
+                )
+            for entry in summary_metrics:
+                if (
+                    entry["model_row"] == GRADED_MODEL_ROW
+                    and entry["stratum"] == stratum
+                    and entry.get("forecast_group") == forecast_group
+                    and entry["variable"] == "sea_water_temperature"
+                    and entry.get("season") is None
+                ):
+                    entry["verdict"] = combined
+                    entry["reason"] = combined_reason
+                    entry["forecast_age_hours"] = float(meta_row["forecast_age_hours"])
+                    entry["source_run_time"] = meta_row.get("source_run_time")
+                    entry["fallback_used"] = bool(meta_row["fallback_used"])
 
     front_loss = _front_detail_loss(
         np.asarray(front_detail_native_sst_grad or [], dtype=float),

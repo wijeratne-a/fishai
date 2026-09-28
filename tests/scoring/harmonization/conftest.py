@@ -20,6 +20,9 @@ def ready_prereg_path(tmp_path: Path) -> Path:
     ndbc = block["observations"]["ndbc_hull_temperature"]["forcing_gate"]["gradability"]
     ndbc["min_matched_daily_values"] = 10
     ndbc["min_distinct_buoys"] = 3
+    strata = block["pass_fail_thresholds"]["cutoffs"]["strata"]["gradability"]
+    strata["min_matched_daily_values"] = 10
+    strata["min_distinct_buoys"] = 3
     path = tmp_path / "prereg.yaml"
     path.write_text(yaml.dump({"schema_version": 1, "harmonization_wcofs_glorys": block}), encoding="utf-8")
     return path

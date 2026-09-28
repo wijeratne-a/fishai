@@ -219,6 +219,16 @@ def assert_harmonization_prereg_ready_for_scoring(doc: dict[str, Any]) -> None:
         assert_shoreline_simplification_check_valid(doc)
     except ValueError as exc:
         raise HarmonizationPreregNotReadyError(str(exc)) from exc
+    from fishai.scoring.harmonization.input_check_config import (
+        collect_graded_input_config_violations,
+    )
+
+    graded_input_violations = collect_graded_input_config_violations(doc)
+    if graded_input_violations:
+        fields = ", ".join(sorted(graded_input_violations))
+        raise HarmonizationPreregNotReadyError(
+            f"harmonization scoring blocked: invalid or unset prereg fields ({fields})"
+        )
     try:
         assert_pass_fail_thresholds_ready_for_scoring(doc)
     except HarmonizationPreregNotReadyError:

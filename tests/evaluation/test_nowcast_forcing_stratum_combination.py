@@ -83,8 +83,8 @@ def test_shared_forcing_and_report_only_variables_never_graded() -> None:
 def test_scoring_entry_point_passes_prereg_gate_on_committed_doc() -> None:
     doc = load_harmonization_prereg(PREREG)
     assert_harmonization_prereg_ready_for_scoring(doc)
-    with pytest.raises(NotImplementedError):
-        run_harmonization_scoring(PREREG)
+    result = run_harmonization_scoring(PREREG, dry_run=True)
+    assert result["status"] == "ready"
 
 
 def test_worst_of_buoy_and_inputs_gradable_all_pass() -> None:

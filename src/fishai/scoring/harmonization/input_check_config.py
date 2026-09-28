@@ -26,11 +26,13 @@ VALID_GRADING_STATUSES: frozenset[str] = frozenset(
 )
 
 
-def _role_to_grading_status(role: str) -> str | None:
+def _role_to_grading_status(entry: dict[str, Any]) -> str | None:
+    role = str(entry.get("role", ""))
+    grading = str(entry.get("grading", ""))
+    if grading == "shared_forcing" or role == "shared_forcing":
+        return GRADING_STATUS_SHARED_FORCING
     if role == "graded_input":
         return GRADING_STATUS_GRADED
-    if role == "shared_forcing":
-        return GRADING_STATUS_SHARED_FORCING
     if role == "report_only":
         return GRADING_STATUS_ASSIMILATED_REPORTED_ONLY
     return None
@@ -48,8 +50,7 @@ def variable_grading_status_map(doc: dict[str, Any]) -> dict[str, str]:
         if not isinstance(item, dict):
             continue
         name = str(item.get("name", ""))
-        role = str(item.get("role", ""))
-        status = _role_to_grading_status(role)
+        status = _role_to_grading_status(item)
         if name and status:
             out[name] = status
     return out
