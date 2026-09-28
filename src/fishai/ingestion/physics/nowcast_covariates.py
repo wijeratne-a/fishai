@@ -11,6 +11,7 @@ from fishai.ingestion.physics.wcofs_glorys_grid import (
     coarsen_wcofs_to_glorys,
     compute_wcofs_covariates_on_glorys_grid,
     covariates_to_xarray,
+    min_wet_fraction_from_config,
 )
 from fishai.ingestion.physics.wcofs_glorys_overlap import depth_grid_m, load_overlap_config
 
@@ -19,6 +20,8 @@ def build_wcofs_nowcast_covariates_for_inference(
     ds_wcofs: xr.Dataset,
     *,
     config: dict[str, Any] | None = None,
+    lat_dst: Any | None = None,
+    lon_dst: Any | None = None,
     u10: xr.DataArray | None = None,
     v10: xr.DataArray | None = None,
 ) -> xr.Dataset:
@@ -28,15 +31,22 @@ def build_wcofs_nowcast_covariates_for_inference(
     Covariates are computed on the GLORYS ~1/12° grid after area-weighted coarsening.
     """
     cfg = config or load_overlap_config()
-    bbox = cfg["pilot_bbox"]
-    lat_dst, lon_dst = glorys_target_grid(
-        float(bbox["lat_min"]),
-        float(bbox["lat_max"]),
-        float(bbox["lon_min"]),
-        float(bbox["lon_max"]),
-    )
+    if lat_dst is None or lon_dst is None:
+        bbox = cfg["pilot_bbox"]
+        lat_dst, lon_dst = glorys_target_grid(
+            float(bbox["lat_min"]),
+            float(bbox["lat_max"]),
+            float(bbox["lon_min"]),
+            float(bbox["lon_max"]),
+        )
     depth = depth_grid_m(cfg)
-    gridded = coarsen_wcofs_to_glorys(ds_wcofs, lat_dst, lon_dst, depth)
+    gridded = coarsen_wcofs_to_glorys(
+        ds_wcofs,
+        lat_dst,
+        lon_dst,
+        depth,
+        min_wet_fraction=min_wet_fraction_from_config(cfg),
+    )
     u_arr = v_arr = None
     if u10 is not None and v10 is not None:
         u_arr = u10.values

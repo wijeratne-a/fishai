@@ -16,6 +16,9 @@ split:
 
 nearshore_km: 20.0
 
+regrid:
+  min_wet_fraction: 0.5
+
 shoreline:
   path: data/reference/shoreline/ne_10m_land_pilot_clip.json
   natural_earth_dataset: ne_10m_land
@@ -31,7 +34,7 @@ shoreline:
 coastline_fixture: tests/fixtures/pilot_coastline_vertices.csv
 
 glorys:
-  product_id: cmems_mod_glo_phy_my_0.083deg_P1D-m
+  product_id: cmems_mod_glo_phy_myint_0.083deg_P1D-m
   copernicus_doi: 10.48670/moi-00021
   production_status: interim
 

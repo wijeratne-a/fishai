@@ -22,7 +22,9 @@ from fishai.ingestion.sources import SourceNotApprovedError, get_source_entry, r
 
 SOURCE_MODULE = "glorys"
 
-PRODUCT_ID = "cmems_mod_glo_phy_my_0.083deg_P1D-m"
+PRODUCT_ID_MY = "cmems_mod_glo_phy_my_0.083deg_P1D-m"
+PRODUCT_ID_MYINT = "cmems_mod_glo_phy_myint_0.083deg_P1D-m"
+PRODUCT_ID = PRODUCT_ID_MYINT
 PRODUCT_TIME_START = dt.date(1993, 1, 1)
 PRODUCT_TIME_END = dt.date(2026, 6, 23)
 LICENSE_VALID_UNTIL = dt.date(2028, 6, 30)
@@ -30,6 +32,21 @@ LICENSE_VALID_UNTIL = dt.date(2028, 6, 30)
 VARIABLES = ("thetao", "so", "bottomT", "mlotst", "uo", "vo", "zos")
 
 ALLOWED_PURPOSES = frozenset({"training", "hindcast"})
+
+
+def resolve_glorys_product_id(
+    _day: dt.date,
+    config: dict[str, Any] | None = None,
+) -> str:
+    """
+    Copernicus Marine dataset id for GLORYS pulls on ``day``.
+
+    No automatic switch between MY and MYINT is implemented; the overlap config
+    ``glorys.product_id`` is authoritative for the pilot window.
+    """
+    if config is not None:
+        return str(config["glorys"]["product_id"])
+    return PRODUCT_ID
 
 
 def _pull_log_path(entry: dict[str, Any]) -> Path:
@@ -51,6 +68,7 @@ def fetch_day(
     fetch_fn: Callable[[], Any] | None = None,
     log_path: Path | None = None,
     path: Path | None = None,
+    dataset_id: str | None = None,
 ) -> Any:
     """
     Fetch GLORYS for ``date`` (Copernicus Toolbox on runtime hosts only).
@@ -67,8 +85,9 @@ def fetch_day(
     if dt.date.today() > LICENSE_VALID_UNTIL:
         raise SourceNotApprovedError("glorys: licence validity ended")
 
+    ds_id = dataset_id or resolve_glorys_product_id(date)
     record = build_pull_record(
-        dataset_id=PRODUCT_ID,
+        dataset_id=ds_id,
         date_start=date.isoformat(),
         date_end=date.isoformat(),
         variables=variables,

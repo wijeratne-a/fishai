@@ -44,7 +44,7 @@ sources:
 
   glorys:
     module: fishai.ingestion.physics.sources.glorys
-    product: cmems_mod_glo_phy_my_0.083deg_P1D-m
+    product: cmems_mod_glo_phy_myint_0.083deg_P1D-m
     license: Copernicus Marine Service
     license_url: https://marine.copernicus.eu/
     attribution: "Generated using E.U. Copernicus Marine Service Information; https://doi.org/10.48670/moi-00021"

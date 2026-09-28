@@ -21,12 +21,13 @@ from fishai.ingestion.copernicus_compliance import append_pull_log, build_pull_r
 from fishai.ingestion.physics.coast_distance import nearshore_mask, shoreline_path_from_config
 from fishai.ingestion.physics.harmonize import glorys_target_grid
 from fishai.ingestion.physics.sources.glorys import (
-    PRODUCT_ID,
     glorys_column_features,
+    resolve_glorys_product_id,
 )
 from fishai.ingestion.physics.wcofs_glorys_grid import (
     coarsen_wcofs_to_glorys,
     compute_wcofs_covariates_on_glorys_grid,
+    min_wet_fraction_from_config,
 )
 from fishai.ingestion.physics.wcofs_pull_log import append_wcofs_pull_log, build_wcofs_pull_record
 from fishai.ingestion.physics.wcofs_pds_store import open_wcofs_cycle
@@ -124,7 +125,13 @@ def wcofs_covariate_arrays_on_glorys_grid(
 ) -> dict[str, np.ndarray]:
     """Shared WCOFS covariates on the GLORYS grid (overlap uses ``wcofs_`` prefixes in rows)."""
     depth = depth_grid_m(config)
-    gridded = coarsen_wcofs_to_glorys(ds_wcofs, lat_dst, lon_dst, depth)
+    gridded = coarsen_wcofs_to_glorys(
+        ds_wcofs,
+        lat_dst,
+        lon_dst,
+        depth,
+        min_wet_fraction=min_wet_fraction_from_config(config),
+    )
     return compute_wcofs_covariates_on_glorys_grid(gridded)
 
 
@@ -302,9 +309,10 @@ def run_overlap_pairing(
             raise RuntimeError("glorys_fetch is required for live overlap pairing")
         budget.charge(day, 1)
         glorys_payload = glorys_fetch(day)
+        glorys_dataset_id = resolve_glorys_product_id(day, config)
         append_pull_log(
             build_pull_record(
-                dataset_id=PRODUCT_ID,
+                dataset_id=glorys_dataset_id,
                 date_start=day.isoformat(),
                 date_end=day.isoformat(),
                 variables=("thetao", "so"),
