@@ -31,11 +31,11 @@ def cmd_daily(args: argparse.Namespace) -> int:
     bbox = _pilot_bbox(manifest)
     run_date = dt.date.fromisoformat(args.date) if args.date else dt.date.today()
     leads = tuple(args.leads.split(",")) if args.leads else NOWCAST_LEADS[:1]
+    from fishai.ingestion.physics.wcofs_store import write_wcofs_cycle
+
     ds = fetch_cycle(run_date, leads, bbox)
     out = Path(args.output)
-    out.mkdir(parents=True, exist_ok=True)
-    zarr_path = out / f"wcofs_{run_date:%Y%m%d}.zarr"
-    ds.to_zarr(zarr_path, mode="w", consolidated=False)
+    zarr_path = write_wcofs_cycle(ds, run_date, out)
     print(f"wrote {zarr_path}")
     return 0
 

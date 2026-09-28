@@ -21,6 +21,7 @@ dependencies = [
   "requests==2.32.3",
   "scipy==1.14.1",
   "xarray==2024.11.0",
+  "numcodecs==0.12.1",
   "zarr==2.18.3",
 ]
 
