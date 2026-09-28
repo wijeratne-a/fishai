@@ -25,6 +25,7 @@ from fishai.ingestion.biology.cps_trawl.constants import (
     UNRESOLVED_HIGHER_TAXON_REASON,
     WEIGHT_FLAG_PARTIAL,
 )
+from fishai.ingestion.biology.cps_trawl import pipeline as cps_pipeline
 from fishai.ingestion.biology.cps_trawl.taxonomy import SUBSPECIES_TSN_TO_SPECIES_TSN
 from fishai.ingestion.biology.cps_trawl.fetch import read_cps_trawl_csv
 from fishai.ingestion.biology.cps_trawl.pipeline import sync_cps_trawl_haul_catch
@@ -546,6 +547,143 @@ class CpsTrawlFalseZeroGapTests(unittest.TestCase):
             )
         sard = next(m for m in matrix if m["species"] == "Sardinops sagax")
         self.assertEqual(sard["fill_reason"], UNPARSEABLE_CATCH_ROW_REASON)
+
+
+def _run_sync_cps_trawl(
+    rows: list[dict[str, str]],
+    evidence: Path,
+    proc: Path,
+) -> dict:
+    with (
+        mock.patch(
+            "fishai.ingestion.biology.cps_trawl.pipeline.processed_dir",
+            return_value=proc,
+        ),
+        mock.patch(
+            "fishai.ingestion.biology.cps_trawl.pipeline.load_raw_rows_for_window",
+        ) as load_rows,
+    ):
+        load_rows.return_value = (rows, 0)
+        return sync_cps_trawl_haul_catch(
+            date(2099, 1, 1),
+            date(2099, 12, 31),
+            fetch=False,
+            evidence_path=evidence,
+        )
+
+
+def _matrix_rows(result: dict) -> list[dict]:
+    table = pq.read_table(result["matrix_path"])
+    return table.to_pylist()
+
+
+class CpsTrawlSyncZeroFrameGateTests(unittest.TestCase):
+    """False-zero gates must run inside ``sync_cps_trawl_haul_catch`` (production path)."""
+
+    def test_sync_blocks_unparseable_catch_row_zero(self) -> None:
+        rows = [
+            {
+                "cruise": "209901",
+                "ship": "SY",
+                "haul": "3",
+                "latitude": "33.0",
+                "longitude": "-120.0",
+                "stop_latitude": "33.02",
+                "stop_longitude": "-119.98",
+                "time": "2099-06-01T12:00:00Z",
+                "haulback_time": "2099-06-01T12:30:00Z",
+                "scientific_name": "",
+                "subsample_count": "1",
+                "subsample_weight": "1.0",
+                "remaining_weight": "1.0",
+                "presence_only": "N",
+            },
+            {
+                "cruise": "209901",
+                "ship": "SY",
+                "haul": "3",
+                "latitude": "33.0",
+                "longitude": "-120.0",
+                "stop_latitude": "33.02",
+                "stop_longitude": "-119.98",
+                "time": "2099-06-01T12:00:00Z",
+                "haulback_time": "2099-06-01T12:30:00Z",
+                "scientific_name": "Engraulis mordax",
+                "itis_tsn": str(TSN_ENGRAULIS_MORDAX),
+                "subsample_count": "2",
+                "subsample_weight": "1.0",
+                "remaining_weight": "1.0",
+                "presence_only": "N",
+            },
+        ]
+        with tempfile.TemporaryDirectory() as tmp:
+            evidence = _evidence_yaml_tmp(Path(tmp), hauls=[3])
+            proc = Path(tmp) / "processed"
+            result = _run_sync_cps_trawl(rows, evidence, proc)
+            matrix = _matrix_rows(result)
+        sard = next(m for m in matrix if m["species"] == "Sardinops sagax")
+        self.assertEqual(sard["fill_reason"], UNPARSEABLE_CATCH_ROW_REASON)
+        self.assertFalse(sard["is_implied_zero"])
+
+    def test_sync_blocks_unresolved_higher_taxon_zero(self) -> None:
+        rows = [
+            {
+                "cruise": "209901",
+                "ship": "SY",
+                "haul": "1",
+                "latitude": "33.0",
+                "longitude": "-120.0",
+                "stop_latitude": "33.02",
+                "stop_longitude": "-119.98",
+                "time": "2099-06-01T12:00:00Z",
+                "haulback_time": "2099-06-01T12:30:00Z",
+                "scientific_name": "Sardinops sp.",
+                "itis_tsn": "999001",
+                "subsample_count": "1",
+                "subsample_weight": "1.0",
+                "remaining_weight": "1.0",
+                "presence_only": "N",
+            }
+        ]
+        with tempfile.TemporaryDirectory() as tmp:
+            evidence = _evidence_yaml_tmp(Path(tmp))
+            proc = Path(tmp) / "processed"
+            result = _run_sync_cps_trawl(rows, evidence, proc)
+            matrix = _matrix_rows(result)
+        sard = next(m for m in matrix if m["species"] == "Sardinops sagax")
+        self.assertEqual(sard["fill_reason"], UNRESOLVED_HIGHER_TAXON_REASON)
+        anch = next(m for m in matrix if m["species"] == "Engraulis mordax")
+        self.assertTrue(anch["is_implied_zero"])
+
+    def test_sync_blocks_haul_meta_missing_zero(self) -> None:
+        rows = [
+            {
+                "cruise": "209901",
+                "ship": "SY",
+                "haul": "1",
+                "latitude": "33.0",
+                "longitude": "-120.0",
+                "stop_latitude": "33.02",
+                "stop_longitude": "-119.98",
+                "time": "2099-06-01T12:00:00Z",
+                "haulback_time": "2099-06-01T12:30:00Z",
+                "scientific_name": "Engraulis mordax",
+                "itis_tsn": str(TSN_ENGRAULIS_MORDAX),
+                "subsample_count": "2",
+                "subsample_weight": "1.0",
+                "remaining_weight": "1.0",
+                "presence_only": "N",
+            }
+        ]
+        with tempfile.TemporaryDirectory() as tmp:
+            evidence = _evidence_yaml_tmp(Path(tmp))
+            proc = Path(tmp) / "processed"
+            with mock.patch.object(cps_pipeline, "haul_meta_for_matrix", return_value=[]):
+                result = _run_sync_cps_trawl(rows, evidence, proc)
+            matrix = _matrix_rows(result)
+        sard = next(m for m in matrix if m["species"] == "Sardinops sagax")
+        self.assertEqual(sard["fill_reason"], HAUL_META_MISSING_REASON)
+        self.assertFalse(sard["is_implied_zero"])
 
 
 class CpsTrawlMissingWeightTests(unittest.TestCase):
