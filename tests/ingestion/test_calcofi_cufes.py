@@ -10,7 +10,13 @@ from pathlib import Path
 from unittest import mock
 
 from fishai.ingestion.biology.cufes import BBox, build_erddap_csv_url, sync_cufes
-from fishai.ingestion.biology.cufes.constants import EGG_CATEGORIES, QC_DURATION_OUT_OF_RANGE
+from fishai.ingestion.biology.cufes.constants import (
+    EGG_CATEGORIES,
+    QC_COUNT_INVALID,
+    QC_DURATION_OUT_OF_RANGE,
+    QC_KEY_INVALID,
+)
+from fishai.ingestion.biology.cufes.transform import parse_egg_count
 from fishai.ingestion.biology.cufes.transform import (
     make_event_id,
     qc_flags_for_row,
@@ -68,10 +74,50 @@ class CufesEventIdTests(unittest.TestCase):
 class CufesEffortTests(unittest.TestCase):
     def test_volume_m3_from_pump_and_duration(self) -> None:
         row = _synthetic_row(start_pump="0.4", stop_pump="0.6")
-        vol = volume_m3_for_row(row)
+        vol, pumps_used = volume_m3_for_row(row)
         self.assertIsNotNone(vol)
+        self.assertEqual(pumps_used, 2)
         # mean pump 0.5 m³/min × 30 min = 15 m³
         self.assertAlmostEqual(vol, 15.0, places=5)
+
+    def test_single_pump_reading_when_stop_missing(self) -> None:
+        row = _synthetic_row(stop_pump="")
+        row["stop_pump_speed"] = ""
+        vol, pumps_used = volume_m3_for_row(row)
+        self.assertEqual(pumps_used, 1)
+        self.assertIsNotNone(vol)
+        result = transform_rows([row])
+        self.assertEqual(result.events[0]["pump_readings_used"], 1)
+
+    def test_parse_egg_count_accepts_whole_float_text(self) -> None:
+        self.assertEqual(parse_egg_count("3.0"), 3)
+
+
+class CufesInvalidCountTests(unittest.TestCase):
+    def test_invalid_sardine_eggs_drop_whole_event(self) -> None:
+        for sardine in ("", "abc", "-1", "2.5"):
+            with self.subTest(sardine=sardine):
+                row = _synthetic_row(sardine=sardine, anchovy="5")
+                result = transform_rows([row])
+                self.assertEqual(result.events, [])
+                self.assertEqual(result.counts, [])
+                self.assertTrue(qc_flags_for_row(row) & QC_COUNT_INVALID)
+                self.assertGreater(result.qc_report["dropped_by_rule"]["count_invalid"], 0)
+
+
+class CufesKeyTests(unittest.TestCase):
+    def test_blank_ship_code_dropped(self) -> None:
+        row = _synthetic_row(ship_code="   ")
+        self.assertTrue(qc_flags_for_row(row) & QC_KEY_INVALID)
+        result = transform_rows([row])
+        self.assertEqual(result.events, [])
+        self.assertEqual(result.qc_report["dropped_by_rule"]["key_invalid"], 1)
+
+    def test_duplicate_event_id_raises(self) -> None:
+        row = _synthetic_row(sample_number="7")
+        with self.assertRaises(ValueError) as ctx:
+            transform_rows([row, row])
+        self.assertIn("CUFES:209901:99:7", str(ctx.exception))
 
 
 class CufesQcTests(unittest.TestCase):
@@ -128,8 +174,19 @@ class CufesEventsContractTests(unittest.TestCase):
         ids = [ev["event_id"] for ev in result.events]
         self.assertEqual(len(ids), len(set(ids)))
         for ev in result.events:
-            for key in ("event_id", "time", "lat", "lon", "stop_time", "stop_lat", "stop_lon", "volume_m3"):
+            for key in (
+                "event_id",
+                "time",
+                "lat",
+                "lon",
+                "stop_time",
+                "stop_lat",
+                "stop_lon",
+                "volume_m3",
+                "pump_readings_used",
+            ):
                 self.assertIsNotNone(ev[key])
+            self.assertIn(ev["pump_readings_used"], (1, 2))
             self.assertEqual(ev["qc_flags"], 0)
         count_event_ids = {c["event_id"] for c in result.counts}
         self.assertEqual(count_event_ids, set(ids))

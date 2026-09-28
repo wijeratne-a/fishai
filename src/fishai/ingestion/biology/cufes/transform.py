@@ -13,7 +13,9 @@ from fishai.ingestion.biology.cufes.constants import (
     EGG_CATEGORIES,
     LIFE_STAGE_EGG,
     QC_COORD_INVALID,
+    QC_COUNT_INVALID,
     QC_DURATION_OUT_OF_RANGE,
+    QC_KEY_INVALID,
     QC_MISSING_STOP_TIME,
     QC_PUMP_INVALID,
     QC_REVERSED_TIME,
@@ -24,6 +26,8 @@ from fishai.ingestion.biology.cufes.constants import (
 __all__ = [
     "TransformResult",
     "make_event_id",
+    "parse_egg_count",
+    "parse_row_egg_counts",
     "qc_flags_for_row",
     "transform_rows",
     "volume_m3_for_row",
@@ -78,6 +82,45 @@ def _valid_lat_lon(lat: float | None, lon: float | None) -> bool:
     return True
 
 
+def _row_keys(row: Mapping[str, Any]) -> tuple[str, str, str]:
+    cruise = str(row.get("cruise", "")).strip()
+    ship_code = str(row.get("ship_code", "")).strip()
+    sample_number = str(row.get("sample_number", "")).strip()
+    return cruise, ship_code, sample_number
+
+
+def keys_invalid(row: Mapping[str, Any]) -> bool:
+    cruise, ship_code, sample_number = _row_keys(row)
+    return not cruise or not ship_code or not sample_number
+
+
+def parse_egg_count(raw: Any) -> int | None:
+    """Parse one egg count cell; invalid cells return None (never coerced to zero)."""
+    if raw is None:
+        return None
+    text = str(raw).strip()
+    if not text:
+        return None
+    try:
+        value = float(text)
+    except ValueError:
+        return None
+    if math.isnan(value) or value < 0 or value != int(value):
+        return None
+    return int(value)
+
+
+def parse_row_egg_counts(row: Mapping[str, Any]) -> dict[str, int] | None:
+    """Return taxon→count for all six categories, or None if any cell is invalid."""
+    parsed: dict[str, int] = {}
+    for col, taxon in EGG_CATEGORIES:
+        count = parse_egg_count(row.get(col))
+        if count is None:
+            return None
+        parsed[taxon] = count
+    return parsed
+
+
 def qc_flags_for_row(
     row: Mapping[str, Any],
     *,
@@ -85,6 +128,12 @@ def qc_flags_for_row(
     max_duration_min: float = DEFAULT_MAX_DURATION_MIN,
 ) -> int:
     flags = 0
+    if keys_invalid(row):
+        flags |= QC_KEY_INVALID
+
+    if parse_row_egg_counts(row) is None:
+        flags |= QC_COUNT_INVALID
+
     start_t = _parse_erddap_time(row.get("time"))
     stop_t = _parse_erddap_time(row.get("stop_time"))
     if stop_t is None:
@@ -94,8 +143,10 @@ def qc_flags_for_row(
 
     start_pump = _parse_float(row.get("start_pump_speed"))
     stop_pump = _parse_float(row.get("stop_pump_speed"))
-    pumps = [p for p in (start_pump, stop_pump) if p is not None]
-    if not pumps or any(p <= 0 for p in pumps):
+    if any(p is not None and p <= 0 for p in (start_pump, stop_pump)):
+        flags |= QC_PUMP_INVALID
+    positive_pumps = [p for p in (start_pump, stop_pump) if p is not None and p > 0]
+    if not positive_pumps:
         flags |= QC_PUMP_INVALID
 
     start_ok = _valid_lat_lon(_parse_float(row.get("latitude")), _parse_float(row.get("longitude")))
@@ -113,24 +164,25 @@ def qc_flags_for_row(
     return flags
 
 
-def volume_m3_for_row(row: Mapping[str, Any]) -> float | None:
+def volume_m3_for_row(row: Mapping[str, Any]) -> tuple[float | None, int]:
     """
-    Effort volume (m³) = mean(start_pump_speed, stop_pump_speed) [m³/min] × duration [min].
+    Effort volume (m³) and number of pump readings used (1 or 2).
 
-    Pump speed units per ERDDAP ``erdCalCOFIcufes.das``: ``M^3 per minute``.
+    Uses the mean of all available positive pump speeds. When only one reading is
+    valid, volume uses that single speed (no imputation of the missing stop/start value).
     """
     start_t = _parse_erddap_time(row.get("time"))
     stop_t = _parse_erddap_time(row.get("stop_time"))
     if start_t is None or stop_t is None or stop_t <= start_t:
-        return None
+        return None, 0
     start_pump = _parse_float(row.get("start_pump_speed"))
     stop_pump = _parse_float(row.get("stop_pump_speed"))
     pumps = [p for p in (start_pump, stop_pump) if p is not None and p > 0]
     if not pumps:
-        return None
+        return None, 0
     mean_pump = sum(pumps) / len(pumps)
     duration_min = (stop_t - start_t).total_seconds() / 60.0
-    return mean_pump * duration_min
+    return mean_pump * duration_min, len(pumps)
 
 
 def track_wkt(row: Mapping[str, Any]) -> str | None:
@@ -143,10 +195,8 @@ def track_wkt(row: Mapping[str, Any]) -> str | None:
     return f"LINESTRING({lon0} {lat0}, {lon1} {lat1})"
 
 
-def row_to_event(row: Mapping[str, Any]) -> dict[str, Any]:
-    cruise = str(row.get("cruise", "")).strip()
-    ship_code = str(row.get("ship_code", "")).strip()
-    sample_number = str(row.get("sample_number", "")).strip()
+def row_to_event(row: Mapping[str, Any], volume_m3: float, pump_readings_used: int) -> dict[str, Any]:
+    cruise, ship_code, sample_number = _row_keys(row)
     event_id = make_event_id(cruise, ship_code, sample_number)
     start_t = _parse_erddap_time(row.get("time"))
     stop_t = _parse_erddap_time(row.get("stop_time"))
@@ -154,7 +204,6 @@ def row_to_event(row: Mapping[str, Any]) -> dict[str, Any]:
     lon = _parse_float(row.get("longitude"))
     stop_lat = _parse_float(row.get("stop_latitude"))
     stop_lon = _parse_float(row.get("stop_longitude"))
-    vol = volume_m3_for_row(row)
     if (
         start_t is None
         or stop_t is None
@@ -162,9 +211,10 @@ def row_to_event(row: Mapping[str, Any]) -> dict[str, Any]:
         or lon is None
         or stop_lat is None
         or stop_lon is None
-        or vol is None
     ):
         raise ValueError(f"row_to_event called on row that did not pass QC: {event_id}")
+    if pump_readings_used not in (1, 2):
+        raise ValueError(f"pump_readings_used must be 1 or 2, got {pump_readings_used}")
     return {
         "event_id": event_id,
         "time": start_t.isoformat(),
@@ -173,20 +223,21 @@ def row_to_event(row: Mapping[str, Any]) -> dict[str, Any]:
         "stop_time": stop_t.isoformat(),
         "stop_lat": stop_lat,
         "stop_lon": stop_lon,
-        "volume_m3": float(vol),
+        "volume_m3": float(volume_m3),
+        "pump_readings_used": pump_readings_used,
         "qc_flags": 0,
         "track_wkt": track_wkt(row),
     }
 
 
-def row_to_occurrences(row: Mapping[str, Any], event_id: str, volume_m3: float) -> list[dict[str, Any]]:
+def row_to_occurrences(
+    egg_counts: dict[str, int],
+    event_id: str,
+    volume_m3: float,
+) -> list[dict[str, Any]]:
     rows: list[dict[str, Any]] = []
-    for col, taxon in EGG_CATEGORIES:
-        raw = row.get(col)
-        try:
-            count = int(float(str(raw).strip())) if raw is not None and str(raw).strip() else 0
-        except ValueError:
-            count = 0
+    for _col, taxon in EGG_CATEGORIES:
+        count = egg_counts[taxon]
         status = "present" if count > 0 else "absent"
         density = count / volume_m3 if volume_m3 > 0 else None
         rows.append(
@@ -214,8 +265,18 @@ def _empty_qc_report() -> dict[str, Any]:
 
 def _record_drop(flags: int, dropped_by_rule: dict[str, int]) -> None:
     for label, bit in QC_RULE_LABELS:
-        if flags & bit:
+        if bit and flags & bit:
             dropped_by_rule[label] += 1
+
+
+def _validate_qc_report(report: dict[str, Any]) -> None:
+    if report["events_read"] != report["events_kept"] + report["dropped_unique_total"]:
+        raise ValueError(
+            "QC report invariant failed: "
+            f"events_read={report['events_read']} "
+            f"events_kept={report['events_kept']} "
+            f"dropped_unique_total={report['dropped_unique_total']}"
+        )
 
 
 @dataclass
@@ -240,13 +301,17 @@ def transform_rows(
     report = result.qc_report
     dropped_ids: set[str] = set()
     kept_ids: set[str] = set()
+    seen_event_ids: set[str] = set()
+    duplicate_ids: set[str] = set()
 
     for row in rows:
         report["events_read"] += 1
-        cruise = str(row.get("cruise", "")).strip()
-        ship_code = str(row.get("ship_code", "")).strip()
-        sample_number = str(row.get("sample_number", "")).strip()
+        cruise, ship_code, sample_number = _row_keys(row)
         event_id = make_event_id(cruise, ship_code, sample_number)
+
+        if event_id in seen_event_ids:
+            duplicate_ids.add(event_id)
+        seen_event_ids.add(event_id)
 
         flags = qc_flags_for_row(
             row, min_duration_min=min_duration_min, max_duration_min=max_duration_min
@@ -256,18 +321,26 @@ def transform_rows(
             dropped_ids.add(event_id)
             continue
 
-        vol = volume_m3_for_row(row)
+        vol, pump_used = volume_m3_for_row(row)
         if vol is None or vol <= 0:
             report["dropped_by_rule"]["invalid_volume"] += 1
             dropped_ids.add(event_id)
             continue
 
-        event = row_to_event(row)
+        egg_counts = parse_row_egg_counts(row)
+        if egg_counts is None:
+            raise ValueError("internal: egg counts missing after QC pass")
+
+        event = row_to_event(row, float(vol), pump_used)
         kept_ids.add(event_id)
         result.events.append(event)
-        result.counts.extend(row_to_occurrences(row, event_id, float(vol)))
+        result.counts.extend(row_to_occurrences(egg_counts, event_id, float(vol)))
+
+    if duplicate_ids:
+        ordered = ", ".join(sorted(duplicate_ids))
+        raise ValueError(f"duplicate event_id(s): {ordered}")
 
     report["dropped_unique_total"] = len(dropped_ids)
     report["events_kept"] = len(kept_ids)
-    assert report["events_read"] == report["events_kept"] + report["dropped_unique_total"]
+    _validate_qc_report(report)
     return result

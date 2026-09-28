@@ -67,6 +67,8 @@ QC_PUMP_INVALID: Final = 1 << 2
 QC_COORD_INVALID: Final = 1 << 3
 QC_DURATION_OUT_OF_RANGE: Final = 1 << 4
 QC_INVALID_VOLUME: Final = 1 << 5
+QC_COUNT_INVALID: Final = 1 << 6
+QC_KEY_INVALID: Final = 1 << 7
 
 # Human-readable keys for ``cufes_qc_report.json`` (one counter per bit).
 QC_RULE_LABELS: Final = (
@@ -76,4 +78,6 @@ QC_RULE_LABELS: Final = (
     ("coord_invalid", QC_COORD_INVALID),
     ("duration_out_of_range", QC_DURATION_OUT_OF_RANGE),
     ("invalid_volume", QC_INVALID_VOLUME),
+    ("count_invalid", QC_COUNT_INVALID),
+    ("key_invalid", QC_KEY_INVALID),
 )
