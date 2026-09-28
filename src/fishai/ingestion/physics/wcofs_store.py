@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import datetime as dt
+import json
 from pathlib import Path
 from typing import Any
 
@@ -15,9 +16,8 @@ from fishai.ingestion.physics.vertical import (
     mld,
     s_to_z,
 )
-from fishai.ingestion.sources import attribution_for
+from fishai.ingestion.sources import REPO_ROOT, attribution_for
 
-REPO_ROOT = Path(__file__).resolve().parents[3]
 DEFAULT_STORE_ROOT = REPO_ROOT / "data" / "processed" / "physics"
 
 
@@ -28,10 +28,13 @@ def cycle_zarr_path(cycle_date: dt.date, store_root: Path | None = None) -> Path
 
 def package_wcofs_cycle(merged: xr.Dataset, cycle_date: dt.date) -> xr.Dataset:
     """Normalize ``fetch_cycle`` output to the processed-store schema (depth positive down)."""
+    from fishai.ingestion.physics.wcofs_daily import read_ocean_time_utc
+
     def _surface(da: xr.DataArray) -> xr.DataArray:
         return da.isel(ocean_time=0) if "ocean_time" in da.dims else da
 
-    ref = merged.isel(lead_hours=0) if "lead_hours" in merged.dims else merged
+    time_dim = "valid_offset_h" if "valid_offset_h" in merged.dims else "lead_hours"
+    ref = merged.isel({time_dim: 0}) if time_dim in merged.dims else merged
     h = ref.h.values
     s_rho = ref.s_rho.values
     hc = float(ref.hc.values)
@@ -41,7 +44,14 @@ def package_wcofs_cycle(merged: xr.Dataset, cycle_date: dt.date) -> xr.Dataset:
     lon = ref.lon_rho.values
     lon = np.where(lon > 180, lon - 360, lon)
 
-    lead_values = list(merged.lead_hours.values) if "lead_hours" in merged.dims else [0]
+    step_values = list(merged[time_dim].values) if time_dim in merged.dims else [0]
+    step_by_op: dict[int, dict[str, Any]] = {}
+    step_raw = merged.attrs.get("step_provenance")
+    if step_raw:
+        for row in json.loads(step_raw):
+            if row.get("state") == "UNKNOWN":
+                continue
+            step_by_op[int(row["valid_offset_h"])] = row
     temp_leads = []
     salt_leads = []
     z_leads = []
@@ -49,8 +59,8 @@ def package_wcofs_cycle(merged: xr.Dataset, cycle_date: dt.date) -> xr.Dataset:
     s3m_leads = []
     mld_leads = []
     times = []
-    for lh in lead_values:
-        slab = merged.sel(lead_hours=lh) if "lead_hours" in merged.dims else merged
+    for step in step_values:
+        slab = merged.sel({time_dim: step}) if time_dim in merged.dims else merged
         zeta = _surface(slab.zeta).values
         temp = _surface(slab.temp).values
         salt = _surface(slab.salt).values
@@ -88,26 +98,28 @@ def package_wcofs_cycle(merged: xr.Dataset, cycle_date: dt.date) -> xr.Dataset:
         t3m_leads.append(t3m)
         s3m_leads.append(s3m)
         mld_leads.append(mld_m)
-        if "ocean_time" in slab:
-            times.append(np.datetime64(_surface(slab.ocean_time).values))
+        if int(step) in step_by_op:
+            times.append(np.datetime64(step_by_op[int(step)]["valid_time"]))
+        elif "ocean_time" in slab:
+            times.append(np.datetime64(read_ocean_time_utc(slab).replace(tzinfo=None)))
         else:
             times.append(np.datetime64("NaT"))
 
     out = xr.Dataset(
         data_vars={
-            "temp": (("lead_hours", "s_rho", "eta_rho", "xi_rho"), np.stack(temp_leads)),
-            "salt": (("lead_hours", "s_rho", "eta_rho", "xi_rho"), np.stack(salt_leads)),
-            "z": (("lead_hours", "s_rho", "eta_rho", "xi_rho"), np.stack(z_leads)),
-            "T3m": (("lead_hours", "eta_rho", "xi_rho"), np.stack(t3m_leads)),
-            "S3m": (("lead_hours", "eta_rho", "xi_rho"), np.stack(s3m_leads)),
-            "MLD_m": (("lead_hours", "eta_rho", "xi_rho"), np.stack(mld_leads)),
+            "temp": ((time_dim, "s_rho", "eta_rho", "xi_rho"), np.stack(temp_leads)),
+            "salt": ((time_dim, "s_rho", "eta_rho", "xi_rho"), np.stack(salt_leads)),
+            "z": ((time_dim, "s_rho", "eta_rho", "xi_rho"), np.stack(z_leads)),
+            "T3m": ((time_dim, "eta_rho", "xi_rho"), np.stack(t3m_leads)),
+            "S3m": ((time_dim, "eta_rho", "xi_rho"), np.stack(s3m_leads)),
+            "MLD_m": ((time_dim, "eta_rho", "xi_rho"), np.stack(mld_leads)),
             "lat": (("eta_rho", "xi_rho"), lat),
             "lon": (("eta_rho", "xi_rho"), lon),
         },
         coords={
-            "lead_hours": np.asarray(lead_values, dtype=int),
+            time_dim: np.asarray(step_values, dtype=int),
             "s_rho": s_rho,
-            "time": ("lead_hours", np.array(times, dtype="datetime64[ns]")),
+            "time": (time_dim, np.array(times, dtype="datetime64[ns]")),
         },
     )
     out["z"].attrs.update(units="m", long_name="depth", positive="down")
@@ -125,12 +137,65 @@ def package_wcofs_cycle(merged: xr.Dataset, cycle_date: dt.date) -> xr.Dataset:
         depth_convention="z_positive_down_metres",
         schema_version="wcofs_processed_v1",
     )
+    if step_by_op:
+        ages: list[float] = []
+        valids: list[np.datetime64] = []
+        sources: list[np.datetime64] = []
+        run_times: list[np.datetime64] = []
+        hints: list[str] = []
+        ldays: list[float] = []
+        for step in step_values:
+            row = step_by_op[int(step)]
+            ages.append(float(row["forecast_age_hours"]))
+            valids.append(np.datetime64(row["valid_time"]))
+            sources.append(np.datetime64(row["source_cycle_time"]))
+            run_times.append(np.datetime64(row["source_run_time"]))
+            hints.append(str(row["evidence_state_hint"]))
+            ldays.append(float("nan") if "lead_days" not in row else float(row["lead_days"]))
+        out = out.assign_coords(valid_time=(time_dim, np.array(valids, dtype="datetime64[ns]")))
+        out["forecast_age_hours"] = (time_dim, np.asarray(ages, dtype=float))
+        out["forecast_age_hours"].attrs.update(units="hours")
+        out["source_cycle_time"] = (time_dim, np.array(sources, dtype="datetime64[ns]"))
+        out["source_run_time"] = (time_dim, np.array(run_times, dtype="datetime64[ns]"))
+        out["evidence_state_hint"] = (time_dim, np.asarray(hints, dtype=object))
+        out["lead_days"] = (time_dim, np.asarray(ldays, dtype=float))
+        out["time"] = (time_dim, np.array(valids, dtype="datetime64[ns]"))
+        for key in ("requested_cycle_time", "fallback_used", "source_cycle_time"):
+            if key in merged.attrs:
+                out.attrs[key] = merged.attrs[key]
+        if merged.attrs.get("unknown_valid_times"):
+            out.attrs["unknown_valid_times"] = merged.attrs["unknown_valid_times"]
     return out
 
 
-def write_wcofs_cycle(merged: xr.Dataset, cycle_date: dt.date, store_root: Path | None = None) -> Path:
+def write_wcofs_cycle(
+    merged: xr.Dataset,
+    cycle_date: dt.date,
+    store_root: Path | None = None,
+    *,
+    extra_attrs: dict[str, Any] | None = None,
+    packaged: xr.Dataset | None = None,
+) -> Path:
     path = cycle_zarr_path(cycle_date, store_root)
     path.parent.mkdir(parents=True, exist_ok=True)
-    packaged = package_wcofs_cycle(merged, cycle_date)
-    packaged.to_zarr(path, mode="w", consolidated=False)
+    packaged = packaged or package_wcofs_cycle(merged, cycle_date)
+    if extra_attrs:
+        packaged.attrs.update(extra_attrs)
+    ny = int(packaged.sizes["eta_rho"])
+    nx = int(packaged.sizes["xi_rho"])
+    ns = int(packaged.sizes["s_rho"])
+    tile = min(16, ny, nx)
+    encoding = {
+        "temp": {"chunks": (1, ns, tile, tile)},
+        "salt": {"chunks": (1, ns, tile, tile)},
+        "z": {"chunks": (1, ns, tile, tile)},
+        "T3m": {"chunks": (1, tile, tile)},
+        "S3m": {"chunks": (1, tile, tile)},
+        "MLD_m": {"chunks": (1, tile, tile)},
+    }
+    packaged.attrs.setdefault(
+        "zarr_chunks",
+        "lead_hours=1, s_rho=full, eta_rho/xi_rho=tile",
+    )
+    packaged.to_zarr(path, mode="w", consolidated=False, encoding=encoding)
     return path
