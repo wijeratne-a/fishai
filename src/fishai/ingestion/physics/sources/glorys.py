@@ -18,18 +18,39 @@ from fishai.ingestion.physics.vertical import (
     interp_at_depth_from_z_levels,
     mld,
 )
-from fishai.ingestion.sources import SourceNotApprovedError, get_source_entry, require_approved
+from fishai.ingestion.sources import SourceNotApprovedError, require_approved
 
 SOURCE_MODULE = "glorys"
 
-PRODUCT_ID = "cmems_mod_glo_phy_my_0.083deg_P1D-m"
-PRODUCT_TIME_START = dt.date(1993, 1, 1)
-PRODUCT_TIME_END = dt.date(2026, 6, 23)
+PRODUCT_MY_ID = "cmems_mod_glo_phy_my_0.083deg_P1D-m"
+PRODUCT_MYINT_ID = "cmems_mod_glo_phy_myint_0.083deg_P1D-m"
+PRODUCT_STATIC_ID = "cmems_mod_glo_phy_my_0.083deg_static"
+
+# Back-compat alias (multiyear reanalysis product id).
+PRODUCT_ID = PRODUCT_MY_ID
+
+PRODUCT_MY_TIME_START = dt.date(1993, 1, 1)
+PRODUCT_MY_TIME_END = dt.date(2021, 6, 30)
+PRODUCT_MYINT_TIME_START = dt.date(2021, 7, 1)
+PRODUCT_MYINT_TIME_END = dt.date(2026, 6, 23)
+
+PRODUCT_TIME_START = PRODUCT_MY_TIME_START
+PRODUCT_TIME_END = PRODUCT_MYINT_TIME_END
+
 LICENSE_VALID_UNTIL = dt.date(2028, 6, 30)
 
 VARIABLES = ("thetao", "so", "bottomT", "mlotst", "uo", "vo", "zos")
 
 ALLOWED_PURPOSES = frozenset({"training", "hindcast"})
+
+
+def glorys_dataset_for_date(day: dt.date) -> tuple[str, dt.date, dt.date]:
+    """Return Copernicus dataset id and that dataset's inclusive coverage for ``day``."""
+    if day <= PRODUCT_MY_TIME_END:
+        return PRODUCT_MY_ID, PRODUCT_MY_TIME_START, PRODUCT_MY_TIME_END
+    if day >= PRODUCT_MYINT_TIME_START:
+        return PRODUCT_MYINT_ID, PRODUCT_MYINT_TIME_START, PRODUCT_MYINT_TIME_END
+    raise ValueError(f"glorys: date {day} falls in gap between my and myint coverage")
 
 
 def _pull_log_path(entry: dict[str, Any]) -> Path:
@@ -51,6 +72,8 @@ def fetch_day(
     fetch_fn: Callable[[], Any] | None = None,
     log_path: Path | None = None,
     path: Path | None = None,
+    dataset_version: str | None = None,
+    file_sha256: str | None = None,
 ) -> Any:
     """
     Fetch GLORYS for ``date`` (Copernicus Toolbox on runtime hosts only).
@@ -62,18 +85,21 @@ def fetch_day(
     entry = require_approved("glorys", purpose=purpose, path=path)
     if purpose not in ALLOWED_PURPOSES:
         raise SourceNotApprovedError(f"glorys: unsupported purpose {purpose!r}")
-    if date < PRODUCT_TIME_START or date > PRODUCT_TIME_END:
-        raise ValueError(f"glorys: date {date} outside product coverage")
+    dataset_id, cov_start, cov_end = glorys_dataset_for_date(date)
+    if date < cov_start or date > cov_end:
+        raise ValueError(f"glorys: date {date} outside {dataset_id} coverage")
     if dt.date.today() > LICENSE_VALID_UNTIL:
         raise SourceNotApprovedError("glorys: licence validity ended")
 
     record = build_pull_record(
-        dataset_id=PRODUCT_ID,
+        dataset_id=dataset_id,
         date_start=date.isoformat(),
         date_end=date.isoformat(),
         variables=variables,
         bbox=bbox,
         request_count=1,
+        dataset_version=dataset_version,
+        file_sha256=file_sha256,
     )
     append_pull_log(record, log_path=log_path or _pull_log_path(entry))
 

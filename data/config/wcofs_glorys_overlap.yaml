@@ -32,8 +32,15 @@ coastline_fixture: tests/fixtures/pilot_coastline_vertices.csv
 
 glorys:
   product_id: cmems_mod_glo_phy_my_0.083deg_P1D-m
+  interim_product_id: cmems_mod_glo_phy_myint_0.083deg_P1D-m
   copernicus_doi: 10.48670/moi-00021
   production_status: interim
+
+bathymetry:
+  glorys_static_dataset_id: cmems_mod_glo_phy_my_0.083deg_static
+  variable: deptho
+  grid: glorys_1_12deg
+  sample_rule: nearest_cell_centre
 
 wcofs:
   product: avg.nowcast

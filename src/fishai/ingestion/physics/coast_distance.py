@@ -60,6 +60,10 @@ def shoreline_path_from_config(config: dict[str, Any]) -> Path:
     path = Path(rel)
     if not path.is_absolute():
         path = REPO_ROOT / path
+    if not path.is_file() and path.suffix == ".geojson":
+        json_path = path.with_suffix(".json")
+        if json_path.is_file():
+            return json_path
     return path
 
 

@@ -21,8 +21,8 @@ from fishai.ingestion.copernicus_compliance import append_pull_log, build_pull_r
 from fishai.ingestion.physics.coast_distance import nearshore_mask, shoreline_path_from_config
 from fishai.ingestion.physics.harmonize import glorys_target_grid
 from fishai.ingestion.physics.sources.glorys import (
-    PRODUCT_ID,
     glorys_column_features,
+    glorys_dataset_for_date,
 )
 from fishai.ingestion.physics.wcofs_glorys_grid import (
     coarsen_wcofs_to_glorys,
@@ -302,9 +302,10 @@ def run_overlap_pairing(
             raise RuntimeError("glorys_fetch is required for live overlap pairing")
         budget.charge(day, 1)
         glorys_payload = glorys_fetch(day)
+        glorys_product, _, _ = glorys_dataset_for_date(day)
         append_pull_log(
             build_pull_record(
-                dataset_id=PRODUCT_ID,
+                dataset_id=glorys_product,
                 date_start=day.isoformat(),
                 date_end=day.isoformat(),
                 variables=("thetao", "so"),

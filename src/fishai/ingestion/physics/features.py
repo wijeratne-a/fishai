@@ -190,7 +190,8 @@ def ekman_upwelling(
     tau_x, tau_y = _wind_stress(u10, v10)
     mx = tau_y / (RHO0 * f)
     my = -tau_x / (RHO0 * f)
-    dlon = np.gradient(np.arange(u10.shape[1]), axis=1)
+    lon_idx = np.arange(u10.shape[1], dtype=float)
+    dlon = np.broadcast_to(np.gradient(lon_idx), u10.shape)
     dlat = np.gradient(lat2d, axis=0)
     dx = np.radians(dlon) * EARTH_RADIUS_M * np.cos(phi)
     dy = np.radians(dlat) * EARTH_RADIUS_M

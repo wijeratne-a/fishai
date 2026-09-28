@@ -18,7 +18,8 @@ from fishai.ingestion.copernicus_compliance import (
     require_glorys_attribution,
 )
 from fishai.ingestion.physics.sources.glorys import (
-    PRODUCT_ID,
+    PRODUCT_MY_ID,
+    PRODUCT_MYINT_ID,
     fetch_day,
     glorys_column_features,
 )
@@ -43,6 +44,32 @@ def test_glorys_refused_for_daily_inference() -> None:
         require_approved("glorys", purpose="daily_inference")
 
 
+def test_glorys_fetch_myint_product_after_interim_start(tmp_path: Path) -> None:
+    log_path = tmp_path / "copernicus_pull_log.jsonl"
+    bbox = (32.0, 35.0, -121.0, -117.0)
+
+    fetch_day(
+        dt.date(2021, 7, 15),
+        bbox,
+        purpose="training",
+        fetch_fn=lambda: {"ok": True},
+        log_path=log_path,
+    )
+    rec = json.loads(log_path.read_text(encoding="utf-8").strip())
+    assert rec["dataset_id"] == PRODUCT_MYINT_ID
+
+
+def test_glorys_fetch_rejects_date_outside_dataset_coverage(tmp_path: Path) -> None:
+    with pytest.raises(ValueError, match="outside"):
+        fetch_day(
+            dt.date(2030, 1, 1),
+            (32.0, 35.0, -121.0, -117.0),
+            purpose="training",
+            fetch_fn=lambda: {},
+            log_path=tmp_path / "log.jsonl",
+        )
+
+
 def test_glorys_fetch_appends_pull_log(tmp_path: Path) -> None:
     log_path = tmp_path / "copernicus_pull_log.jsonl"
     bbox = (32.0, 35.0, -121.0, -117.0)
@@ -60,7 +87,7 @@ def test_glorys_fetch_appends_pull_log(tmp_path: Path) -> None:
     lines = log_path.read_text(encoding="utf-8").strip().splitlines()
     assert len(lines) == 1
     rec = json.loads(lines[0])
-    assert rec["dataset_id"] == PRODUCT_ID
+    assert rec["dataset_id"] == PRODUCT_MY_ID
     assert rec["variables"]
     assert rec["request_count"] == 1
     assert "timestamp" in rec

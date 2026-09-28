@@ -64,10 +64,12 @@ def build_pull_record(
     bbox: tuple[float, float, float, float],
     request_count: int = 1,
     timestamp: datetime | None = None,
+    dataset_version: str | None = None,
+    file_sha256: str | None = None,
 ) -> dict[str, Any]:
     ts = timestamp or datetime.now(timezone.utc)
     la0, la1, lo0, lo1 = bbox
-    return {
+    record: dict[str, Any] = {
         "dataset_id": dataset_id,
         "date_start": date_start,
         "date_end": date_end,
@@ -76,3 +78,8 @@ def build_pull_record(
         "timestamp": ts.isoformat(),
         "request_count": int(request_count),
     }
+    if dataset_version is not None:
+        record["dataset_version"] = dataset_version
+    if file_sha256 is not None:
+        record["file_sha256"] = file_sha256
+    return record
