@@ -1,0 +1,19 @@
+# Versioned registry: whether each observation source is assimilated by WCOFS / GLORYS.
+# Values: true | false | presumed_true | unknown
+schema_version: 1
+
+sources:
+  sccoos_hf_radar:
+    wcofs: presumed_true
+    glorys: unknown
+    note: >-
+      HF radar surface currents are presumed assimilated by WCOFS unless documented
+      otherwise; GLORYS surface-current assimilation status not confirmed here.
+
+  ndbc_buoy_temperature:
+    wcofs: unknown
+    glorys: unknown
+    note: >-
+      NDBC hull water temperature assimilation pending NOAA CO-OPS reply for WCOFS;
+      GLORYS product assimilates in-situ profiles in general — status marked unknown
+      until documented with citation.

@@ -156,7 +156,7 @@ def test_native_wcofs_diagnostic_never_through_harmonization_map() -> None:
 
 def test_scoring_entry_point_raises_while_placeholders_unset() -> None:
     doc = load_harmonization_prereg(PREREG)
-    with pytest.raises(HarmonizationPreregNotReadyError, match="unset prereg fields"):
+    with pytest.raises(HarmonizationPreregNotReadyError, match="invalid or unset"):
         assert_harmonization_prereg_ready_for_scoring(doc)
     with pytest.raises(HarmonizationPreregNotReadyError, match="shoreline_sha256"):
         run_harmonization_scoring(PREREG)
@@ -186,13 +186,27 @@ def test_scoring_entry_point_passes_gate_when_placeholders_replaced(tmp_path: Pa
         "max_coastline_displacement_m": 0.0,
         "nearshore_flag_diff_cell_count": 0,
     }
-    block["pass_fail_thresholds"]["cutoffs"] = {"auditbot1": "v1-placeholder-not-gating"}
+    block["pass_fail_thresholds"]["cutoffs"] = {
+        "rmse_ratio_pass": 1.2,
+        "rmse_ratio_ci_upper_pass": 1.5,
+        "rmse_ratio_degraded_upper": 1.5,
+        "bias_abs_pass_c": 0.5,
+        "bias_abs_degraded_c": 1.0,
+        "pearson_r_margin_below_glorys": 0.10,
+        "min_matched_daily_values": 100,
+        "min_buoys": 3,
+        "input_rmse_pass_fraction_glorys_sd": 0.5,
+        "input_rmse_degraded_fraction_glorys_sd": 1.0,
+        "bootstrap_seed": 42,
+    }
+    block["pass_fail_thresholds"]["combination_rule"] = "worst_of"
+    block["pass_fail_thresholds"]["not_gradable_combination"] = "ignore"
     patched = {"schema_version": 1, "harmonization_wcofs_glorys": block}
     path = tmp_path / "prereg.yaml"
     path.write_text(yaml.dump(patched), encoding="utf-8")
     assert_harmonization_prereg_ready_for_scoring(patched)
-    with pytest.raises(NotImplementedError):
-        run_harmonization_scoring(path)
+    ready = run_harmonization_scoring(path, dry_run=True)
+    assert ready["status"] == "ready"
 
 
 def test_committed_prereg_still_has_expected_placeholders() -> None:

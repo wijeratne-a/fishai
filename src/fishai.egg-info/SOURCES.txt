@@ -11,6 +11,7 @@ src/fishai.egg-info/top_level.txt
 src/fishai/api/__init__.py
 src/fishai/api/app.py
 src/fishai/evaluation/__init__.py
+src/fishai/evaluation/harmonization_prereg.py
 src/fishai/evaluation/engine/__init__.py
 src/fishai/evaluation/engine/metrics.py
 src/fishai/evaluation/support/__init__.py
@@ -38,6 +39,7 @@ src/fishai/ingestion/physics/geo_distance.py
 src/fishai/ingestion/physics/harmonize.py
 src/fishai/ingestion/physics/http_util.py
 src/fishai/ingestion/physics/nowcast_covariates.py
+src/fishai/ingestion/physics/shoreline_geo.py
 src/fishai/ingestion/physics/store.py
 src/fishai/ingestion/physics/vertical.py
 src/fishai/ingestion/physics/wcofs_glorys_grid.py
@@ -78,5 +80,17 @@ src/fishai/models/frameworks/baselines/__init__.py
 src/fishai/models/frameworks/baselines/prevalence.py
 src/fishai/physics/__init__.py
 src/fishai/physics/store.py
+src/fishai/scoring/__init__.py
+src/fishai/scoring/harmonization/__init__.py
+src/fishai/scoring/harmonization/common_support.py
+src/fishai/scoring/harmonization/constants.py
+src/fishai/scoring/harmonization/grading.py
+src/fishai/scoring/harmonization/io.py
+src/fishai/scoring/harmonization/manifest.py
+src/fishai/scoring/harmonization/metrics.py
+src/fishai/scoring/harmonization/prereg_gate.py
+src/fishai/scoring/harmonization/registry.py
+src/fishai/scoring/harmonization/runner.py
+src/fishai/scoring/harmonization/seasons.py
 src/fishai/validation/__init__.py
 src/fishai/validation/model_eligibility.py

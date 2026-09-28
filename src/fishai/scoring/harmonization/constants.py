@@ -1,0 +1,32 @@
+"""Identifiers and row labels for harmonization holdout scoring."""
+
+from __future__ import annotations
+
+MODEL_ROW_WCOFS_NATIVE = "wcofs_native"
+MODEL_ROW_WCOFS_COARSENED = "wcofs_coarsened"
+MODEL_ROW_WCOFS_COARSENED_MAPPED = "wcofs_coarsened_mapped"
+MODEL_ROW_GLORYS = "glorys"
+
+ALL_MODEL_ROWS: tuple[str, ...] = (
+    MODEL_ROW_WCOFS_NATIVE,
+    MODEL_ROW_WCOFS_COARSENED,
+    MODEL_ROW_WCOFS_COARSENED_MAPPED,
+    MODEL_ROW_GLORYS,
+)
+
+GRADED_MODEL_ROW = MODEL_ROW_WCOFS_COARSENED_MAPPED
+
+INPUT_CHECK_VARIABLES: tuple[str, ...] = (
+    "S3m",
+    "MLD_m",
+    "sst_grad",
+    "front_distance_km",
+    "upwelling",
+)
+
+VERDICT_PASS = "PASS"
+VERDICT_DEGRADED = "DEGRADED"
+VERDICT_FAIL = "FAIL"
+VERDICT_NOT_GRADABLE = "not_gradable"
+
+FAIL_EVIDENCE_REASON = "nowcast_forcing_failed_holdout"

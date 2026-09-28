@@ -18,6 +18,23 @@ from fishai.ingestion.physics.vertical import interp_at_depth_from_z_levels, mld
 
 COVARIATE_FIELDS = ("T3m", "S3m", "MLD_m", "sst_grad", "front_distance_km", "upwelling")
 
+# Harmonization buoy SST matching depth (below moving sea surface); see prereg surface_definition.
+HARMONIZATION_BUOY_MATCH_DEPTH_M = 0.494
+
+
+def harmonization_temperature_at_buoy_depth(
+    depth_levels_m: np.ndarray,
+    temperature: np.ndarray,
+    *,
+    depth_m: float = HARMONIZATION_BUOY_MATCH_DEPTH_M,
+) -> float:
+    """
+    Shared depth function for all four harmonization model rows at NDBC buoys.
+
+    Linear interpolation in depth below the moving surface (positive metres down).
+    """
+    return interp_at_depth_from_z_levels(depth_levels_m, temperature, depth_m)
+
 
 @dataclass(frozen=True)
 class WcofsGlorysGrid:

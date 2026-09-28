@@ -46,34 +46,23 @@ def iter_placeholder_fields(node: object, prefix: str = "") -> list[str]:
 
 
 def assert_harmonization_prereg_ready_for_scoring(doc: dict[str, Any]) -> None:
-    """Refuse holdout scoring until bot2/auditbot1 placeholders are concrete."""
-    block = doc.get("harmonization_wcofs_glorys")
-    if not isinstance(block, dict):
-        raise HarmonizationPreregNotReadyError("missing harmonization_wcofs_glorys block")
-    pending = iter_placeholder_fields(block)
-    if pending:
-        fields = ", ".join(sorted(pending))
-        raise HarmonizationPreregNotReadyError(
-            f"harmonization scoring blocked: unset prereg fields ({fields})"
-        )
+    """Refuse holdout scoring until required prereg fields are concrete."""
+    from fishai.scoring.harmonization.prereg_gate import assert_prereg_gate
+
+    assert_prereg_gate(doc)
 
 
 def run_harmonization_scoring(
     prereg_path: Path | str | None = None,
     *,
     dry_run: bool = False,
+    **kwargs: Any,
 ) -> dict[str, Any]:
     """
-    Holdout scoring entry point.
+    Holdout scoring entry point (delegates to ``fishai.scoring.harmonization``).
 
-    Raises ``HarmonizationPreregNotReadyError`` while any ``TO_BE_SET_BEFORE_SCORING``
-    field remains. Full pairing/scoring is implemented in a later change; this gate
-    enforces the prereg lock only.
+    Raises ``HarmonizationPreregNotReadyError`` while required prereg fields are unset.
     """
-    doc = load_harmonization_prereg(prereg_path)
-    assert_harmonization_prereg_ready_for_scoring(doc)
-    if dry_run:
-        return {"status": "ready", "scoring": "not_implemented"}
-    raise NotImplementedError(
-        "harmonization holdout scoring is not implemented; prereg placeholders are set"
-    )
+    from fishai.scoring.harmonization.runner import run_holdout_scoring
+
+    return run_holdout_scoring(prereg_path, dry_run=dry_run, **kwargs)

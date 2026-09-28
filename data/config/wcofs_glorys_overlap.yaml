@@ -44,6 +44,9 @@ depth_grid_m:
   end: 200
   step: 1
 
+regrid:
+  min_wet_fraction: 0.5
+
 rate_limits:
   max_concurrent_per_host: 2
   max_requests_per_day: 200
