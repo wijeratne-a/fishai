@@ -48,6 +48,18 @@ If `reference_volume_m3` is absent from the frozen config, prediction **refuses*
 
 **Held-out events** (spatial CV, LFO, frozen-model scoring) use each row’s own **`log(volume_m3)`** offset—the real sample effort. Only gridded map products use \(V_\text{ref}\).
 
+### Pre-fit preferential-sampling diagnostic
+
+Optional **`diagnostics.preferential_sampling`** runs covariate-only encounter (binomial) and positive (Gamma) GLMs with **no spatial field**. Per **cruise**, counts of events in **10 km** EPSG:32611 cells define sampling intensity; Spearman correlation with mean combined Pearson residuals is reported with a **cell-block bootstrap 95% CI**. JSON output sets **`flag_preferential: true`** when the CI excludes zero.
+
+### Positive model fallback
+
+**`positive_model_fallback: encounter_only`**: if the positive component fails convergence or sanity (non-positive-definite Hessian or max gradient > 0.001), FishAI refits with the positive spatial/spatiotemporal field off and reports **encounter-only** (species not dropped).
+
+### CUFES planned vs adaptive sampling
+
+Processed **`cufes_events`** has no planned-transect flag (`artifacts/sensitivity/cufes_planned_vs_adaptive_field_audit.md`). Optional **`egg_split.test_event_filter.mode: planned_line_only`** requires **`planned_line_reference_path`** for time-forward test sensitivity.
+
 ### Spatial-block fold assignment (real CUFES events)
 
 When bot1 ``cufes_events`` has no ``fold_id`` column, FishAI assigns folds on the modeling side from track midpoints in **EPSG:32611** (km):

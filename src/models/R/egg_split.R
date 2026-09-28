@@ -86,6 +86,12 @@ filter_egg_split_scope <- function(dat, cfg, scope = c("fit", "test", "all")) {
     stop("no events remain for egg_split scope=", scope, call. = FALSE)
   }
   out <- dat[keep, , drop = FALSE]
+  if (scope == "test") {
+    out <- filter_test_events_by_sampling_mode(out, cfg)
+    if (nrow(out) == 0L) {
+      stop("no test events remain after test_event_filter", call. = FALSE)
+    }
+  }
   if (!"egg_split_period" %in% names(out)) {
     out <- tag_egg_split_period(out, cfg)
   }
@@ -106,7 +112,9 @@ filter_egg_test_period_scores <- function(dat, cfg, include_post_boundary = NULL
   if (!isTRUE(include_post_boundary)) {
     keep <- keep & (d <= es$glorys_product_boundary)
   }
-  dat[keep, , drop = FALSE]
+  out <- dat[keep, , drop = FALSE]
+  out <- filter_test_events_by_sampling_mode(out, cfg)
+  out
 }
 
 .filter_events_table_to_fit_end <- function(events, cfg) {

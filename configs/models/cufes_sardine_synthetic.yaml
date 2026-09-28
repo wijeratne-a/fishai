@@ -15,6 +15,13 @@ fishai_engine_config:
     test_end: "2022-04-27"
     glorys_product_boundary: "2021-06-30"
     test_score_include_post_boundary: true
+    test_event_filter:
+      mode: all
+  diagnostics:
+    preferential_sampling:
+      cell_size_km: 10
+      bootstrap_replicates: 500
+      output_path: artifacts/diagnostics/preferential_sampling_synthetic.json
   training:
     observation_source_id: calcofi_cufes
     covariate_forcing_source_id: glorys
@@ -57,6 +64,7 @@ fishai_engine_config:
     engine: sdmTMB
     family: delta_gamma
     delta_type: poisson-link
+    positive_model_fallback: encounter_only
     formula_shared: >-
       ~ s(temp_3m_z, k = 3) + s(sal_3m_z, k = 3) + s(mld_z, k = 3)
       + s(sst_grad_z, k = 3) + s(dist_front_z, k = 3) + s(upwelling_z, k = 3)
