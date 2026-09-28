@@ -63,6 +63,37 @@ def shoreline_path_from_config(config: dict[str, Any]) -> Path:
     return path
 
 
+def _min_distance_to_coast_vertices_km(
+    lat: np.ndarray,
+    lon: np.ndarray,
+    coast_lat: np.ndarray,
+    coast_lon: np.ndarray,
+    *,
+    chunk: int = 8000,
+) -> np.ndarray:
+    lat = np.asarray(lat, dtype=float)
+    lon = np.asarray(lon, dtype=float)
+    flat_lat = lat.ravel()
+    flat_lon = lon.ravel()
+    out = np.empty(flat_lat.size, dtype=float)
+    if coast_lat.size == 0:
+        out.fill(np.nan)
+        return out.reshape(lat.shape)
+    for idx, (la, lo) in enumerate(zip(flat_lat, flat_lon, strict=True)):
+        best_m = float("inf")
+        for start in range(0, coast_lat.size, chunk):
+            sl = slice(start, min(start + chunk, coast_lat.size))
+            _, _, dist_m = GEOD.inv(
+                np.full(sl.stop - sl.start, lo),
+                np.full(sl.stop - sl.start, la),
+                coast_lon[sl],
+                coast_lat[sl],
+            )
+            best_m = min(best_m, float(np.min(dist_m)))
+        out[idx] = best_m / 1000.0
+    return out.reshape(lat.shape)
+
+
 def distance_to_shoreline_km(
     lat: np.ndarray,
     lon: np.ndarray,
@@ -72,22 +103,7 @@ def distance_to_shoreline_km(
 ) -> np.ndarray:
     """Minimum geodesic distance (km) from each point to the land boundary."""
     coast_lat, coast_lon = _densified_boundary_vertices(str(geojson_path), float(densify_km))
-    if coast_lat.size == 0:
-        return np.full(np.asarray(lat).shape, np.nan, dtype=float)
-    lat = np.asarray(lat, dtype=float)
-    lon = np.asarray(lon, dtype=float)
-    flat_lat = lat.ravel()
-    flat_lon = lon.ravel()
-    out = np.empty(flat_lat.size, dtype=float)
-    for idx, (la, lo) in enumerate(zip(flat_lat, flat_lon, strict=True)):
-        _, _, dist_m = GEOD.inv(
-            np.full_like(coast_lon, lo),
-            np.full_like(coast_lat, la),
-            coast_lon,
-            coast_lat,
-        )
-        out[idx] = float(np.min(dist_m)) / 1000.0
-    return out.reshape(lat.shape)
+    return _min_distance_to_coast_vertices_km(lat, lon, coast_lat, coast_lon)
 
 
 def nearshore_mask(

@@ -24,6 +24,8 @@ shoreline:
   license: public_domain
   densify_spacing_km: 1.0
   distance_method: pyproj_geod_fwd
+  simplification_method: none_bbox_clip_only
+  simplification_max_vertices_per_polygon: null
 
 # Simplified polyline for unit tests only (not used in production nearshore).
 coastline_fixture: tests/fixtures/pilot_coastline_vertices.csv
