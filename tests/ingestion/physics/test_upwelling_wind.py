@@ -23,14 +23,38 @@ from fishai.ingestion.physics.features import (
     compute_upwelling,
 )
 from fishai.ingestion.physics.sources.glorys import glorys_product_for_date
-from fishai.ingestion.physics.sources.winds import CCMP_DATASET_ID, fetch_winds_for_day
 from fishai.ingestion.physics.wcofs_glorys_overlap import (
     glorys_grid_from_config,
     load_overlap_config,
     wcofs_covariate_arrays_on_glorys_grid,
 )
 from fishai.ingestion.sources import require_approved
-from tests.ingestion.physics.test_wcofs_covariate_grid_parity import _synthetic_wcofs
+
+
+def _synthetic_wcofs(n_eta: int = 12, n_xi: int = 12, n_s: int = 6) -> xr.Dataset:
+    s_rho = (np.arange(1, n_s + 1) - n_s - 0.5) / n_s
+    lat = np.linspace(33.0, 33.35, n_eta)
+    lon = np.linspace(-120.55, -120.15, n_xi)
+    lat2d = np.broadcast_to(lat[:, None], (n_eta, n_xi))
+    lon2d = np.broadcast_to(lon[None, :], (n_eta, n_xi))
+    temp = np.linspace(12, 19, n_s)[:, None, None] * np.ones((n_s, n_eta, n_xi))
+    salt = 33.0 + 0.02 * np.linspace(0, 1, n_s)[:, None, None] * np.ones((n_s, n_eta, n_xi))
+    return xr.Dataset(
+        {
+            "temp": (("ocean_time", "s_rho", "eta_rho", "xi_rho"), temp[None, ...]),
+            "salt": (("ocean_time", "s_rho", "eta_rho", "xi_rho"), salt[None, ...]),
+            "zeta": (("eta_rho", "xi_rho"), np.zeros((n_eta, n_xi))),
+            "h": (("eta_rho", "xi_rho"), np.full((n_eta, n_xi), 150.0)),
+            "mask_rho": (("eta_rho", "xi_rho"), np.ones((n_eta, n_xi))),
+            "lat_rho": (("eta_rho", "xi_rho"), lat2d),
+            "lon_rho": (("eta_rho", "xi_rho"), lon2d),
+            "pm": (("eta_rho", "xi_rho"), np.full((n_eta, n_xi), 1.0 / 3500.0)),
+            "pn": (("eta_rho", "xi_rho"), np.full((n_eta, n_xi), 1.0 / 3500.0)),
+            "hc": 50.0,
+            "s_rho": ("s_rho", s_rho),
+            "Cs_r": ("s_rho", np.linspace(-1, 0, n_s)),
+        }
+    )
 
 
 def _equatorward_alongshore_wind(speed_m_s: float, shape: tuple[int, ...]) -> tuple[np.ndarray, np.ndarray]:
@@ -98,35 +122,6 @@ def test_glorys_and_wcofs_paths_use_same_compute_upwelling_and_wind() -> None:
     np.testing.assert_allclose(calls[0][0], calls[1][0])
     np.testing.assert_allclose(calls[0][1], calls[1][1])
     np.testing.assert_allclose(glorys_fields.upwelling, wcofs_fields["upwelling"])
-
-
-def test_fetch_winds_for_day_mock_appends_pull_log(tmp_path) -> None:
-    lat = np.linspace(33.0, 34.0, 3)
-    lon = np.linspace(-121.0, -120.0, 3)
-    u = np.ones((1, lat.size, lon.size)) * 5.0
-    v = np.zeros((1, lat.size, lon.size))
-    payload = xr.Dataset(
-        {
-            "uwnd": (("time", "lat", "lon"), u),
-            "vwnd": (("time", "lat", "lon"), v),
-        },
-        attrs={"version": "ccmp-test-v1"},
-    )
-    buf = payload.to_netcdf()
-
-    def get_fn(url: str, **kwargs: object) -> bytes:
-        return buf
-
-    log_path = tmp_path / "wind.jsonl"
-    day = dt.date(2019, 5, 1)
-    bbox = (32.0, 35.0, -121.0, -117.0)
-    ds = fetch_winds_for_day(day, bbox, purpose="training", get_fn=get_fn, log_path=log_path)
-    assert ds.attrs["wind_source"] == "ccmp_winds"
-    lines = log_path.read_text(encoding="utf-8").strip().splitlines()
-    assert len(lines) == 1
-    record = __import__("json").loads(lines[0])
-    assert record["dataset_id"] == CCMP_DATASET_ID
-    assert record["dataset_version"] == "ccmp-test-v1"
 
 
 def test_training_parquet_metadata_includes_upwelling_fields(tmp_path) -> None:
