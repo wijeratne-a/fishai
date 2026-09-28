@@ -169,12 +169,56 @@ def np_finite(x: float) -> bool:
     return math.isfinite(x)
 
 
+def _cutoffs_from_pass_fail_thresholds_block(
+    cutoffs: dict[str, Any],
+    block: dict[str, Any],
+) -> dict[str, float]:
+    buoy = cutoffs.get("buoy_gate") or {}
+    pass_req = buoy.get("pass_requires_all") or {}
+    deg = buoy.get("degraded") or {}
+    strata = cutoffs.get("strata") or {}
+    gradability = strata.get("gradability") or {}
+    cell = cutoffs.get("graded_inputs_cell_gate") or {}
+    rmse_sd = cell.get("rmse_vs_glorys_spatial_sd") or {}
+    glider_tests = (
+        ((block.get("observations") or {}).get("scripps_spray_gliders") or {}).get("tests") or {}
+    )
+    abs_lim = glider_tests.get("absolute_bias_limits") or {}
+    ratio_max = float(pass_req["rmse_ratio_max"])
+    ratio_ci = float(pass_req["rmse_ratio_bootstrap_upper_95_max"])
+    ratio_deg = float(deg["rmse_ratio_max_inclusive"])
+    return {
+        "rmse_ratio_pass": ratio_max,
+        "rmse_ratio_ci_upper_pass": ratio_ci,
+        "rmse_ratio_degraded_upper": ratio_deg,
+        "bias_abs_pass_c": float(pass_req["absolute_bias_C_max"]),
+        "bias_abs_degraded_c": float(deg["absolute_bias_C_max_inclusive"]),
+        "pearson_r_margin_below_glorys": float(pass_req["pearson_r_max_deficit_vs_glorys_r"]),
+        "min_matched_daily_values": float(gradability["min_matched_daily_values"]),
+        "min_buoys": float(gradability["min_distinct_buoys"]),
+        "input_rmse_pass_fraction_glorys_sd": float(rmse_sd["pass_max_multiple"]),
+        "input_rmse_degraded_fraction_glorys_sd": float(rmse_sd["degraded_max_multiple"]),
+        "bootstrap_seed": 42.0,
+        "glider_rmse_ratio_pass": ratio_max,
+        "glider_rmse_ratio_ci_upper_pass": ratio_ci,
+        "glider_rmse_ratio_degraded_upper": ratio_deg,
+        "glider_bias_abs_pass_c_T3m_10m": float(abs_lim["temperature_10m_C"]),
+        "glider_bias_abs_pass_c_S3m_10m": float(abs_lim["salinity_10m"]),
+        "glider_bias_abs_pass_c_MLD_m": float(abs_lim["MLD_m"]),
+    }
+
+
 def cutoffs_from_prereg(doc: dict[str, Any]) -> dict[str, float]:
     block = doc["harmonization_wcofs_glorys"]
     pf = block.get("pass_fail_thresholds") or {}
     raw = pf.get("cutoffs")
     if isinstance(raw, dict) and raw and raw != "TO_BE_SET_BEFORE_SCORING":
-        return {k: float(raw[k]) for k in raw}
+        if "buoy_gate" in raw:
+            return _cutoffs_from_pass_fail_thresholds_block(raw, block)
+        try:
+            return {k: float(v) for k, v in raw.items() if isinstance(v, (int, float))}
+        except (TypeError, ValueError):
+            pass
 
     grading = block.get("nowcast_forcing_grading") or {}
     buoy = grading.get("buoy_gate") or {}

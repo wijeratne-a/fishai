@@ -257,13 +257,14 @@ def run_holdout_scoring(
                     rows_out.append(entry)
 
     # Grading (mapped row, buoy temperature, graded strata only)
-    grading_cfg = block.get("nowcast_forcing_grading") or {}
-    if grading_cfg:
+    pf_cutoffs = (block.get("pass_fail_thresholds") or {}).get("cutoffs") or {}
+    if isinstance(pf_cutoffs, dict) and pf_cutoffs.get("combination_rule"):
+        combination_rule = str(pf_cutoffs["combination_rule"]).replace("_", "-")
+    else:
+        grading_cfg = block.get("nowcast_forcing_grading") or {}
         combination_rule = str(
             grading_cfg.get("combination_rules", {}).get("per_stratum", "worst_verdict_across_checks")
         ).replace("_", "-")
-    else:
-        combination_rule = str(block["pass_fail_thresholds"]["combination_rule"])
     buoy_var = kept[kept["variable"] == "sea_water_temperature"] if "variable" in kept.columns else kept
     input_cell_check_summary: list[dict[str, Any]] = []
     glider_grading_summary: list[dict[str, Any]] = []

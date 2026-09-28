@@ -60,8 +60,7 @@ def collect_prereg_gate_violations(doc: dict[str, Any]) -> list[str]:
                 violations.append(f"nearshore.shoreline_simplification_check.{sk}")
     if _is_blank_or_pending(near.get("cutoff_km")):
         violations.append("nearshore.cutoff_km")
-    if not _is_blank_or_pending(near.get("shoreline_sha256")):
-        violations.extend(collect_shoreline_sha256_gate_violations(doc))
+    violations.extend(collect_shoreline_sha256_gate_violations(doc))
 
     grading = block.get("nowcast_forcing_grading")
     pf = block.get("pass_fail_thresholds") or {}

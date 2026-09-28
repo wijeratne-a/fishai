@@ -114,12 +114,13 @@ harmonization_wcofs_glorys:
     - name: front_distance_km
       role: graded_input
     - name: upwelling
-      role: shared_forcing
-      graded: false
+      grading: shared_forcing
+      role: report_only
+      source_field: upwelling
       note: >-
-        Reported when a single wind product covers CUFES training years and daily
-        nowcasts; never graded because both GLORYS and WCOFS paths use the same wind
-        (comparison would only test regridding).
+        Both GLORYS and WCOFS paths use the same outside wind product; a
+        WCOFS-vs-GLORYS comparison would only test regridding, so upwelling is
+        reported but never cell-gate graded.
       blank_when:
         reason: no_consistent_wind_product
         pilot_model_action: drop_upwelling_from_pilot_model
@@ -412,6 +413,85 @@ harmonization_wcofs_glorys:
       nearshore/offshore flag of the GLORYS cell it is matched to for scoring, not
       its own geodesic distance to the coast. This rule applies identically to all
       four model rows in metrics strata, including native ~4 km WCOFS (diagnostic).
+
+  pass_fail_thresholds:
+    cutoffs:
+      graded_model_row: wcofs_coarsened_mapped
+      model_rows:
+        wcofs_coarsened_mapped: graded
+        wcofs_native: report_only
+        wcofs_coarsened_glorys_grid: report_only
+        glorys: report_only
+      graded_observations:
+        independent_of_wcofs_only: true
+        graded:
+          buoy_temperature_0_494m:
+            observation_block: ndbc_hull_temperature
+            depth_m: 0.494
+        report_only:
+          - hf_radar_u_surf
+          - hf_radar_v_surf
+        hf_radar_report_only_reason: presumed_assimilated_by_wcofs
+      strata:
+        names:
+          - pooled
+          - nearshore
+          - offshore
+        seasonal_scores: report_only
+        gradability:
+          min_matched_daily_values: 100
+          min_distinct_buoys: 3
+          status_when_unmet: not_gradable
+      buoy_gate:
+        pass_requires_all:
+          rmse_ratio_max: 1.2
+          rmse_ratio_bootstrap_upper_95_max: 1.5
+          absolute_bias_C_max: 0.5
+          pearson_r_max_deficit_vs_glorys_r: 0.10
+        degraded:
+          rmse_ratio_min_exclusive: 1.2
+          rmse_ratio_max_inclusive: 1.5
+          absolute_bias_C_min_exclusive: 0.5
+          absolute_bias_C_max_inclusive: 1.0
+          nowcast_label: reduced_confidence
+        fail:
+          worse_than: degraded
+          verdict: UNKNOWN
+          reason: nowcast_forcing_failed_holdout
+      graded_inputs:
+        - T3m
+        - S3m
+        - MLD_m
+        - sst_grad
+        - front_distance_km
+      graded_inputs_cell_gate:
+        model_row: wcofs_coarsened_mapped
+        reference_row: glorys
+        comparison: cell_by_cell_test_period_within_stratum
+        rmse_vs_glorys_spatial_sd:
+          pass_max_multiple: 0.5
+          degraded_max_multiple: 1.0
+          fail_above_multiple: 1.0
+        per_input_verdict_rule: same_pass_degraded_fail_bands_for_all_graded_inputs
+        any_variable_fail_stratum_verdict: UNKNOWN
+      combination_rule: worst_of
+      verdict_rank_worst_first:
+        - UNKNOWN
+        - FAIL
+        - DEGRADED
+        - PASS
+      combination_rule_note: >-
+        Each stratum verdict is the worst of the buoy verdict and all five
+        graded_inputs cell-gate verdicts (UNKNOWN, FAIL, DEGRADED, PASS).
+      failed_input_stratum_verdict: UNKNOWN
+      not_gradable_cap:
+        verdict: DEGRADED
+        reason: no_independent_obs_check
+      no_independent_validation:
+        all_strata_verdict: UNKNOWN
+        reason: no_independent_validation
+        unknown_assimilation_status: not_independent
+      block_bootstrap_block_days: 7
 
   nowcast_forcing_grading:
     graded_model_row: wcofs_coarsened_mapped

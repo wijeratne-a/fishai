@@ -11,6 +11,7 @@ import yaml
 REPO_ROOT = Path(__file__).resolve().parents[3]
 DEFAULT_PREREG_PATH = REPO_ROOT / "prereg" / "harmonization_wcofs_glorys.yaml"
 PLACEHOLDER_TOKEN = "TO_BE_SET_BEFORE_SCORING"
+PENDING_COMBINATION_RULE_PREFIX = "PENDING_AUDITOR_CONFIRMATION"
 _SHA256_HEX_RE = re.compile(r"^[0-9a-f]{64}$")
 
 
@@ -65,6 +66,99 @@ def is_valid_frozen_shoreline_sha256(value: object) -> bool:
 
 # Bot4 PR #10 and other scoring code import this constant instead of hard-coding hashes.
 FROZEN_PILOT_SHORELINE_REFERENCE_SHA256 = frozen_shoreline_reference_sha256()
+
+
+def pass_fail_thresholds_cutoffs(doc: dict[str, Any] | None = None) -> dict[str, Any]:
+    """Return auditbot1 cutoff block from ``pass_fail_thresholds.cutoffs``."""
+    raw = doc if doc is not None else load_harmonization_prereg()
+    block = raw["harmonization_wcofs_glorys"].get("pass_fail_thresholds")
+    if not isinstance(block, dict):
+        raise ValueError("missing pass_fail_thresholds in harmonization prereg")
+    cutoffs = block.get("cutoffs")
+    if not isinstance(cutoffs, dict):
+        raise ValueError("pass_fail_thresholds.cutoffs must be a mapping")
+    return cutoffs
+
+
+def combination_rule_blocks_scoring(cutoffs: dict[str, Any]) -> bool:
+    """True while ``combination_rule`` awaits auditor confirmation."""
+    rule = cutoffs.get("combination_rule")
+    return isinstance(rule, str) and rule.startswith(PENDING_COMBINATION_RULE_PREFIX)
+
+
+PASS_FAIL_GRADED_INPUT_COUNT = 5
+
+
+def pass_fail_graded_input_names(doc: dict[str, Any] | None = None) -> tuple[str, ...]:
+    """Return cell-gate graded input names from ``pass_fail_thresholds.cutoffs``."""
+    cutoffs = pass_fail_thresholds_cutoffs(doc)
+    names = cutoffs.get("graded_inputs")
+    if not isinstance(names, list) or not names:
+        raise ValueError("pass_fail_thresholds.cutoffs.graded_inputs must be a non-empty list")
+    return tuple(str(n) for n in names)
+
+
+def _variable_is_never_cell_graded(entry: dict[str, Any]) -> bool:
+    if entry.get("grading") == "shared_forcing":
+        return True
+    return entry.get("role") == "report_only"
+
+
+def assert_graded_inputs_declared_in_variables(doc: dict[str, Any]) -> None:
+    """Every ``graded_inputs`` name must appear in harmonization ``variables``."""
+    expected = pass_fail_graded_input_names(doc)
+    if len(expected) != PASS_FAIL_GRADED_INPUT_COUNT:
+        raise ValueError(
+            "pass_fail_thresholds.cutoffs.graded_inputs must list exactly "
+            f"{PASS_FAIL_GRADED_INPUT_COUNT} names, got {len(expected)}"
+        )
+    block = doc["harmonization_wcofs_glorys"]
+    vars_by_name = {v["name"]: v for v in block["variables"]}
+    missing = [n for n in expected if n not in vars_by_name]
+    if missing:
+        raise ValueError(f"graded_inputs missing from variables list: {missing}")
+    for name in expected:
+        entry = vars_by_name[name]
+        if _variable_is_never_cell_graded(entry):
+            raise ValueError(f"graded_inputs must not include never-graded variable {name!r}")
+        if entry.get("role") != "graded_input":
+            raise ValueError(f"variables.{name}.role must be graded_input for cell gate")
+    for name, entry in vars_by_name.items():
+        if not _variable_is_never_cell_graded(entry):
+            continue
+        if name in expected:
+            raise ValueError(f"shared_forcing/report_only variable {name!r} is in graded_inputs")
+
+
+def assert_pass_fail_thresholds_ready_for_scoring(doc: dict[str, Any]) -> None:
+    """Refuse scoring until cutoff combination_rule is auditor-confirmed."""
+    cutoffs = pass_fail_thresholds_cutoffs(doc)
+    if combination_rule_blocks_scoring(cutoffs):
+        raise HarmonizationPreregNotReadyError(
+            "harmonization scoring blocked: pass_fail_thresholds.cutoffs.combination_rule "
+            "pending auditor confirmation"
+        )
+    rule = cutoffs.get("combination_rule")
+    if rule != "worst_of":
+        raise HarmonizationPreregNotReadyError(
+            f"harmonization scoring blocked: unsupported combination_rule {rule!r}"
+        )
+    for key in (
+        "verdict_rank_worst_first",
+        "graded_inputs",
+        "failed_input_stratum_verdict",
+        "not_gradable_cap",
+        "no_independent_validation",
+        "graded_inputs_cell_gate",
+    ):
+        if key not in cutoffs:
+            raise HarmonizationPreregNotReadyError(
+                f"harmonization scoring blocked: pass_fail_thresholds.cutoffs missing {key}"
+            )
+    try:
+        assert_graded_inputs_declared_in_variables(doc)
+    except ValueError as exc:
+        raise HarmonizationPreregNotReadyError(str(exc)) from exc
 
 
 def iter_placeholder_fields(node: object, prefix: str = "") -> list[str]:
@@ -123,6 +217,12 @@ def assert_harmonization_prereg_ready_for_scoring(doc: dict[str, Any]) -> None:
         )
     try:
         assert_shoreline_simplification_check_valid(doc)
+    except ValueError as exc:
+        raise HarmonizationPreregNotReadyError(str(exc)) from exc
+    try:
+        assert_pass_fail_thresholds_ready_for_scoring(doc)
+    except HarmonizationPreregNotReadyError:
+        raise
     except ValueError as exc:
         raise HarmonizationPreregNotReadyError(str(exc)) from exc
     from fishai.scoring.harmonization.prereg_gate import assert_prereg_gate

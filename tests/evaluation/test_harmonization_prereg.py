@@ -12,11 +12,15 @@ from fishai.evaluation.harmonization_prereg import (
     HarmonizationPreregNotReadyError,
     PLACEHOLDER_TOKEN,
     assert_harmonization_prereg_ready_for_scoring,
+    assert_pass_fail_thresholds_ready_for_scoring,
     assert_shoreline_simplification_check_valid,
+    assert_graded_inputs_declared_in_variables,
     frozen_shoreline_reference,
     frozen_shoreline_reference_sha256,
     is_valid_frozen_shoreline_sha256,
     load_harmonization_prereg,
+    pass_fail_thresholds_cutoffs,
+    pass_fail_graded_input_names,
     run_harmonization_scoring,
     shoreline_simplification_check,
 )
@@ -243,9 +247,72 @@ def test_shoreline_simplification_check_not_placeholder_and_matches_frozen_hash(
         assert_shoreline_simplification_check_valid(bad3)
 
 
-def test_committed_prereg_has_no_pass_fail_thresholds_placeholder_block() -> None:
+def test_pass_fail_thresholds_cutoffs_auditbot1_numeric_values() -> None:
     doc = load_harmonization_prereg(PREREG)
-    assert "pass_fail_thresholds" not in doc["harmonization_wcofs_glorys"]
+    cutoffs = pass_fail_thresholds_cutoffs(doc)
+    assert cutoffs["graded_model_row"] == "wcofs_coarsened_mapped"
+    assert cutoffs["model_rows"]["wcofs_coarsened_mapped"] == "graded"
+    assert cutoffs["model_rows"]["glorys"] == "report_only"
+    graded_obs = cutoffs["graded_observations"]
+    assert graded_obs["independent_of_wcofs_only"] is True
+    assert graded_obs["graded"]["buoy_temperature_0_494m"]["depth_m"] == 0.494
+    assert graded_obs["report_only"] == ["hf_radar_u_surf", "hf_radar_v_surf"]
+    strata = cutoffs["strata"]
+    assert strata["names"] == ["pooled", "nearshore", "offshore"]
+    assert strata["seasonal_scores"] == "report_only"
+    assert strata["gradability"]["min_matched_daily_values"] == 100
+    assert strata["gradability"]["min_distinct_buoys"] == 3
+    assert strata["gradability"]["status_when_unmet"] == "not_gradable"
+    buoy = cutoffs["buoy_gate"]
+    assert buoy["pass_requires_all"]["rmse_ratio_max"] == 1.2
+    assert buoy["pass_requires_all"]["rmse_ratio_bootstrap_upper_95_max"] == 1.5
+    assert buoy["pass_requires_all"]["absolute_bias_C_max"] == 0.5
+    assert buoy["pass_requires_all"]["pearson_r_max_deficit_vs_glorys_r"] == 0.10
+    assert buoy["degraded"]["rmse_ratio_min_exclusive"] == 1.2
+    assert buoy["degraded"]["rmse_ratio_max_inclusive"] == 1.5
+    assert buoy["degraded"]["absolute_bias_C_min_exclusive"] == 0.5
+    assert buoy["degraded"]["absolute_bias_C_max_inclusive"] == 1.0
+    assert buoy["degraded"]["nowcast_label"] == "reduced_confidence"
+    assert buoy["fail"]["verdict"] == "UNKNOWN"
+    assert buoy["fail"]["reason"] == "nowcast_forcing_failed_holdout"
+    graded = cutoffs["graded_inputs"]
+    assert graded == list(pass_fail_graded_input_names(doc))
+    assert len(graded) == 5
+    cell = cutoffs["graded_inputs_cell_gate"]
+    assert cell["model_row"] == "wcofs_coarsened_mapped"
+    assert cell["reference_row"] == "glorys"
+    rmse_sd = cell["rmse_vs_glorys_spatial_sd"]
+    assert rmse_sd["pass_max_multiple"] == 0.5
+    assert rmse_sd["degraded_max_multiple"] == 1.0
+    assert rmse_sd["fail_above_multiple"] == 1.0
+    assert cell["any_variable_fail_stratum_verdict"] == "UNKNOWN"
+    assert cutoffs["block_bootstrap_block_days"] == 7
+    metrics_days = doc["harmonization_wcofs_glorys"]["metrics"]["reporting"][
+        "block_bootstrap_block_days"
+    ]
+    assert cutoffs["block_bootstrap_block_days"] == metrics_days
+    assert cutoffs["combination_rule"] == "worst_of"
+    assert_graded_inputs_declared_in_variables(doc)
+    assert_pass_fail_thresholds_ready_for_scoring(doc) is None
+
+
+def test_pass_fail_thresholds_cutoffs_align_with_nowcast_forcing_grading() -> None:
+    doc = load_harmonization_prereg(PREREG)
+    cutoffs = pass_fail_thresholds_cutoffs(doc)
+    buoy_yaml = doc["harmonization_wcofs_glorys"]["nowcast_forcing_grading"]["buoy_gate"]
+    assert cutoffs["buoy_gate"]["pass_requires_all"]["rmse_ratio_max"] == buoy_yaml[
+        "rmse_ratio_to_glorys"
+    ]["pass"]["ratio_max"]
+    assert cutoffs["buoy_gate"]["pass_requires_all"][
+        "rmse_ratio_bootstrap_upper_95_max"
+    ] == buoy_yaml["rmse_ratio_to_glorys"]["pass"]["bootstrap_upper_95_max"]
+    inputs_yaml = doc["harmonization_wcofs_glorys"]["nowcast_forcing_grading"][
+        "graded_inputs_gate"
+    ]["rmse_vs_glorys_sd"]
+    assert (
+        cutoffs["graded_inputs_cell_gate"]["rmse_vs_glorys_spatial_sd"]["pass_max_multiple"]
+        == inputs_yaml["pass_max_multiple"]
+    )
 
 
 def test_nowcast_forcing_grading_blocks() -> None:
@@ -264,6 +331,8 @@ def test_nowcast_forcing_grading_blocks() -> None:
     assert buoy["fail_outcome"]["reason"] == "nowcast_forcing_failed_holdout"
     inputs = grading["graded_inputs_gate"]
     assert len(inputs["graded_variable_names"]) == 5
+    assert "upwelling" not in inputs["graded_variable_names"]
+    assert inputs["shared_forcing_variables_never_graded"] == ["upwelling"]
     assert inputs["rmse_vs_glorys_sd"]["pass_max_multiple"] == 0.5
     combo = grading["combination_rules"]
     assert combo["no_gradable_independent_check"]["reason"] == "no_independent_obs_check"
@@ -293,5 +362,6 @@ def test_upwelling_lags_and_shared_forcing_variable() -> None:
     assert lags["selection"]["fit_split_end"] == "2017-12-31"
     assert lags["selection"]["never_reselect_after_freeze"] is True
     vars_by_name = {v["name"]: v for v in doc["harmonization_wcofs_glorys"]["variables"]}
-    assert vars_by_name["upwelling"]["role"] == "shared_forcing"
+    assert vars_by_name["upwelling"]["grading"] == "shared_forcing"
+    assert vars_by_name["upwelling"]["role"] == "report_only"
     assert vars_by_name["upwelling"]["blank_when"]["reason"] == "no_consistent_wind_product"
