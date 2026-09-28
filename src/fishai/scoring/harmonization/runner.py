@@ -14,9 +14,11 @@ import pandas as pd
 from fishai.evaluation.harmonization_prereg import DEFAULT_PREREG_PATH, load_harmonization_prereg
 from fishai.ingestion.physics.sources.glorys import glorys_product_for_date
 from fishai.scoring.harmonization.forecast_age import (
+    NOWCAST_GROUP,
     assert_not_grouped_by_valid_offset_h,
     enrich_pairing_forecast_metadata,
     grouping_keys_for_scores,
+    split_nowcast_and_forecast_rows,
 )
 from fishai.ingestion.physics.vertical import GLORYS_TOP_LEVEL_DEPTH_M, interp_tracer_at_depth_below_surface
 from fishai.ingestion.physics.wcofs_glorys_overlap import load_overlap_config
@@ -80,12 +82,10 @@ SEASONAL_STRATA = True
 
 
 def _ensure_pairing_forecast_columns(df: pd.DataFrame) -> pd.DataFrame:
-    """Synthetic tables may omit forecast metadata; default to same-day nowcast."""
+    """Synthetic tables must supply ``ocean_time`` and ``source_run_time`` (or date-only nowcast)."""
     out = df.copy()
     if "ocean_time" not in out.columns:
         out["ocean_time"] = pd.to_datetime(out["date"]).dt.strftime("%Y-%m-%dT12:00:00Z")
-    if "forecast_age_hours" not in out.columns:
-        out["forecast_age_hours"] = 0.0
     if "source_run_time" not in out.columns:
         out["source_run_time"] = out["ocean_time"]
     if "fallback_used" not in out.columns:
@@ -207,51 +207,68 @@ def run_holdout_scoring(
     work = _ensure_pairing_forecast_columns(work)
     work = enrich_pairing_forecast_metadata(work)
     assert_not_grouped_by_valid_offset_h(grouping_keys_for_scores())
-    kept, dropped = apply_common_support(work)
+    nowcast_work, forecast_work = split_nowcast_and_forecast_rows(work)
+    kept, dropped = apply_common_support(nowcast_work)
     coverage_drop = insufficient_coverage_counts(dropped)
 
     rows_out: list[dict[str, Any]] = []
     summary_metrics: list[dict[str, Any]] = []
+    forecast_step_metrics: list[dict[str, Any]] = []
+
+    def _append_metric_rows(
+        target: list[dict[str, Any]],
+        frame: pd.DataFrame,
+        *,
+        graded_default: bool,
+    ) -> None:
+        for variable, var_df in frame.groupby("variable"):
+            for model_row in ALL_MODEL_ROWS:
+                for forecast_group, fg_df in var_df.groupby("forecast_group", sort=True):
+                    meta_row = fg_df.iloc[0]
+                    for stratum in STRATA_POOL:
+                        mask = _stratum_mask(fg_df, stratum)
+                        sub = fg_df.loc[mask]
+                        dates = pd.to_datetime(sub["date"]).values.astype("datetime64[D]")
+                        obs = sub["obs_value"].astype(float).values
+                        pred = sub[model_row].astype(float).values
+                        m = compute_metrics(obs, pred, dates, block_days=block_days, seed=seed)
+                        entry = {
+                            "model_row": model_row,
+                            "stratum": stratum,
+                            "forecast_group": forecast_group,
+                            "lead_days": meta_row.get("lead_days"),
+                            "forecast_age_hours": float(meta_row["forecast_age_hours"]),
+                            "ocean_time": meta_row.get("ocean_time"),
+                            "source_run_time": meta_row.get("source_run_time"),
+                            "fallback_used": bool(meta_row["fallback_used"]),
+                            "season": None,
+                            "variable": variable,
+                            "graded": graded_default
+                            and model_row == GRADED_MODEL_ROW
+                            and stratum in STRATA_POOL,
+                            "n": m.n,
+                            "bias": m.bias,
+                            "rmse": m.rmse,
+                            "pearson_r": m.pearson_r,
+                            "bias_ci95_lo": m.bias_ci95[0],
+                            "bias_ci95_hi": m.bias_ci95[1],
+                            "rmse_ci95_lo": m.rmse_ci95[0],
+                            "rmse_ci95_hi": m.rmse_ci95[1],
+                            "pearson_r_ci95_lo": m.pearson_r_ci95[0],
+                            "pearson_r_ci95_hi": m.pearson_r_ci95[1],
+                            "verdict": None,
+                            "reason": None,
+                            "indirect": False,
+                        }
+                        target.append(entry)
+
+    _append_metric_rows(summary_metrics, kept, graded_default=True)
+    if not forecast_work.empty:
+        _append_metric_rows(forecast_step_metrics, forecast_work, graded_default=False)
+    rows_out.extend(summary_metrics)
 
     for variable, var_df in kept.groupby("variable"):
         for model_row in ALL_MODEL_ROWS:
-            for forecast_group, fg_df in var_df.groupby("forecast_group", sort=True):
-                meta_row = fg_df.iloc[0]
-                for stratum in STRATA_POOL:
-                    mask = _stratum_mask(fg_df, stratum)
-                    sub = fg_df.loc[mask]
-                    dates = pd.to_datetime(sub["date"]).values.astype("datetime64[D]")
-                    obs = sub["obs_value"].astype(float).values
-                    pred = sub[model_row].astype(float).values
-                    m = compute_metrics(obs, pred, dates, block_days=block_days, seed=seed)
-                    entry = {
-                        "model_row": model_row,
-                        "stratum": stratum,
-                        "forecast_group": forecast_group,
-                        "lead_days": meta_row.get("lead_days"),
-                        "forecast_age_hours": float(meta_row["forecast_age_hours"]),
-                        "source_run_time": meta_row.get("source_run_time"),
-                        "fallback_used": bool(meta_row["fallback_used"]),
-                        "season": None,
-                        "variable": variable,
-                        "graded": model_row == GRADED_MODEL_ROW and stratum in STRATA_POOL,
-                        "n": m.n,
-                        "bias": m.bias,
-                        "rmse": m.rmse,
-                        "pearson_r": m.pearson_r,
-                        "bias_ci95_lo": m.bias_ci95[0],
-                        "bias_ci95_hi": m.bias_ci95[1],
-                        "rmse_ci95_lo": m.rmse_ci95[0],
-                        "rmse_ci95_hi": m.rmse_ci95[1],
-                        "pearson_r_ci95_lo": m.pearson_r_ci95[0],
-                        "pearson_r_ci95_hi": m.pearson_r_ci95[1],
-                        "verdict": None,
-                        "reason": None,
-                        "indirect": False,
-                    }
-                    rows_out.append(entry)
-                    summary_metrics.append(entry)
-
             if SEASONAL_STRATA:
                 season_key = var_df["date"].map(
                     lambda d: season_label(
@@ -303,7 +320,8 @@ def run_holdout_scoring(
     min_glider_profiles = int(gradability.get("min_matched_profiles", 100))
     min_glider_missions = int(gradability.get("min_distinct_missions", 3))
 
-    for forecast_group, fg_buoy in buoy_var.groupby("forecast_group", sort=True):
+    buoy_nowcast = buoy_var[buoy_var["forecast_group"] == NOWCAST_GROUP]
+    for forecast_group, fg_buoy in buoy_nowcast.groupby("forecast_group", sort=True):
         meta_row = fg_buoy.iloc[0]
         for stratum in STRATA_POOL:
             mask = _stratum_mask(fg_buoy, stratum)
@@ -419,6 +437,7 @@ def run_holdout_scoring(
         "glorys_product_selection": glorys_product_selection,
         "front_detail_loss": front_loss,
         "metrics": summary_metrics,
+        "forecast_step_metrics": forecast_step_metrics,
         "input_cell_check": input_cell_check_summary,
         "glider_holdout_grading": glider_grading_summary,
         "glider_holdout_known_limitations": [GLIDER_RMSE_RATIO_KNOWN_LIMITATION],

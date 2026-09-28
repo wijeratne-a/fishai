@@ -11,11 +11,6 @@ NOWCAST_GROUP = "nowcast"
 FORBIDDEN_GROUP_COLUMNS = frozenset({"valid_offset_h"})
 
 
-def forecast_age_hours(nominal_offset_h: float, missed_runs: int) -> float:
-    """Age in hours when ``missed_runs`` consecutive WCOFS cycles were unavailable."""
-    return float(nominal_offset_h) + float(missed_runs) * 24.0
-
-
 def lead_days_from_forecast_age_hours(forecast_age_hours: float) -> int:
     """``ceil(forecast_age_hours / 24)`` capped to 1–3 for lead groups."""
     days = int(math.ceil(float(forecast_age_hours) / 24.0))
@@ -49,11 +44,13 @@ def enrich_pairing_forecast_metadata(df: pd.DataFrame) -> pd.DataFrame:
     """
     Add ``forecast_group``, ``lead_days``, and metadata columns for scoring.
 
-    Requires ``forecast_age_hours``, ``source_run_time``, ``fallback_used``, and ``ocean_time``.
+    ``forecast_age_hours`` is derived from ``ocean_time`` − ``source_run_time``.
     """
+    from fishai.scoring.harmonization.wcofs_ocean_time import attach_forecast_age_from_ocean_time
+
     assert_pairing_uses_ocean_time_only(df)
     assert_not_grouped_by_valid_offset_h(tuple(df.columns))
-    out = df.copy()
+    out = attach_forecast_age_from_ocean_time(df)
     ages = out["forecast_age_hours"].astype(float)
     fallback = out["fallback_used"].astype(bool)
     out["forecast_group"] = [
@@ -65,6 +62,14 @@ def enrich_pairing_forecast_metadata(df: pd.DataFrame) -> pd.DataFrame:
         for a, f in zip(ages, fallback, strict=True)
     ]
     return out
+
+
+def split_nowcast_and_forecast_rows(df: pd.DataFrame) -> tuple[pd.DataFrame, pd.DataFrame]:
+    """Nowcast rows for scored forcing; forecast steps listed separately."""
+    if "forecast_group" not in df.columns:
+        df = enrich_pairing_forecast_metadata(df)
+    nowcast_mask = df["forecast_group"] == NOWCAST_GROUP
+    return df.loc[nowcast_mask].copy(), df.loc[~nowcast_mask].copy()
 
 
 def grouping_keys_for_scores() -> tuple[str, ...]:
