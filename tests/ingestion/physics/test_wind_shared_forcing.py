@@ -18,7 +18,9 @@ from fishai.ingestion.physics.wind_shared_forcing import (
 
 def test_cufes_training_span_precedes_ccmp_nrt() -> None:
     audit = wind_product_audit_summary()
-    ccmp = audit["candidates"][0]
+    ncei = next(c for c in audit["candidates"] if c["dataset_id"] == "noaacwBlendedWindsDaily")
+    ccmp = next(c for c in audit["candidates"] if c["dataset_id"] == "ccmp-daily-v2-1-NRT")
+    assert CUFES_TRAINING_MID_TIME_MIN >= dt.date.fromisoformat(ncei["coverage_start"])
     assert CUFES_TRAINING_MID_TIME_MIN < dt.date.fromisoformat(ccmp["coverage_start"])
     assert not UPWELLING_SHARED_FORCING_QUALIFIED
 
