@@ -19,6 +19,13 @@ harmonization_wcofs_glorys:
     coarsening_parity_note: >-
       The daily nowcast path must use the same single coarsening function as the
       overlap/holdout path so features are built identically.
+    shared_functions:
+      module: fishai.ingestion.physics.wcofs_glorys_grid
+      coarsen_wcofs_to_glorys: coarsen_wcofs_to_glorys
+      compute_wcofs_covariates_on_glorys_grid: compute_wcofs_covariates_on_glorys_grid
+      requirement: >-
+        Overlap/holdout scoring and the daily nowcast path must call these functions
+        only; no duplicate coarsening or covariate builders.
     notes:
       last_fit_day: "2025-08-31"
       first_test_day: "2025-09-01"
@@ -160,19 +167,31 @@ harmonization_wcofs_glorys:
 
   nearshore:
     supplied_by: bot2
-    shoreline_source: >-
-      Natural Earth 10m land polygons (ne_10m_land, public domain, includes the
-      Channel Islands), clipped to lat 31 to 36 and lon -122 to -116.
-    nearshore_cutoff_km: 20
-    nearshore_rule: >-
-      A GLORYS cell is nearshore when the geodesic distance from its cell centre
-      to the nearest mainland or island shoreline is 20 km or less.
-    shoreline_version: TO_BE_SET_BEFORE_SCORING
+    bot2_pr: "PR #7 @ cc26ab4"
+    shoreline_source: "Natural Earth ne_10m_land"
+    shoreline_version: "5.1.1"
+    license: "public domain"
+    clip:
+      lat_min: 31
+      lat_max: 36
+      lon_min: -122
+      lon_max: -116
+      includes_channel_islands: true
+    shoreline_path: data/reference/shoreline/ne_10m_land_pilot_clip.json
+    cutoff_km: 20
+    distance: >-
+      Geodesic on WGS84 from each GLORYS cell centre to nearest mainland or island
+      shoreline; nearshore when distance is cutoff_km or less.
     shoreline_sha256: TO_BE_SET_BEFORE_SCORING
-    version_hash_note: >-
-      bot2 will post the exact Natural Earth version and shoreline file SHA-256;
-      the scoring guard must refuse while shoreline_version or shoreline_sha256
-      remain unset.
+    shoreline_simplification_check: TO_BE_SET_BEFORE_SCORING
+    simplification_check_requirement: >-
+      Records max coastline displacement and the count of GLORYS cells whose
+      nearshore flag differs from full-resolution shoreline; required count is 0.
+      bot2 is still testing whether simplified saved polygons change any nearshore
+      flags; shoreline_sha256 may change until the check is finalized.
+    scoring_gate_note: >-
+      Scoring must refuse while shoreline_sha256 or shoreline_simplification_check
+      remain TO_BE_SET_BEFORE_SCORING.
 
   pass_fail_thresholds:
     owner: auditbot1

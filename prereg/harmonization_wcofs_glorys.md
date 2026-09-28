@@ -16,7 +16,7 @@ Before any test-split observational pairing or score tables are produced, this d
 
 **Resolution (exact string in YAML):** `WCOFS coarsened to GLORYS grid, area-weighted, wet-masked`
 
-The **daily nowcast path** must call the **same single coarsening function** as the overlap/holdout path so features are built identically. **Native ~4 km WCOFS** is scored only as a **diagnostic** row and is **never** passed through the harmonization map.
+The **daily nowcast path** must call **`coarsen_wcofs_to_glorys`** and **`compute_wcofs_covariates_on_glorys_grid`** in `fishai.ingestion.physics.wcofs_glorys_grid` — the same shared functions as overlap/holdout scoring. **Native ~4 km WCOFS** is scored only as a **diagnostic** row and is **never** passed through the harmonization map.
 
 Correction models for mapped WCOFS are fit on the fit window only; reported holdout scores use the **test** window only.
 
@@ -49,7 +49,7 @@ Scores use `config/assimilated_sources.yaml` (versioned, cited). Unknown assimil
 
 Per variable: **bias**, **RMSE**, **Pearson r**, by season (DJF/MAM/JJA/SON), nearshore/offshore, and pooled, each with **n** and a **7-day block bootstrap 95% CI**. **Front-detail loss** is mean coarsened-WCOFS **sst_grad** divided by native WCOFS on the same days. Test-split **JJA** is **1–23 June only** (`test_split_jja_partial`).
 
-Nearshore (bot2): **Natural Earth** `ne_10m_land` (public domain, Channel Islands included), clipped to lat 31–36°N and lon 122–116°W; **20 km** geodesic cutoff from each GLORYS cell centre to the nearest mainland or island shoreline (`nearshore_rule` in YAML). `shoreline_version` and `shoreline_sha256` stay `TO_BE_SET_BEFORE_SCORING` until bot2 posts the exact version and hash; scoring **must refuse** while those two fields are unset. auditbot1 pass/degraded cutoffs remain placeholders.
+Nearshore (bot2 PR #7 @ cc26ab4): `Natural Earth ne_10m_land` v**5.1.1**, public domain, clip lat 31–36 / lon −122 to −116 (Channel Islands), path `data/reference/shoreline/ne_10m_land_pilot_clip.json`, **cutoff_km 20**, geodesic distance on WGS84 from GLORYS cell centre to nearest shoreline. `shoreline_sha256` and `shoreline_simplification_check` remain `TO_BE_SET_BEFORE_SCORING` (simplification must report 0 cells with changed nearshore flags vs full resolution). Scoring refuses while any placeholder remains. auditbot1 cutoffs unchanged.
 
 ## Timing
 

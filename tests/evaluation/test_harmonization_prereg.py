@@ -20,7 +20,7 @@ PREREG = REPO / "prereg" / "harmonization_wcofs_glorys.yaml"
 RESOLUTION_EXACT = "WCOFS coarsened to GLORYS grid, area-weighted, wet-masked"
 
 
-def test_prereg_temporal_split_dates_and_resolution() -> None:
+def test_prereg_temporal_split_dates_resolution_and_shared_functions() -> None:
     doc = load_harmonization_prereg(PREREG)
     split = doc["harmonization_wcofs_glorys"]["temporal_split"]
     assert split["overlap_start"] == "2024-09-01"
@@ -30,7 +30,10 @@ def test_prereg_temporal_split_dates_and_resolution() -> None:
     assert split["test_start"] == "2025-09-01"
     assert split["test_end"] == "2026-06-23"
     assert split["resolution"] == RESOLUTION_EXACT
-    assert "coarsening_parity_note" in split
+    shared = split["shared_functions"]
+    assert shared["module"] == "fishai.ingestion.physics.wcofs_glorys_grid"
+    assert shared["coarsen_wcofs_to_glorys"] == "coarsen_wcofs_to_glorys"
+    assert shared["compute_wcofs_covariates_on_glorys_grid"] == "compute_wcofs_covariates_on_glorys_grid"
     assert split["notes"]["last_fit_day"] == "2025-08-31"
     assert split["notes"]["first_test_day"] == "2025-09-01"
 
@@ -67,26 +70,34 @@ def test_scoring_entry_point_raises_while_placeholders_unset() -> None:
     doc = load_harmonization_prereg(PREREG)
     with pytest.raises(HarmonizationPreregNotReadyError, match="unset prereg fields"):
         assert_harmonization_prereg_ready_for_scoring(doc)
-    with pytest.raises(HarmonizationPreregNotReadyError, match="shoreline_version"):
+    with pytest.raises(HarmonizationPreregNotReadyError, match="shoreline_sha256"):
         run_harmonization_scoring(PREREG)
 
 
-def test_nearshore_bot2_definition_and_version_placeholders() -> None:
+def test_nearshore_bot2_pr7_fields_and_pending_placeholders() -> None:
     doc = load_harmonization_prereg(PREREG)
     near = doc["harmonization_wcofs_glorys"]["nearshore"]
-    assert near["nearshore_cutoff_km"] == 20
-    assert "ne_10m_land" in near["shoreline_source"]
-    assert "Channel Islands" in near["shoreline_source"]
-    assert "nearshore_rule" in near
-    assert near["shoreline_version"] == PLACEHOLDER_TOKEN
+    assert near["shoreline_source"] == "Natural Earth ne_10m_land"
+    assert near["shoreline_version"] == "5.1.1"
+    assert near["license"] == "public domain"
+    assert near["clip"]["lat_min"] == 31
+    assert near["clip"]["lon_max"] == -116
+    assert near["clip"]["includes_channel_islands"] is True
+    assert near["shoreline_path"] == "data/reference/shoreline/ne_10m_land_pilot_clip.json"
+    assert near["cutoff_km"] == 20
+    assert "Geodesic on WGS84" in near["distance"]
     assert near["shoreline_sha256"] == PLACEHOLDER_TOKEN
+    assert near["shoreline_simplification_check"] == PLACEHOLDER_TOKEN
 
 
 def test_scoring_entry_point_passes_gate_when_placeholders_replaced(tmp_path: Path) -> None:
     doc = load_harmonization_prereg(PREREG)
     block = yaml.safe_load(yaml.dump(doc))["harmonization_wcofs_glorys"]
-    block["nearshore"]["shoreline_version"] = "ne_10m_land_v5.1.1"
-    block["nearshore"]["shoreline_sha256"] = "abc123"
+    block["nearshore"]["shoreline_sha256"] = "deadbeef"
+    block["nearshore"]["shoreline_simplification_check"] = {
+        "max_coastline_displacement_m": 0.0,
+        "nearshore_flag_diff_cell_count": 0,
+    }
     block["pass_fail_thresholds"]["cutoffs"] = {"auditbot1": "v1-placeholder-not-gating"}
     patched = {"schema_version": 1, "harmonization_wcofs_glorys": block}
     path = tmp_path / "prereg.yaml"
@@ -99,6 +110,6 @@ def test_scoring_entry_point_passes_gate_when_placeholders_replaced(tmp_path: Pa
 def test_committed_prereg_still_has_expected_placeholders() -> None:
     doc = load_harmonization_prereg(PREREG)
     near = doc["harmonization_wcofs_glorys"]["nearshore"]
-    assert near["shoreline_version"] == PLACEHOLDER_TOKEN
     assert near["shoreline_sha256"] == PLACEHOLDER_TOKEN
+    assert near["shoreline_simplification_check"] == PLACEHOLDER_TOKEN
     assert doc["harmonization_wcofs_glorys"]["pass_fail_thresholds"]["cutoffs"] == PLACEHOLDER_TOKEN
