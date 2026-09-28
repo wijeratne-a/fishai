@@ -11,6 +11,7 @@ overlap:
   expected_days: 661
 
 split:
+  fit_start: 2024-09-01
   fit_end: 2025-08-31
   test_start: 2025-09-01
 
@@ -55,6 +56,7 @@ glorys:
 wcofs:
   product: avg.nowcast
   cycle: t03z
+  daily_pairing: hourly_utc_mean
 
 depth_grid_m:
   start: 0

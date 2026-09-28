@@ -219,6 +219,53 @@ def compute_wcofs_covariates_on_glorys_grid(
     }
 
 
+def compute_glorys_covariates_on_glorys_grid(
+    z_levels_m: np.ndarray,
+    thetao: np.ndarray,
+    so: np.ndarray,
+    lat: np.ndarray,
+    lon: np.ndarray,
+) -> dict[str, np.ndarray]:
+    """
+    GLORYS P1D-m column features on the pilot lat/lon grid.
+
+    ``sst_grad`` and ``front_distance_km`` use the same helpers as the coarsened WCOFS
+    path after building SST from GLORYS ``thetao``.
+    """
+    from fishai.ingestion.physics.sources.glorys import glorys_column_features
+
+    nz, nj, ni = thetao.shape
+    if so.shape != thetao.shape:
+        raise ValueError("thetao and so must share shape")
+    t3m = np.full((nj, ni), np.nan, dtype=float)
+    s3m = np.full((nj, ni), np.nan, dtype=float)
+    mld_m = np.full((nj, ni), np.nan, dtype=float)
+    sst = np.full((nj, ni), np.nan, dtype=float)
+    for j in range(nj):
+        for i in range(ni):
+            col_t = thetao[:, j, i]
+            col_s = so[:, j, i]
+            if not np.isfinite(col_t).any():
+                continue
+            feats = glorys_column_features(z_levels_m, col_t, col_s, None)
+            t3m[j, i] = feats["T3m"]
+            s3m[j, i] = feats["S3m"]
+            mld_m[j, i] = feats["MLD_m"]
+            sst[j, i] = interp_at_depth_from_z_levels(
+                z_levels_m, col_t, GLORYS_TOP_LEVEL_DEPTH_M
+            )
+    grad = sst_gradient(sst, lat, lon)
+    lat2d, lon2d = np.meshgrid(lat, lon, indexing="ij")
+    front_km = front_distance_km(grad, lat2d, lon2d)
+    return {
+        "T3m": t3m,
+        "S3m": s3m,
+        "MLD_m": mld_m,
+        "sst_grad": grad,
+        "front_distance_km": front_km,
+    }
+
+
 def wcofs_native_4km_covariates_diagnostic(
     ds_wcofs: xr.Dataset,
     depth_grid_m: np.ndarray,

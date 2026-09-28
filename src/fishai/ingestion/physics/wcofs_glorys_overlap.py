@@ -20,10 +20,7 @@ import xarray as xr
 from fishai.ingestion.copernicus_compliance import append_pull_log, build_pull_record
 from fishai.ingestion.physics.coast_distance import nearshore_mask, shoreline_path_from_config
 from fishai.ingestion.physics.harmonize import glorys_target_grid
-from fishai.ingestion.physics.sources.glorys import (
-    glorys_column_features,
-    glorys_dataset_id_for_date,
-)
+from fishai.ingestion.physics.sources.glorys import glorys_dataset_id_for_date
 from fishai.ingestion.physics.wcofs_glorys_coverage import (
     CoverageAccumulator,
     build_coverage_report,
@@ -34,11 +31,17 @@ from fishai.ingestion.physics.wcofs_glorys_coverage import (
 )
 from fishai.ingestion.physics.wcofs_glorys_grid import (
     coarsen_wcofs_to_glorys,
+    compute_glorys_covariates_on_glorys_grid,
     compute_wcofs_covariates_on_glorys_grid,
     min_wet_fraction_from_config,
 )
 from fishai.ingestion.physics.wcofs_pull_log import append_wcofs_pull_log, build_wcofs_pull_record
 from fishai.ingestion.physics.wcofs_pds_store import open_wcofs_cycle
+from fishai.ingestion.physics.wcofs_utc_daily_pairing import (
+    OpenFieldsLead,
+    assert_avg_nowcast_ocean_time_covers_utc_day,
+    wcofs_utc_daily_mean_fields,
+)
 from fishai.ingestion.sources import REPO_ROOT, attribution_for
 
 DEFAULT_CONFIG = REPO_ROOT / "data" / "config" / "wcofs_glorys_overlap.yaml"
@@ -159,6 +162,49 @@ def glorys_profiles_on_depth_grid(
     )
 
 
+def _nearshore_bool(flag: Any) -> bool:
+    if flag is None:
+        raise ValueError("nearshore flag must not be null")
+    if isinstance(flag, (bool, np.bool_)):
+        return bool(flag)
+    if isinstance(flag, (float, np.floating)) and np.isnan(flag):
+        raise ValueError("nearshore flag must not be NaN")
+    return bool(flag)
+
+
+def open_wcofs_for_overlap_day(
+    day: dt.date,
+    config: dict[str, Any],
+    wcofs_open: Callable[[dt.date], xr.Dataset] | None,
+    *,
+    open_fields_lead: OpenFieldsLead | None = None,
+) -> xr.Dataset:
+    """Open WCOFS for overlap pairing on UTC calendar day ``day`` (hourly mean or avg.nowcast)."""
+    pairing = (config.get("wcofs") or {}).get("daily_pairing", "hourly_utc_mean")
+    if pairing == "avg_nowcast":
+        ds = (
+            open_wcofs_cycle(day, product="avg_nowcast")
+            if wcofs_open is None
+            else wcofs_open(day)
+        )
+        assert_avg_nowcast_ocean_time_covers_utc_day(ds, day)
+        return ds
+
+    if open_fields_lead is not None:
+        return wcofs_utc_daily_mean_fields(day, open_fields_lead=open_fields_lead)
+
+    def _live(cycle: dt.date, lead: str) -> xr.Dataset:
+        return open_wcofs_cycle(cycle, product="fields", lead=lead)
+
+    if wcofs_open is None:
+        return wcofs_utc_daily_mean_fields(day, open_fields_lead=_live)
+
+    def _from_day_opener(cycle: dt.date, lead: str) -> xr.Dataset:
+        return wcofs_open(cycle)
+
+    return wcofs_utc_daily_mean_fields(day, open_fields_lead=_from_day_opener)
+
+
 def pair_day_cell(
     day: dt.date,
     j: int,
@@ -181,7 +227,7 @@ def pair_day_cell(
         "lon": lon,
         "split": split_label(day, config),
         "season": meteorological_season(day),
-        "nearshore": bool(nearshore),
+        "nearshore": _nearshore_bool(nearshore),
         **wcofs_metrics,
         **glorys_metrics,
         **wcofs_surface,
@@ -232,24 +278,24 @@ def overlap_day_dataframe(
     config: dict[str, Any],
 ) -> pd.DataFrame:
     """One day of overlap rows on the GLORYS pilot grid."""
+    glorys_gridded = compute_glorys_covariates_on_glorys_grid(
+        z_levels, glorys_thetao, glorys_so, lat_dst, lon_dst
+    )
     rows: list[dict[str, Any]] = []
     for j, la in enumerate(lat_dst):
         for i, lo in enumerate(lon_dst):
             wcofs_metrics = {f"wcofs_{k}": float(wcofs_fields[k][j, i]) for k in wcofs_fields}
             glorys_metrics = {
-                f"glorys_{k}": v
-                for k, v in glorys_column_features(
-                    z_levels, glorys_thetao[:, j, i], glorys_so[:, j, i], None
-                ).items()
-                if k != "mlotst_crosscheck"
+                f"glorys_{k}": float(glorys_gridded[k][j, i])
+                for k in ("T3m", "S3m", "MLD_m")
             }
             wcofs_surface = {
                 "wcofs_sst_grad": wcofs_metrics["wcofs_sst_grad"],
                 "wcofs_front_distance_km": wcofs_metrics["wcofs_front_distance_km"],
             }
             glorys_surface = {
-                "glorys_sst_grad": float("nan"),
-                "glorys_front_distance_km": float("nan"),
+                "glorys_sst_grad": float(glorys_gridded["sst_grad"][j, i]),
+                "glorys_front_distance_km": float(glorys_gridded["front_distance_km"][j, i]),
             }
             rows.append(
                 pair_day_cell(
@@ -263,7 +309,7 @@ def overlap_day_dataframe(
                     wcofs_surface,
                     glorys_surface,
                     config=config,
-                    nearshore=bool(nearshore[j, i]),
+                    nearshore=nearshore[j, i],
                 )
             )
     return pd.DataFrame(rows)
@@ -303,6 +349,7 @@ def run_overlap_pairing(
     config: dict[str, Any] | None = None,
     days: Sequence[dt.date] | None = None,
     wcofs_open: Callable[[dt.date], xr.Dataset] | None = None,
+    open_fields_lead: OpenFieldsLead | None = None,
     glorys_fetch: Callable[[dt.date], dict[str, Any]] | None = None,
     budget: _DailyRequestBudget | None = None,
     wcofs_log: Path | None = None,
@@ -333,12 +380,13 @@ def run_overlap_pairing(
     wcofs_log = wcofs_log or REPO_ROOT / str(config["pull_logs"]["wcofs"])
     glorys_log = glorys_log or REPO_ROOT / str(config["pull_logs"]["glorys"])
     all_rows: list[dict[str, Any]] = []
+    pairing = (config.get("wcofs") or {}).get("daily_pairing", "hourly_utc_mean")
+    wcofs_requests_per_day = 24 if pairing == "hourly_utc_mean" else 1
     for day in days:
-        if wcofs_open is None:
-            budget.charge(day, 1)
-            ds = open_wcofs_cycle(day, product="avg_nowcast")
-        else:
-            ds = wcofs_open(day)
+        budget.charge(day, wcofs_requests_per_day)
+        ds = open_wcofs_for_overlap_day(
+            day, config, wcofs_open, open_fields_lead=open_fields_lead
+        )
         key = str(ds.attrs.get("wcofs_s3_key", ""))
         append_wcofs_pull_log(
             build_wcofs_pull_record(

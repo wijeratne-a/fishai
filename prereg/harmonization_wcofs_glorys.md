@@ -39,7 +39,15 @@ WCOFS is coarsened to the GLORYS horizontal grid with **area-weighted** regriddi
 
 ## Frozen mapping artifact (bot3, later PR)
 
-The WCOFS-to-GLORYS map is fit by **bot3** on the **fit split only**, then frozen under `artifacts/harmonization/wcofs_to_glorys_map/v1/` with a sidecar **`manifest.json`** recording: fitting commit SHA, SHA-256 of the fit-split Parquet, this pre-registration file’s commit SHA, variables mapped, and the fit date range (`fit_start`–`fit_end`). **Scoring and the nowcast path load only this frozen map and never refit it.**
+The WCOFS-to-GLORYS map is fit by **bot3** on the **fit split only**, then frozen under `artifacts/harmonization/wcofs_to_glorys_map/v1/` with a sidecar **`manifest.json`** recording: fitting commit SHA, SHA-256 of the fit-split Parquet (when a real fit-split Parquet exists), variables mapped, and the fit date range (`fit_start`–`fit_end`). **Scoring and the nowcast path load only this frozen map and never refit it.** Until a real fit completes, CI uses the synthetic fixture `tests/fixtures/harmonization/wcofs_to_glorys_map_v0_synthetic/` (`synthetic: true`); production loaders must reject synthetic maps.
+
+## WCOFS daily pairing vs GLORYS P1D-m (awaiting auditbot1 sign-off)
+
+**GLORYS:** Copernicus P1D-m daily mean for calendar day **D** (UTC).
+
+**WCOFS (default `hourly_utc_mean`):** For UTC day **D**, build the daily mean from **24** WCOFS `fields` nowcast files whose valid times are **D 00Z … D 23Z** (exclusive of **D+1 00Z**), using each file’s `ocean_time` semantics: cycle **R** lead **nNNN** valid at **R 03Z + (NNN−24) h**; hours **00–03Z** on **D** from cycle **D** leads **n021–n024**; hours **04–23Z** from cycle **D+1** leads **n001–n020**. Implementation: `fishai.ingestion.physics.wcofs_utc_daily_pairing`.
+
+**Fallback `avg_nowcast`:** Single `wcofs.t03z.{D}.avg.nowcast.nc` per day when hourly composition is unavailable; tests assert `ocean_time` date matches **D**.
 
 ## Observations and forcing gates
 

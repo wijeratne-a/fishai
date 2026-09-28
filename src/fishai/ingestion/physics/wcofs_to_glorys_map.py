@@ -24,6 +24,9 @@ from fishai.ingestion.physics.wcofs_glorys_overlap import load_overlap_config, s
 from fishai.ingestion.sources import REPO_ROOT
 
 DEFAULT_MAP_VERSION_DIR = REPO_ROOT / "artifacts" / "harmonization" / "wcofs_to_glorys_map" / "v1"
+SYNTHETIC_FIXTURE_DIR = (
+    REPO_ROOT / "tests" / "fixtures" / "harmonization" / "wcofs_to_glorys_map_v0_synthetic"
+)
 CORRECTION_MAP_FILENAME = "correction_map.json"
 CORRECTION_MAP_HASH_FILENAME = "correction_map.sha256"
 MANIFEST_FILENAME = "manifest.json"
@@ -40,6 +43,7 @@ STRATA: tuple[str, ...] = ("nearshore", "offshore")
 
 MAP_SCHEMA_VERSION = 1
 FUNCTIONAL_FORM = "per_variable_per_stratum_linear_ols"
+MIN_STRATUM_SAMPLES = 2
 
 
 class HarmonizationMapLeakageError(RuntimeError):
@@ -48,6 +52,14 @@ class HarmonizationMapLeakageError(RuntimeError):
 
 class HarmonizationMapHashError(RuntimeError):
     """Raised when a frozen correction map fails SHA-256 verification."""
+
+
+class HarmonizationMapSyntheticError(RuntimeError):
+    """Raised when a synthetic map is loaded outside tests."""
+
+
+class HarmonizationMapInsufficientDataError(RuntimeError):
+    """Raised when any mapped variable/stratum has too few paired samples to fit."""
 
 
 def _code_version() -> str:
@@ -84,27 +96,36 @@ def test_period_start_from_config(config: dict[str, Any]) -> dt.date:
 
 
 def assert_fit_split_only(df: pd.DataFrame, config: dict[str, Any]) -> None:
-    """Hard-fail if any overlap row on or after the test window enters fitting."""
+    """Hard-fail before filtering if any row is outside the fit window or has bad flags."""
     if "day" not in df.columns:
         raise ValueError("overlap frame must include a day column")
     days = pd.to_datetime(df["day"]).dt.date
-    fit_end = fit_date_range_from_config(config)[1]
+    fit_start, fit_end = fit_date_range_from_config(config)
     test_start = test_period_start_from_config(config)
+    if "nearshore" in df.columns and df["nearshore"].isna().any():
+        raise HarmonizationMapLeakageError(
+            f"overlap frame has {int(df['nearshore'].isna().sum())} rows with NaN nearshore"
+        )
     if "split" in df.columns:
         bad_split = df["split"] == "test"
         if bad_split.any():
             raise HarmonizationMapLeakageError(
-                f"fit split contains {int(bad_split.sum())} rows labeled test"
+                f"overlap frame contains {int(bad_split.sum())} rows labeled test"
             )
+    early = days < fit_start
+    if early.any():
+        raise HarmonizationMapLeakageError(
+            f"overlap frame contains {int(early.sum())} rows before fit_start {fit_start.isoformat()}"
+        )
     late = days > fit_end
     if late.any():
         raise HarmonizationMapLeakageError(
-            f"fit split contains {int(late.sum())} rows after fit_end {fit_end.isoformat()}"
+            f"overlap frame contains {int(late.sum())} rows after fit_end {fit_end.isoformat()}"
         )
     in_test_window = days >= test_start
     if in_test_window.any():
         raise HarmonizationMapLeakageError(
-            f"fit split contains {int(in_test_window.sum())} rows on or after test_start "
+            f"overlap frame contains {int(in_test_window.sum())} rows on or after test_start "
             f"{test_start.isoformat()}"
         )
 
@@ -114,7 +135,7 @@ def _ols_intercept_slope(x: np.ndarray, y: np.ndarray) -> dict[str, float | int]
     y = np.asarray(y, dtype=float)
     mask = np.isfinite(x) & np.isfinite(y)
     n = int(mask.sum())
-    if n < 2:
+    if n < MIN_STRATUM_SAMPLES:
         return {"a": float("nan"), "b": float("nan"), "n": n}
     xv = x[mask]
     yv = y[mask]
@@ -129,6 +150,16 @@ def _ols_intercept_slope(x: np.ndarray, y: np.ndarray) -> dict[str, float | int]
     return {"a": float(a), "b": float(b), "n": n}
 
 
+def _raise_if_insufficient_strata(coefficients: dict[str, Any]) -> None:
+    for var in MAPPED_VARIABLES:
+        for stratum in STRATA:
+            n = int(coefficients[var][stratum]["n"])
+            if n < MIN_STRATUM_SAMPLES:
+                raise HarmonizationMapInsufficientDataError(
+                    f"insufficient paired samples for {var}/{stratum}: n={n}"
+                )
+
+
 def fit_correction_map_from_overlap(
     df: pd.DataFrame,
     *,
@@ -137,6 +168,7 @@ def fit_correction_map_from_overlap(
     fitting_commit_sha: str | None = None,
     fit_split_parquet_sha256: str | None = None,
     prereg_commit_sha: str | None = None,
+    synthetic: bool = False,
 ) -> dict[str, Any]:
     """
     Fit the correction map from an overlap pairing table (fit split rows only).
@@ -149,17 +181,14 @@ def fit_correction_map_from_overlap(
             "seasonal harmonic correction is disabled; set use_seasonal_harmonic=False"
         )
     config = config or load_overlap_config()
+    assert_fit_split_only(df, config)
     fit_start, fit_end = fit_date_range_from_config(config)
-    if "split" in df.columns and (df["split"] == "test").any():
-        raise HarmonizationMapLeakageError(
-            f"overlap frame includes {int((df['split'] == 'test').sum())} test-split rows"
-        )
     work = df.copy()
     if "split" in work.columns:
         work = work.loc[work["split"] == "fit"]
     else:
         days = pd.to_datetime(work["day"]).dt.date
-        work = work.loc[days <= fit_end]
+        work = work.loc[(days >= fit_start) & (days <= fit_end)]
     assert_fit_split_only(work, config)
     if "nearshore" not in work.columns:
         raise ValueError("overlap frame must include nearshore for stratum fitting")
@@ -178,10 +207,22 @@ def fit_correction_map_from_overlap(
                 sub[y_col].to_numpy(),
             )
 
+    _raise_if_insufficient_strata(coefficients)
+
+    metadata: dict[str, Any] = {
+        "fitting_commit_sha": fitting_commit_sha or _git_head_sha(),
+        "synthetic": bool(synthetic),
+    }
+    if fit_split_parquet_sha256:
+        metadata["fit_split_parquet_sha256"] = fit_split_parquet_sha256
+    if prereg_commit_sha:
+        metadata["prereg_commit_sha"] = prereg_commit_sha
+
     return {
         "schema_version": MAP_SCHEMA_VERSION,
         "functional_form": FUNCTIONAL_FORM,
         "seasonal_harmonic": False,
+        "synthetic": bool(synthetic),
         "code_version": _code_version(),
         "fit_date_range": {
             "fit_start": fit_start.isoformat(),
@@ -189,11 +230,7 @@ def fit_correction_map_from_overlap(
         },
         "variables_mapped": list(MAPPED_VARIABLES),
         "coefficients": coefficients,
-        "metadata": {
-            "fitting_commit_sha": fitting_commit_sha or _git_head_sha(),
-            "fit_split_parquet_sha256": fit_split_parquet_sha256,
-            "prereg_commit_sha": prereg_commit_sha,
-        },
+        "metadata": metadata,
     }
 
 
@@ -207,12 +244,12 @@ def sha256_file(path: Path) -> str:
 
 def write_correction_map_artifacts(
     map_doc: dict[str, Any],
-    directory: Path | str | None = None,
+    directory: Path | str,
     *,
     fit_split_parquet_sha256: str | None = None,
 ) -> dict[str, Path]:
     """Write ``correction_map.json``, sidecar hash, and ``manifest.json``."""
-    directory = Path(directory) if directory is not None else DEFAULT_MAP_VERSION_DIR
+    directory = Path(directory)
     directory.mkdir(parents=True, exist_ok=True)
     map_path = directory / CORRECTION_MAP_FILENAME
     map_path.write_text(json.dumps(map_doc, indent=2, sort_keys=True) + "\n", encoding="utf-8")
@@ -222,10 +259,7 @@ def write_correction_map_artifacts(
 
     meta = map_doc.get("metadata") or {}
     fit_range = map_doc.get("fit_date_range") or {}
-    manifest = {
-        "fitting_commit_sha": meta.get("fitting_commit_sha"),
-        "fit_split_parquet_sha256": fit_split_parquet_sha256 or meta.get("fit_split_parquet_sha256"),
-        "prereg_commit_sha": meta.get("prereg_commit_sha"),
+    manifest: dict[str, Any] = {
         "variables_mapped": map_doc.get("variables_mapped"),
         "fit_date_range": fit_range,
         "correction_map_file": CORRECTION_MAP_FILENAME,
@@ -233,7 +267,15 @@ def write_correction_map_artifacts(
         "functional_form": map_doc.get("functional_form"),
         "seasonal_harmonic": map_doc.get("seasonal_harmonic", False),
         "code_version": map_doc.get("code_version"),
+        "synthetic": map_doc.get("synthetic", False),
     }
+    if meta.get("fitting_commit_sha"):
+        manifest["fitting_commit_sha"] = meta["fitting_commit_sha"]
+    parquet_sha = fit_split_parquet_sha256 or meta.get("fit_split_parquet_sha256")
+    if parquet_sha:
+        manifest["fit_split_parquet_sha256"] = parquet_sha
+    if meta.get("prereg_commit_sha"):
+        manifest["prereg_commit_sha"] = meta["prereg_commit_sha"]
     manifest_path = directory / MANIFEST_FILENAME
     manifest_path.write_text(json.dumps(manifest, indent=2, sort_keys=True) + "\n", encoding="utf-8")
     return {"map": map_path, "hash": hash_path, "manifest": manifest_path}
@@ -243,6 +285,7 @@ def load_correction_map(
     directory: Path | str | None = None,
     *,
     verify_hash: bool = True,
+    allow_synthetic: bool = False,
 ) -> dict[str, Any]:
     """Load a frozen correction map, optionally verifying ``correction_map.sha256``."""
     directory = Path(directory) if directory is not None else DEFAULT_MAP_VERSION_DIR
@@ -259,7 +302,13 @@ def load_correction_map(
             raise HarmonizationMapHashError(
                 f"correction map hash mismatch (expected {expected}, got {actual})"
             )
-    return json.loads(map_path.read_text(encoding="utf-8"))
+    doc = json.loads(map_path.read_text(encoding="utf-8"))
+    is_synthetic = bool(doc.get("synthetic")) or bool((doc.get("metadata") or {}).get("synthetic"))
+    if is_synthetic and not allow_synthetic:
+        raise HarmonizationMapSyntheticError(
+            "synthetic correction maps may not be loaded without allow_synthetic=True"
+        )
+    return doc
 
 
 def apply_map(
@@ -302,13 +351,16 @@ def apply_map_to_overlap_frame(
     """Vectorized map application for overlap / training tables (one row per cell-day)."""
     coeffs = map_doc["coefficients"]
     out = df.copy()
-    nearshore = out["nearshore"].to_numpy(dtype=bool)
+    nearshore = out["nearshore"]
+    if nearshore.isna().any():
+        raise ValueError("nearshore column contains NaN")
+    ns = nearshore.to_numpy(dtype=bool)
     for var in MAPPED_VARIABLES:
         x_col = f"wcofs_{var}"
         target = f"{prefix}{var}"
         x = out[x_col].to_numpy(dtype=float)
         y = np.full(x.shape, np.nan, dtype=float)
-        for stratum, mask in (("nearshore", nearshore), ("offshore", ~nearshore)):
+        for stratum, mask in (("nearshore", ns), ("offshore", ~ns)):
             c = coeffs[var][stratum]
             a, b = float(c["a"]), float(c["b"])
             sel = mask & np.isfinite(x)
