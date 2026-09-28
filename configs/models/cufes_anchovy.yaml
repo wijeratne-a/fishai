@@ -1,0 +1,43 @@
+fishai_engine_config:
+  version: "1.0"
+  species:
+    code: ANCH
+    name: Northern anchovy
+  domain:
+    lat_min: 32.0
+    lat_max: 35.0
+    lon_min: -121.0
+    lon_max: -117.0
+  training_end: "2021-12-31"
+  data:
+    table_path: src/models/tests/fixtures/synthetic_cufes.csv
+  response:
+    type: density_delta
+    column: egg_count
+    effort_column: volume_m3
+  model:
+    engine: sdmTMB
+    family: delta_gamma
+    delta_type: standard
+    formula_shared: "~ log_effort + s(sst_z, k = 3) + s(sal_z, k = 3)"
+    spatial: [on, on]
+    spatiotemporal: [iid, off]
+    share_range: [true, true]
+    time_varying:
+      formula: "~ 1"
+      type: rw0
+  mesh:
+    cutoff_km: 9
+    range_guess_km: 60
+    barrier:
+      enabled: false
+      range_fraction: 0.1
+  prediction:
+    nsim: 50
+    seed: 20260928
+    reference_effort: 1.0
+    grid_table: src/models/tests/fixtures/synthetic_grid.csv
+  ood:
+    mess_mask_below: -20
+  output:
+    dir: artifacts/models/anchovy

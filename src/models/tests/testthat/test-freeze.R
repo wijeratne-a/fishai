@@ -1,0 +1,15 @@
+test_that("frozen model scores once", {
+  td <- tempfile()
+  dir.create(td)
+  cfg <- load_config_yaml(file.path(FISHAI_ROOT, "configs", "models", "cufes_sardine.yaml"))
+  dat <- load_model_data(cfg$data$table_path, cfg)
+  mesh <- build_fishai_mesh(dat, cfg$mesh)
+  fit <- fit_delta_engine(dat, mesh, cfg)
+  path <- file.path(td, "artifact.rds")
+  freeze_model(fit, cfg, path)
+  hold <- dat[1:10, ]
+  flag <- file.path(td, "scored.flag")
+  s1 <- score_frozen_once(path, hold, flag)
+  expect_true(is.finite(s1$auc))
+  expect_error(score_frozen_once(path, hold, flag), "already scored")
+})

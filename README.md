@@ -24,12 +24,15 @@ src/fishai/
   ingestion/physics/     WCOFS, GLORYS stubs
   ingestion/sensors/     SCCOOS HF radar, NDBC, IOOS glider stubs
   models/                Python experiment config, baselines, run manifest
-  models/R/              sdmTMB R code (bootstrap via renv)
+  models/R/              legacy bootstrap note (see src/models/)
   evaluation/            Metrics and numeric support mask (reusable)
   validation/            Survey file eligibility gate
   api/                   Future nowcast API stub
   schemas/               JSON schemas for observations and provenance
 data/SOURCES.yaml        License manifest (CI-enforced for ingestion modules)
+src/models/              fishaisdm R package (sdmTMB delta core) + testthat suite
+python/fishai_models/    fishai-models CLI (Rscript wrapper)
+configs/models/          CUFES sardine/anchovy pilot YAML configs
 labels/                  Label validation rules (YAML/JSON)
 science/                 Measurement and temporal integrity rules
 security/                Sensitive-data pre-commit scanner

@@ -40,4 +40,4 @@ RUN Rscript renv/scripts/bootstrap.R
 
 ENV RENV_PATHS_LIBRARY=/app/renv/library
 
-CMD ["bash", "-lc", "pytest && Rscript -e \"testthat::test_dir('src/models/tests/testthat')\""]
+CMD ["bash", "-lc", "python3 -m pytest && Rscript scripts/ci/run_r_model_tests.R"]
