@@ -79,7 +79,16 @@ def _cycle_init_utc(day: dt.date) -> dt.datetime:
 
 
 def requested_cycle_time(target: dt.date) -> dt.datetime:
+    """Operational 03Z run time R for the target calendar day."""
     return wcofs_src.cycle_run_time(target)
+
+
+def expected_valid_time(target: dt.date, valid_offset_h: int) -> dt.datetime:
+    return requested_cycle_time(target) + dt.timedelta(hours=valid_offset_h)
+
+
+def source_run_time_for_cycle(cycle_date: dt.date) -> dt.datetime:
+    return wcofs_src.cycle_run_time(cycle_date)
 
 
 def read_ocean_time_utc(ds: xr.Dataset) -> dt.datetime:
@@ -123,7 +132,7 @@ def step_provenance_record(
     primary_available: bool,
 ) -> dict[str, Any]:
     valid = read_ocean_time_utc(ds)
-    source = wcofs_src.cycle_run_time(lp.cycle_date)
+    source = source_run_time_for_cycle(lp.cycle_date)
     requested = requested_cycle_time(target)
     age = forecast_age_hours(valid, lp.cycle_date)
     fallback_used = lp.cycle_date != target or lp.fallback is not None
@@ -132,6 +141,7 @@ def step_provenance_record(
         "valid_offset_h": lp.valid_offset_h,
         "requested_cycle_time": requested.isoformat(),
         "source_cycle_time": source.isoformat(),
+        "source_run_time": source.isoformat(),
         "valid_time": valid.isoformat(),
         "forecast_age_hours": age,
         "fallback_used": fallback_used,
@@ -182,6 +192,7 @@ def build_step_provenance_table(
                     "valid_offset_h": lp.valid_offset_h,
                     "lead_tag": lp.lead_tag,
                     "source_cycle_time": wcofs_src.cycle_run_time(lp.cycle_date).isoformat(),
+                    "source_run_time": wcofs_src.cycle_run_time(lp.cycle_date).isoformat(),
                     "requested_cycle_time": requested_cycle_time(plan.target_date).isoformat(),
                     "valid_time": (
                         requested_cycle_time(plan.target_date)
@@ -359,6 +370,38 @@ def fetch_and_log_leads(
             )
             ds = wcofs_src.open_dataset_from_bytes(data)
             sub = wcofs_src.subset_bbox(ds, bbox)
+            expected = expected_valid_time(plan.target_date, lp.valid_offset_h)
+            actual = read_ocean_time_utc(sub)
+            if actual != expected:
+                mismatch = unknown_slot_record(
+                    plan.target_date, lp.valid_offset_h, reason="valid_time_mismatch"
+                )
+                mismatch["expected_valid_time"] = expected.isoformat()
+                mismatch["actual_valid_time"] = actual.isoformat()
+                failed.append(mismatch)
+                prior = index.get(s3_key)
+                if skip_if_etag_matches and prior and prior.get("etag") == meta.get("etag"):
+                    continue
+                rec = build_pull_record(
+                    s3_key=s3_key,
+                    url=url,
+                    cycle=cycle_id(lp.cycle_date),
+                    lead=lp.lead_tag,
+                    lead_hour=lp.valid_offset_h,
+                    status="error",
+                    etag=meta.get("etag"),
+                    size_bytes=meta.get("size_bytes"),
+                    sha256=meta.get("sha256"),
+                    extra={
+                        "target_cycle": cycle_id(plan.target_date),
+                        "reason": "valid_time_mismatch",
+                        "expected_valid_time": expected.isoformat(),
+                        "actual_valid_time": actual.isoformat(),
+                        "evidence_state_hint": "UNKNOWN",
+                    },
+                )
+                append_pull_log(rec, log_path=log_path)
+                continue
             prov = step_provenance_record(
                 lp, sub, plan.target_date, primary_available=plan.primary_available
             )
@@ -384,6 +427,7 @@ def fetch_and_log_leads(
                     for k in (
                         "requested_cycle_time",
                         "source_cycle_time",
+                        "source_run_time",
                         "valid_time",
                         "forecast_age_hours",
                         "fallback_used",

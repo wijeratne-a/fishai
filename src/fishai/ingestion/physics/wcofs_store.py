@@ -141,6 +141,7 @@ def package_wcofs_cycle(merged: xr.Dataset, cycle_date: dt.date) -> xr.Dataset:
         ages: list[float] = []
         valids: list[np.datetime64] = []
         sources: list[np.datetime64] = []
+        run_times: list[np.datetime64] = []
         hints: list[str] = []
         ldays: list[float] = []
         for step in step_values:
@@ -148,12 +149,14 @@ def package_wcofs_cycle(merged: xr.Dataset, cycle_date: dt.date) -> xr.Dataset:
             ages.append(float(row["forecast_age_hours"]))
             valids.append(np.datetime64(row["valid_time"]))
             sources.append(np.datetime64(row["source_cycle_time"]))
+            run_times.append(np.datetime64(row["source_run_time"]))
             hints.append(str(row["evidence_state_hint"]))
             ldays.append(float("nan") if "lead_days" not in row else float(row["lead_days"]))
         out = out.assign_coords(valid_time=(time_dim, np.array(valids, dtype="datetime64[ns]")))
         out["forecast_age_hours"] = (time_dim, np.asarray(ages, dtype=float))
         out["forecast_age_hours"].attrs.update(units="hours")
         out["source_cycle_time"] = (time_dim, np.array(sources, dtype="datetime64[ns]"))
+        out["source_run_time"] = (time_dim, np.array(run_times, dtype="datetime64[ns]"))
         out["evidence_state_hint"] = (time_dim, np.asarray(hints, dtype=object))
         out["lead_days"] = (time_dim, np.asarray(ldays, dtype=float))
         out["time"] = (time_dim, np.array(valids, dtype="datetime64[ns]"))

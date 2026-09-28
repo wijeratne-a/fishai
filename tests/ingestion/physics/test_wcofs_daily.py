@@ -19,6 +19,7 @@ from fishai.ingestion.physics.wcofs_daily import (
     assemble_merged_dataset,
     build_lead_plan,
     evidence_from_forecast_age,
+    expected_valid_time,
     fetch_and_log_leads,
     plan_daily,
     read_ocean_time_utc,
@@ -136,10 +137,15 @@ def test_normal_cycle_uses_ocean_time_and_nowcast_age(tmp_path: Path) -> None:
         valid_offset_h=0,
         tmp_path=tmp_path,
     )
+    r = requested_cycle_time(target)
     assert log["forecast_age_hours"] == 0.0
     assert log["evidence_state_hint"] == "nowcast"
+    assert log["source_run_time"] == r.isoformat()
     assert "lead_days" not in log
     assert float(packaged["forecast_age_hours"].sel(valid_offset_h=0).values) == 0.0
+    assert str(packaged["source_run_time"].sel(valid_offset_h=0).values)[:19] == r.strftime(
+        "%Y-%m-%dT%H:%M:%S"
+    )
 
 
 def test_fallback_uses_prior_source_cycle_and_forecast_age(tmp_path: Path) -> None:
@@ -153,11 +159,16 @@ def test_fallback_uses_prior_source_cycle_and_forecast_age(tmp_path: Path) -> No
         tmp_path=tmp_path,
         fallback="previous_cycle",
     )
-    assert log["source_cycle_time"] == wcofs_src.cycle_run_time(prev).isoformat()
+    src_r = wcofs_src.cycle_run_time(prev)
+    assert log["source_cycle_time"] == src_r.isoformat()
+    assert log["source_run_time"] == src_r.isoformat()
     assert log["forecast_age_hours"] == 24.0
     assert log["evidence_state_hint"] == "forecast"
     assert log["lead_days"] == 1
     assert float(packaged["forecast_age_hours"].sel(valid_offset_h=0).values) == 24.0
+    assert str(packaged["source_run_time"].sel(valid_offset_h=0).values)[:19] == src_r.strftime(
+        "%Y-%m-%dT%H:%M:%S"
+    )
 
 
 def test_walkback_skips_missing_runs(tmp_path: Path) -> None:
@@ -176,11 +187,18 @@ def test_walkback_skips_missing_runs(tmp_path: Path) -> None:
     assert all(lp.cycle_date == dt.date(2026, 9, 26) for lp in plan.leads)
 
 
+def _three_hour_offsets(start_h: int, end_h: int) -> set[int]:
+    return set(range(start_h, end_h + 1, 3))
+
+
 def test_two_missing_operational_days_walkback_or_unknown() -> None:
     target = dt.date(2026, 9, 28)
+    source_day = dt.date(2026, 9, 26)
+    expected_covered = _three_hour_offsets(-21, 24)
+    expected_unknown = _three_hour_offsets(27, 72)
 
     def exists(d: dt.date) -> bool:
-        return d == dt.date(2026, 9, 26)
+        return d == source_day
 
     plan = build_lead_plan(
         target,
@@ -188,10 +206,127 @@ def test_two_missing_operational_days_walkback_or_unknown() -> None:
         max_missed_cycles=2,
         cycle_exists_fn=exists,
     )
-    assert plan.leads
+    covered_offsets = {lp.valid_offset_h for lp in plan.leads}
+    assert covered_offsets == expected_covered
     unknown = [u for u in plan.unknown_slots if u["reason"] == "missing_operational_cycle"]
-    assert unknown
-    assert any(u["valid_offset_h"] == 72 for u in unknown)
+    assert {u["valid_offset_h"] for u in unknown} == expected_unknown
+    for lp in plan.leads:
+        assert lp.cycle_date == source_day
+        assert lp.fallback == "previous_cycle"
+        assert lp.lead_tag.startswith("f")
+        age_h = lp.valid_offset_h + 48
+        assert age_h == int(lp.lead_tag[1:])
+        assert lp.lead_tag == wcofs_src.lead_tag_for_age_from_source(age_h)
+
+
+def test_two_missed_runs_fallback_source_run_time_in_log_and_zarr(tmp_path: Path) -> None:
+    target = dt.date(2026, 9, 28)
+    source_day = dt.date(2026, 9, 26)
+    source_r = requested_cycle_time(source_day)
+
+    def exists(d: dt.date) -> bool:
+        return d == source_day
+
+    plan = build_lead_plan(
+        target,
+        primary_available=False,
+        max_missed_cycles=2,
+        cycle_exists_fn=exists,
+    )
+    plan.pull_log = tmp_path / "provenance" / "pull.jsonl"
+    payloads = {
+        (lp.cycle_date, lp.lead_tag): write_mini_wcofs_bytes(
+            cycle_date=lp.cycle_date, lead_tag=lp.lead_tag
+        )
+        for lp in plan.leads
+    }
+
+    def fake_get(url: str, **kwargs: Any) -> bytes:  # noqa: ARG001
+        for lp in plan.leads:
+            key = wcofs_src.fields_s3_key(lp.cycle_date, lp.lead_tag)
+            if key in url or lp.lead_tag in url:
+                return payloads[(lp.cycle_date, lp.lead_tag)]
+        raise KeyError(url)
+
+    def fake_head(url: str) -> dict[str, Any]:  # noqa: ARG001
+        return {"status": 200, "etag": "e", "size_bytes": 100}
+
+    slices, failed = fetch_and_log_leads(
+        plan,
+        get_fn=fake_get,
+        head_meta_fn=fake_head,
+        log_path=plan.pull_log,
+        skip_if_etag_matches=False,
+    )
+    assert not failed
+    merged = assemble_merged_dataset(plan, slices)
+    packaged = package_wcofs_cycle(merged, target)
+    for lp in plan.leads:
+        off = lp.valid_offset_h
+        assert float(packaged["forecast_age_hours"].sel(valid_offset_h=off).values) == off + 48
+        assert packaged["evidence_state_hint"].sel(valid_offset_h=off).values == "forecast"
+        run_t = packaged["source_run_time"].sel(valid_offset_h=off).values
+        assert str(run_t)[:19] == source_r.strftime("%Y-%m-%dT%H:%M:%S")
+    log_lines = [
+        json.loads(line) for line in plan.pull_log.read_text(encoding="utf-8").strip().splitlines()
+    ]
+    for rec in log_lines:
+        assert rec["status"] == "ok"
+        assert rec["source_run_time"] == source_r.isoformat()
+        assert rec["fallback_used"] is True
+        assert rec["forecast_age_hours"] == rec["lead_hour"] + 48
+        assert rec["evidence_state_hint"] == "forecast"
+
+
+def test_valid_time_mismatch_skips_zarr_step_and_marks_unknown(tmp_path: Path) -> None:
+    target = dt.date(2026, 9, 28)
+    plan = build_lead_plan(target, primary_available=True, cycle_exists_fn=lambda _d: True)
+    good = next(lp for lp in plan.leads if lp.valid_offset_h == -21)
+    bad = next(lp for lp in plan.leads if lp.valid_offset_h == 3)
+    plan.leads = [good, bad]
+    plan.s3_keys = [
+        wcofs_src.fields_s3_key(lp.cycle_date, lp.lead_tag) for lp in plan.leads
+    ]
+    log_path = tmp_path / "pull.jsonl"
+    plan.pull_log = log_path
+    good_bytes = write_mini_wcofs_bytes(cycle_date=target, lead_tag=good.lead_tag)
+    bad_bytes = write_mini_wcofs_bytes(
+        cycle_date=target, lead_tag=bad.lead_tag, valid_time_shift_h=3
+    )
+
+    def fake_get(url: str, **kwargs: Any) -> bytes:  # noqa: ARG001
+        if bad.lead_tag in url:
+            return bad_bytes
+        return good_bytes
+
+    def fake_head(url: str) -> dict[str, Any]:  # noqa: ARG001
+        return {"status": 200, "etag": "x", "size_bytes": 10}
+
+    slices, failed = fetch_and_log_leads(
+        plan,
+        get_fn=fake_get,
+        head_meta_fn=fake_head,
+        log_path=log_path,
+        skip_if_etag_matches=False,
+    )
+    assert len(slices) == 1
+    assert slices[0][0].valid_offset_h == -21
+    assert len(failed) == 1
+    assert failed[0]["valid_offset_h"] == 3
+    assert failed[0]["reason"] == "valid_time_mismatch"
+    assert failed[0]["state"] == "UNKNOWN"
+    assert failed[0]["evidence_state_hint"] == "UNKNOWN"
+    expected = expected_valid_time(target, 3)
+    assert failed[0]["expected_valid_time"] == expected.isoformat()
+    assert "actual_valid_time" in failed[0]
+    err_line = json.loads(log_path.read_text(encoding="utf-8").strip().splitlines()[-1])
+    assert err_line["status"] == "error"
+    assert err_line["reason"] == "valid_time_mismatch"
+    assert err_line["expected_valid_time"] == expected.isoformat()
+    merged = assemble_merged_dataset(plan, slices)
+    packaged = package_wcofs_cycle(merged, target)
+    assert -21 in packaged.valid_offset_h.values
+    assert 3 not in packaged.valid_offset_h.values
 
 
 def test_download_failed_marks_unknown(tmp_path: Path) -> None:
@@ -234,10 +369,11 @@ def test_dry_run_lists_keys_and_request_count(tmp_path: Path) -> None:
 
 def test_idempotent_pull_log_skips_duplicate_etag(tmp_path: Path) -> None:
     target = dt.date(2026, 9, 28)
-    payload = write_mini_wcofs_bytes(cycle_date=target, lead_tag="n024")
     plan = build_lead_plan(target, primary_available=True)
     plan.leads = plan.leads[:1]
     plan.s3_keys = plan.s3_keys[:1]
+    lead = plan.leads[0]
+    payload = write_mini_wcofs_bytes(cycle_date=target, lead_tag=lead.lead_tag)
     log_path = tmp_path / "pull.jsonl"
     plan.pull_log = log_path
 

@@ -19,9 +19,10 @@ def write_mini_wcofs_bytes(
     *,
     cycle_date: dt.date | None = None,
     lead_tag: str = "n024",
+    valid_time_shift_h: int = 0,
 ) -> bytes:
     cycle_date = cycle_date or dt.date(2026, 9, 26)
-    valid = valid_time_for_lead_tag(cycle_date, lead_tag)
+    valid = valid_time_for_lead_tag(cycle_date, lead_tag) + dt.timedelta(hours=valid_time_shift_h)
     epoch = dt.datetime(1970, 1, 1, tzinfo=dt.timezone.utc)
     ocean_seconds = (valid - epoch).total_seconds()
 
