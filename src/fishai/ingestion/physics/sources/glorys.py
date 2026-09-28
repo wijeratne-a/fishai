@@ -33,7 +33,7 @@ ALLOWED_PURPOSES = frozenset({"training", "hindcast"})
 
 
 def _pull_log_path(entry: dict[str, Any]) -> Path:
-    rel = entry.get("pull_log_path") or "data/interim/copernicus_pull_log.jsonl"
+    rel = entry.get("pull_log_path") or "data/provenance/copernicus_pull_log.jsonl"
     path = Path(rel)
     if not path.is_absolute():
         from fishai.ingestion.sources import REPO_ROOT

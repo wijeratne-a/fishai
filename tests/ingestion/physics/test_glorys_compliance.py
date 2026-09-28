@@ -35,6 +35,7 @@ def test_glorys_approved_for_training() -> None:
     assert entry["enabled"] is True
     assert GLORYS_CREDIT_TEXT in entry["attribution"]
     assert GLORYS_DOI in entry["attribution"]
+    assert entry["attribution"].count(GLORYS_CREDIT_TEXT) == 1
 
 
 def test_glorys_refused_for_daily_inference() -> None:
@@ -69,12 +70,14 @@ def test_glorys_attribution_guard_requires_credit_and_doi() -> None:
     require_glorys_attribution(
         {
             "glorys_derived": True,
-            "copernicus_credit": GLORYS_CREDIT_TEXT,
-            "copernicus_doi": GLORYS_DOI,
+            "attribution": (
+                "Generated using E.U. Copernicus Marine Service Information; "
+                "https://doi.org/10.48670/moi-00021"
+            ),
         }
     )
     with pytest.raises(GlorysAttributionError):
-        require_glorys_attribution({"glorys_derived": True, "copernicus_credit": "missing"})
+        require_glorys_attribution({"glorys_derived": True, "attribution": "missing"})
 
 
 def test_interp_3m_glorys_and_wcofs_agree_on_linear_profile() -> None:

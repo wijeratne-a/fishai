@@ -78,6 +78,10 @@ def main() -> int:
             errors.append(f"bad_status:{source_id}:{status}")
         if entry.get("enabled") is True and status != "approved":
             errors.append(f"enabled_requires_approved:{source_id}")
+        if entry.get("enabled") is True:
+            attr = entry.get("attribution")
+            if not attr or not str(attr).strip():
+                errors.append(f"missing_attribution:{source_id}")
     for path in source_modules():
         rel_mod = module_path_from_file(path)
         if rel_mod not in manifest_modules:

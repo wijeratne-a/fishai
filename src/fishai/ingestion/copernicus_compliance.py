@@ -12,7 +12,7 @@ REPO_ROOT = Path(__file__).resolve().parents[2]
 GLORYS_CREDIT_TEXT = "Generated using E.U. Copernicus Marine Service Information"
 GLORYS_DOI = "10.48670/moi-00021"
 
-DEFAULT_PULL_LOG = REPO_ROOT / "data" / "interim" / "copernicus_pull_log.jsonl"
+DEFAULT_PULL_LOG = REPO_ROOT / "data" / "provenance" / "copernicus_pull_log.jsonl"
 
 
 class GlorysAttributionError(RuntimeError):
@@ -20,33 +20,25 @@ class GlorysAttributionError(RuntimeError):
 
 
 def glorys_attribution_bundle(entry: dict[str, Any]) -> dict[str, str]:
-    """Build required attribution fields from a SOURCES.yaml entry."""
-    credit = str(entry.get("copernicus_credit") or GLORYS_CREDIT_TEXT).strip()
-    doi = str(entry.get("copernicus_doi") or GLORYS_DOI).strip()
+    """Return the single manifest ``attribution`` string for GLORYS exports."""
     text = str(entry.get("attribution") or "").strip()
-    return {
-        "attribution": text,
-        "copernicus_credit": credit,
-        "copernicus_doi": doi,
-    }
+    return {"attribution": text}
 
 
 def require_glorys_attribution(metadata: dict[str, Any]) -> None:
     """
     Fail closed before rendering/exporting GLORYS-derived products.
 
-    Any map layer, metadata export, or published artifact that includes GLORYS
-    data must carry the mandated credit line and DOI.
+    Validates the single ``attribution`` field contains both the mandated credit
+    sentence and DOI (no separate duplicate fields required at export time).
     """
     if not metadata.get("glorys_derived"):
         return
-    credit = str(metadata.get("copernicus_credit") or metadata.get("attribution") or "")
-    doi = str(metadata.get("copernicus_doi") or "")
-    combined = f"{credit} {doi} {metadata.get('attribution', '')}"
-    if GLORYS_CREDIT_TEXT not in credit and GLORYS_CREDIT_TEXT not in combined:
-        raise GlorysAttributionError(f"missing Copernicus credit: {GLORYS_CREDIT_TEXT!r}")
-    if GLORYS_DOI not in doi and GLORYS_DOI not in combined:
-        raise GlorysAttributionError(f"missing Copernicus DOI: {GLORYS_DOI!r}")
+    text = str(metadata.get("attribution") or "").strip()
+    if GLORYS_CREDIT_TEXT not in text:
+        raise GlorysAttributionError(f"missing Copernicus credit in attribution: {GLORYS_CREDIT_TEXT!r}")
+    if GLORYS_DOI not in text:
+        raise GlorysAttributionError(f"missing Copernicus DOI in attribution: {GLORYS_DOI!r}")
 
 
 def append_pull_log(

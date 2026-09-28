@@ -26,7 +26,7 @@ sources:
     endpoint_family: NOAA WCOFS public S3
     license: U.S. Government Work
     license_url: https://www.noaa.gov/information-technology/foia
-    attribution: "NOAA National Ocean Service WCOFS; cite model run and retrieval time."
+    attribution: "NOAA NOS CO-OPS West Coast Operational Forecast System (WCOFS)"
     status: approved
     enabled: true
 
@@ -35,8 +35,7 @@ sources:
     product: cmems_mod_glo_phy_my_0.083deg_P1D-m
     license: Copernicus Marine Service
     license_url: https://marine.copernicus.eu/
-    attribution: "Generated using E.U. Copernicus Marine Service Information; DOI 10.48670/moi-00021 (GLORYS12V1)."
-    copernicus_credit: "Generated using E.U. Copernicus Marine Service Information"
+    attribution: "Generated using E.U. Copernicus Marine Service Information; https://doi.org/10.48670/moi-00021"
     copernicus_doi: "10.48670/moi-00021"
     product_doi_label: GLORYS12V1
     status: approved
@@ -45,7 +44,7 @@ sources:
     product_time_start: 1993-01-01
     product_time_end: 2026-06-23
     variables: [thetao, so, bottomT, mlotst, uo, vo, zos]
-    pull_log_path: data/interim/copernicus_pull_log.jsonl
+    pull_log_path: data/provenance/copernicus_pull_log.jsonl
     credentials_policy: personal_non_transferable_runtime_only
     use:
       allowed_purposes: [training, hindcast]
@@ -58,7 +57,7 @@ sources:
     provider: NASA JPL MUR via NOAA CoastWatch ERDDAP
     license: U.S. Government Work
     license_url: https://www.jpl.nasa.gov/jpl-image-use-policy
-    attribution: "NASA JPL MUR SST; cite JPL MUR and CoastWatch ERDDAP retrieval."
+    attribution: "These data were provided by JPL under support by NASA MEaSUREs program."
     status: approved
     enabled: true
 
@@ -68,7 +67,7 @@ sources:
     provider: NOAA Geo-Polar Blended SST via CoastWatch ERDDAP
     license: U.S. Government Work
     license_url: https://www.noaa.gov/information-technology/foia
-    attribution: "NOAA blended day+night SST; cite CoastWatch ERDDAP noaacwBLENDEDsstDNDaily."
+    attribution: "NOAA/NESDIS; Office of Satellite Products and Operations"
     status: approved
     enabled: true
 
@@ -78,7 +77,7 @@ sources:
     provider: RSS CCMP via NOAA PIFSC ERDDAP
     license: U.S. Government Work
     license_url: https://www.noaa.gov/information-technology/foia
-    attribution: "RSS CCMP v2.1 NRT winds; cite PIFSC ERDDAP ccmp-daily-v2-1-NRT."
+    attribution: "Remote Sensing Systems"
     status: approved
     enabled: true
 
@@ -88,7 +87,7 @@ sources:
     provider: NCEP GFS 10 m wind via PacIOOS ERDDAP
     license: U.S. Government Work
     license_url: https://www.noaa.gov/information-technology/foia
-    attribution: "NCEP global wind; cite PacIOOS ERDDAP ncep_global."
+    attribution: "NOAA National Centers for Environmental Prediction (NCEP)"
     status: approved
     enabled: true
 

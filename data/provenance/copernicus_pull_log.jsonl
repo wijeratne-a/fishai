@@ -1,0 +1,1 @@
+{"_schema":"copernicus_pull_log_v1","append_only":true,"notes":"One JSON object per Copernicus request; no credentials or usernames."}
