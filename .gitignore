@@ -26,6 +26,7 @@ data/provenance/wcofs_pull_*.jsonl
 # Data trees (never commit raw/processed survey or grid files)
 data/raw/
 data/processed/
+data/cache/
 data/interim/
 data/restricted/
 data/quarantine/*

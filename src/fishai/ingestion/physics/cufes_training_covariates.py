@@ -52,9 +52,20 @@ from fishai.ingestion.physics.features import (
     sst_gradient,
     upwelling_covariate_metadata,
 )
+from fishai.ingestion.physics.glorys_cufes_subset import (
+    TRAINING_SUBSET_DEPTH_MAX_M,
+    TRAINING_SUBSET_DEPTH_MIN_M,
+    TRAINING_SUBSET_VARIABLES,
+    assert_copernicus_env_credentials,
+    cache_byte_total,
+    enforce_subset_request_budget,
+    populate_store_days_from_cache,
+    product_date_coverage,
+    subset_nc_path,
+)
 from fishai.ingestion.physics.sources.glorys import (
-    VARIABLES,
     glorys_column_features,
+    glorys_dataset_id_for_date,
     glorys_product_for_date,
 )
 from fishai.ingestion.physics.wcofs_glorys_overlap import (
@@ -271,7 +282,7 @@ def plan_glorys_subset_batches(
     days: Sequence[dt.date],
     *,
     bbox: tuple[float, float, float, float] = PILOT_BBOX,
-    variables: tuple[str, ...] = VARIABLES,
+    variables: tuple[str, ...] = TRAINING_SUBSET_VARIABLES,
 ) -> list[GlorysSubsetBatch]:
     """Group unique event days into monthly Copernicus subset requests per dataset id."""
     by_key: dict[tuple[str, int, int], list[dt.date]] = defaultdict(list)
@@ -281,6 +292,7 @@ def plan_glorys_subset_batches(
     batches: list[GlorysSubsetBatch] = []
     for (product_id, _year, _month), month_days in sorted(by_key.items()):
         month_days = sorted(month_days)
+        glorys_dataset_id_for_date(month_days[0], product_id)
         batches.append(
             GlorysSubsetBatch(
                 dataset_id=product_id,
@@ -560,9 +572,8 @@ def _subset_batch_live(
         raise RuntimeError("copernicusmarine package required for live GLORYS subset") from exc
 
     output_dir.mkdir(parents=True, exist_ok=True)
-    out_file = output_dir / (
-        f"{batch.dataset_id}_{batch.date_start.isoformat()}_{batch.date_end.isoformat()}.nc"
-    )
+    out_file = subset_nc_path(output_dir, batch)
+    glorys_dataset_id_for_date(batch.date_start, batch.dataset_id)
     la0, la1, lo0, lo1 = batch.bbox
     copernicusmarine.subset(
         dataset_id=batch.dataset_id,
@@ -571,6 +582,8 @@ def _subset_batch_live(
         maximum_latitude=la1,
         minimum_longitude=lo0,
         maximum_longitude=lo1,
+        minimum_depth=TRAINING_SUBSET_DEPTH_MIN_M,
+        maximum_depth=TRAINING_SUBSET_DEPTH_MAX_M,
         start_datetime=f"{batch.date_start.isoformat()}T00:00:00",
         end_datetime=f"{batch.date_end.isoformat()}T23:59:59",
         output_filename=str(out_file),
@@ -680,9 +693,12 @@ def run_build_cufes_training_covariates(
         ],
     }
     if dry_run:
+        result["glorys_product_coverage"] = product_date_coverage(days)
         return result
 
+    enforce_subset_request_budget(batches)
     if subset_fn is None:
+        assert_copernicus_env_credentials()
         cfg_logs = load_overlap_config()
         log_path = REPO_ROOT / str(cfg_logs["pull_logs"]["glorys"])
 
@@ -700,16 +716,20 @@ def run_build_cufes_training_covariates(
         wcofs_h_m=np.full((nj, ni), 500.0),
     )
     cache_dir = REPO_ROOT / "data" / "cache" / "glorys_cufes"
+    cache_dir.mkdir(parents=True, exist_ok=True)
 
-    with ThreadPoolExecutor(max_workers=max_concurrent) as pool:
+    with ThreadPoolExecutor(max_workers=max(1, min(max_concurrent, 2))) as pool:
         futures = {
             pool.submit(subset_fn, batch, cache_dir): batch for batch in batches
         }
         for fut in as_completed(futures):
             fut.result()
 
-    for day in days:
-        store.days[day] = build_synthetic_day_fields(day, lat, lon)
+    populate_store_days_from_cache(store, days, batches, cache_dir)
+    result["subset_request_count"] = len(batches)
+    result["subset_bytes_downloaded"] = cache_byte_total(cache_dir, batches)
+    result["glorys_product_coverage"] = product_date_coverage(days)
+    result["glorys_cache_dir"] = str(cache_dir)
 
     out_path = output_path or DEFAULT_OUTPUT_PATH
     drops_path = out_path.parent / DEFAULT_DROPS_NAME
@@ -729,6 +749,16 @@ def run_build_cufes_training_covariates(
         store=store,
     )
     result["output_path"] = str(out_path)
+    result["drops_path"] = str(drops_path)
     result["qc"] = qc
     result["bottom_depth_qc"] = floor_qc
+    excluded = table[table["excluded"]]
+    result["excluded_row_count"] = int(len(excluded))
+    if not excluded.empty:
+        result["excluded_reasons"] = (
+            excluded.groupby("excluded_reason")["event_id"]
+            .count()
+            .astype(int)
+            .to_dict()
+        )
     return result
