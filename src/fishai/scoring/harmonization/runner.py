@@ -12,7 +12,7 @@ import numpy as np
 import pandas as pd
 
 from fishai.evaluation.harmonization_prereg import DEFAULT_PREREG_PATH, load_harmonization_prereg
-from fishai.ingestion.physics.sources.glorys import glorys_dataset_id_for_date
+from fishai.ingestion.physics.sources.glorys import glorys_product_for_date
 from fishai.scoring.harmonization.forecast_age import (
     assert_not_grouped_by_valid_offset_h,
     enrich_pairing_forecast_metadata,
@@ -185,14 +185,14 @@ def run_holdout_scoring(
     test_end = _config_date(split["test_end"])
     block_days = int(block["metrics"]["reporting"]["block_bootstrap_block_days"])
     cutoffs = cutoffs_from_prereg(doc)
-    seed = int(cutoffs["bootstrap_seed"])
     prereg_commit = prereg_file_commit(prereg_file)
     prereg_sha = prereg_file_sha256(prereg_file)
+    seed = int(prereg_sha[:8], 16) % (2**31 - 1)
     overlap_cfg = load_overlap_config()
     glorys_product_selection = {
-        "resolver": f"{glorys_dataset_id_for_date.__module__}.{glorys_dataset_id_for_date.__name__}",
-        "test_start_product_id": glorys_dataset_id_for_date(test_start, None, config=overlap_cfg),
-        "test_end_product_id": glorys_dataset_id_for_date(test_end, None, config=overlap_cfg),
+        "resolver": f"{glorys_product_for_date.__module__}.{glorys_product_for_date.__name__}",
+        "test_start_product_id": glorys_product_for_date(test_start, config=overlap_cfg),
+        "test_end_product_id": glorys_product_for_date(test_end, config=overlap_cfg),
     }
 
     if verify_map:

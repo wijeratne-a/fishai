@@ -39,7 +39,6 @@ CUTOFFS = {
     "min_buoys": 3,
     "input_rmse_pass_fraction_glorys_sd": 0.5,
     "input_rmse_degraded_fraction_glorys_sd": 1.0,
-    "bootstrap_seed": 42,
 }
 
 
