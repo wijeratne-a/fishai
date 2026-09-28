@@ -1,0 +1,22 @@
+# Minimal protocol for unit tests (single species, intercept-only fits).
+short_sample_sensitivity:
+  prereg_doc: docs/prereg/short_sample_refit.md
+  prereg_doc_git_path: docs/prereg/short_sample_refit.md
+  reduced_fit_min_duration_min: 5
+  full_fit_min_duration_min: 2
+  cv_eval_min_duration_min: 5
+  coefficient_check:
+    wald_confidence: 0.95
+  cv_check:
+    margin_se_fold_diff: 1.0
+    metrics:
+      - mean_log_score
+      - boyce_index
+  revert_on_fail:
+    duration_minutes: 10
+  species:
+    - label: sardine
+      model_config: configs/models/cufes_sardine.yaml
+  output:
+    report_json: artifacts/sensitivity/test_short_sample_report.json
+    pass_fail_csv: artifacts/sensitivity/test_short_sample_pass_fail.csv

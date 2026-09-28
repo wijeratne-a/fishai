@@ -53,6 +53,16 @@ def main(argv: list[str] | None = None) -> int:
         help="Frozen/fit RDS artifact",
     )
 
+    sens = sub.add_parser(
+        "sensitivity-short-samples",
+        help="Run pre-registered short-sample duration refit pass/fail tests",
+    )
+    sens.add_argument(
+        "--protocol",
+        default=str(REPO_ROOT / "configs/sensitivity_short_samples.yaml"),
+        help="Pre-registered sensitivity protocol YAML",
+    )
+
     ns = parser.parse_args(argv)
 
     def _r_args(config: str, min_duration_min: float | None) -> list[str]:
@@ -67,6 +77,8 @@ def main(argv: list[str] | None = None) -> int:
         return _run_r("cv.R", _r_args(ns.config, ns.min_duration_min))
     if ns.command == "predict":
         return _run_r("predict.R", [ns.config, ns.artifact])
+    if ns.command == "sensitivity-short-samples":
+        return _run_r("short_sample_sensitivity.R", [ns.protocol])
     return 1
 
 
