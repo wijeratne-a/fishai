@@ -92,6 +92,14 @@ def test_coverage_report_written_on_overlap_run(tmp_path: Path) -> None:
         wcofs_open=wcofs_open,
         glorys_fetch=glorys_fetch,
     )
+    glorys_log_path = tmp_path / "copernicus_pull_log.jsonl"
+    glorys_lines = glorys_log_path.read_text(encoding="utf-8").strip().splitlines()
+    assert len(glorys_lines) == 1
+    glorys_pull = json.loads(glorys_lines[0])
+    assert glorys_pull["dataset_version"] == "202311"
+    assert glorys_pull["catalog_coverage"]["start"] == "1993-01-01"
+    assert glorys_pull["catalog_coverage"]["end"] == "2026-06-23"
+
     report_path = tmp_path / "coverage_report.json"
     assert report_path.is_file()
     report = json.loads(report_path.read_text(encoding="utf-8"))

@@ -8,32 +8,28 @@ from typing import Any, Callable
 
 import numpy as np
 
-from fishai.ingestion.copernicus_compliance import (
-    append_pull_log,
-    build_pull_record,
-    glorys_attribution_bundle,
+from fishai.ingestion.copernicus_compliance import glorys_attribution_bundle
+from fishai.ingestion.physics.glorys_catalog import (
+    guard_glorys_version_before_fetch,
+    resolve_glorys_dataset_for_date,
+    write_glorys_pull_log_record,
 )
 from fishai.ingestion.physics.vertical import (
     CUFES_SAMPLE_DEPTH_M,
     interp_at_depth_from_z_levels,
     mld,
 )
-from fishai.ingestion.sources import SourceNotApprovedError, get_source_entry, require_approved
+from fishai.ingestion.sources import SourceNotApprovedError, require_approved
 
 SOURCE_MODULE = "glorys"
 
 PRODUCT_ID_MY = "cmems_mod_glo_phy_my_0.083deg_P1D-m"
-PRODUCT_ID_MYINT = "cmems_mod_glo_phy_myint_0.083deg_P1D-m"
-# Back-compat alias for interim-era default (use ``glorys_product_for_date`` for pulls).
-PRODUCT_ID = PRODUCT_ID_MYINT
 
 MY_PRODUCT_START = dt.date(1993, 1, 1)
-MY_PRODUCT_END = dt.date(2021, 6, 30)
-MYINT_PRODUCT_START = dt.date(2021, 7, 1)
-MYINT_PRODUCT_END_DEFAULT = dt.date(2026, 6, 23)
+MY_COVERAGE_END_DEFAULT = dt.date(2026, 6, 23)
 
 PRODUCT_TIME_START = MY_PRODUCT_START
-PRODUCT_TIME_END = MYINT_PRODUCT_END_DEFAULT
+PRODUCT_TIME_END = MY_COVERAGE_END_DEFAULT
 LICENSE_VALID_UNTIL = dt.date(2028, 6, 30)
 
 VARIABLES = ("thetao", "so", "bottomT", "mlotst", "uo", "vo", "zos")
@@ -47,26 +43,6 @@ def _config_date(value: Any) -> dt.date:
     return dt.date.fromisoformat(str(value))
 
 
-def myint_product_end(config: dict[str, Any] | None = None) -> dt.date:
-    """Last calendar day covered by the MYINT product (from config or SOURCES default)."""
-    if config is not None:
-        glorys_cfg = config.get("glorys") or {}
-        if "product_time_end" in glorys_cfg:
-            return _config_date(glorys_cfg["product_time_end"])
-        products = glorys_cfg.get("products") or {}
-        myint = products.get("myint") or {}
-        if "date_end" in myint:
-            return _config_date(myint["date_end"])
-    entry = get_source_entry("glorys")
-    products = entry.get("products") or {}
-    myint = products.get("myint") or {}
-    if "date_end" in myint:
-        return _config_date(myint["date_end"])
-    if "product_time_end" in entry:
-        return _config_date(entry["product_time_end"])
-    return MYINT_PRODUCT_END_DEFAULT
-
-
 def glorys_product_for_date(
     date: dt.date,
     *,
@@ -75,21 +51,16 @@ def glorys_product_for_date(
     """
     Copernicus Marine GLORYS12 dataset id for ``date``.
 
-    Returns the finished reanalysis (``my``) through 2021-06-30 inclusive and the
-    interim product (``myint``) from 2021-07-01 through the configured MYINT end.
+    Resolved from the live Copernicus Marine catalogue time coverage (cached per run).
+    Raises ``GlorysCatalogError`` with a ``reason_code`` when the catalogue cannot be
+    used or no dataset covers ``date``.
     """
-    myint_end = myint_product_end(config)
+    del config  # catalogue coverage is authoritative; config retained for call-site compat
     if date < MY_PRODUCT_START:
         raise ValueError(
             f"glorys: date {date} is before {MY_PRODUCT_START} (my product start)"
         )
-    if date > myint_end:
-        raise ValueError(
-            f"glorys: date {date} is after myint coverage end {myint_end}"
-        )
-    if date <= MY_PRODUCT_END:
-        return PRODUCT_ID_MY
-    return PRODUCT_ID_MYINT
+    return resolve_glorys_dataset_for_date(date).dataset_id
 
 
 def glorys_dataset_id_for_date(
@@ -158,22 +129,22 @@ def fetch_day(
     if dt.date.today() > LICENSE_VALID_UNTIL:
         raise SourceNotApprovedError("glorys: licence validity ended")
 
-    ds_id = glorys_dataset_id_for_date(date, dataset_id, config=config)
-    record = build_pull_record(
-        dataset_id=ds_id,
-        date_start=date.isoformat(),
-        date_end=date.isoformat(),
-        variables=variables,
-        bbox=bbox,
-        request_count=1,
-    )
-    append_pull_log(record, log_path=log_path or _pull_log_path(entry))
+    glorys_dataset_id_for_date(date, dataset_id, config=config)
+    pull_log = log_path or _pull_log_path(entry)
+    resolution = guard_glorys_version_before_fetch(date, log_path=pull_log)
 
     if fetch_fn is None:
         raise RuntimeError(
             "glorys: live Copernicus client not invoked from unit tests; inject fetch_fn"
         )
     payload = fetch_fn()
+    write_glorys_pull_log_record(
+        date,
+        resolution,
+        variables=variables,
+        bbox=bbox,
+        log_path=pull_log,
+    )
     attrs = glorys_attribution_bundle(entry)
     if isinstance(payload, dict):
         payload.setdefault("metadata", {}).update(attrs)
