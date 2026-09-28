@@ -158,7 +158,7 @@ def test_scoring_entry_point_raises_while_placeholders_unset() -> None:
     doc = load_harmonization_prereg(PREREG)
     with pytest.raises(HarmonizationPreregNotReadyError, match="unset prereg fields"):
         assert_harmonization_prereg_ready_for_scoring(doc)
-    with pytest.raises(HarmonizationPreregNotReadyError, match="shoreline_sha256"):
+    with pytest.raises(HarmonizationPreregNotReadyError, match="shoreline_simplification_check"):
         run_harmonization_scoring(PREREG)
 
 
@@ -174,19 +174,20 @@ def test_nearshore_bot2_pr7_fields_and_pending_placeholders() -> None:
     assert near["shoreline_path"] == "data/reference/shoreline/ne_10m_land_pilot_clip.json"
     assert near["cutoff_km"] == 20
     assert "Geodesic on WGS84" in near["distance"]
-    assert near["shoreline_sha256"] == PLACEHOLDER_TOKEN
+    sha = near["shoreline_sha256"]
+    assert sha.startswith("2f677a16") and sha.endswith("0996c")
+    assert near["shoreline_sha256_provisional"] is True
+    assert "Natural Earth 10 m land" in near["shoreline_simplification_note"]
     assert near["shoreline_simplification_check"] == PLACEHOLDER_TOKEN
 
 
 def test_scoring_entry_point_passes_gate_when_placeholders_replaced(tmp_path: Path) -> None:
     doc = load_harmonization_prereg(PREREG)
     block = yaml.safe_load(yaml.dump(doc))["harmonization_wcofs_glorys"]
-    block["nearshore"]["shoreline_sha256"] = "deadbeef"
     block["nearshore"]["shoreline_simplification_check"] = {
         "max_coastline_displacement_m": 0.0,
         "nearshore_flag_diff_cell_count": 0,
     }
-    block["pass_fail_thresholds"]["cutoffs"] = {"auditbot1": "v1-placeholder-not-gating"}
     patched = {"schema_version": 1, "harmonization_wcofs_glorys": block}
     path = tmp_path / "prereg.yaml"
     path.write_text(yaml.dump(patched), encoding="utf-8")
@@ -198,6 +199,50 @@ def test_scoring_entry_point_passes_gate_when_placeholders_replaced(tmp_path: Pa
 def test_committed_prereg_still_has_expected_placeholders() -> None:
     doc = load_harmonization_prereg(PREREG)
     near = doc["harmonization_wcofs_glorys"]["nearshore"]
-    assert near["shoreline_sha256"] == PLACEHOLDER_TOKEN
     assert near["shoreline_simplification_check"] == PLACEHOLDER_TOKEN
-    assert doc["harmonization_wcofs_glorys"]["pass_fail_thresholds"]["cutoffs"] == PLACEHOLDER_TOKEN
+    assert "pass_fail_thresholds" not in doc["harmonization_wcofs_glorys"]
+
+
+def test_nowcast_forcing_grading_blocks() -> None:
+    doc = load_harmonization_prereg(PREREG)
+    block = doc["harmonization_wcofs_glorys"]
+    assert block["models_scored"]["graded_model_row_for_forcing_gate"] == "wcofs_coarsened_mapped"
+    grading = block["nowcast_forcing_grading"]
+    assert grading["graded_model_row"] == "wcofs_coarsened_mapped"
+    assert grading["verdict_rank_worst_first"][0] == "UNKNOWN"
+    buoy = grading["buoy_gate"]
+    assert buoy["rmse_ratio_to_glorys"]["pass"]["ratio_max"] == 1.2
+    assert buoy["fail_outcome"]["reason"] == "nowcast_forcing_failed_holdout"
+    inputs = grading["graded_inputs_gate"]
+    assert len(inputs["graded_variable_names"]) == 5
+    assert inputs["rmse_vs_glorys_sd"]["pass_max_multiple"] == 0.5
+    combo = grading["combination_rules"]
+    assert combo["no_gradable_independent_check"]["reason"] == "no_independent_obs_check"
+    maps = block["map_product_labeling"]
+    assert "spawning habitat" in maps["forbidden_labels"]
+
+
+def test_buoy_and_glider_forcing_gate_observations() -> None:
+    doc = load_harmonization_prereg(PREREG)
+    obs = doc["harmonization_wcofs_glorys"]["observations"]
+    gate = obs["ndbc_hull_temperature"]["forcing_gate"]
+    assert gate["grades_model_row"] == "wcofs_coarsened_mapped"
+    assert gate["gradability"]["min_matched_daily_values"] == 100
+    radar = obs["sccoos_hf_radar"]
+    assert radar["forcing_gate_role"] == "report_only"
+    gliders = obs["scripps_spray_gliders"]
+    assert {d["id"] for d in gliders["datasets"]} == {"binnedCUGN80", "binnedCUGN90"}
+    assert gliders["forcing_gate"]["never_grades_model_rows"] == ["glorys"]
+    assert gliders["mld_definition"]["function"] == "mld"
+
+
+def test_upwelling_lags_and_shared_forcing_variable() -> None:
+    doc = load_harmonization_prereg(PREREG)
+    lags = doc["harmonization_wcofs_glorys"]["upwelling_lags"]
+    days = [c["trailing_mean_days"] for c in lags["candidates"]]
+    assert days == [0, 7, 14, 28]
+    assert lags["selection"]["fit_split_end"] == "2017-12-31"
+    assert lags["selection"]["never_reselect_after_freeze"] is True
+    vars_by_name = {v["name"]: v for v in doc["harmonization_wcofs_glorys"]["variables"]}
+    assert vars_by_name["upwelling"]["role"] == "shared_forcing"
+    assert vars_by_name["upwelling"]["blank_when"]["reason"] == "no_consistent_wind_product"
