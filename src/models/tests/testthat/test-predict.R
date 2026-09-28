@@ -1,5 +1,5 @@
 test_that("predictions mask high OOD and physics FAIL", {
-  cfg <- load_config_yaml(file.path(FISHAI_ROOT, "configs", "models", "cufes_sardine.yaml"))
+  cfg <- load_sardine_test_cfg(intercept_only = TRUE)
   dat <- load_model_data(cfg = cfg)
   ref_cols <- c("temp_3m_z", "sal_3m_z", "mld_z")
   mesh <- build_fishai_mesh(dat, cfg$mesh)

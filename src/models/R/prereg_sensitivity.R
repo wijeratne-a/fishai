@@ -18,12 +18,32 @@ load_short_sample_protocol <- function(path = NULL) {
 #' Git object name for the prereg markdown at HEAD (recorded in run metadata).
 #' @export
 prereg_commit_sha <- function(git_path, repo_root = NULL) {
+  for (env_nm in c("PREREG_COMMIT_SHA", "GIT_SHA", "GITHUB_SHA")) {
+    sha <- trimws(Sys.getenv(env_nm, unset = ""))
+    if (nzchar(sha) && grepl("^[0-9a-fA-F]{5,40}$", sha)) {
+      return(tolower(sha))
+    }
+  }
   repo_root <- repo_root %||% Sys.getenv("FISHAI_ROOT", unset = normalizePath(getwd()))
   git_path <- gsub("^\\./", "", git_path)
+  git_dir <- file.path(repo_root, ".git")
+  if (!dir.exists(git_dir)) {
+    stop(
+      "could not resolve prereg_commit_sha for ",
+      git_path,
+      "; set PREREG_COMMIT_SHA or GIT_SHA (CI should pass github.sha into docker-r)",
+      call. = FALSE
+    )
+  }
   cmd <- paste("git", "-C", shQuote(repo_root), "rev-parse", shQuote(paste0("HEAD:", git_path)))
   sha <- tryCatch(trimws(system(cmd, intern = TRUE, ignore.stderr = TRUE)), error = function(e) character())
   if (length(sha) != 1L || !nzchar(sha) || grepl("fatal", sha)) {
-    stop("could not resolve prereg_commit_sha for ", git_path, call. = FALSE)
+    stop(
+      "could not resolve prereg_commit_sha for ",
+      git_path,
+      "; set PREREG_COMMIT_SHA or GIT_SHA when git rev-parse is unavailable",
+      call. = FALSE
+    )
   }
   sha
 }

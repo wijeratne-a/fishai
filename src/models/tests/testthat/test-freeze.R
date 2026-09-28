@@ -1,7 +1,7 @@
 test_that("frozen model scores once", {
   td <- tempfile()
   dir.create(td)
-  cfg <- load_config_yaml(file.path(FISHAI_ROOT, "configs", "models", "cufes_sardine.yaml"))
+  cfg <- load_sardine_test_cfg(intercept_only = TRUE)
   dat <- load_model_data(cfg = cfg)
   mesh <- build_fishai_mesh(dat, cfg$mesh)
   fit <- fit_delta_engine(dat, mesh, cfg)
@@ -17,7 +17,7 @@ test_that("frozen model scores once", {
 test_that("freeze records covariate join drop shares when drop table configured", {
   td <- tempfile()
   dir.create(td)
-  cfg <- load_config_yaml(file.path(FISHAI_ROOT, "configs", "models", "cufes_sardine.yaml"))
+  cfg <- load_sardine_test_cfg(intercept_only = TRUE)
   cfg$data$covariate_drops_path <- file.path(
     FISHAI_ROOT,
     "src",
@@ -43,7 +43,7 @@ test_that("freeze records covariate join drop shares when drop table configured"
 test_that("covariate drop table must reference known cufes_events ids", {
   td <- tempfile()
   dir.create(td)
-  cfg <- load_config_yaml(file.path(FISHAI_ROOT, "configs", "models", "cufes_sardine.yaml"))
+  cfg <- load_sardine_test_cfg(intercept_only = TRUE)
   cfg$data$covariate_drops_path <- file.path(
     FISHAI_ROOT,
     "src",

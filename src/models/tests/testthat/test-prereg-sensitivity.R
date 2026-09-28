@@ -16,6 +16,22 @@ test_that("prereg_commit_sha resolves for prereg markdown", {
   expect_match(sha, "^[0-9a-f]{5,40}$")
 })
 
+test_that("prereg_commit_sha uses env when git checkout is unavailable", {
+  old <- Sys.getenv("PREREG_COMMIT_SHA", unset = NA_character_)
+  on.exit({
+    if (is.na(old)) {
+      Sys.unsetenv("PREREG_COMMIT_SHA")
+    } else {
+      Sys.setenv(PREREG_COMMIT_SHA = old)
+    }
+  }, add = TRUE)
+  Sys.setenv(PREREG_COMMIT_SHA = "abc123def4567890abcd")
+  nogit <- tempfile()
+  dir.create(nogit)
+  sha <- prereg_commit_sha("docs/prereg/short_sample_refit.md", repo_root = nogit)
+  expect_equal(sha, "abc123def4567890abcd")
+})
+
 test_that("missing count row species framing excludes taxon without zero imputation", {
   ev <- tempfile(fileext = ".csv")
   ct <- tempfile(fileext = ".csv")

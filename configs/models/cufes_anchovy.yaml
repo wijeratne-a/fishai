@@ -56,7 +56,7 @@ fishai_engine_config:
       formula: "~ 1"
       type: rw0
   mesh:
-    cutoff_km: 9
+    cutoff_km: 18
     range_guess_km: 60
     barrier:
       enabled: false

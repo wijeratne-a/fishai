@@ -60,7 +60,7 @@ fishai_engine_config:
         range_gt_mult_max_edge: 2
         sigma_lt: 2
   mesh:
-    cutoff_km: 9
+    cutoff_km: 18
     range_guess_km: 60
     barrier:
       enabled: false

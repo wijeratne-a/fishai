@@ -25,6 +25,9 @@ test_that("encounter probability rises with volume under poisson-link offset", {
 
 test_that("freeze stores median reference_volume_m3 from training QC data", {
   cfg <- load_config_yaml(file.path(FISHAI_ROOT, "configs", "models", "cufes_sardine.yaml"))
+  cfg$model$formula_shared <- "~ 1"
+  cfg$model$spatial <- list("off", "off")
+  cfg$model$spatiotemporal <- list("off", "off")
   dat <- load_model_data(cfg = cfg)
   mesh <- build_fishai_mesh(dat, cfg$mesh)
   fit <- fit_delta_engine(dat, mesh, cfg)
@@ -39,6 +42,9 @@ test_that("freeze stores median reference_volume_m3 from training QC data", {
 
 test_that("map prediction uses log V_ref offset; events use log(volume_m3)", {
   cfg <- load_config_yaml(file.path(FISHAI_ROOT, "configs", "models", "cufes_sardine.yaml"))
+  cfg$model$formula_shared <- "~ 1"
+  cfg$model$spatial <- list("off", "off")
+  cfg$model$spatiotemporal <- list("off", "off")
   dat <- load_model_data(cfg = cfg)
   dat <- dat[seq_len(min(18L, nrow(dat))), ]
   mesh <- build_fishai_mesh(dat, cfg$mesh)
@@ -62,6 +68,9 @@ test_that("map prediction uses log V_ref offset; events use log(volume_m3)", {
 
 test_that("predict_engine refuses without reference_volume_m3", {
   cfg <- load_config_yaml(file.path(FISHAI_ROOT, "configs", "models", "cufes_sardine.yaml"))
+  cfg$model$formula_shared <- "~ 1"
+  cfg$model$spatial <- list("off", "off")
+  cfg$model$spatiotemporal <- list("off", "off")
   dat <- load_model_data(cfg = cfg)
   mesh <- build_fishai_mesh(dat, cfg$mesh)
   fit <- fit_delta_engine(dat, mesh, cfg)
@@ -78,6 +87,9 @@ test_that("predict_engine refuses without reference_volume_m3", {
 
 test_that("predict output records reference volume basis", {
   cfg <- load_config_yaml(file.path(FISHAI_ROOT, "configs", "models", "cufes_sardine.yaml"))
+  cfg$model$formula_shared <- "~ 1"
+  cfg$model$spatial <- list("off", "off")
+  cfg$model$spatiotemporal <- list("off", "off")
   dat <- load_model_data(cfg = cfg)
   ref_cols <- c("temp_3m_z", "sal_3m_z", "mld_z")
   mesh <- build_fishai_mesh(dat, cfg$mesh)
