@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import math
 from collections.abc import Callable
+from pathlib import Path
 from typing import Any
 
 import numpy as np
@@ -46,8 +47,26 @@ FEATURE_STORE_EXTRA_FIELDS: tuple[str, ...] = (
 MLD_COVARIATE_SOURCE = "computed_temperature_threshold"
 MLDST_FIELD_ROLE = "cross_check_only"
 
-EARTH_RADIUS_KM = 6371.0
+from fishai.ingestion.physics.geo_distance import haversine_km  # noqa: E402
+
 DEFAULT_GRID_CELL_KM = 4.0
+MIN_TRACK_LENGTH_KM = 1e-6
+
+DROP_REASON_LAND_MASK = "land_mask"
+DROP_REASON_MISSING_COVARIATE = "missing_covariate"
+DROP_REASON_TOO_FEW_TRACK_POINTS = "too_few_track_points"
+DROP_REASON_MISSING_ENDPOINT = "missing_endpoint"
+
+DROP_TABLE_COLUMNS: tuple[str, ...] = (
+    "event_id",
+    "reason",
+    "covariate",
+    "latitude",
+    "longitude",
+)
+
+# Optional per-sample flag from ``field_sampler`` (not a model covariate).
+SAMPLER_LAND_MASK_KEY = "land_mask"
 
 
 class CufesEventValidationError(ValueError):
@@ -68,12 +87,12 @@ def validate_cufes_events(events: pd.DataFrame) -> None:
         raise CufesEventValidationError(f"duplicate event_id values: {dupes[:5]}")
 
 
-def haversine_km(lat1: float, lon1: float, lat2: float, lon2: float) -> float:
-    p1, p2 = math.radians(lat1), math.radians(lat2)
-    dphi = math.radians(lat2 - lat1)
-    dlam = math.radians(lon2 - lon1)
-    hav = math.sin(dphi / 2) ** 2 + math.cos(p1) * math.cos(p2) * math.sin(dlam / 2) ** 2
-    return 2 * EARTH_RADIUS_KM * math.asin(min(1.0, math.sqrt(hav)))
+def event_midpoint_lat_lon(event: pd.Series) -> tuple[float, float]:
+    if not endpoints_present(event):
+        return float("nan"), float("nan")
+    lat = (float(event[COL_START_LAT]) + float(event[COL_STOP_LAT])) / 2.0
+    lon = (float(event[COL_START_LON]) + float(event[COL_STOP_LON])) / 2.0
+    return lat, lon
 
 
 def _gc_point(lat1: float, lon1: float, lat2: float, lon2: float, frac: float) -> tuple[float, float]:
@@ -141,17 +160,30 @@ def mean_covariates_along_segment(
     field_sampler: Callable[[float, float, pd.Timestamp], dict[str, Any]],
     *,
     grid_cell_km: float = DEFAULT_GRID_CELL_KM,
-) -> dict[str, float]:
-    """Mean of gridded covariates sampled along the tow great-circle segment at mid-time."""
+) -> tuple[dict[str, float], list[str]]:
+    """
+    Mean of gridded covariates along the tow segment at mid-time.
+
+    Returns covariate values and segment-level drop reason codes (may be empty).
+    """
     if not endpoints_present(event):
-        return {field: float("nan") for field in CUFES_COVARIATE_FIELDS}
+        return {field: float("nan") for field in CUFES_COVARIATE_FIELDS}, []
     lat0, lon0 = float(event[COL_START_LAT]), float(event[COL_START_LON])
     lat1, lon1 = float(event[COL_STOP_LAT]), float(event[COL_STOP_LON])
+    segment_reasons: list[str] = []
+    dist_km = haversine_km(lat0, lon0, lat1, lon1)
+    if dist_km < MIN_TRACK_LENGTH_KM:
+        segment_reasons.append(DROP_REASON_TOO_FEW_TRACK_POINTS)
     mid_t = event_mid_time(event)
     points = great_circle_sample_points(lat0, lon0, lat1, lon1, grid_cell_km=grid_cell_km)
+    if len(points) < 3:
+        segment_reasons.append(DROP_REASON_TOO_FEW_TRACK_POINTS)
     stacks: dict[str, list[float]] = {f: [] for f in CUFES_COVARIATE_FIELDS}
     for lat, lon in points:
         sampled = field_sampler(lat, lon, mid_t)
+        if sampled.get(SAMPLER_LAND_MASK_KEY) is True:
+            if DROP_REASON_LAND_MASK not in segment_reasons:
+                segment_reasons.append(DROP_REASON_LAND_MASK)
         for field in CUFES_COVARIATE_FIELDS:
             val = sampled.get(field, np.nan)
             stacks[field].append(float(val) if val is not None else float("nan"))
@@ -159,7 +191,7 @@ def mean_covariates_along_segment(
     for field, vals in stacks.items():
         arr = np.asarray(vals, dtype=float)
         out[field] = float(np.nanmean(arr)) if np.isfinite(arr).any() else float("nan")
-    return out
+    return out, segment_reasons
 
 
 def missing_covariate_counts(covariates: pd.DataFrame) -> dict[str, int]:
@@ -170,6 +202,19 @@ def missing_covariate_counts(covariates: pd.DataFrame) -> dict[str, int]:
     return counts
 
 
+def _drop_summary(drops: pd.DataFrame) -> dict[str, int]:
+    if drops.empty:
+        return {}
+    return drops.groupby("reason").size().astype(int).to_dict()
+
+
+def write_covariate_drop_table(drops: pd.DataFrame, path: Path) -> Path:
+    path = Path(path)
+    path.parent.mkdir(parents=True, exist_ok=True)
+    drops.to_parquet(path, index=False)
+    return path
+
+
 def join_covariates_to_events(
     events: pd.DataFrame,
     *,
@@ -177,7 +222,8 @@ def join_covariates_to_events(
     source: str,
     provenance: str = "",
     grid_cell_km: float = DEFAULT_GRID_CELL_KM,
-) -> tuple[pd.DataFrame, dict[str, Any]]:
+    drops_parquet_path: Path | None = None,
+) -> tuple[pd.DataFrame, dict[str, Any], pd.DataFrame]:
     """
     One covariate row per input ``event_id``.
 
@@ -187,22 +233,58 @@ def join_covariates_to_events(
     validate_cufes_events(events)
     endpoint_missing = 0
     rows: list[dict[str, Any]] = []
+    drop_rows: list[dict[str, Any]] = []
     for _, event in events.iterrows():
+        mid_lat, mid_lon = event_midpoint_lat_lon(event)
+        eid = event[COL_EVENT_ID]
         if not endpoints_present(event):
             endpoint_missing += 1
             sampled = {field: float("nan") for field in CUFES_COVARIATE_FIELDS}
+            drop_rows.append(
+                {
+                    "event_id": eid,
+                    "reason": DROP_REASON_MISSING_ENDPOINT,
+                    "covariate": None,
+                    "latitude": mid_lat,
+                    "longitude": mid_lon,
+                }
+            )
+            segment_reasons: list[str] = []
         else:
-            sampled = mean_covariates_along_segment(
+            sampled, segment_reasons = mean_covariates_along_segment(
                 event, field_sampler, grid_cell_km=grid_cell_km
             )
-        row: dict[str, Any] = {COL_EVENT_ID: event[COL_EVENT_ID]}
+            for reason in segment_reasons:
+                drop_rows.append(
+                    {
+                        "event_id": eid,
+                        "reason": reason,
+                        "covariate": None,
+                        "latitude": mid_lat,
+                        "longitude": mid_lon,
+                    }
+                )
+        row: dict[str, Any] = {COL_EVENT_ID: eid}
         for field in CUFES_COVARIATE_FIELDS:
             val = sampled.get(field, np.nan)
             row[field] = np.nan if val is None else val
         row["source"] = source
         row["provenance"] = provenance
         rows.append(row)
+        if endpoints_present(event):
+            for field in CUFES_COVARIATE_FIELDS:
+                if pd.isna(row[field]):
+                    drop_rows.append(
+                        {
+                            "event_id": eid,
+                            "reason": DROP_REASON_MISSING_COVARIATE,
+                            "covariate": field,
+                            "latitude": mid_lat,
+                            "longitude": mid_lon,
+                        }
+                    )
     out = pd.DataFrame(rows)
+    drops = pd.DataFrame(drop_rows, columns=list(DROP_TABLE_COLUMNS))
     if len(out) != len(events):
         raise CufesEventValidationError("output row count must equal input event count")
     if out[COL_EVENT_ID].tolist() != events[COL_EVENT_ID].tolist():
@@ -212,5 +294,9 @@ def join_covariates_to_events(
     qc: dict[str, Any] = {
         "missing_by_field": missing_covariate_counts(out),
         "events_endpoint_missing": endpoint_missing,
+        "drop_summary": _drop_summary(drops),
     }
-    return out, qc
+    if drops_parquet_path is not None:
+        written = write_covariate_drop_table(drops, Path(drops_parquet_path))
+        qc["drops_parquet_path"] = str(written)
+    return out, qc, drops

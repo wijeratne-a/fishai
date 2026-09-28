@@ -61,7 +61,7 @@ def test_join_one_row_per_event_id_segment_mean() -> None:
     def field_sampler(lat: float, lon: float, _t: pd.Timestamp) -> dict:
         return {field: lat for field in CUFES_COVARIATE_FIELDS}
 
-    out, qc = join_covariates_to_events(
+    out, qc, _drops = join_covariates_to_events(
         events, field_sampler=field_sampler, source="wcofs", provenance="test-fixture"
     )
     assert len(out) == len(events)
@@ -76,7 +76,7 @@ def test_missing_endpoint_leaves_nan_and_qc_count() -> None:
     events = _synthetic_events()
     events.loc[1, COL_STOP_LAT] = np.nan
 
-    out, qc = join_covariates_to_events(
+    out, qc, _drops = join_covariates_to_events(
         events,
         field_sampler=lambda lat, lon, _t: {"T3m": lat},
         source="test",
@@ -94,7 +94,7 @@ def test_missing_covariates_left_nan_with_qc_counts() -> None:
             return {"T3m": 15.0}
         return {}
 
-    out, qc = join_covariates_to_events(events, field_sampler=field_sampler, source="test")
+    out, qc, _drops = join_covariates_to_events(events, field_sampler=field_sampler, source="test")
     assert np.isfinite(out.loc[0, "T3m"])
     assert pd.isna(out.loc[2, "S3m"])
     assert qc["missing_by_field"]["S3m"] >= 1
@@ -106,7 +106,7 @@ def test_event_covariates_parquet_requires_event_id(tmp_path) -> None:
     def field_sampler(_lat: float, _lon: float, _t: pd.Timestamp) -> dict:
         return {}
 
-    out, _ = join_covariates_to_events(events, field_sampler=field_sampler, source="test")
+    out, _, _drops = join_covariates_to_events(events, field_sampler=field_sampler, source="test")
     path = tmp_path / "cufes_physics_covariates.parquet"
     event_covariates_parquet(out, path)
     loaded = pd.read_parquet(path)
