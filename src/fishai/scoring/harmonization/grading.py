@@ -5,6 +5,12 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import Any
 
+from fishai.evaluation.nowcast_forcing_buoy import (
+    BuoyStratumMetrics,
+    buoy_gate_thresholds_from_harmonization_cutoffs,
+    buoy_gate_thresholds_from_prereg,
+    evaluate_buoy_stratum_verdict,
+)
 from fishai.scoring.harmonization.constants import (
     BUOY_INSUFFICIENT_OBS_REASON,
     FAIL_EVIDENCE_REASON,
@@ -68,7 +74,12 @@ def rmse_ratio_verdict(
     return VERDICT_FAIL
 
 
-def grade_buoy_stratum(inp: BuoyGradeInput, cutoffs: dict[str, float]) -> tuple[str, str | None]:
+def grade_buoy_stratum(
+    inp: BuoyGradeInput,
+    cutoffs: dict[str, float],
+    *,
+    doc: dict[str, Any] | None = None,
+) -> tuple[str, str | None]:
     min_n = int(cutoffs["min_matched_daily_values"])
     min_buoys = int(cutoffs["min_buoys"])
     if inp.n < min_n or inp.n_buoys < min_buoys:
@@ -84,29 +95,20 @@ def grade_buoy_stratum(inp: BuoyGradeInput, cutoffs: dict[str, float]) -> tuple[
     ):
         return VERDICT_NOT_GRADABLE, "missing_rmse"
 
-    ratio = inp.rmse_mapped / inp.rmse_glorys
-    ratio_verdict = rmse_ratio_verdict(ratio, inp.rmse_ratio_ci_upper, cutoffs)
-
-    bias_lim_pass = float(cutoffs["bias_abs_pass_c"])
-    bias_lim_deg = float(cutoffs["bias_abs_degraded_c"])
-    abs_bias = abs(inp.bias_c)
-    if abs_bias <= bias_lim_pass:
-        bias_verdict = VERDICT_PASS
-    elif abs_bias <= bias_lim_deg:
-        bias_verdict = VERDICT_DEGRADED
-    else:
-        bias_verdict = VERDICT_FAIL
-
-    margin = float(cutoffs["pearson_r_margin_below_glorys"])
-    r_verdict = (
-        VERDICT_PASS
-        if inp.pearson_r_mapped >= inp.pearson_r_glorys - margin
-        else VERDICT_FAIL
+    thresholds = (
+        buoy_gate_thresholds_from_prereg(doc)
+        if doc is not None
+        else buoy_gate_thresholds_from_harmonization_cutoffs(cutoffs)
     )
-
-    verdict = worst_of_verdicts([ratio_verdict, bias_verdict, r_verdict])
-    reason = FAIL_EVIDENCE_REASON if verdict == VERDICT_FAIL else None
-    return verdict, reason
+    metrics = BuoyStratumMetrics(
+        rmse_ratio=inp.rmse_mapped / inp.rmse_glorys,
+        rmse_ratio_bootstrap_upper_95=inp.rmse_ratio_ci_upper,
+        absolute_bias_c=inp.bias_c,
+        pearson_r=inp.pearson_r_mapped,
+        glorys_pearson_r=inp.pearson_r_glorys,
+    )
+    result = evaluate_buoy_stratum_verdict(metrics, thresholds=thresholds)
+    return result.verdict, result.reason
 
 
 def grade_input_check(inp: InputCheckGradeInput, cutoffs: dict[str, float]) -> str:

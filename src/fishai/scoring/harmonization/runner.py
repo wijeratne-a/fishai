@@ -347,6 +347,7 @@ def run_holdout_scoring(
                         independent_source=independent,
                     ),
                     cutoffs,
+                    doc=doc,
                 )
                 glider_verdict: str | None = None
                 if glider_match_table is not None and not glider_match_table.empty:
