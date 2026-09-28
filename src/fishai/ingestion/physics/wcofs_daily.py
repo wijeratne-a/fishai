@@ -724,7 +724,8 @@ def run_wcofs_daily(
     if (
         zpath.is_dir()
         and _pull_complete(plan.pull_log, plan.s3_keys)
-        and day_outcome != "failed"
+        and day_outcome in (None, "success")
+        and plan.primary_available
     ):
         return plan
 

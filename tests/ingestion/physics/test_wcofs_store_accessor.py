@@ -119,7 +119,8 @@ def test_stale_tombstone_superseded_by_success_allows_read(tmp_path: Path) -> No
     assert latest_wcofs_cycle_date(tmp_path, as_of=day) == day
 
 
-def test_newer_tombstone_after_success_blocks_read(tmp_path: Path) -> None:
+def test_failed_rerun_after_success_still_serves_valid_zarr(tmp_path: Path) -> None:
+    """A newer tombstone after success must not hide an existing valid Zarr."""
     day = dt.date(2026, 9, 28)
     write_wcofs_cycle(_synthetic_merged(), day, tmp_path)
     log_path = pull_log_path_for_date(day, out_root=tmp_path)
@@ -128,9 +129,9 @@ def test_newer_tombstone_after_success_blocks_read(tmp_path: Path) -> None:
         build_day_tombstone_record(day, reason="download_failed"),
         log_path=log_path,
     )
-    with pytest.raises(WcofsDayFailed) as excinfo:
-        open_wcofs_cycle(day, store_root=tmp_path)
-    assert excinfo.value.reason == "download_failed"
+    ds = open_wcofs_cycle(day, store_root=tmp_path)
+    assert ds.attrs["cycle_id"] == "20260928T03Z"
+    assert latest_wcofs_cycle_date(tmp_path, as_of=day) == day
 
 
 def test_tombstoned_day_without_zarr_raises(tmp_path: Path) -> None:

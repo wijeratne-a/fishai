@@ -80,7 +80,22 @@ def list_wcofs_cycles(store_root: Path | str | None = None) -> list[dt.date]:
     return dates
 
 
+def _has_valid_processed_zarr(cycle_date: dt.date, store_root: Path) -> bool:
+    """True when a readable processed Zarr with required attrs exists for ``cycle_date``."""
+    path = cycle_zarr_path(cycle_date, store_root)
+    if not path.is_dir():
+        return False
+    try:
+        ds = xr.open_zarr(path, consolidated=False)
+        _validate_processed_attrs(ds)
+    except (CycleNotAvailable, OSError, KeyError, ValueError):
+        return False
+    return True
+
+
 def _raise_if_day_failed(cycle_date: dt.date, store_root: Path) -> None:
+    if _has_valid_processed_zarr(cycle_date, store_root):
+        return
     outcome, record = day_outcome_for_date(cycle_date, out_root=store_root)
     if outcome != "failed":
         return
@@ -100,8 +115,9 @@ def latest_wcofs_cycle_date(
     """
     Resolve the processed-store cycle for operational ``as_of`` (default: UTC today).
 
-    Never falls back to an older cycle when ``as_of`` has no store. Tombstoned days
-    raise ``WcofsDayFailed``.
+    Never falls back to an older cycle when ``as_of`` has no store. Raises
+    ``WcofsDayFailed`` only when there is no valid processed Zarr and the pull log
+    records a failed day-level outcome.
     """
     root = _resolve_store_root(store_root)
     day = as_of or utc_today()

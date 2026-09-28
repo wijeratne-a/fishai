@@ -728,6 +728,32 @@ def _mock_full_day_http(target: dt.date) -> tuple[Any, Any, Any]:
     return head, get_fn, head_meta
 
 
+def test_failed_rerun_after_success_keeps_valid_zarr(tmp_path: Path) -> None:
+    target = dt.date(2026, 9, 28)
+    head, get_fn, head_meta = _mock_full_day_http(target)
+    first = run_wcofs_daily(
+        target,
+        out_root=tmp_path,
+        dry_run=False,
+        wait_for_cycle=False,
+        head_fn=head,
+        get_fn=get_fn,
+        head_meta_fn=head_meta,
+    )
+    assert first.zarr_path is not None and first.zarr_path.is_dir()
+
+    run_wcofs_daily(
+        target,
+        out_root=tmp_path,
+        dry_run=False,
+        wait_for_cycle=False,
+        head_fn=lambda _u: False,
+    )
+    assert first.zarr_path.is_dir()
+    open_wcofs_cycle(target, store_root=tmp_path)
+    assert load_day_outcome(first.pull_log)[0] == "failed"
+
+
 def test_run_wcofs_daily_rerun_after_tombstone_writes_zarr(tmp_path: Path) -> None:
     target = dt.date(2026, 9, 28)
     failed = run_wcofs_daily(
