@@ -35,7 +35,19 @@ ERDDAP_FIELDS: Final = (
 # Zero-catch expansion gate (per-cruise evidence in config/cps_trawl_zero_frame_evidence.yaml).
 ZERO_FRAME_UNVERIFIED_REASON: Final = "zero_frame_unverified"
 ANIMALIA_ONLY_ZERO_FRAME_REASON: Final = "animalia_only_undocumented"
+HAUL_META_MISSING_REASON: Final = "haul_meta_missing"
+UNRESOLVED_HIGHER_TAXON_REASON: Final = "unresolved_higher_taxon"
+UNPARSEABLE_CATCH_ROW_REASON: Final = "unparseable_catch_row"
 WEIGHT_FLAG_PARTIAL: Final = "weight_partial"
+
+ITIS_TSN_SARDINOPS_SAGAX: Final = 161729
+ITIS_TSN_ENGRAULIS_MORDAX: Final = 161828
+PILOT_MATRIX_SPECIES: Final = ("Sardinops sagax", "Engraulis mordax")
+PILOT_SPECIES_ITIS_TSN: Final = {
+    "Sardinops sagax": ITIS_TSN_SARDINOPS_SAGAX,
+    "Engraulis mordax": ITIS_TSN_ENGRAULIS_MORDAX,
+}
+HAUL_SPECIES_MATRIX_FILENAME: Final = "cps_trawl_haul_species_matrix.parquet"
 
 # Effort fields not present in FRDCPSTrawlLHHaulCatch.
 NET_MOUTH_AREA_NULL_REASON: Final = "not_in_source_dataset"
