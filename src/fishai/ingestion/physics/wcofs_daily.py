@@ -18,7 +18,9 @@ from fishai.ingestion.physics.http_util import get_bytes, head_metadata
 from fishai.ingestion.physics.sources import wcofs as wcofs_src
 from fishai.ingestion.physics.wcofs_pull_log import (
     append_pull_log,
+    build_day_tombstone_record,
     build_pull_record,
+    load_day_tombstone,
     load_pull_index,
     pull_log_path,
     resolve_pull_log_dir,
@@ -29,6 +31,7 @@ from fishai.ingestion.sources import attribution_for, load_sources_manifest, req
 
 DEFAULT_WAIT_CUTOFF_UTC = dt.time(5, 45)
 DEFAULT_MAX_MISSED_CYCLES = 2
+NOWCAST_VALID_OFFSET_H = 0
 FORECAST_HORIZON_H = 72
 TEMP_MIN_C = -2.0
 TEMP_MAX_C = 35.0
@@ -606,6 +609,71 @@ def _pull_complete(log_path: Path | None, s3_keys: Sequence[str]) -> bool:
     return all(key in index for key in s3_keys)
 
 
+def _successful_valid_offsets(
+    lead_slices: Sequence[tuple[LeadPlan, xr.Dataset]],
+) -> set[int]:
+    return {lp.valid_offset_h for lp, _ in lead_slices}
+
+
+def _nowcast_slot_satisfied(
+    lead_slices: Sequence[tuple[LeadPlan, xr.Dataset]],
+) -> bool:
+    return NOWCAST_VALID_OFFSET_H in _successful_valid_offsets(lead_slices)
+
+
+def _tombstone_reason_code(
+    plan: DailyPlan,
+    lead_slices: Sequence[tuple[LeadPlan, xr.Dataset]],
+    failed: Sequence[dict[str, Any]],
+    *,
+    wait_timed_out: bool,
+) -> str | None:
+    if not _nowcast_slot_satisfied(lead_slices):
+        if not lead_slices:
+            if wait_timed_out:
+                return "timeout"
+            if plan.leads and failed and all(
+                slot.get("reason") == "download_failed" for slot in failed
+            ):
+                return "download_failed"
+            if not plan.leads:
+                return "wcofs_nowcast_missing"
+            return "download_failed"
+        return "wcofs_nowcast_missing"
+    return None
+
+
+def _write_failed_day(
+    plan: DailyPlan,
+    target: dt.date,
+    *,
+    reason: str,
+    out_root: Path,
+) -> None:
+    assert plan.pull_log is not None
+    attempted_cycles = sorted({cycle_id(lp.cycle_date) for lp in plan.leads})
+    tombstone = build_day_tombstone_record(
+        target,
+        reason=reason,
+        attempted_s3_keys=plan.s3_keys,
+        attempted_cycles=attempted_cycles,
+        unknown_slots=plan.unknown_slots,
+    )
+    append_pull_log(tombstone, log_path=plan.pull_log)
+    qc_path = plan.qc_report_path or out_root / f"wcofs_{target:%Y%m%d}_qc.json"
+    write_qc_report(
+        {
+            "cycle_id": cycle_id(target),
+            "status": "failed",
+            "reason": reason,
+            "attempted_s3_keys": list(plan.s3_keys),
+            "attempted_cycles": attempted_cycles,
+            "unknown_slots": list(plan.unknown_slots),
+        },
+        qc_path,
+    )
+
+
 def run_wcofs_daily(
     target: dt.date,
     *,
@@ -631,7 +699,9 @@ def run_wcofs_daily(
             cycle_exists_fn=lambda _d: True,
         )
     primary_available = wcofs_src.cycle_available(target, head_fn=head_fn)
+    wait_timed_out = False
     if wait_for_cycle and not primary_available and not dry_run:
+        wait_timed_out = True
         primary_available = wait_for_primary_cycle(
             target,
             head_fn=head_fn,
@@ -649,6 +719,8 @@ def run_wcofs_daily(
 
     zpath = plan.zarr_path
     assert zpath is not None
+    if plan.pull_log and load_day_tombstone(plan.pull_log):
+        return plan
     if zpath.is_dir() and _pull_complete(plan.pull_log, plan.s3_keys):
         return plan
 
@@ -660,6 +732,17 @@ def run_wcofs_daily(
     )
     if failed:
         plan.unknown_slots.extend(failed)
+    tombstone_reason = _tombstone_reason_code(
+        plan, lead_slices, failed, wait_timed_out=wait_timed_out
+    )
+    if tombstone_reason:
+        _write_failed_day(
+            plan,
+            target,
+            reason=tombstone_reason,
+            out_root=out_root,
+        )
+        return plan
     partial = bool(failed)
     merged = assemble_merged_dataset(plan, lead_slices)
     extra_attrs = {
