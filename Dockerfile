@@ -1,4 +1,4 @@
-FROM rocker/r-ver:4.4.3
+FROM rocker/r-ver:4.5.2
 
 RUN apt-get update && apt-get install -y --no-install-recommends \
     python3 \
