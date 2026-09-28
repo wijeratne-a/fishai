@@ -19,9 +19,7 @@ from fishai.ingestion.physics.glorys_training_build import (
     SYNTHETIC_TEST_FIXTURE_SOURCE,
 )
 from fishai.ingestion.sources import require_approved
-from tests.ingestion.physics.cufes_glorys_synthetic_fixture import (
-    glorys_store_from_synthetic_days,
-)
+from cufes_glorys_synthetic_fixture import glorys_store_from_synthetic_days
 
 
 def test_live_build_fails_without_credentials(tmp_path: Path) -> None:

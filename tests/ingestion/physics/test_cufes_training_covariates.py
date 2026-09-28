@@ -34,9 +34,7 @@ from fishai.ingestion.physics.cufes_training_covariates import (
     write_training_covariates_parquet,
 )
 from fishai.ingestion.physics.glorys_training_build import GLORYS_COVARIATE_SOURCE_COPERNICUS
-from tests.ingestion.physics.cufes_glorys_synthetic_fixture import (
-    glorys_store_from_synthetic_days,
-)
+from cufes_glorys_synthetic_fixture import glorys_store_from_synthetic_days
 from fishai.ingestion.physics.sources.glorys import (
     PRODUCT_ID_MY,
     PRODUCT_ID_MYINT,
@@ -218,7 +216,7 @@ def test_pull_log_includes_version_and_sha256(tmp_path: Path) -> None:
 def test_training_parquet_metadata_has_credit_and_doi(tmp_path: Path) -> None:
     from fishai.ingestion.physics.cufes_training_covariates import GlorysSubsetBatch, new_glorys_field_store_for_live_build
     from fishai.ingestion.physics.glorys_cufes_subset import populate_store_days_from_cache, subset_nc_path
-    from tests.ingestion.physics.test_glorys_cufes_subset import _write_toy_subset
+    from test_glorys_cufes_subset import _write_toy_subset
 
     events = _synthetic_events().iloc[[0]]
     day = unique_event_days(events)[0]
