@@ -22,7 +22,7 @@ sources:
     notes: Egg-stage evidence only; not adult presence.
 
   wcofs:
-    module: fishai.ingestion.physics.wcofs
+    module: fishai.ingestion.physics.sources.wcofs
     endpoint_family: NOAA WCOFS public S3
     license: U.S. Government Work
     license_url: https://www.noaa.gov/information-technology/foia
@@ -31,12 +31,61 @@ sources:
     enabled: true
 
   glorys:
-    module: fishai.ingestion.physics.glorys
+    module: fishai.ingestion.physics.sources.glorys
     product: Copernicus Marine GLORYS
     license: Copernicus Marine Service (account terms)
     license_url: https://marine.copernicus.eu/
     attribution: "Copernicus Marine Service GLORYS; cite product DOI and download credentials holder."
     status: account_required
+    enabled: false
+
+  mur_sst:
+    module: fishai.ingestion.physics.sources.sst
+    erddap_dataset: jplMURSST41
+    provider: NASA JPL MUR via NOAA CoastWatch ERDDAP
+    license: U.S. Government Work
+    license_url: https://www.jpl.nasa.gov/jpl-image-use-policy
+    attribution: "NASA JPL MUR SST; cite JPL MUR and CoastWatch ERDDAP retrieval."
+    status: approved
+    enabled: true
+
+  blended_sst:
+    module: fishai.ingestion.physics.sources.sst
+    erddap_dataset: noaacwBLENDEDsstDNDaily
+    provider: NOAA Geo-Polar Blended SST via CoastWatch ERDDAP
+    license: U.S. Government Work
+    license_url: https://www.noaa.gov/information-technology/foia
+    attribution: "NOAA blended day+night SST; cite CoastWatch ERDDAP noaacwBLENDEDsstDNDaily."
+    status: approved
+    enabled: true
+
+  ccmp_winds:
+    module: fishai.ingestion.physics.sources.winds
+    erddap_dataset: ccmp-daily-v2-1-NRT
+    provider: RSS CCMP via NOAA PIFSC ERDDAP
+    license: U.S. Government Work
+    license_url: https://www.noaa.gov/information-technology/foia
+    attribution: "RSS CCMP v2.1 NRT winds; cite PIFSC ERDDAP ccmp-daily-v2-1-NRT."
+    status: approved
+    enabled: true
+
+  ncep_winds:
+    module: fishai.ingestion.physics.sources.winds
+    erddap_dataset: ncep_global
+    provider: NCEP GFS 10 m wind via PacIOOS ERDDAP
+    license: U.S. Government Work
+    license_url: https://www.noaa.gov/information-technology/foia
+    attribution: "NCEP global wind; cite PacIOOS ERDDAP ncep_global."
+    status: approved
+    enabled: true
+
+  altimetry_sla:
+    module: fishai.ingestion.physics.sources.altimetry
+    provider: NOAA CoastWatch blended SSH (future)
+    license: U.S. Government Work
+    license_url: https://www.noaa.gov/information-technology/foia
+    attribution: "NOAA altimetry SLA; cite product and retrieval when enabled."
+    status: pending
     enabled: false
 
   sccoos_hfr:
