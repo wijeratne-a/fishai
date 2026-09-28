@@ -17,7 +17,14 @@ from fishai.ingestion.copernicus_compliance import (
     append_pull_log,
     build_pull_record,
 )
-from fishai.ingestion.physics.covariates import CUFES_COVARIATE_FIELDS
+from fishai.ingestion.physics.bathymetry import (
+    WCOFS_BOTTOM_DEPTH_SOURCE,
+    WCOFS_BOTTOM_DEPTH_VARIABLE,
+)
+from fishai.ingestion.physics.covariates import (
+    CUFES_COVARIATE_FIELDS,
+    DROP_REASON_OUTSIDE_WCOFS_DOMAIN,
+)
 from fishai.ingestion.physics.cufes_training_covariates import (
     TRAINING_OUTPUT_COLUMNS,
     build_cufes_training_covariates_table,
@@ -104,13 +111,19 @@ def test_no_zero_filled_nans_for_missing_bottom_depth() -> None:
     events = _synthetic_events().iloc[[0]].copy()
     days = unique_event_days(events)
     lat, lon = _small_glorys_axes()
-    deptho = np.full((lat.size, lon.size), np.nan)
-    store = glorys_store_from_synthetic_days(days, deptho=deptho, lat=lat, lon=lon)
+    has_source = np.zeros((lat.size, lon.size), dtype=bool)
+    store = glorys_store_from_synthetic_days(
+        days,
+        wcofs_h_m=np.full((lat.size, lon.size), np.nan),
+        has_source=has_source,
+        lat=lat,
+        lon=lon,
+    )
     out, _qc, drops = build_cufes_training_covariates_table(events, store)
     assert bool(out.iloc[0]["excluded"])
     assert pd.isna(out.iloc[0]["bottom_depth_m"])
     assert out.iloc[0]["bottom_depth_m"] != 0.0
-    assert (drops["reason"] == "missing_bottom_depth").any()
+    assert (drops["reason"] == DROP_REASON_OUTSIDE_WCOFS_DOMAIN).any()
 
 
 def test_excluded_reason_nonempty_iff_excluded() -> None:
@@ -164,6 +177,9 @@ def test_training_parquet_metadata_has_credit_and_doi(tmp_path: Path) -> None:
     doc = json.loads(raw.decode())
     assert GLORYS_CREDIT_TEXT in doc["attribution"]
     assert GLORYS_DOI in doc["attribution"]
+    bottom = doc["bottom_depth_m"]
+    assert bottom["source"] == WCOFS_BOTTOM_DEPTH_SOURCE
+    assert bottom["variable"] == WCOFS_BOTTOM_DEPTH_VARIABLE
 
 
 def test_dry_run_prints_batch_count(tmp_path: Path) -> None:

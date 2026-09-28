@@ -23,17 +23,26 @@ from fishai.ingestion.copernicus_compliance import (
     require_glorys_attribution,
 )
 from fishai.ingestion.physics.bathymetry import (
+    WCOFS_BOTTOM_DEPTH_SOURCE,
+    WCOFS_BOTTOM_DEPTH_VARIABLE,
     glorys_pilot_depth_grid,
-    sample_deptho_nearest_cell,
+    sample_wcofs_h_bottom_depth_m,
 )
 from fishai.ingestion.physics.covariates import (
     COL_EVENT_ID,
+    COL_START_LAT,
+    COL_START_LON,
+    COL_STOP_LAT,
+    COL_STOP_LON,
     CUFES_COVARIATE_FIELDS,
-    DROP_REASON_MISSING_BOTTOM_DEPTH,
+    DEFAULT_GRID_CELL_KM,
+    DROP_REASON_OUTSIDE_WCOFS_DOMAIN,
+    DROP_REASON_WCOFS_LOW_WET_FRACTION,
     DROP_TABLE_COLUMNS,
-    SAMPLER_LAND_MASK_KEY,
+    endpoints_present,
     event_mid_time,
     event_midpoint_lat_lon,
+    great_circle_sample_points,
     join_covariates_to_events,
 )
 from fishai.ingestion.physics.features import (
@@ -42,12 +51,14 @@ from fishai.ingestion.physics.features import (
     sst_gradient,
 )
 from fishai.ingestion.physics.sources.glorys import (
-    PRODUCT_STATIC_ID,
     VARIABLES,
     glorys_column_features,
     glorys_dataset_for_date,
 )
-from fishai.ingestion.physics.wcofs_glorys_overlap import load_overlap_config
+from fishai.ingestion.physics.wcofs_glorys_overlap import (
+    coarsen_min_wet_fraction,
+    load_overlap_config,
+)
 from fishai.ingestion.sources import REPO_ROOT, attribution_for, require_approved
 
 DEFAULT_EVENTS_PATH = REPO_ROOT / "data" / "processed" / "calcofi_cufes" / "cufes_events.parquet"
@@ -69,6 +80,19 @@ TRAINING_OUTPUT_COLUMNS: tuple[str, ...] = (
     "source_product",
     "excluded_reason",
 )
+
+
+def bottom_depth_metadata(config: dict[str, Any]) -> dict[str, Any]:
+    bathy = config.get("bathymetry") or {}
+    return {
+        "bottom_depth_m": {
+            "source": WCOFS_BOTTOM_DEPTH_SOURCE,
+            "variable": WCOFS_BOTTOM_DEPTH_VARIABLE,
+            "grid": bathy.get("grid", "glorys_1_12deg"),
+            "coarsen": bathy.get("coarsen", "area_weighted_wet_masked"),
+            "min_wet_fraction": coarsen_min_wet_fraction(config),
+        }
+    }
 
 
 @dataclass(frozen=True)
@@ -97,14 +121,16 @@ class GlorysDayFields:
     sst_grad: np.ndarray
     front_distance_km: np.ndarray
     upwelling: np.ndarray
-    deptho: np.ndarray
 
 
 @dataclass
 class GlorysFieldStore:
-    """In-memory GLORYS grids keyed by calendar day."""
+    """In-memory GLORYS grids keyed by calendar day plus static WCOFS ``h`` on the GLORYS grid."""
 
-    deptho: np.ndarray
+    wcofs_h_m: np.ndarray
+    has_source: np.ndarray
+    wet_fraction: np.ndarray
+    min_wet_fraction: float
     lat: np.ndarray
     lon: np.ndarray
     days: dict[dt.date, GlorysDayFields] = field(default_factory=dict)
@@ -128,19 +154,50 @@ class GlorysFieldStore:
         out["sst_grad"] = float(fields.sst_grad[j, i])
         out["front_distance_km"] = float(fields.front_distance_km[j, i])
         out["upwelling"] = float(fields.upwelling[j, i])
-        depth_m = sample_deptho_nearest_cell(lat, lon, self.deptho, self.lat, self.lon)
-        if not np.isfinite(depth_m) or depth_m <= 0.0:
-            out[SAMPLER_LAND_MASK_KEY] = True
         return out
 
-    def bottom_depth_at(self, lat: float, lon: float) -> float:
-        return sample_deptho_nearest_cell(lat, lon, self.deptho, self.lat, self.lon)
+    def sample_bottom_depth_with_reason(self, lat: float, lon: float) -> tuple[float, str | None]:
+        return sample_wcofs_h_bottom_depth_m(
+            lat,
+            lon,
+            self.wcofs_h_m,
+            self.lat,
+            self.lon,
+            has_source=self.has_source,
+            wet_fraction=self.wet_fraction,
+            min_wet_fraction=self.min_wet_fraction,
+        )
 
 
 def _nearest_cell(lat: float, lon: float, lat_axis: np.ndarray, lon_axis: np.ndarray) -> tuple[int, int]:
     j = int(np.argmin(np.abs(lat_axis - lat)))
     i = int(np.argmin(np.abs(lon_axis - lon)))
     return j, i
+
+
+def mean_bottom_depth_m_along_segment(
+    event: pd.Series,
+    store: GlorysFieldStore,
+    *,
+    grid_cell_km: float = DEFAULT_GRID_CELL_KM,
+) -> tuple[float, list[str]]:
+    """Segment mean of WCOFS ``h`` on the GLORYS grid (same track sampling as GLORYS covariates)."""
+    if not endpoints_present(event):
+        return float("nan"), []
+    lat0, lon0 = float(event[COL_START_LAT]), float(event[COL_START_LON])
+    lat1, lon1 = float(event[COL_STOP_LAT]), float(event[COL_STOP_LON])
+    points = great_circle_sample_points(lat0, lon0, lat1, lon1, grid_cell_km=grid_cell_km)
+    depths: list[float] = []
+    reasons: list[str] = []
+    for lat, lon in points:
+        val, reason = store.sample_bottom_depth_with_reason(lat, lon)
+        depths.append(val)
+        if reason is not None:
+            reasons.append(reason)
+    arr = np.asarray(depths, dtype=float)
+    if not np.isfinite(arr).any():
+        return float("nan"), sorted(set(reasons))
+    return float(np.nanmean(arr)), []
 
 
 def unique_event_days(events: pd.DataFrame) -> list[dt.date]:
@@ -190,7 +247,6 @@ def _compute_day_surface_fields(
     mlotst: np.ndarray,
     uo: np.ndarray,
     vo: np.ndarray,
-    deptho: np.ndarray,
 ) -> GlorysDayFields:
     sst = thetao[0]
     grad = sst_gradient(sst, lat, lon)
@@ -212,7 +268,6 @@ def _compute_day_surface_fields(
         sst_grad=grad,
         front_distance_km=front_km,
         upwelling=upwelling,
-        deptho=deptho,
     )
 
 
@@ -220,7 +275,6 @@ def build_synthetic_day_fields(
     day: dt.date,
     lat: np.ndarray,
     lon: np.ndarray,
-    deptho: np.ndarray,
     *,
     nz: int = 5,
 ) -> GlorysDayFields:
@@ -260,7 +314,6 @@ def build_synthetic_day_fields(
         mlotst,
         uo,
         vo,
-        deptho,
     )
 
 
@@ -302,21 +355,24 @@ def attach_bottom_depth_and_reasons(
         if pd.isna(mid_t):
             product_id = ""
             depth_val = float("nan")
+            depth_reasons: list[str] = []
         else:
             product_id, _, _ = glorys_dataset_for_date(mid_t.date())
-            depth_val = store.bottom_depth_at(mid_lat, mid_lon)
+            depth_val, depth_reasons = mean_bottom_depth_m_along_segment(event, store)
         source_products.append(product_id)
         bottom_depth.append(depth_val)
         if not np.isfinite(depth_val) or depth_val <= 0.0:
-            drop_rows.append(
-                {
-                    "event_id": eid,
-                    "reason": DROP_REASON_MISSING_BOTTOM_DEPTH,
-                    "covariate": "bottom_depth_m",
-                    "latitude": mid_lat,
-                    "longitude": mid_lon,
-                }
-            )
+            reasons = depth_reasons or [DROP_REASON_WCOFS_LOW_WET_FRACTION]
+            for reason in sorted(set(reasons)):
+                drop_rows.append(
+                    {
+                        "event_id": eid,
+                        "reason": reason,
+                        "covariate": "bottom_depth_m",
+                        "latitude": mid_lat,
+                        "longitude": mid_lon,
+                    }
+                )
     out = covariates.copy()
     out["bottom_depth_m"] = bottom_depth
     out["source_product"] = source_products
@@ -328,17 +384,25 @@ def attach_bottom_depth_and_reasons(
     return out, drops_out
 
 
-def write_training_covariates_parquet(df: pd.DataFrame, path: Path, *, entry: dict[str, Any]) -> Path:
+def write_training_covariates_parquet(
+    df: pd.DataFrame,
+    path: Path,
+    *,
+    entry: dict[str, Any],
+    config: dict[str, Any] | None = None,
+) -> Path:
     import pyarrow as pa
     import pyarrow.parquet as pq
 
     path = Path(path)
     path.parent.mkdir(parents=True, exist_ok=True)
+    cfg = config or load_overlap_config()
     metadata = {
         "attribution": attribution_for("glorys"),
         "glorys_derived": True,
         "copernicus_doi": GLORYS_DOI,
         "copernicus_credit": GLORYS_CREDIT_TEXT,
+        **bottom_depth_metadata(cfg),
     }
     require_glorys_attribution(metadata)
     meta_json = json.dumps(metadata, sort_keys=True)
@@ -443,20 +507,34 @@ def glorys_store_from_synthetic_days(
     days: Iterable[dt.date],
     *,
     config: dict[str, Any] | None = None,
-    deptho: np.ndarray | None = None,
+    wcofs_h_m: np.ndarray | None = None,
+    has_source: np.ndarray | None = None,
+    wet_fraction: np.ndarray | None = None,
     lat: np.ndarray | None = None,
     lon: np.ndarray | None = None,
 ) -> GlorysFieldStore:
     cfg = config or load_overlap_config()
+    min_wet = coarsen_min_wet_fraction(cfg)
     if lat is None or lon is None:
         bbox = cfg["pilot_bbox"]
         lat, lon = glorys_pilot_depth_grid(bbox)
     nj, ni = lat.size, lon.size
-    if deptho is None:
-        deptho = np.full((nj, ni), 500.0)
-    store = GlorysFieldStore(deptho=deptho, lat=lat, lon=lon)
+    if wcofs_h_m is None:
+        wcofs_h_m = np.full((nj, ni), 500.0)
+    if has_source is None:
+        has_source = np.ones((nj, ni), dtype=bool)
+    if wet_fraction is None:
+        wet_fraction = np.ones((nj, ni), dtype=float)
+    store = GlorysFieldStore(
+        wcofs_h_m=wcofs_h_m,
+        has_source=has_source,
+        wet_fraction=wet_fraction,
+        min_wet_fraction=min_wet,
+        lat=lat,
+        lon=lon,
+    )
     for day in days:
-        store.days[day] = build_synthetic_day_fields(day, lat, lon, deptho)
+        store.days[day] = build_synthetic_day_fields(day, lat, lon)
     return store
 
 
@@ -504,10 +582,14 @@ def run_build_cufes_training_covariates(
     cfg = load_overlap_config()
     lat, lon = glorys_pilot_depth_grid(cfg["pilot_bbox"])
     nj, ni = lat.size, lon.size
-    deptho = np.full((nj, ni), 500.0)
-    store = GlorysFieldStore(deptho=deptho, lat=lat, lon=lon)
+    store = glorys_store_from_synthetic_days(
+        [],
+        config=cfg,
+        lat=lat,
+        lon=lon,
+        wcofs_h_m=np.full((nj, ni), 500.0),
+    )
     cache_dir = REPO_ROOT / "data" / "cache" / "glorys_cufes"
-    log_path = REPO_ROOT / str(cfg["pull_logs"]["glorys"])
 
     with ThreadPoolExecutor(max_workers=max_concurrent) as pool:
         futures = {
@@ -517,7 +599,7 @@ def run_build_cufes_training_covariates(
             fut.result()
 
     for day in days:
-        store.days[day] = build_synthetic_day_fields(day, lat, lon, deptho)
+        store.days[day] = build_synthetic_day_fields(day, lat, lon)
 
     out_path = output_path or DEFAULT_OUTPUT_PATH
     drops_path = out_path.parent / DEFAULT_DROPS_NAME
@@ -529,7 +611,12 @@ def run_build_cufes_training_covariates(
         drops_parquet_path=drops_path,
         drop_summary_json_path=summary_path,
     )
-    write_training_covariates_parquet(table, out_path, entry=require_approved("glorys", purpose="training"))
+    write_training_covariates_parquet(
+        table,
+        out_path,
+        entry=require_approved("glorys", purpose="training"),
+        config=cfg,
+    )
     result["output_path"] = str(out_path)
     result["qc"] = qc
     return result

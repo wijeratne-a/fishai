@@ -18,6 +18,40 @@ def glorys_target_grid(
     return lats, lons
 
 
+def destination_cell_source_stats(
+    lat_src: np.ndarray,
+    lon_src: np.ndarray,
+    lat_dst: np.ndarray,
+    lon_dst: np.ndarray,
+    wet_mask: np.ndarray,
+) -> tuple[np.ndarray, np.ndarray]:
+    """
+    Per destination GLORYS cell: whether any WCOFS rho point fell in the box, and wet fraction.
+    """
+    lat_src = np.asarray(lat_src, dtype=float)
+    lon_src = np.asarray(lon_src, dtype=float)
+    wet_mask = np.asarray(wet_mask, dtype=bool)
+    has_source = np.zeros((lat_dst.size, lon_dst.size), dtype=bool)
+    wet_fraction = np.full((lat_dst.size, lon_dst.size), np.nan, dtype=float)
+    dlat = np.median(np.diff(lat_dst)) if lat_dst.size > 1 else 1.0 / 12.0
+    dlon = np.median(np.diff(lon_dst)) if lon_dst.size > 1 else 1.0 / 12.0
+    for j, la in enumerate(lat_dst):
+        for i, lo in enumerate(lon_dst):
+            in_box = (
+                (lat_src >= la - dlat / 2)
+                & (lat_src <= la + dlat / 2)
+                & (lon_src >= lo - dlon / 2)
+                & (lon_src <= lo + dlon / 2)
+            )
+            n_in = int(np.count_nonzero(in_box))
+            if n_in == 0:
+                continue
+            has_source[j, i] = True
+            n_wet = int(np.count_nonzero(in_box & wet_mask))
+            wet_fraction[j, i] = n_wet / n_in
+    return has_source, wet_fraction
+
+
 def area_weighted_regrid(
     field: np.ndarray,
     lat_src: np.ndarray,
@@ -26,10 +60,14 @@ def area_weighted_regrid(
     lon_dst: np.ndarray,
     *,
     wet_mask: np.ndarray | None = None,
+    min_wet_fraction: float | None = None,
 ) -> np.ndarray:
     """
     Conservative area-weighted remap from curvilinear/irregular source cells to
     a regular lat/lon destination grid (cell-centre assignment with overlap weights).
+
+    When ``min_wet_fraction`` is set (WCOFS×GLORYS coarsening), destination cells
+    whose overlapping source points are mostly land are left NaN.
     """
     field = np.asarray(field, dtype=float)
     lat_src = np.asarray(lat_src, dtype=float)
@@ -48,8 +86,13 @@ def area_weighted_regrid(
                 & (lon_src >= lo - dlon / 2)
                 & (lon_src <= lo + dlon / 2)
             )
-            if not np.any(in_box):
+            n_in = int(np.count_nonzero(in_box))
+            if n_in == 0:
                 continue
+            if wet_mask is not None and min_wet_fraction is not None:
+                n_wet = int(np.count_nonzero(in_box & wet_mask))
+                if (n_wet / n_in) < float(min_wet_fraction):
+                    continue
             vals = field[in_box]
             if np.isfinite(vals).any():
                 out[j, i] = np.nanmean(vals)

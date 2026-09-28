@@ -106,6 +106,11 @@ def depth_grid_m(config: dict[str, Any]) -> np.ndarray:
     return np.arange(start, end + step, step, dtype=float)
 
 
+def coarsen_min_wet_fraction(config: dict[str, Any]) -> float:
+    block = config.get("wcofs_glorys_coarsen") or {}
+    return float(block.get("min_wet_fraction", 0.5))
+
+
 def glorys_grid_from_config(config: dict[str, Any]) -> tuple[np.ndarray, np.ndarray]:
     bbox = config["pilot_bbox"]
     return glorys_target_grid(
@@ -124,7 +129,13 @@ def wcofs_covariate_arrays_on_glorys_grid(
 ) -> dict[str, np.ndarray]:
     """Shared WCOFS covariates on the GLORYS grid (overlap uses ``wcofs_`` prefixes in rows)."""
     depth = depth_grid_m(config)
-    gridded = coarsen_wcofs_to_glorys(ds_wcofs, lat_dst, lon_dst, depth)
+    gridded = coarsen_wcofs_to_glorys(
+        ds_wcofs,
+        lat_dst,
+        lon_dst,
+        depth,
+        min_wet_fraction=coarsen_min_wet_fraction(config),
+    )
     return compute_wcofs_covariates_on_glorys_grid(gridded)
 
 

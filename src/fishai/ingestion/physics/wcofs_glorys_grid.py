@@ -13,7 +13,7 @@ import numpy as np
 import xarray as xr
 
 from fishai.ingestion.physics.features import ekman_upwelling, front_distance_km, sst_gradient
-from fishai.ingestion.physics.harmonize import area_weighted_regrid
+from fishai.ingestion.physics.harmonize import area_weighted_regrid, destination_cell_source_stats
 from fishai.ingestion.physics.vertical import interp_at_depth_from_z_levels, mld, s_to_z
 
 COVARIATE_FIELDS = ("T3m", "S3m", "MLD_m", "sst_grad", "front_distance_km", "upwelling")
@@ -77,6 +77,8 @@ def coarsen_wcofs_to_glorys(
     lat_dst: np.ndarray,
     lon_dst: np.ndarray,
     depth_grid_m: np.ndarray,
+    *,
+    min_wet_fraction: float | None = None,
 ) -> WcofsGlorysGrid:
     """
     Area-weighted average of ocean-only (wet) WCOFS cells onto ``lat_dst`` × ``lon_dst``.
@@ -96,10 +98,22 @@ def coarsen_wcofs_to_glorys(
     salt_coarse = np.full((nj, ni, nz), np.nan, dtype=float)
     for k in range(nz):
         temp_coarse[:, :, k] = area_weighted_regrid(
-            temp_native[:, :, k], lat, lon, lat_dst, lon_dst, wet_mask=wet
+            temp_native[:, :, k],
+            lat,
+            lon,
+            lat_dst,
+            lon_dst,
+            wet_mask=wet,
+            min_wet_fraction=min_wet_fraction,
         )
         salt_coarse[:, :, k] = area_weighted_regrid(
-            salt_native[:, :, k], lat, lon, lat_dst, lon_dst, wet_mask=wet
+            salt_native[:, :, k],
+            lat,
+            lon,
+            lat_dst,
+            lon_dst,
+            wet_mask=wet,
+            min_wet_fraction=min_wet_fraction,
         )
     return WcofsGlorysGrid(
         lat=np.asarray(lat_dst, dtype=float),
@@ -108,6 +122,40 @@ def coarsen_wcofs_to_glorys(
         temp=temp_coarse,
         salt=salt_coarse,
     )
+
+
+def coarsen_wcofs_h_to_glorys(
+    ds_wcofs: xr.Dataset,
+    lat_dst: np.ndarray,
+    lon_dst: np.ndarray,
+    *,
+    min_wet_fraction: float | None = None,
+) -> tuple[np.ndarray, np.ndarray, np.ndarray]:
+    """
+    Area-weight WCOFS ROMS ``h`` (positive depth, m) onto the GLORYS grid.
+
+    Returns ``(h_m, has_source, wet_fraction)`` with the same coarsening rule as
+    temperature and salinity on the overlap / nowcast paths.
+    """
+    slab = _surface_slab(ds_wcofs)
+    lat = np.asarray(slab.lat_rho.values, dtype=float)
+    lon = np.asarray(slab.lon_rho.values, dtype=float)
+    lon = np.where(lon > 180, lon - 360, lon)
+    wet = np.asarray(slab.mask_rho.values == 1, dtype=bool)
+    h_native = np.asarray(slab.h.values, dtype=float)
+    has_source, wet_fraction = destination_cell_source_stats(
+        lat, lon, lat_dst, lon_dst, wet
+    )
+    h_m = area_weighted_regrid(
+        h_native,
+        lat,
+        lon,
+        lat_dst,
+        lon_dst,
+        wet_mask=wet,
+        min_wet_fraction=min_wet_fraction,
+    )
+    return h_m, has_source, wet_fraction
 
 
 def compute_wcofs_covariates_on_glorys_grid(

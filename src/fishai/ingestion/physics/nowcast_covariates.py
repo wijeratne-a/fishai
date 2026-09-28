@@ -12,7 +12,11 @@ from fishai.ingestion.physics.wcofs_glorys_grid import (
     compute_wcofs_covariates_on_glorys_grid,
     covariates_to_xarray,
 )
-from fishai.ingestion.physics.wcofs_glorys_overlap import depth_grid_m, load_overlap_config
+from fishai.ingestion.physics.wcofs_glorys_overlap import (
+    coarsen_min_wet_fraction,
+    depth_grid_m,
+    load_overlap_config,
+)
 
 
 def build_wcofs_nowcast_covariates_for_inference(
@@ -36,7 +40,13 @@ def build_wcofs_nowcast_covariates_for_inference(
         float(bbox["lon_max"]),
     )
     depth = depth_grid_m(cfg)
-    gridded = coarsen_wcofs_to_glorys(ds_wcofs, lat_dst, lon_dst, depth)
+    gridded = coarsen_wcofs_to_glorys(
+        ds_wcofs,
+        lat_dst,
+        lon_dst,
+        depth,
+        min_wet_fraction=coarsen_min_wet_fraction(cfg),
+    )
     u_arr = v_arr = None
     if u10 is not None and v10 is not None:
         u_arr = u10.values

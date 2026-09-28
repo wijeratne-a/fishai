@@ -36,11 +36,14 @@ glorys:
   copernicus_doi: 10.48670/moi-00021
   production_status: interim
 
+wcofs_glorys_coarsen:
+  min_wet_fraction: 0.5
+
 bathymetry:
-  glorys_static_dataset_id: cmems_mod_glo_phy_my_0.083deg_static
-  variable: deptho
+  source: wcofs_roms
+  variable: h
   grid: glorys_1_12deg
-  sample_rule: nearest_cell_centre
+  coarsen: area_weighted_wet_masked
 
 wcofs:
   product: avg.nowcast
