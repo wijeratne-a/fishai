@@ -6,9 +6,10 @@ import tempfile
 from pathlib import Path
 
 import numpy as np
+import pandas as pd
 
 from fishai.ingestion.physics.harmonize import area_weighted_regrid, glorys_target_grid
-from fishai.ingestion.physics.store import cell_id_from_indices, inference_parquet, training_parquet
+from fishai.ingestion.physics.store import cell_id_from_indices, event_covariates_parquet, inference_parquet
 
 
 def test_area_weighted_regrid_mean() -> None:
@@ -22,8 +23,11 @@ def test_area_weighted_regrid_mean() -> None:
 
 def test_parquet_writers_no_lat_lon_columns() -> None:
     with tempfile.TemporaryDirectory() as tmp:
-        tpath = Path(tmp) / "train.parquet"
-        training_parquet([{"sample_id": 1, "mean": 1.0, "sd": 0.1}], tpath)
+        tpath = Path(tmp) / "events.parquet"
+        event_covariates_parquet(
+            pd.DataFrame([{"event_id": "CUFES:2020-01:SH01:1", "T3m": 1.0}]),
+            tpath,
+        )
         ipath = Path(tmp) / "inf.parquet"
         inference_parquet(
             [
@@ -38,8 +42,6 @@ def test_parquet_writers_no_lat_lon_columns() -> None:
             ipath,
         )
         forbidden = {"lat", "lon", "latitude", "longitude"}
-        import pandas as pd
-
         for path in (tpath, ipath):
             cols = set(pd.read_parquet(path).columns)
             assert not forbidden & cols

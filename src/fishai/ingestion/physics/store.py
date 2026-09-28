@@ -23,14 +23,15 @@ def write_gridded_zarr(ds: Any, path: Path) -> None:
     ds.to_zarr(path, mode="w", consolidated=False)
 
 
-def training_parquet(
-    rows: list[dict[str, Any]],
+def event_covariates_parquet(
+    df: pd.DataFrame,
     path: Path,
 ) -> pd.DataFrame:
-    """Parquet keyed by ``sample_id`` for training aggregates."""
-    df = pd.DataFrame(rows)
-    if "sample_id" not in df.columns:
-        raise ValueError("training rows require sample_id")
+    """Parquet keyed by ``event_id`` for CUFES-matched training covariates."""
+    if "event_id" not in df.columns:
+        raise ValueError("event covariate rows require event_id")
+    if df["event_id"].duplicated().any():
+        raise ValueError("event_id must be unique in output")
     path = Path(path)
     path.parent.mkdir(parents=True, exist_ok=True)
     df.to_parquet(path, index=False)

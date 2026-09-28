@@ -268,9 +268,8 @@ def sample_along_track(
         arr = interp(np.column_stack([lats, lons]))
     arr = arr[np.isfinite(arr)]
     if arr.size == 0:
-        return {"sample_id": hash((start, stop, field_time_index)) % 10_000_000, "mean": np.nan, "sd": np.nan}
+        return {"mean": np.nan, "sd": np.nan}
     return {
-        "sample_id": int(hash((round(lat0, 4), round(lon0, 4), round(lat1, 4), round(lon1, 4))) % 10_000_000),
         "mean": float(np.mean(arr)),
         "sd": float(np.std(arr)),
     }
