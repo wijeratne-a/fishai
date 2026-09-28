@@ -12,11 +12,13 @@ from fishai.evaluation.harmonization_prereg import (
     HarmonizationPreregNotReadyError,
     PLACEHOLDER_TOKEN,
     assert_harmonization_prereg_ready_for_scoring,
+    assert_shoreline_simplification_check_valid,
     frozen_shoreline_reference,
     frozen_shoreline_reference_sha256,
     is_valid_frozen_shoreline_sha256,
     load_harmonization_prereg,
     run_harmonization_scoring,
+    shoreline_simplification_check,
 )
 
 REPO = Path(__file__).resolve().parents[2]
@@ -163,11 +165,10 @@ def test_native_wcofs_diagnostic_never_through_harmonization_map() -> None:
     assert native.get("role") == "diagnostic_only"
 
 
-def test_scoring_entry_point_raises_while_placeholders_unset() -> None:
+def test_scoring_entry_point_passes_prereg_gate_on_committed_doc() -> None:
     doc = load_harmonization_prereg(PREREG)
-    with pytest.raises(HarmonizationPreregNotReadyError, match="unset prereg fields"):
-        assert_harmonization_prereg_ready_for_scoring(doc)
-    with pytest.raises(HarmonizationPreregNotReadyError, match="shoreline_simplification_check"):
+    assert_harmonization_prereg_ready_for_scoring(doc)
+    with pytest.raises(NotImplementedError):
         run_harmonization_scoring(PREREG)
 
 
@@ -189,7 +190,9 @@ def test_nearshore_bot2_pr7_fields_and_pending_placeholders() -> None:
     assert ref["pr7_source_commit"] == "8d4bfae"
     assert "Natural Earth 10 m land" in near["shoreline_simplification_note"]
     assert "0 GLORYS cells" in near["shoreline_simplification_note"]
-    assert near["shoreline_simplification_check"] == PLACEHOLDER_TOKEN
+    check = near["shoreline_simplification_check"]
+    assert check["method"] == "none_bbox_clip_only"
+    assert check["nearshore_flag_mismatches_vs_full_resolution"] == 0
 
 
 def test_frozen_shoreline_reference_sha256_required_and_well_formed() -> None:
@@ -208,25 +211,37 @@ def test_frozen_shoreline_reference_sha256_required_and_well_formed() -> None:
         frozen_shoreline_reference_sha256(broken2)
 
 
-def test_scoring_entry_point_passes_gate_when_placeholders_replaced(tmp_path: Path) -> None:
+def test_shoreline_simplification_check_not_placeholder_and_matches_frozen_hash() -> None:
     doc = load_harmonization_prereg(PREREG)
-    block = yaml.safe_load(yaml.dump(doc))["harmonization_wcofs_glorys"]
-    block["nearshore"]["shoreline_simplification_check"] = {
-        "max_coastline_displacement_m": 0.0,
-        "nearshore_flag_diff_cell_count": 0,
-    }
-    patched = {"schema_version": 1, "harmonization_wcofs_glorys": block}
-    path = tmp_path / "prereg.yaml"
-    path.write_text(yaml.dump(patched), encoding="utf-8")
-    assert_harmonization_prereg_ready_for_scoring(patched)
-    with pytest.raises(NotImplementedError):
-        run_harmonization_scoring(path)
+    check = shoreline_simplification_check(doc)
+    assert check is not PLACEHOLDER_TOKEN
+    assert check["method"] == "none_bbox_clip_only"
+    assert check["source_commit"] == "8d4bfae"
+    assert check["rejected_trial"]["nearshore_flag_mismatches"] == 211
+    assert check["file_sha256"] == frozen_shoreline_reference_sha256(doc)
+    assert_shoreline_simplification_check_valid(doc)
+    bad = yaml.safe_load(yaml.dump(doc))
+    bad["harmonization_wcofs_glorys"]["nearshore"]["shoreline_simplification_check"] = (
+        PLACEHOLDER_TOKEN
+    )
+    with pytest.raises(ValueError, match="unset"):
+        shoreline_simplification_check(bad)
+    bad2 = yaml.safe_load(yaml.dump(doc))
+    bad2["harmonization_wcofs_glorys"]["nearshore"]["shoreline_simplification_check"][
+        "nearshore_flag_mismatches_vs_full_resolution"
+    ] = 1
+    with pytest.raises(ValueError, match="must be 0"):
+        assert_shoreline_simplification_check_valid(bad2)
+    bad3 = yaml.safe_load(yaml.dump(doc))
+    bad3["harmonization_wcofs_glorys"]["nearshore"]["shoreline_simplification_check"][
+        "file_sha256"
+    ] = "deadbeef"
+    with pytest.raises(ValueError, match="frozen_shoreline_reference"):
+        assert_shoreline_simplification_check_valid(bad3)
 
 
-def test_committed_prereg_still_has_expected_placeholders() -> None:
+def test_committed_prereg_has_no_pass_fail_thresholds_placeholder_block() -> None:
     doc = load_harmonization_prereg(PREREG)
-    near = doc["harmonization_wcofs_glorys"]["nearshore"]
-    assert near["shoreline_simplification_check"] == PLACEHOLDER_TOKEN
     assert "pass_fail_thresholds" not in doc["harmonization_wcofs_glorys"]
 
 

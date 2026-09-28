@@ -65,7 +65,7 @@ Per variable: **bias**, **RMSE**, **Pearson r**, by season (DJF/MAM/JJA/SON), ne
 
 ## Shoreline (bot2 PR #7)
 
-**Frozen shoreline** (`frozen_shoreline_reference` in YAML): path `data/reference/shoreline/ne_10m_land_pilot_clip.json`, SHA-256 frozen at PR #7 commit **8d4bfae** (import **`FROZEN_PILOT_SHORELINE_REFERENCE_SHA256`** from `fishai.evaluation.harmonization_prereg` for scoring). **Natural Earth 10 m land** clipped to the pilot box (`ne_10m_land` v**5.1.1**, public domain); PR #7 uses **clip-only** geometry with **0** nearshore-flag changes vs full coastline. **cutoff_km 20**, geodesic WGS84 from GLORYS cell centre. Scoring strata inherit the matched GLORYS cell nearshore flag. `shoreline_simplification_check` remains `TO_BE_SET_BEFORE_SCORING` (bot2).
+**Frozen shoreline** (`frozen_shoreline_reference` in YAML): path `data/reference/shoreline/ne_10m_land_pilot_clip.json`, SHA-256 frozen at PR #7 commit **8d4bfae** (import **`FROZEN_PILOT_SHORELINE_REFERENCE_SHA256`** from `fishai.evaluation.harmonization_prereg` for scoring). **`shoreline_simplification_check`:** method **`none_bbox_clip_only`** (Natural Earth `ne_10m_land` v**5.1.1**, pilot bbox clip, not simplified); **0** nearshore-flag mismatches vs full resolution; rejected trial was ~400-vertex simplification (**211** mismatches). `file_sha256` aliases the frozen reference. **cutoff_km 20**, geodesic WGS84 from GLORYS cell centre. Scoring strata inherit the matched GLORYS cell nearshore flag.
 
 ## Timing
 

@@ -86,8 +86,36 @@ def iter_placeholder_fields(node: object, prefix: str = "") -> list[str]:
     return found
 
 
+def shoreline_simplification_check(doc: dict[str, Any] | None = None) -> dict[str, Any]:
+    """Return bot2 shoreline simplification fidelity block from nearshore prereg."""
+    raw = doc if doc is not None else load_harmonization_prereg()
+    near = raw["harmonization_wcofs_glorys"]["nearshore"]
+    check = near.get("shoreline_simplification_check")
+    if check == PLACEHOLDER_TOKEN or not isinstance(check, dict):
+        raise ValueError("shoreline_simplification_check is unset or not a mapping")
+    return check
+
+
+def assert_shoreline_simplification_check_valid(doc: dict[str, Any] | None = None) -> None:
+    """Refuse scoring when simplification check is placeholder, mismatched, or wrong hash."""
+    check = shoreline_simplification_check(doc)
+    mismatches = check.get("nearshore_flag_mismatches_vs_full_resolution")
+    if mismatches is None or int(mismatches) > 0:
+        raise ValueError(
+            "shoreline_simplification_check: nearshore_flag_mismatches_vs_full_resolution "
+            f"must be 0, got {mismatches!r}"
+        )
+    file_sha = check.get("file_sha256")
+    frozen_sha = frozen_shoreline_reference_sha256(doc)
+    if file_sha != frozen_sha:
+        raise ValueError(
+            "shoreline_simplification_check.file_sha256 must equal "
+            "frozen_shoreline_reference.sha256"
+        )
+
+
 def assert_harmonization_prereg_ready_for_scoring(doc: dict[str, Any]) -> None:
-    """Refuse holdout scoring until bot2/auditbot1 placeholders are concrete."""
+    """Refuse holdout scoring until required prereg fields are concrete and consistent."""
     block = doc.get("harmonization_wcofs_glorys")
     if not isinstance(block, dict):
         raise HarmonizationPreregNotReadyError("missing harmonization_wcofs_glorys block")
@@ -97,6 +125,10 @@ def assert_harmonization_prereg_ready_for_scoring(doc: dict[str, Any]) -> None:
         raise HarmonizationPreregNotReadyError(
             f"harmonization scoring blocked: unset prereg fields ({fields})"
         )
+    try:
+        assert_shoreline_simplification_check_valid(doc)
+    except ValueError as exc:
+        raise HarmonizationPreregNotReadyError(str(exc)) from exc
 
 
 def run_harmonization_scoring(

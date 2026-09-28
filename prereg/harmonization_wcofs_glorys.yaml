@@ -353,7 +353,7 @@ harmonization_wcofs_glorys:
 
   frozen_shoreline_reference:
     path: data/reference/shoreline/ne_10m_land_pilot_clip.json
-    sha256: 2f677a16aa6c8470846d813eda6d82f2656dea2d697b1511a4c878542d20996c
+    sha256: &frozen_pilot_shoreline_file_sha256 2f677a16aa6c8470846d813eda6d82f2656dea2d697b1511a4c878542d20996c
     frozen: true
     pr7_source_commit: 8d4bfae
     pr7_branch: cursor/wcofs-glorys-overlap-missing-by-field-60e8
@@ -384,13 +384,23 @@ harmonization_wcofs_glorys:
     distance: >-
       Geodesic on WGS84 from each GLORYS cell centre to nearest mainland or island
       shoreline; nearshore when distance is cutoff_km or less.
-    shoreline_simplification_check: TO_BE_SET_BEFORE_SCORING
+    shoreline_simplification_check:
+      method: none_bbox_clip_only
+      shoreline_source: Natural Earth ne_10m_land
+      shoreline_version: "5.1.1"
+      note: clipped to pilot bbox, not simplified
+      nearshore_flag_mismatches_vs_full_resolution: 0
+      rejected_trial:
+        description: simplified ~400 vertices
+        nearshore_flag_mismatches: 211
+      file_sha256: *frozen_pilot_shoreline_file_sha256
+      source_commit: 8d4bfae
     simplification_check_requirement: >-
-      Records max coastline displacement and the count of GLORYS cells whose
-      nearshore flag differs from full-resolution shoreline; required count is 0.
+      Production shoreline uses none_bbox_clip_only; nearshore flags must match
+      full-resolution coastline (0 mismatches). file_sha256 must match
+      frozen_shoreline_reference.sha256.
     scoring_gate_note: >-
-      Scoring must refuse while shoreline_simplification_check remains
-      TO_BE_SET_BEFORE_SCORING (bot2-owned). frozen_shoreline_reference is frozen;
+      frozen_shoreline_reference and shoreline_simplification_check are locked;
       path and sha256 are authoritative for PR #10 shoreline checks.
     scoring_nearshore_assignment: >-
       Every NDBC buoy observation and SCCOOS HF radar grid cell inherits the
