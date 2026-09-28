@@ -1,3 +1,25 @@
+cufes_covariates_csv_header <- function() {
+  paste(
+    c(
+      "event_id",
+      "T3m",
+      "S3m",
+      "MLD_m",
+      "sst_grad",
+      "front_distance_km",
+      "upwelling",
+      "log_depth_z",
+      "excluded"
+    ),
+    collapse = ","
+  )
+}
+
+cufes_covariate_row <- function(event_id, values = rep(0, 7), excluded = FALSE) {
+  vals <- paste(c(as.character(values), if (isTRUE(excluded)) "TRUE" else "FALSE"), collapse = ",")
+  paste(event_id, vals, sep = ",")
+}
+
 cufes_events_csv_header <- function(extra_cols = character()) {
   base <- paste(
     c(

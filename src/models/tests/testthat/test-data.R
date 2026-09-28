@@ -2,7 +2,7 @@ test_that("load_model_data rejects missing effort", {
   cfg <- load_config_yaml(file.path(FISHAI_ROOT, "configs", "models", "cufes_sardine.yaml"))
   dat <- load_model_data(cfg = cfg)
   expect_true(all(dat$volume_m3 > 0))
-  expect_equal(nrow(dat), 48)
+  expect_equal(nrow(dat), 46)
   expect_true(all(is.finite(dat$X)))
 })
 
@@ -13,8 +13,8 @@ test_that("missing effort rows are refused", {
   writeLines(
     paste(
       "event_id,time,lat,lon,stop_time,stop_lat,stop_lon,volume_m3,pump_readings_used,duration_min,short_event,time_idx",
-      "CUFES:T:AK:a,2020-01-01T00:00:00Z,33, -119,2020-01-01T00:05:00Z,33.01,-118.99,NA,1",
-      "CUFES:T:AK:b,2020-01-01T00:00:00Z,33, -119,2020-01-01T00:05:00Z,33.01,-118.99,10,1",
+      "CUFES:T:AK:a,2020-01-01T00:00:00Z,33, -119,2020-01-01T00:05:00Z,33.01,-118.99,NA,1,FALSE",
+      "CUFES:T:AK:b,2020-01-01T00:00:00Z,33, -119,2020-01-01T00:05:00Z,33.01,-118.99,10,1,FALSE",
       sep = "\n"
     ),
     ev
@@ -25,9 +25,9 @@ test_that("missing effort rows are refused", {
   )
   writeLines(
     paste(
-      "event_id,T3m,S3m,MLD_m,sst_grad,front_distance_km,upwelling,log_depth_z",
-      "CUFES:T:AK:a,0,0,0,0,0,0,0",
-      "CUFES:T:AK:b,0,0,0,0,0,0,0",
+      cufes_covariates_csv_header(),
+      "CUFES:T:AK:a,0,0,0,0,0,0,0,FALSE",
+      "CUFES:T:AK:b,0,0,0,0,0,0,0,FALSE",
       sep = "\n"
     ),
     cov
@@ -94,8 +94,8 @@ test_that("cufes_events counts and covariates join on event_id", {
   writeLines(
     paste(
       "event_id,time,lat,lon,stop_time,stop_lat,stop_lon,volume_m3,pump_readings_used,duration_min,short_event,time_idx",
-      "CUFES:2024:SH:1,2020-01-01T00:00:00Z,33.0,-120.0,2020-01-01T00:08:00Z,33.02,-119.98,100,1",
-      "CUFES:2024:SH:2,2020-01-01T00:00:00Z,33.1,-120.1,2020-01-01T00:08:00Z,33.12,-119.88,200,1",
+      "CUFES:2024:SH:1,2020-01-01T00:00:00Z,33.0,-120.0,2020-01-01T00:08:00Z,33.02,-119.98,100,1,FALSE",
+      "CUFES:2024:SH:2,2020-01-01T00:00:00Z,33.1,-120.1,2020-01-01T00:08:00Z,33.12,-119.88,200,1,FALSE",
       sep = "\n"
     ),
     ev
@@ -111,9 +111,9 @@ test_that("cufes_events counts and covariates join on event_id", {
   )
   writeLines(
     paste(
-      "event_id,T3m,S3m,MLD_m,sst_grad,front_distance_km,upwelling,log_depth_z",
-      "CUFES:2024:SH:1,0.1,0.2,10,0,0,0,0",
-      "CUFES:2024:SH:2,0.2,0.3,11,0,0,0,0",
+      cufes_covariates_csv_header(),
+      "CUFES:2024:SH:1,0.1,0.2,10,0,0,0,0,FALSE",
+      "CUFES:2024:SH:2,0.2,0.3,11,0,0,0,0,FALSE",
       sep = "\n"
     ),
     cov
@@ -145,7 +145,7 @@ test_that("mesh X/Y are UTM 11N track midpoints", {
     paste(
       "event_id,time,lat,lon,stop_time,stop_lat,stop_lon,volume_m3,pump_readings_used,duration_min,short_event,time_idx",
       sprintf(
-        "CUFES:T:AK:mid,2020-01-01T00:00:00Z,%s,%s,2020-01-01T00:10:00Z,%s,%s,50,1",
+        "CUFES:T:AK:mid,2020-01-01T00:00:00Z,%s,%s,2020-01-01T00:10:00Z,%s,%s,50,1,FALSE",
         lat0, lon0, lat1, lon1
       ),
       sep = "\n"
@@ -154,7 +154,11 @@ test_that("mesh X/Y are UTM 11N track midpoints", {
   )
   writeLines("event_id,taxon,count\nCUFES:T:AK:mid,sardine,2", ct)
   writeLines(
-    "event_id,T3m,S3m,MLD_m,sst_grad,front_distance_km,upwelling,log_depth_z\nCUFES:T:AK:mid,1,1,1,0,0,0,0",
+    paste(
+      cufes_covariates_csv_header(),
+      "CUFES:T:AK:mid,1,1,1,0,0,0,0,FALSE",
+      sep = "\n"
+    ),
     cov
   )
   cfg <- list(
@@ -179,15 +183,19 @@ test_that("covariate event_id mismatch is refused when covariates omit an event"
   writeLines(
     paste(
       "event_id,time,lat,lon,stop_time,stop_lat,stop_lon,volume_m3,pump_readings_used,duration_min,short_event,time_idx",
-      "CUFES:T:AK:ok,2020-01-01T00:00:00Z,33,-119,2020-01-01T00:05:00Z,33.01,-118.99,10,1",
-      "CUFES:T:AK:bad,2020-01-01T00:00:00Z,33,-119,2020-01-01T00:05:00Z,NA,-118.99,10,1",
+      "CUFES:T:AK:ok,2020-01-01T00:00:00Z,33,-119,2020-01-01T00:05:00Z,33.01,-118.99,10,1,FALSE",
+      "CUFES:T:AK:bad,2020-01-01T00:00:00Z,33,-119,2020-01-01T00:05:00Z,NA,-118.99,10,1,FALSE",
       sep = "\n"
     ),
     ev
   )
   writeLines("event_id,taxon,count\nCUFES:T:AK:ok,sardine,1\nCUFES:T:AK:bad,sardine,1", ct)
   writeLines(
-    "event_id,T3m,S3m,MLD_m,sst_grad,front_distance_km,upwelling,log_depth_z\nCUFES:T:AK:ok,0,0,0,0,0,0,0",
+    paste(
+      cufes_covariates_csv_header(),
+      "CUFES:T:AK:ok,0,0,0,0,0,0,0,FALSE",
+      sep = "\n"
+    ),
     cov
   )
   cfg <- list(
@@ -209,8 +217,8 @@ test_that("missing endpoint dropped with aligned covariate ids", {
   writeLines(
     paste(
       "event_id,time,lat,lon,stop_time,stop_lat,stop_lon,volume_m3,pump_readings_used,duration_min,short_event,time_idx",
-      "CUFES:T:AK:ok,2020-01-01T00:00:00Z,33,-119,2020-01-01T00:05:00Z,33.01,-118.99,10,1",
-      "CUFES:T:AK:bad,2020-01-01T00:00:00Z,33,-119,2020-01-01T00:05:00Z,NA,-118.99,10,1",
+      "CUFES:T:AK:ok,2020-01-01T00:00:00Z,33,-119,2020-01-01T00:05:00Z,33.01,-118.99,10,1,FALSE",
+      "CUFES:T:AK:bad,2020-01-01T00:00:00Z,33,-119,2020-01-01T00:05:00Z,NA,-118.99,10,1,FALSE",
       sep = "\n"
     ),
     ev
@@ -218,9 +226,9 @@ test_that("missing endpoint dropped with aligned covariate ids", {
   writeLines("event_id,taxon,count\nCUFES:T:AK:ok,sardine,1\nCUFES:T:AK:bad,sardine,1", ct)
   writeLines(
     paste(
-      "event_id,T3m,S3m,MLD_m,sst_grad,front_distance_km,upwelling,log_depth_z",
-      "CUFES:T:AK:ok,0,0,0,0,0,0,0",
-      "CUFES:T:AK:bad,0,0,0,0,0,0,0",
+      cufes_covariates_csv_header(),
+      "CUFES:T:AK:ok,0,0,0,0,0,0,0,FALSE",
+      "CUFES:T:AK:bad,0,0,0,0,0,0,0,FALSE",
       sep = "\n"
     ),
     cov
@@ -247,14 +255,18 @@ test_that("covariate event_id mismatch is refused", {
   writeLines(
     paste(
       "event_id,time,lat,lon,stop_time,stop_lat,stop_lon,volume_m3,pump_readings_used,duration_min,short_event,time_idx",
-      "CUFES:T:AK:a,2020-01-01T00:00:00Z,33,-119,2020-01-01T00:05:00Z,33.01,-118.99,10,1",
+      "CUFES:T:AK:a,2020-01-01T00:00:00Z,33,-119,2020-01-01T00:05:00Z,33.01,-118.99,10,1,FALSE",
       sep = "\n"
     ),
     ev
   )
   writeLines("event_id,taxon,count\nCUFES:T:AK:a,sardine,1", ct)
   writeLines(
-    "event_id,T3m,S3m,MLD_m,sst_grad,front_distance_km,upwelling,log_depth_z\nCUFES:T:AK:b,0,0,0,0,0,0,0",
+    paste(
+      cufes_covariates_csv_header(),
+      "CUFES:T:AK:b,0,0,0,0,0,0,0,FALSE",
+      sep = "\n"
+    ),
     cov
   )
   cfg <- list(
@@ -294,7 +306,7 @@ test_that("cufes_events schema requires pump_readings_used and short_event", {
   writeLines(
     paste(
       "event_id,time,lat,lon,stop_time,stop_lat,stop_lon,volume_m3,duration_min",
-      "CUFES:T:AK:x,2020-01-01T00:00:00Z,33,-119,2020-01-01T00:05:00Z,33.01,-118.99,10,5",
+      "CUFES:T:AK:x,2020-01-01T00:00:00Z,33,-119,2020-01-01T00:05:00Z,33.01,-118.99,10,5,FALSE",
       sep = "\n"
     ),
     ev
@@ -321,7 +333,11 @@ test_that("bot1 start_latitude columns are accepted on cufes_events", {
   )
   writeLines("event_id,taxon,count\nCUFES:T:AK:bot,sardine,1", ct)
   writeLines(
-    "event_id,T3m,S3m,MLD_m,sst_grad,front_distance_km,upwelling,log_depth_z\nCUFES:T:AK:bot,0,0,0,0,0,0,0",
+    paste(
+      cufes_covariates_csv_header(),
+      "CUFES:T:AK:bot,0,0,0,0,0,0,0,FALSE",
+      sep = "\n"
+    ),
     cov
   )
   cfg <- list(
@@ -338,7 +354,7 @@ test_that("bot1 start_latitude columns are accepted on cufes_events", {
   expect_equal(dat$pump_readings_used, 2L)
 })
 
-test_that("empty covariate drops row and counts per column", {
+test_that("empty covariate on non-excluded row stops with error", {
   ev <- tempfile(fileext = ".csv")
   ct <- tempfile(fileext = ".csv")
   cov <- tempfile(fileext = ".csv")
@@ -357,9 +373,9 @@ test_that("empty covariate drops row and counts per column", {
   )
   writeLines(
     paste(
-      "event_id,T3m,S3m,MLD_m,sst_grad,front_distance_km,upwelling,log_depth_z",
-      "CUFES:T:AK:ok,0.5,0,0,0,0,0,0",
-      "CUFES:T:AK:na,,0,0,0,0,0,0",
+      cufes_covariates_csv_header(),
+      "CUFES:T:AK:ok,0.5,0,0,0,0,0,0,FALSE",
+      "CUFES:T:AK:na,,0,0,0,0,0,0,FALSE",
       sep = "\n"
     ),
     cov
@@ -373,8 +389,5 @@ test_that("empty covariate drops row and counts per column", {
     ),
     response = list(column = "egg_count", effort_column = "volume_m3")
   )
-  dat <- load_model_data(cfg = cfg)
-  expect_equal(nrow(dat), 1L)
-  qc <- fishai_data_prep_qc(dat)
-  expect_equal(qc$dropped_missing_covariate$temp_3m_z, 1L)
+  expect_error(load_model_data(cfg = cfg), "never impute or silently drop")
 })

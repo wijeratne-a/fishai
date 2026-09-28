@@ -62,9 +62,5 @@ test_that("covariate drop table must reference known cufes_events ids", {
     bad
   )
   cfg$data$covariate_drops_path <- bad
-  dat <- load_model_data(cfg = cfg)
-  mesh <- build_fishai_mesh(dat, cfg$mesh)
-  fit <- fit_delta_engine(dat, mesh, cfg)
-  path <- file.path(td, "artifact.rds")
-  expect_error(freeze_model(fit, cfg, path, training_dat = dat), "not found in cufes_events")
+  expect_error(load_model_data(cfg = cfg), "not found in cufes_events")
 })

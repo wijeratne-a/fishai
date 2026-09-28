@@ -20,7 +20,7 @@ test_that("missing cufes_counts row is not a zero for another taxon", {
   )
   writeLines(
     paste(
-      "event_id,T3m,S3m,MLD_m,sst_grad,front_distance_km,upwelling,log_depth_z",
+      cufes_covariates_csv_header(),
       paste0(eid, ",0.1,0.2,10,0,0,0,0"),
       sep = "\n"
     ),
@@ -55,8 +55,8 @@ test_that("excluded_no_count_row counts events without taxon row", {
   writeLines(
     paste(
       "event_id,time,lat,lon,stop_time,stop_lat,stop_lon,volume_m3,pump_readings_used,duration_min,short_event,time_idx",
-      "CUFES:T:AK:a,2020-01-01T00:00:00Z,33,-119,2020-01-01T00:10:00Z,33.01,-118.99,10,1,10",
-      "CUFES:T:AK:b,2020-01-01T00:00:00Z,33.1,-119.1,2020-01-01T00:10:00Z,33.11,-119.09,10,1,10",
+      "CUFES:T:AK:a,2020-01-01T00:00:00Z,33,-119,2020-01-01T00:10:00Z,33.01,-118.99,10,1,10,FALSE",
+      "CUFES:T:AK:b,2020-01-01T00:00:00Z,33.1,-119.1,2020-01-01T00:10:00Z,33.11,-119.09,10,1,10,FALSE",
       sep = "\n"
     ),
     ev
@@ -67,9 +67,9 @@ test_that("excluded_no_count_row counts events without taxon row", {
   )
   writeLines(
     paste(
-      "event_id,T3m,S3m,MLD_m,sst_grad,front_distance_km,upwelling,log_depth_z",
-      "CUFES:T:AK:a,0,0,0,0,0,0,0",
-      "CUFES:T:AK:b,0,0,0,0,0,0,0",
+      cufes_covariates_csv_header(),
+      "CUFES:T:AK:a,0,0,0,0,0,0,0,FALSE",
+      "CUFES:T:AK:b,0,0,0,0,0,0,0,FALSE",
       sep = "\n"
     ),
     cov

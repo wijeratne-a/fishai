@@ -12,7 +12,11 @@ test_that("event_count_guard reads from config and stops on mismatch", {
   )
   writeLines("event_id,taxon,count\nCUFES:T:AK:a,sardine,1", ct)
   writeLines(
-    "event_id,T3m,S3m,MLD_m,sst_grad,front_distance_km,upwelling,log_depth_z\nCUFES:T:AK:a,0,0,0,0,0,0,0",
+    paste(
+      cufes_covariates_csv_header(),
+      "CUFES:T:AK:a,0,0,0,0,0,0,0,FALSE",
+      sep = "\n"
+    ),
     cov
   )
   cfg <- list(
@@ -36,7 +40,7 @@ test_that("exclude_short_events filters on short_event column", {
   cfg <- load_config_yaml(file.path(FISHAI_ROOT, "configs", "models", "cufes_sardine.yaml"))
   all <- load_model_data(cfg = cfg)
   red <- load_model_data(cfg = cfg, exclude_short_events = TRUE)
-  expect_equal(nrow(all), 48L)
+  expect_equal(nrow(all), 46L)
   expect_equal(nrow(red), 24L)
   expect_false(any(isTRUE(.parse_short_event_logical(red$short_event))))
 })

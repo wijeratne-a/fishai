@@ -32,8 +32,8 @@ test_that("missing count row species framing excludes taxon without zero imputat
   writeLines(paste0("event_id,taxon,count\n", eid, ",sardine,2"), ct)
   writeLines(
     paste(
-      "event_id,T3m,S3m,MLD_m,sst_grad,front_distance_km,upwelling,log_depth_z",
-      paste0(eid, ",0,0,0,0,0,0,0"),
+      cufes_covariates_csv_header(),
+      paste0(eid, ",0,0,0,0,0,0,0,FALSE"),
       sep = "\n"
     ),
     cov

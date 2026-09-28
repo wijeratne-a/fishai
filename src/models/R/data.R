@@ -99,11 +99,16 @@ load_model_data <- function(
     if (!"event_id" %in% names(cov)) {
       stop("covariate table missing event_id", call. = FALSE)
     }
+    if (!"excluded" %in% names(cov)) {
+      stop("covariate table missing excluded column", call. = FALSE)
+    }
     .assert_unique_keys(cov$event_id, "event_id in covariates")
-    cov <- cov[cov$event_id %in% dat$event_id, , drop = FALSE]
-    dat <- .join_covariates_strict(dat, cov)
     drops <- .read_covariate_drop_table(cfg$data$covariate_drops_path)
-    if (!is.null(drops)) {
+    .validate_covariate_drop_events(drops, events)
+    .validate_excluded_vs_drop_table(cov, drops)
+    cov <- cov[cov$event_id %in% dat$event_id, , drop = FALSE]
+    dat <- .join_covariates_bot2(dat, cov, cfg)
+    if (!is.null(drops) && nrow(drops)) {
       qc$join_drop_event_ids <- .join_drop_event_ids(drops)
     }
   } else {
@@ -143,11 +148,8 @@ load_model_data <- function(
     qc$dropped_missing_endpoint <- prep$dropped_missing_endpoint
   }
 
-  cov_prep <- .map_and_drop_covariates(dat, cfg)
+  cov_prep <- .map_and_assert_covariates(dat, cfg)
   dat <- cov_prep$dat
-  if (length(cov_prep$dropped_missing_covariate)) {
-    qc$dropped_missing_covariate <- cov_prep$dropped_missing_covariate
-  }
   dat <- .ensure_time_idx(dat)
 
   short_filt <- .apply_short_event_filter(dat, exclude_short_events)
@@ -348,6 +350,9 @@ assert_event_count_guard <- function(events, guard, species = "unknown") {
 }
 
 .validate_covariate_drop_events <- function(drops, events) {
+  if (is.null(drops) || !nrow(drops)) {
+    return(invisible(TRUE))
+  }
   drop_ids <- unique(as.character(drops$event_id))
   ev_ids <- unique(as.character(events$event_id))
   missing <- setdiff(drop_ids, ev_ids)
@@ -362,15 +367,20 @@ assert_event_count_guard <- function(events, guard, species = "unknown") {
 }
 
 #' Summarize covariate-join drops for reference-volume metadata (PR #2 drop table).
+#' Counts and shares use unique ``event_id`` values (not drop-table row counts).
 #' @export
 summarize_covariate_join_drops <- function(
   taxon_eligible_ids,
   taxon_positive_ids,
-  join_drop_ids,
+  join_drop_ids = NULL,
+  drops = NULL,
   dist_by_event_id = NULL,
   short_event_by_event_id = NULL,
   nearshore_km = 20
 ) {
+  if (!is.null(drops) && nrow(drops)) {
+    join_drop_ids <- unique(as.character(drops$event_id))
+  }
   if (is.null(join_drop_ids) || !length(join_drop_ids)) {
     return(NULL)
   }
@@ -405,12 +415,21 @@ summarize_covariate_join_drops <- function(
     }
     out
   }
-  drop_in_eligible <- intersect(eligible, drop_ids)
+  drop_in_eligible <- unique(intersect(eligible, drop_ids))
   .share <- function(num, den) {
     if (!den) {
       return(NA_real_)
     }
     num / den
+  }
+  .stratum_drop_report <- function(ids, ddrop) {
+    ddrop <- unique(intersect(ids, ddrop))
+    dpos <- intersect(ids, pos_ids)
+    list(
+      n_dropped = length(ddrop),
+      share_all_events = .share(length(ddrop), length(ids)),
+      share_positive_events = .share(length(intersect(ddrop, dpos)), length(dpos))
+    )
   }
   out <- list(
     n_eligible = length(eligible),
@@ -421,28 +440,39 @@ summarize_covariate_join_drops <- function(
   )
   for (shore in c("nearshore", "offshore")) {
     ids <- stratum_ids(eligible, shore = shore)
-    ddrop <- intersect(ids, drop_ids)
-    dpos <- intersect(ids, pos_ids)
-    out[[paste0("share_all_events_", shore)]] <- .share(length(ddrop), length(ids))
-    out[[paste0("share_positive_events_", shore)]] <- .share(length(intersect(ddrop, dpos)), length(dpos))
+    rep <- .stratum_drop_report(ids, drop_ids)
+    out[[paste0("share_all_events_", shore)]] <- rep$share_all_events
+    out[[paste0("share_positive_events_", shore)]] <- rep$share_positive_events
   }
   for (dur_label in c("short", "long")) {
     short_flag <- dur_label == "short"
     ids <- stratum_ids(eligible, short_only = short_flag)
-    ddrop <- intersect(ids, drop_ids)
-    dpos <- intersect(ids, pos_ids)
-    out[[paste0("share_all_events_", dur_label)]] <- .share(length(ddrop), length(ids))
-    out[[paste0("share_positive_events_", dur_label)]] <- .share(length(intersect(ddrop, dpos)), length(dpos))
+    rep <- .stratum_drop_report(ids, drop_ids)
+    out[[paste0("share_all_events_", dur_label)]] <- rep$share_all_events
+    out[[paste0("share_positive_events_", dur_label)]] <- rep$share_positive_events
     for (shore in c("nearshore", "offshore")) {
       ids2 <- stratum_ids(eligible, shore = shore, short_only = short_flag)
-      ddrop2 <- intersect(ids2, drop_ids)
-      dpos2 <- intersect(ids2, pos_ids)
-      out[[paste0("share_all_events_", shore, "_", dur_label)]] <- .share(length(ddrop2), length(ids2))
-      out[[paste0("share_positive_events_", shore, "_", dur_label)]] <- .share(
-        length(intersect(ddrop2, dpos2)),
-        length(dpos2)
+      rep2 <- .stratum_drop_report(ids2, drop_ids)
+      out[[paste0("share_all_events_", shore, "_", dur_label)]] <- rep2$share_all_events
+      out[[paste0("share_positive_events_", shore, "_", dur_label)]] <- rep2$share_positive_events
+    }
+  }
+  if (!is.null(drops) && nrow(drops) && "reason" %in% names(drops)) {
+    reasons <- sort(unique(as.character(drops$reason)))
+    by_reason <- list()
+    for (reason in reasons) {
+      reason_ids <- unique(as.character(drops$event_id[drops$reason == reason]))
+      dropped_reason <- unique(intersect(eligible, reason_ids))
+      by_reason[[reason]] <- list(
+        n_events = length(dropped_reason),
+        share_all_events = .share(length(dropped_reason), length(eligible)),
+        share_positive_events = .share(
+          length(intersect(dropped_reason, pos_ids)),
+          length(pos_ids)
+        )
       )
     }
+    out$by_reason <- by_reason
   }
   out
 }
@@ -458,7 +488,41 @@ fishai_data_prep_qc <- function(dat) {
   qc
 }
 
-.join_covariates_strict <- function(events, cov) {
+.parse_excluded_logical <- function(x) {
+  .parse_short_event_logical(x)
+}
+
+.validate_excluded_vs_drop_table <- function(cov, drops) {
+  ex <- .parse_excluded_logical(cov$excluded)
+  ex_ids <- unique(as.character(cov$event_id[ex %in% TRUE]))
+  drop_ids <- if (is.null(drops) || !nrow(drops)) {
+    character()
+  } else {
+    unique(as.character(drops$event_id))
+  }
+  if (!length(drop_ids) && length(ex_ids)) {
+    stop(
+      "covariate table has excluded=TRUE for ",
+      length(ex_ids),
+      " event(s) but no covariate drop table was provided; first ids: ",
+      paste(head(ex_ids, 10L), collapse = ", "),
+      call. = FALSE
+    )
+  }
+  only_ex <- setdiff(ex_ids, drop_ids)
+  only_drop <- setdiff(drop_ids, ex_ids)
+  if (!length(only_ex) && !length(only_drop)) {
+    return(invisible(TRUE))
+  }
+  mismatch <- head(c(only_ex, only_drop), 10L)
+  stop(
+    "excluded column inconsistent with covariate drop table; mismatched event_id: ",
+    paste(mismatch, collapse = ", "),
+    call. = FALSE
+  )
+}
+
+.join_covariates_bot2 <- function(events, cov, cfg) {
   ev_ids <- sort(unique(as.character(events$event_id)))
   cov_ids <- sort(unique(as.character(cov$event_id)))
   if (!identical(ev_ids, cov_ids)) {
@@ -478,7 +542,84 @@ fishai_data_prep_qc <- function(dat) {
   for (col in extra_cov_cols) {
     events[[col]] <- cov[[col]]
   }
+  events <- .map_model_covariates(events, cfg)
+  .assert_non_excluded_covariates_complete(events, cfg)
+  ex <- .parse_excluded_logical(events$excluded)
+  events <- events[!(ex %in% TRUE), , drop = FALSE]
+  if (nrow(events) == 0L) {
+    stop("no events remain after excluding covariate-join failures", call. = FALSE)
+  }
   events
+}
+
+.map_model_covariates <- function(dat, cfg) {
+  model_cols <- .model_covariate_columns(cfg)
+  if (!length(model_cols)) {
+    return(dat)
+  }
+  upstream_map <- cfg$covariates$upstream_fields %||% .default_upstream_covariate_map()
+  for (model_col in model_cols) {
+    slug <- sub("_z$", "", model_col)
+    upstream <- upstream_map[[slug]]
+    if (is.null(upstream) || (length(upstream) == 1L && is.na(upstream))) {
+      upstream <- model_col
+    }
+    if (upstream %in% names(dat)) {
+      dat[[model_col]] <- dat[[upstream]]
+    } else if (!model_col %in% names(dat)) {
+      stop("missing covariate column: ", upstream, " (model ", model_col, ")", call. = FALSE)
+    }
+  }
+  dat
+}
+
+.assert_non_excluded_covariates_complete <- function(dat, cfg) {
+  ex <- .parse_excluded_logical(dat$excluded)
+  keep <- !(ex %in% TRUE)
+  if (!any(keep)) {
+    return(invisible(TRUE))
+  }
+  sub <- dat[keep, , drop = FALSE]
+  model_cols <- .model_covariate_columns(cfg)
+  upstream_map <- cfg$covariates$upstream_fields %||% .default_upstream_covariate_map()
+  for (model_col in model_cols) {
+    slug <- sub("_z$", "", model_col)
+    upstream <- upstream_map[[slug]]
+    if (is.null(upstream) || (length(upstream) == 1L && is.na(upstream))) {
+      upstream <- model_col
+    }
+    col <- if (model_col %in% names(sub)) model_col else upstream
+    if (!col %in% names(sub)) {
+      stop("missing covariate column for non-excluded event: ", col, call. = FALSE)
+    }
+    vals <- sub[[col]]
+    if (is.character(vals)) {
+      bad <- is.na(vals) | !nzchar(trimws(vals))
+    } else {
+      bad <- is.na(vals) | !is.finite(as.numeric(vals))
+    }
+    if (any(bad)) {
+      stop(
+        "non-excluded event has missing covariate value in ",
+        col,
+        " (never impute or silently drop)",
+        call. = FALSE
+      )
+    }
+  }
+  invisible(TRUE)
+}
+
+.map_and_assert_covariates <- function(dat, cfg) {
+  if ("excluded" %in% names(dat)) {
+    return(list(dat = dat))
+  }
+  dat <- .map_model_covariates(dat, cfg)
+  .assert_non_excluded_covariates_complete(
+    data.frame(excluded = FALSE, dat, stringsAsFactors = FALSE),
+    cfg
+  )
+  list(dat = dat)
 }
 
 .add_track_midpoint_xy <- function(dat) {
@@ -613,49 +754,7 @@ fishai_data_prep_qc <- function(dat) {
 }
 
 .map_and_drop_covariates <- function(dat, cfg) {
-  model_cols <- .model_covariate_columns(cfg)
-  dropped_by_col <- list()
-  if (!length(model_cols)) {
-    return(list(dat = dat, dropped_missing_covariate = dropped_by_col))
-  }
-  upstream_map <- cfg$covariates$upstream_fields %||% .default_upstream_covariate_map()
-  for (model_col in model_cols) {
-    slug <- sub("_z$", "", model_col)
-    upstream <- upstream_map[[slug]]
-    if (is.null(upstream) || (length(upstream) == 1L && is.na(upstream))) {
-      upstream <- model_col
-    }
-    if (upstream %in% names(dat)) {
-      dat[[model_col]] <- dat[[upstream]]
-    } else if (!model_col %in% names(dat)) {
-      stop("missing covariate column: ", upstream, " (model ", model_col, ")", call. = FALSE)
-    }
-  }
-  drop <- rep(FALSE, nrow(dat))
-  for (col in model_cols) {
-    if (!col %in% names(dat)) {
-      next
-    }
-    bad <- .covariate_empty(dat[[col]])
-    if (any(bad)) {
-      dropped_by_col[[col]] <- as.integer(sum(bad))
-      drop <- drop | bad
-    }
-  }
-  if (any(drop)) {
-    dat <- dat[!drop, , drop = FALSE]
-  }
-  if (nrow(dat) == 0L) {
-    stop("no rows remain after dropping empty covariates", call. = FALSE)
-  }
-  list(dat = dat, dropped_missing_covariate = dropped_by_col)
-}
-
-.covariate_empty <- function(x) {
-  if (is.character(x)) {
-    return(is.na(x) | !nzchar(trimws(x)))
-  }
-  is.na(x)
+  .map_and_assert_covariates(dat, cfg)
 }
 
 .ensure_time_idx <- function(dat) {

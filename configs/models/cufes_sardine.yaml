@@ -17,6 +17,7 @@ fishai_engine_config:
     events_path: src/models/tests/fixtures/synthetic_cufes_events.csv
     counts_path: src/models/tests/fixtures/synthetic_cufes_counts.csv
     covariates_path: src/models/tests/fixtures/synthetic_cufes_covariates.csv
+    covariate_drops_path: src/models/tests/fixtures/synthetic_covariate_drops.csv
     source_id: calcofi_cufes
   covariates:
     forcing_source_id: glorys
