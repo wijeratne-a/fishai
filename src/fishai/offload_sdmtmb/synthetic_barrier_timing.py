@@ -14,6 +14,26 @@ R_BENCHMARK_SCRIPT = (
     REPO_ROOT / "src" / "models" / "offload_sdmtmb" / "SYNTHETIC_barrier_delta_gamma_timing.R"
 )
 SYNTHETIC_BARRIER_TIMING_BASENAME = "SYNTHETIC_sdmtmb_barrier_delta_gamma_timing"
+ZERO_BARRIER_TRIANGLES_REASON = "zero barrier triangles flagged"
+
+
+def validate_synthetic_barrier_benchmark_report(payload: dict[str, Any]) -> None:
+    """
+    Enforce PR #21 guard: a completed barrier benchmark must flag barrier triangles.
+
+    Skipped runs (missing R/sdmTMB) are allowed. When ``barrier_triangle_count`` is
+    present and zero, ``status`` must be ``error`` with the documented reason.
+    """
+    if payload.get("status") == "skipped":
+        return
+    count = payload.get("barrier_triangle_count")
+    if count is None:
+        return
+    if int(count) == 0:
+        if payload.get("status") != "error":
+            raise ValueError("barrier_triangle_count 0 requires status error")
+        if payload.get("reason") != ZERO_BARRIER_TRIANGLES_REASON:
+            raise ValueError("barrier_triangle_count 0 requires zero-barrier reason")
 
 
 def run_synthetic_barrier_delta_gamma_timing_benchmark(
@@ -71,6 +91,7 @@ def run_synthetic_barrier_delta_gamma_timing_benchmark(
         if isinstance(loaded, dict):
             loaded.setdefault("label", "SYNTHETIC")
             payload = loaded
+    validate_synthetic_barrier_benchmark_report(payload)
     payload["wall_sec"] = tick() - t0
     if "SYNTHETIC" not in report_path.name:
         raise ValueError("benchmark report path must include SYNTHETIC in the filename")
