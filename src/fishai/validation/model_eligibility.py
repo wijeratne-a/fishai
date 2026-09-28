@@ -19,7 +19,7 @@ from typing import Any, Iterable
 
 REPO_ROOT = Path(__file__).resolve().parents[3]
 QUARANTINE = REPO_ROOT / "data" / "quarantine"
-LICENSE_MANIFEST = REPO_ROOT / "data" / "manifests" / "source-licenses.csv"
+LICENSE_MANIFEST = REPO_ROOT / "docs" / "archive" / "legacy_data" / "manifests" / "source-licenses.csv"
 
 ALLOWED_LICENSE_CLASSES = {
     "AUTO_ACQUIRE_INTERNAL_ONLY",

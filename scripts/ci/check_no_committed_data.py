@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Fail if tracked files exist under data/raw or data/processed, or if binary extensions are committed."""
+"""Fail if tracked files violate data/binary commit policy."""
 
 from __future__ import annotations
 
@@ -9,6 +9,7 @@ from pathlib import Path
 
 REPO = Path(__file__).resolve().parents[2]
 FORBIDDEN_PREFIXES = ("data/raw/", "data/processed/")
+FORBIDDEN_DATA_CSV_PREFIX = "data/"
 BINARY_SUFFIXES = (
     ".nc",
     ".parquet",
@@ -17,6 +18,22 @@ BINARY_SUFFIXES = (
     ".hdf5",
     ".tif",
     ".tiff",
+    ".gpkg",
+    ".geojson",
+    ".shp",
+    ".shx",
+    ".dbf",
+    ".prj",
+    ".cpg",
+    ".grib",
+    ".grib2",
+    ".grb",
+    ".grb2",
+    ".rds",
+    ".rdata",
+    ".feather",
+    ".pkl",
+    ".pickle",
 )
 
 
@@ -31,6 +48,8 @@ def main() -> int:
         if rel.startswith(FORBIDDEN_PREFIXES):
             errors.append(f"forbidden_path:{rel}")
         lower = rel.lower()
+        if lower.startswith(FORBIDDEN_DATA_CSV_PREFIX) and lower.endswith(".csv"):
+            errors.append(f"forbidden_data_csv:{rel}")
         for suffix in BINARY_SUFFIXES:
             if lower.endswith(suffix) or f"{suffix}/" in lower:
                 errors.append(f"forbidden_binary:{rel}")

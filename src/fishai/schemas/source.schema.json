@@ -61,7 +61,7 @@
     "owner": {
       "type": ["string", "null"]
     },
-    "landing_url": {
+    "documentation_url": {
       "type": ["string", "null"],
       "format": "uri"
     },

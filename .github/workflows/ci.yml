@@ -27,5 +27,8 @@ jobs:
       - name: Ingestion SOURCES manifest
         run: python scripts/ci/check_sources_manifest.py
 
+      - name: Fishery-dependent schema fields
+        run: python scripts/ci/check_fishery_schema_fields.py
+
       - name: Pytest
         run: pytest

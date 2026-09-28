@@ -81,7 +81,7 @@ def base_valid_nondetection(**overrides) -> dict:
         "effort_type": "VISUAL_PLOT",
         "taxonomic_confidence": "CONFIRMED",
         "identification_method": "VISUAL_FIELD",
-        "observer_or_instrument_type": "TRAINED_DIVER",
+        "recorder_or_instrument_type": "TRAINED_DIVER",
         "spatial_precision": "SAMPLE_UNIT",
         "temporal_precision": "DAY",
         "protocol_version": "RVC_SYNTHETIC_v1",

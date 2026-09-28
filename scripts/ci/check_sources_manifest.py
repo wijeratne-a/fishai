@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Ensure every ingestion source module is listed in data/SOURCES.yaml."""
+"""Ensure every ingestion source module is listed in data/SOURCES.yaml with required fields."""
 
 from __future__ import annotations
 
@@ -11,6 +11,17 @@ import yaml
 REPO = Path(__file__).resolve().parents[2]
 INGESTION = REPO / "src" / "fishai" / "ingestion"
 MANIFEST = REPO / "data" / "SOURCES.yaml"
+
+REQUIRED_FIELDS = (
+    "module",
+    "license",
+    "license_url",
+    "attribution",
+    "status",
+    "enabled",
+)
+
+ALLOWED_STATUS = frozenset({"approved", "pending", "account_required", "disabled"})
 
 
 def source_modules() -> list[Path]:
@@ -35,6 +46,18 @@ def main() -> int:
         if isinstance(entry, dict) and entry.get("module")
     }
     errors: list[str] = []
+    for source_id, entry in sources.items():
+        if not isinstance(entry, dict):
+            errors.append(f"bad_entry:{source_id}")
+            continue
+        for field in REQUIRED_FIELDS:
+            if field not in entry:
+                errors.append(f"missing_field:{source_id}:{field}")
+        status = entry.get("status")
+        if status not in ALLOWED_STATUS:
+            errors.append(f"bad_status:{source_id}:{status}")
+        if entry.get("enabled") is True and status != "approved":
+            errors.append(f"enabled_requires_approved:{source_id}")
     for path in source_modules():
         rel_mod = f"fishai.ingestion.{path.parent.name}.{path.stem}"
         if rel_mod not in manifest_modules:

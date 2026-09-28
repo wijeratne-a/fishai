@@ -16,7 +16,7 @@
     "effort_type",
     "taxonomic_confidence",
     "identification_method",
-    "observer_or_instrument_type",
+    "recorder_or_instrument_type",
     "spatial_precision",
     "temporal_precision",
     "protocol_version",
@@ -150,7 +150,7 @@
         "UNKNOWN"
       ]
     },
-    "observer_or_instrument_type": {
+    "recorder_or_instrument_type": {
       "type": "string",
       "enum": [
         "TRAINED_DIVER",
@@ -158,7 +158,7 @@
         "AUTOMATED_SAMPLER",
         "HYDROPHONE",
         "TAG_RECEIVER",
-        "CITIZEN_OBSERVER",
+        "CITIZEN_RECORDER",
         "COMPILER",
         "OTHER",
         "UNKNOWN"
