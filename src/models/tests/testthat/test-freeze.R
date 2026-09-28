@@ -36,4 +36,35 @@ test_that("freeze records covariate join drop shares when drop table configured"
   expect_gt(drops$n_join_dropped, 0L)
   expect_true(is.finite(drops$share_all_events))
   expect_true(is.finite(drops$share_all_events_nearshore))
+  expect_true(is.finite(drops$share_all_events_short))
+  expect_true(is.finite(drops$share_positive_events_long))
+})
+
+test_that("covariate drop table must reference known cufes_events ids", {
+  td <- tempfile()
+  dir.create(td)
+  cfg <- load_config_yaml(file.path(FISHAI_ROOT, "configs", "models", "cufes_sardine.yaml"))
+  cfg$data$covariate_drops_path <- file.path(
+    FISHAI_ROOT,
+    "src",
+    "models",
+    "tests",
+    "fixtures",
+    "synthetic_covariate_drops.csv"
+  )
+  bad <- tempfile(fileext = ".csv")
+  writeLines(
+    paste(
+      "event_id,reason,covariate,latitude,longitude",
+      "CUFES:MISSING:XX:999,missing_covariate,T3m,33,-119",
+      sep = "\n"
+    ),
+    bad
+  )
+  cfg$data$covariate_drops_path <- bad
+  dat <- load_model_data(cfg = cfg)
+  mesh <- build_fishai_mesh(dat, cfg$mesh)
+  fit <- fit_delta_engine(dat, mesh, cfg)
+  path <- file.path(td, "artifact.rds")
+  expect_error(freeze_model(fit, cfg, path, training_dat = dat), "not found in cufes_events")
 })

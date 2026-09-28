@@ -5,7 +5,7 @@ test_that("missing cufes_counts row is not a zero for another taxon", {
   eid <- "CUFES:T:AK:only-sardine"
   writeLines(
     paste(
-      "event_id,time,lat,lon,stop_time,stop_lat,stop_lon,volume_m3,pump_readings_used,duration_min,short_event,time_idx,duration_min",
+      "event_id,time,lat,lon,stop_time,stop_lat,stop_lon,volume_m3,pump_readings_used,duration_min,short_event,time_idx",
       paste0(
         eid,
         ",2020-01-01T00:00:00Z,33,-119,2020-01-01T00:10:00Z,33.01,-118.99,100,1,10"
@@ -54,7 +54,7 @@ test_that("excluded_no_count_row counts events without taxon row", {
   cov <- tempfile(fileext = ".csv")
   writeLines(
     paste(
-      "event_id,time,lat,lon,stop_time,stop_lat,stop_lon,volume_m3,pump_readings_used,duration_min,short_event,time_idx,duration_min",
+      "event_id,time,lat,lon,stop_time,stop_lat,stop_lon,volume_m3,pump_readings_used,duration_min,short_event,time_idx",
       "CUFES:T:AK:a,2020-01-01T00:00:00Z,33,-119,2020-01-01T00:10:00Z,33.01,-118.99,10,1,10",
       "CUFES:T:AK:b,2020-01-01T00:00:00Z,33.1,-119.1,2020-01-01T00:10:00Z,33.11,-119.09,10,1,10",
       sep = "\n"

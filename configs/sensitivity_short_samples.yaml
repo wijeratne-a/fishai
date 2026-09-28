@@ -31,6 +31,8 @@ short_sample_sensitivity:
   revert_on_fail:
     duration_minutes: 10
 
+  reduced_fit_exclude_short_events: true
+
   species:
     - label: sardine
       model_config: configs/models/cufes_sardine.yaml

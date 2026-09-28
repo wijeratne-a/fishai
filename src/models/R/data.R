@@ -13,10 +13,16 @@
 #' @param path Deprecated single-table override (tests only).
 #' @param cfg Config with `data`, `response`, and `covariates` blocks.
 #' @param min_duration_min Optional; drop events with ``duration_min`` below this threshold.
+#' @param exclude_short_events If TRUE, keep only rows with ``short_event == FALSE`` (#4 column).
 #' @return Data frame with `event_id`, `X`, `Y`, `y`, `log_effort`, and `*_z`
 #'   covariates. Attribute `fishai_data_qc` holds drop counts (never imputed).
 #' @export
-load_model_data <- function(path = NULL, cfg = NULL, min_duration_min = NULL) {
+load_model_data <- function(
+  path = NULL,
+  cfg = NULL,
+  min_duration_min = NULL,
+  exclude_short_events = NULL
+) {
   if (is.null(cfg)) {
     stop("cfg is required", call. = FALSE)
   }
@@ -26,11 +32,13 @@ load_model_data <- function(path = NULL, cfg = NULL, min_duration_min = NULL) {
     dropped_missing_covariate = list(),
     excluded_no_count_row = 0L,
     dropped_short_duration = 0L,
+    dropped_short_event = 0L,
     taxon = NA_character_,
     join_drop_event_ids = character()
   )
 
   min_duration_min <- min_duration_min %||% cfg$data$min_duration_min %||% cfg$sensitivity$min_duration_min
+  exclude_short_events <- exclude_short_events %||% cfg$data$exclude_short_events %||% FALSE
 
   effort_col <- cfg$response$effort_column %||% "volume_m3"
   resp_col <- cfg$response$column %||% "egg_count"
@@ -43,6 +51,10 @@ load_model_data <- function(path = NULL, cfg = NULL, min_duration_min = NULL) {
     events <- .read_model_table(cfg$data$events_path)
     events <- .normalize_cufes_events_columns(events)
     .validate_cufes_events_schema(events)
+    assert_no_open_review_flags(cfg)
+    if (!is.null(cfg$data$event_count_guard)) {
+      .assert_event_count_guard(events, cfg$data$event_count_guard, cfg$species$taxon %||% "unknown")
+    }
     counts <- .read_model_table(cfg$data$counts_path)
     .validate_cufes_counts(counts)
     taxon <- cfg$species$taxon
@@ -138,6 +150,12 @@ load_model_data <- function(path = NULL, cfg = NULL, min_duration_min = NULL) {
   }
   dat <- .ensure_time_idx(dat)
 
+  short_filt <- .apply_short_event_filter(dat, exclude_short_events)
+  dat <- short_filt$dat
+  if (!is.null(short_filt$dropped_short_event)) {
+    qc$dropped_short_event <- short_filt$dropped_short_event
+  }
+
   dur <- .apply_min_duration_filter(dat, min_duration_min)
   dat <- dur$dat
   if (!is.null(dur$dropped_short_duration)) {
@@ -156,6 +174,12 @@ load_model_data <- function(path = NULL, cfg = NULL, min_duration_min = NULL) {
     if (!is.null(events_for_dist) && "dist_shore_km" %in% names(events_for_dist)) {
       attr(dat, "fishai_dist_shore_km_by_event") <- stats::setNames(
         as.numeric(events_for_dist$dist_shore_km),
+        as.character(events_for_dist$event_id)
+      )
+    }
+    if (!is.null(events_for_dist) && "short_event" %in% names(events_for_dist)) {
+      attr(dat, "fishai_short_event_by_event") <- stats::setNames(
+        .parse_short_event_logical(events_for_dist$short_event),
         as.character(events_for_dist$event_id)
       )
     }
@@ -256,6 +280,87 @@ load_model_data <- function(path = NULL, cfg = NULL, min_duration_min = NULL) {
   unique(as.character(drops$event_id))
 }
 
+.parse_short_event_logical <- function(x) {
+  if (is.logical(x)) {
+    return(x)
+  }
+  if (is.numeric(x)) {
+    return(as.logical(x))
+  }
+  lx <- tolower(trimws(as.character(x)))
+  out <- rep(NA, length(lx))
+  out[lx %in% c("true", "t", "1", "yes")] <- TRUE
+  out[lx %in% c("false", "f", "0", "no")] <- FALSE
+  out
+}
+
+#' Assert bot1 event counts before covariate join (config-driven guard).
+#' @export
+assert_event_count_guard <- function(events, guard, species = "unknown") {
+  .assert_event_count_guard(events, guard, species)
+}
+
+.assert_event_count_guard <- function(events, guard, species) {
+  if (is.null(guard)) {
+    return(invisible(TRUE))
+  }
+  n_ev <- nrow(events)
+  short <- .parse_short_event_logical(events$short_event)
+  n_short <- sum(short %in% TRUE, na.rm = TRUE)
+  n_long <- sum(short %in% FALSE, na.rm = TRUE)
+  exp_n <- as.integer(guard$n_events)
+  exp_short <- as.integer(guard$n_short_event)
+  exp_long <- as.integer(guard$n_long_event)
+  ok <- (n_ev == exp_n) && (n_short == exp_short) && (n_long == exp_long)
+  if (!ok) {
+    stop(
+      "event_count_guard mismatch for taxon=",
+      species,
+      ": observed n_events=",
+      n_ev,
+      " n_short_event=",
+      n_short,
+      " n_long_event=",
+      n_long,
+      "; expected n_events=",
+      exp_n,
+      " n_short_event=",
+      exp_short,
+      " n_long_event=",
+      exp_long,
+      call. = FALSE
+    )
+  }
+  invisible(TRUE)
+}
+
+.apply_short_event_filter <- function(dat, exclude_short_events) {
+  if (!isTRUE(exclude_short_events)) {
+    return(list(dat = dat, dropped_short_event = NULL))
+  }
+  if (!"short_event" %in% names(dat)) {
+    stop("short_event column required for exclude_short_events filter", call. = FALSE)
+  }
+  short <- .parse_short_event_logical(dat$short_event)
+  keep <- !(short %in% TRUE)
+  dropped <- as.integer(sum(!keep))
+  list(dat = dat[keep, , drop = FALSE], dropped_short_event = dropped)
+}
+
+.validate_covariate_drop_events <- function(drops, events) {
+  drop_ids <- unique(as.character(drops$event_id))
+  ev_ids <- unique(as.character(events$event_id))
+  missing <- setdiff(drop_ids, ev_ids)
+  if (length(missing)) {
+    stop(
+      "covariate drop table event_id not found in cufes_events: ",
+      paste(head(missing, 5), collapse = ", "),
+      call. = FALSE
+    )
+  }
+  invisible(TRUE)
+}
+
 #' Summarize covariate-join drops for reference-volume metadata (PR #2 drop table).
 #' @export
 summarize_covariate_join_drops <- function(
@@ -263,6 +368,7 @@ summarize_covariate_join_drops <- function(
   taxon_positive_ids,
   join_drop_ids,
   dist_by_event_id = NULL,
+  short_event_by_event_id = NULL,
   nearshore_km = 20
 ) {
   if (is.null(join_drop_ids) || !length(join_drop_ids)) {
@@ -278,15 +384,26 @@ summarize_covariate_join_drops <- function(
     pos_ids <- eligible
   }
   dist_map <- dist_by_event_id
-  stratum_ids <- function(ids) {
-    if (is.null(dist_map) || !length(dist_map)) {
-      return(list(nearshore = character(), offshore = character()))
+  short_map <- short_event_by_event_id
+  stratum_ids <- function(ids, shore = NULL, short_only = NULL) {
+    out <- ids
+    if (!is.null(short_only) && length(short_map)) {
+      sx <- short_map[out]
+      if (isTRUE(short_only)) {
+        out <- out[sx %in% TRUE]
+      } else if (isFALSE(short_only)) {
+        out <- out[sx %in% FALSE]
+      }
     }
-    d <- dist_map[ids]
-    list(
-      nearshore = ids[!is.na(d) & d <= nearshore_km],
-      offshore = ids[!is.na(d) & d > nearshore_km]
-    )
+    if (!is.null(shore) && length(dist_map)) {
+      d <- dist_map[out]
+      if (shore == "nearshore") {
+        out <- out[!is.na(d) & d <= nearshore_km]
+      } else if (shore == "offshore") {
+        out <- out[!is.na(d) & d > nearshore_km]
+      }
+    }
+    out
   }
   drop_in_eligible <- intersect(eligible, drop_ids)
   .share <- function(num, den) {
@@ -302,12 +419,30 @@ summarize_covariate_join_drops <- function(
     share_positive_events = .share(length(intersect(drop_in_eligible, pos_ids)), length(pos_ids)),
     nearshore_max_km = nearshore_km
   )
-  for (label in c("nearshore", "offshore")) {
-    ids <- stratum_ids(eligible)[[label]]
+  for (shore in c("nearshore", "offshore")) {
+    ids <- stratum_ids(eligible, shore = shore)
     ddrop <- intersect(ids, drop_ids)
     dpos <- intersect(ids, pos_ids)
-    out[[paste0("share_all_events_", label)]] <- .share(length(ddrop), length(ids))
-    out[[paste0("share_positive_events_", label)]] <- .share(length(intersect(ddrop, dpos)), length(dpos))
+    out[[paste0("share_all_events_", shore)]] <- .share(length(ddrop), length(ids))
+    out[[paste0("share_positive_events_", shore)]] <- .share(length(intersect(ddrop, dpos)), length(dpos))
+  }
+  for (dur_label in c("short", "long")) {
+    short_flag <- dur_label == "short"
+    ids <- stratum_ids(eligible, short_only = short_flag)
+    ddrop <- intersect(ids, drop_ids)
+    dpos <- intersect(ids, pos_ids)
+    out[[paste0("share_all_events_", dur_label)]] <- .share(length(ddrop), length(ids))
+    out[[paste0("share_positive_events_", dur_label)]] <- .share(length(intersect(ddrop, dpos)), length(dpos))
+    for (shore in c("nearshore", "offshore")) {
+      ids2 <- stratum_ids(eligible, shore = shore, short_only = short_flag)
+      ddrop2 <- intersect(ids2, drop_ids)
+      dpos2 <- intersect(ids2, pos_ids)
+      out[[paste0("share_all_events_", shore, "_", dur_label)]] <- .share(length(ddrop2), length(ids2))
+      out[[paste0("share_positive_events_", shore, "_", dur_label)]] <- .share(
+        length(intersect(ddrop2, dpos2)),
+        length(dpos2)
+      )
+    }
   }
   out
 }

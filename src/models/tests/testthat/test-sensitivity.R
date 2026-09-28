@@ -4,7 +4,7 @@ test_that("min_duration_min drops short events and logs QC", {
   cov <- tempfile(fileext = ".csv")
   writeLines(
     paste(
-      "event_id,time,lat,lon,stop_time,stop_lat,stop_lon,volume_m3,pump_readings_used,duration_min,short_event,time_idx,duration_min",
+      "event_id,time,lat,lon,stop_time,stop_lat,stop_lon,volume_m3,pump_readings_used,duration_min,short_event,time_idx",
       "CUFES:T:AK:long,2020-01-01T00:00:00Z,33,-119,2020-01-01T00:10:00Z,33.01,-118.99,10,1,10",
       "CUFES:T:AK:short,2020-01-01T00:00:00Z,33.1,-119.1,2020-01-01T00:10:00Z,33.11,-119.09,10,1,3",
       sep = "\n"

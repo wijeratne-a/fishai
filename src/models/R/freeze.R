@@ -15,11 +15,27 @@ compute_reference_volume_metadata <- function(training_dat, cfg) {
   join_report <- NULL
   qc <- attr(training_dat, "fishai_data_qc")
   if (!is.null(qc) && length(qc$join_drop_event_ids)) {
+    drops_path <- cfg$data$covariate_drops_path
+    events_path <- cfg$data$events_path
+    short_map <- attr(training_dat, "fishai_short_event_by_event")
+    if (!is.null(drops_path) && !is.null(events_path)) {
+      drops <- .read_covariate_drop_table(drops_path)
+      events <- .read_model_table(events_path)
+      events <- .normalize_cufes_events_columns(events)
+      .validate_covariate_drop_events(drops, events)
+      if (is.null(short_map) && "short_event" %in% names(events)) {
+        short_map <- stats::setNames(
+          .parse_short_event_logical(events$short_event),
+          as.character(events$event_id)
+        )
+      }
+    }
     join_report <- summarize_covariate_join_drops(
       taxon_eligible_ids = attr(training_dat, "fishai_taxon_eligible_event_ids"),
       taxon_positive_ids = attr(training_dat, "fishai_taxon_positive_event_ids"),
       join_drop_ids = qc$join_drop_event_ids,
       dist_by_event_id = attr(training_dat, "fishai_dist_shore_km_by_event"),
+      short_event_by_event_id = short_map,
       nearshore_km = cfg$data$nearshore_max_km %||% 20
     )
   }

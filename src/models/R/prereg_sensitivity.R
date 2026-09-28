@@ -121,7 +121,8 @@ check_coefficient_wald_pass <- function(full_fit, reduced_fit, conf_level = 0.95
   boyce <- numeric()
   for (k in folds) {
     train <- dat[dat[[fold_col]] != k, , drop = FALSE]
-    test <- dat[dat[[fold_col]] == k & dat$duration_min >= eval_min_duration, , drop = FALSE]
+    test <- dat[dat[[fold_col]] == k, , drop = FALSE]
+    test <- .cv_holdout_rows(test, eval_min_duration)
     if (nrow(train) < 5L || nrow(test) < 2L) {
       next
     }
@@ -158,7 +159,8 @@ check_coefficient_wald_pass <- function(full_fit, reduced_fit, conf_level = 0.95
   boyce <- numeric()
   for (ht in hold_times) {
     train <- dat[dat$time_idx < ht, , drop = FALSE]
-    test <- dat[dat$time_idx == ht & dat$duration_min >= eval_min_duration, , drop = FALSE]
+    test <- dat[dat$time_idx == ht, , drop = FALSE]
+    test <- .cv_holdout_rows(test, eval_min_duration)
     if (nrow(train) < 5L || nrow(test) < 2L) {
       next
     }
@@ -216,19 +218,38 @@ check_cv_design_pass <- function(full_metrics, reduced_metrics, margin_se, metri
   c(out, list(pass = all_pass))
 }
 
+.cv_holdout_rows <- function(test, eval_min_duration) {
+  if ("short_event" %in% names(test)) {
+    short <- .parse_short_event_logical(test$short_event)
+    return(test[short %in% FALSE, , drop = FALSE])
+  }
+  if (!is.null(eval_min_duration) && "duration_min" %in% names(test)) {
+    dur <- as.numeric(test$duration_min)
+    return(test[!is.na(dur) & dur >= eval_min_duration, , drop = FALSE])
+  }
+  test
+}
+
 #' Run pre-registered short-sample sensitivity for one species.
 #' @export
 run_short_sample_species <- function(protocol, species_entry) {
   cfg <- load_config_yaml(species_entry$model_config)
+  if (!is.null(protocol$event_count_guard)) {
+    cfg$data$event_count_guard <- protocol$event_count_guard
+  }
   conf_level <- protocol$coefficient_check$wald_confidence
   margin_se <- protocol$cv_check$margin_se_fold_diff
   metrics <- unlist(protocol$cv_check$metrics)
   eval_min <- protocol$cv_eval_min_duration_min
   full_min <- protocol$full_fit_min_duration_min
-  red_min <- protocol$reduced_fit_min_duration_min
+  prereg_reduced <- isTRUE(protocol$reduced_fit_exclude_short_events %||% TRUE)
 
   dat_full <- load_model_data(cfg = cfg, min_duration_min = full_min)
-  dat_red <- load_model_data(cfg = cfg, min_duration_min = red_min)
+  dat_red <- if (prereg_reduced) {
+    load_model_data(cfg = cfg, exclude_short_events = TRUE)
+  } else {
+    load_model_data(cfg = cfg, min_duration_min = protocol$reduced_fit_min_duration_min)
+  }
   mesh_full <- build_fishai_mesh(dat_full, cfg$mesh)
   mesh_red <- build_fishai_mesh(dat_red, cfg$mesh)
   fit_full <- fit_delta_engine(dat_full, mesh_full, cfg)
@@ -246,14 +267,18 @@ run_short_sample_species <- function(protocol, species_entry) {
 
   overall_pass <- isTRUE(coef$pass) && isTRUE(cv_sp$pass) && isTRUE(cv_lfo$pass)
   revert_min <- .revert_duration_minutes(protocol)
+  use_short_revert <- !overall_pass && prereg_reduced
+  dat_action <- if (overall_pass) {
+    load_model_data(cfg = cfg, min_duration_min = full_min)
+  } else if (use_short_revert) {
+    load_model_data(cfg = cfg, exclude_short_events = TRUE, min_duration_min = full_min)
+  } else {
+    load_model_data(cfg = cfg, min_duration_min = revert_min)
+  }
   action_min <- if (overall_pass) full_min else revert_min
-
-  dat_action <- load_model_data(cfg = cfg, min_duration_min = action_min)
   if (nrow(dat_action) == 0L) {
     stop(
-      "no events remain at action_min_duration_min=",
-      action_min,
-      " for ",
+      "no events remain after short-sample action frame for ",
       species_entry$label,
       "; cannot recompute V_ref",
       call. = FALSE
@@ -269,6 +294,8 @@ run_short_sample_species <- function(protocol, species_entry) {
     cv_lfo_pass = isTRUE(cv_lfo$pass),
     overall_pass = overall_pass,
     action_min_duration_min = action_min,
+    action_exclude_short_events = use_short_revert,
+    reduced_fit_exclude_short_events = prereg_reduced,
     reference_volume_m3 = vref$reference_volume_m3,
     reference_volume_n_events = vref$source$n_events_fitting_frame,
     n_events_full = nrow(dat_full),
@@ -327,6 +354,7 @@ run_short_sample_sensitivity <- function(protocol_path = NULL, output_override =
     protocol_config = protocol$config_path,
     thresholds = list(
       full_fit_min_duration_min = protocol$full_fit_min_duration_min,
+      reduced_fit_exclude_short_events = protocol$reduced_fit_exclude_short_events %||% TRUE,
       reduced_fit_min_duration_min = protocol$reduced_fit_min_duration_min,
       cv_eval_min_duration_min = protocol$cv_eval_min_duration_min,
       wald_confidence = protocol$coefficient_check$wald_confidence,
