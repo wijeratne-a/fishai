@@ -24,6 +24,14 @@ from fishai.ingestion.physics.sources.glorys import (
     glorys_column_features,
     resolve_glorys_product_id,
 )
+from fishai.ingestion.physics.wcofs_glorys_coverage import (
+    CoverageAccumulator,
+    build_coverage_report,
+    coverage_paths_from_config,
+    expected_cufes_counts,
+    load_cufes_event_index,
+    write_coverage_report,
+)
 from fishai.ingestion.physics.wcofs_glorys_grid import (
     coarsen_wcofs_to_glorys,
     compute_wcofs_covariates_on_glorys_grid,
@@ -208,23 +216,19 @@ def write_overlap_parquet(df: pd.DataFrame, path: Path, metadata: dict[str, Any]
     return path
 
 
-def pair_overlap_from_synthetic(
+def overlap_day_dataframe(
     day: dt.date,
-    wcofs_slab: xr.Dataset,
+    wcofs_fields: dict[str, np.ndarray],
     glorys_thetao: np.ndarray,
     glorys_so: np.ndarray,
     z_levels: np.ndarray,
     lat_dst: np.ndarray,
     lon_dst: np.ndarray,
+    nearshore: np.ndarray,
     *,
-    config: dict[str, Any] | None = None,
+    config: dict[str, Any],
 ) -> pd.DataFrame:
-    """Test helper: one day, full GLORYS subgrid."""
-    config = config or load_overlap_config()
-    depth_grid = depth_grid_m(config)
-    wcofs_fields = wcofs_covariate_arrays_on_glorys_grid(wcofs_slab, lat_dst, lon_dst, config)
-    lat2d, lon2d = np.meshgrid(lat_dst, lon_dst, indexing="ij")
-    nearshore = nearshore_mask(lat2d, lon2d, config=config)
+    """One day of overlap rows on the GLORYS pilot grid."""
     rows: list[dict[str, Any]] = []
     for j, la in enumerate(lat_dst):
         for i, lo in enumerate(lon_dst):
@@ -262,6 +266,35 @@ def pair_overlap_from_synthetic(
     return pd.DataFrame(rows)
 
 
+def pair_overlap_from_synthetic(
+    day: dt.date,
+    wcofs_slab: xr.Dataset,
+    glorys_thetao: np.ndarray,
+    glorys_so: np.ndarray,
+    z_levels: np.ndarray,
+    lat_dst: np.ndarray,
+    lon_dst: np.ndarray,
+    *,
+    config: dict[str, Any] | None = None,
+) -> pd.DataFrame:
+    """Test helper: one day, full GLORYS subgrid."""
+    config = config or load_overlap_config()
+    wcofs_fields = wcofs_covariate_arrays_on_glorys_grid(wcofs_slab, lat_dst, lon_dst, config)
+    lat2d, lon2d = np.meshgrid(lat_dst, lon_dst, indexing="ij")
+    nearshore = nearshore_mask(lat2d, lon2d, config=config)
+    return overlap_day_dataframe(
+        day,
+        wcofs_fields,
+        glorys_thetao,
+        glorys_so,
+        z_levels,
+        lat_dst,
+        lon_dst,
+        nearshore,
+        config=config,
+    )
+
+
 def run_overlap_pairing(
     *,
     config: dict[str, Any] | None = None,
@@ -285,6 +318,13 @@ def run_overlap_pairing(
     if days is not None and len(days) == expected and len(overlap_dates(config)) != expected:
         raise ValueError("configured overlap.expected_days does not match date span")
     lat_dst, lon_dst = glorys_grid_from_config(config)
+    depth_grid = depth_grid_m(config)
+    min_wf = min_wet_fraction_from_config(config)
+    lat2d, lon2d = np.meshgrid(lat_dst, lon_dst, indexing="ij")
+    nearshore = nearshore_mask(lat2d, lon2d, config=config)
+    coverage_accumulator = CoverageAccumulator(
+        lat_dst, lon_dst, nearshore, depth_grid, min_wf
+    )
     rate = config.get("rate_limits") or {}
     budget = budget or _DailyRequestBudget(int(rate.get("max_requests_per_day", 200)))
     wcofs_log = wcofs_log or REPO_ROOT / str(config["pull_logs"]["wcofs"])
@@ -325,20 +365,50 @@ def run_overlap_pairing(
             ),
             log_path=glorys_log,
         )
-        frame = pair_overlap_from_synthetic(
+        gridded = coarsen_wcofs_to_glorys(
+            ds, lat_dst, lon_dst, depth_grid, min_wet_fraction=min_wf
+        )
+        coverage_accumulator.observe_day(
+            gridded, glorys_payload["depth"], glorys_payload["thetao"]
+        )
+        wcofs_fields = compute_wcofs_covariates_on_glorys_grid(gridded)
+        frame = overlap_day_dataframe(
             day,
-            ds,
+            wcofs_fields,
             glorys_payload["thetao"],
             glorys_payload["so"],
             glorys_payload["depth"],
             lat_dst,
             lon_dst,
+            nearshore,
             config=config,
         )
         all_rows.extend(frame.to_dict(orient="records"))
     df = pd.DataFrame(all_rows)
     metadata = build_overlap_metadata(config)
     metadata["glorys_production_status"] = str(config["glorys"]["production_status"])
+    cov_paths = coverage_paths_from_config(config)
+    kept_n, reduced_n = expected_cufes_counts(config)
+    try:
+        cufes_index = load_cufes_event_index(cov_paths["cufes_fixture"])
+    except FileNotFoundError:
+        cufes_index = None
+    coverage_report = build_coverage_report(
+        coverage_accumulator,
+        cufes_events=cufes_index,
+        expected_kept=kept_n,
+        expected_reduced=reduced_n,
+    )
+    json_path, _csv_path = write_coverage_report(
+        coverage_report,
+        json_path=cov_paths["json"],
+        csv_path=cov_paths["csv"],
+        accumulator=coverage_accumulator,
+    )
+    try:
+        metadata["coverage_report_json"] = str(json_path.relative_to(REPO_ROOT))
+    except ValueError:
+        metadata["coverage_report_json"] = str(json_path)
     if output_path is not None:
         write_overlap_parquet(df, output_path, metadata)
     return df, metadata

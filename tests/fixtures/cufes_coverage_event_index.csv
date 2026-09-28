@@ -1,0 +1,5 @@
+event_id,start_latitude,start_longitude,stop_latitude,stop_longitude,in_reduced_set
+CUFES:2020-01:SH01:1,33.12,-120.42,33.13,-120.41,1
+CUFES:2020-01:SH01:2,33.18,-120.35,33.19,-120.34,0
+CUFES:2020-02:SH02:7,34.50,-118.90,34.51,-118.89,1
+CUFES:2020-03:SH03:3,33.05,-120.55,33.06,-120.54,0

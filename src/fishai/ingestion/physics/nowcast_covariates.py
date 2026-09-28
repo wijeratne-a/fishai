@@ -11,6 +11,7 @@ from fishai.ingestion.physics.wcofs_glorys_grid import (
     coarsen_wcofs_to_glorys,
     compute_wcofs_covariates_on_glorys_grid,
     covariates_to_xarray,
+    inference_evidence_masks,
     min_wet_fraction_from_config,
 )
 from fishai.ingestion.physics.wcofs_glorys_overlap import depth_grid_m, load_overlap_config
@@ -51,5 +52,9 @@ def build_wcofs_nowcast_covariates_for_inference(
     if u10 is not None and v10 is not None:
         u_arr = u10.values
         v_arr = v10.values
+    min_wf = min_wet_fraction_from_config(cfg)
     fields = compute_wcofs_covariates_on_glorys_grid(gridded, u10=u_arr, v10=v_arr)
+    evidence_state, unknown_reason = inference_evidence_masks(gridded, min_wet_fraction=min_wf)
+    fields["evidence_state"] = evidence_state
+    fields["unknown_reason"] = unknown_reason
     return covariates_to_xarray(gridded, fields)

@@ -26,6 +26,10 @@ from fishai.ingestion.physics.vertical import (
 
 COVARIATE_FIELDS = ("T3m", "S3m", "MLD_m", "sst_grad", "front_distance_km", "upwelling")
 
+EVIDENCE_STATE_OK = "OK"
+EVIDENCE_STATE_UNKNOWN = "UNKNOWN"
+UNKNOWN_REASON_INSUFFICIENT_MODEL_COVERAGE = "insufficient_model_coverage"
+
 
 @dataclass(frozen=True)
 class WcofsGlorysGrid:
@@ -262,3 +266,29 @@ def covariates_to_xarray(
 def min_wet_fraction_from_config(config: dict[str, Any]) -> float:
     regrid = config.get("regrid") or {}
     return float(regrid.get("min_wet_fraction", 0.5))
+
+
+def inference_evidence_masks(
+    gridded: WcofsGlorysGrid,
+    *,
+    min_wet_fraction: float,
+) -> tuple[np.ndarray, np.ndarray]:
+    """
+    Per-cell nowcast evidence when WCOFS coarsening is below ``min_wet_fraction``.
+
+    Uses surface and 3 m wet-fraction levels (covariates sampled there).
+    """
+    k3 = int(np.argmin(np.abs(gridded.depth_m - 3.0)))
+    wf_surf = gridded.wet_fraction[:, :, 0]
+    wf_3m = gridded.wet_fraction[:, :, k3]
+    bad = (
+        (~np.isfinite(wf_surf))
+        | (wf_surf < min_wet_fraction)
+        | (~np.isfinite(wf_3m))
+        | (wf_3m < min_wet_fraction)
+    )
+    state = np.full(bad.shape, EVIDENCE_STATE_OK, dtype=object)
+    reason = np.full(bad.shape, "", dtype=object)
+    state[bad] = EVIDENCE_STATE_UNKNOWN
+    reason[bad] = UNKNOWN_REASON_INSUFFICIENT_MODEL_COVERAGE
+    return state, reason

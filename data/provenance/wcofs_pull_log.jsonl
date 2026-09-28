@@ -1,1 +1,7 @@
 {"_schema":"wcofs_pull_log_v1","append_only":true,"notes":"One JSON object per WCOFS PDS request; no credentials."}
+{"attribution": "NOAA NOS CO-OPS West Coast Operational Forecast System (WCOFS)", "cycle_date": "2024-09-01", "request_count": 1, "s3_key": "", "source": "wcofs", "timestamp": "2026-09-28T16:54:57.258640+00:00"}
+{"attribution": "NOAA NOS CO-OPS West Coast Operational Forecast System (WCOFS)", "cycle_date": "2024-09-01", "request_count": 1, "s3_key": "", "source": "wcofs", "timestamp": "2026-09-28T16:55:14.898708+00:00"}
+{"attribution": "NOAA NOS CO-OPS West Coast Operational Forecast System (WCOFS)", "cycle_date": "2024-09-01", "request_count": 1, "s3_key": "", "source": "wcofs", "timestamp": "2026-09-28T16:55:28.532655+00:00"}
+{"attribution": "NOAA NOS CO-OPS West Coast Operational Forecast System (WCOFS)", "cycle_date": "2024-09-01", "request_count": 1, "s3_key": "", "source": "wcofs", "timestamp": "2026-09-28T16:55:32.164936+00:00"}
+{"attribution": "NOAA NOS CO-OPS West Coast Operational Forecast System (WCOFS)", "cycle_date": "2024-09-01", "request_count": 1, "s3_key": "", "source": "wcofs", "timestamp": "2026-09-28T16:55:45.713087+00:00"}
+{"attribution": "NOAA NOS CO-OPS West Coast Operational Forecast System (WCOFS)", "cycle_date": "2024-09-01", "request_count": 1, "s3_key": "", "source": "wcofs", "timestamp": "2026-09-28T16:59:55.198792+00:00"}

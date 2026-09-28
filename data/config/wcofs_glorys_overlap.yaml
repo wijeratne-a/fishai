@@ -19,6 +19,13 @@ nearshore_km: 20.0
 regrid:
   min_wet_fraction: 0.5
 
+coverage_report:
+  json_path: artifacts/harmonization/wcofs_glorys_overlap/coverage_report.json
+  csv_path: artifacts/harmonization/wcofs_glorys_overlap/coverage_cells.csv
+  cufes_events_fixture: tests/fixtures/cufes_coverage_event_index.csv
+  expected_kept_event_count: 14592
+  expected_reduced_event_count: 13326
+
 shoreline:
   path: data/reference/shoreline/ne_10m_land_pilot_clip.json
   natural_earth_dataset: ne_10m_land
