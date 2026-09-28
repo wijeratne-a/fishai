@@ -1,0 +1,12 @@
+{
+  "drop_summary": {
+    "input_event_count": 48,
+    "dropped_unique_total": 2,
+    "missing_covariate": 1,
+    "land_mask": 1
+  },
+  "rows_by_reason": {
+    "missing_covariate": 1,
+    "land_mask": 1
+  }
+}

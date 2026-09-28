@@ -64,6 +64,7 @@ freeze_model <- function(fit_obj, cfg, path, training_dat = NULL, sources_manife
   if (is.null(training_dat)) {
     stop("training_dat is required to compute reference_volume_m3", call. = FALSE)
   }
+  .assert_bot2_covariate_join_counts(cfg)
   ref_vol <- compute_reference_volume_metadata(training_dat, cfg)
   cfg <- cfg
   cfg$prediction <- cfg$prediction %||% list()

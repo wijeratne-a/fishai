@@ -278,6 +278,79 @@ load_model_data <- function(
   drops
 }
 
+.read_covariate_drop_summary <- function(path) {
+  if (is.null(path) || !nzchar(path)) {
+    return(NULL)
+  }
+  root <- Sys.getenv("FISHAI_ROOT", unset = normalizePath(getwd()))
+  if (!grepl("^/", path)) {
+    path <- file.path(root, path)
+  }
+  if (!file.exists(path)) {
+    stop("covariate_drop_summary_path not found: ", path, call. = FALSE)
+  }
+  raw <- jsonlite::read_json(path, simplifyVector = TRUE)
+  drop_summary <- raw$drop_summary
+  if (is.null(drop_summary)) {
+    drop_summary <- raw
+  }
+  if (is.null(drop_summary$input_event_count)) {
+    stop("covariate drop summary missing drop_summary$input_event_count", call. = FALSE)
+  }
+  drop_summary
+}
+
+.assert_bot2_covariate_join_counts <- function(cfg) {
+  guard <- cfg$data$event_count_guard
+  if (is.null(guard) || is.null(guard$n_events)) {
+    return(invisible(TRUE))
+  }
+  expected <- as.integer(guard$n_events)
+  summary_path <- cfg$data$covariate_drop_summary_path
+  if (is.null(summary_path) || !nzchar(summary_path)) {
+    stop(
+      "event_count_guard is set but data.covariate_drop_summary_path is missing",
+      call. = FALSE
+    )
+  }
+  drop_summary <- .read_covariate_drop_summary(summary_path)
+  input_n <- as.integer(drop_summary$input_event_count)
+  if (input_n != expected) {
+    stop(
+      "bot2 drop_summary input_event_count (",
+      input_n,
+      ") != event_count_guard n_events (",
+      expected,
+      "); expected post-QC bot1 events fed to covariate join, not raw ERDDAP pull",
+      call. = FALSE
+    )
+  }
+  cov_path <- cfg$data$covariates_path
+  if (is.null(cov_path) || !nzchar(cov_path)) {
+    stop(
+      "data.covariates_path is required to validate covariate output row count",
+      call. = FALSE
+    )
+  }
+  cov <- .read_model_table(cov_path)
+  if (!"event_id" %in% names(cov)) {
+    stop("covariate table missing event_id column", call. = FALSE)
+  }
+  .assert_unique_keys(cov$event_id, "event_id in covariates")
+  cov_n <- nrow(cov)
+  if (cov_n != expected) {
+    stop(
+      "covariate output row count (",
+      cov_n,
+      ") != event_count_guard n_events (",
+      expected,
+      ")",
+      call. = FALSE
+    )
+  }
+  invisible(TRUE)
+}
+
 .join_drop_event_ids <- function(drops) {
   unique(as.character(drops$event_id))
 }
