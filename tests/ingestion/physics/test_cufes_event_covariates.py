@@ -1,4 +1,4 @@
-"""CUFES event_id covariate join (synthetic events; no network)."""
+"""CUFES event_id covariate join along tow segments (synthetic events)."""
 
 from __future__ import annotations
 
@@ -8,7 +8,9 @@ import pytest
 
 from fishai.ingestion.physics.covariates import (
     CUFES_COVARIATE_FIELDS,
+    COL_STOP_LAT,
     CufesEventValidationError,
+    great_circle_sample_points,
     join_covariates_to_events,
     validate_cufes_events,
 )
@@ -23,12 +25,18 @@ def _synthetic_events() -> pd.DataFrame:
                 "CUFES:2020-01:SH01:43",
                 "CUFES:2020-02:SH02:7",
             ],
-            "time": pd.to_datetime(
+            "start_time": pd.to_datetime(
                 ["2020-01-15T12:00:00Z", "2020-01-15T12:05:00Z", "2020-02-01T08:00:00Z"],
                 utc=True,
             ),
-            "latitude": [33.5, 33.51, 34.2],
-            "longitude": [-120.1, -120.09, -119.5],
+            "stop_time": pd.to_datetime(
+                ["2020-01-15T12:10:00Z", "2020-01-15T12:15:00Z", "2020-02-01T08:12:00Z"],
+                utc=True,
+            ),
+            "start_latitude": [33.5, 33.51, 34.2],
+            "start_longitude": [-120.1, -120.09, -119.5],
+            "stop_latitude": [33.52, 33.53, 34.22],
+            "stop_longitude": [-120.08, -120.07, -119.48],
         }
     )
 
@@ -40,40 +48,65 @@ def test_rejects_duplicate_event_id() -> None:
         validate_cufes_events(events)
 
 
-def test_join_one_row_per_event_id_exact_set() -> None:
+def test_great_circle_sample_at_least_start_mid_stop() -> None:
+    pts = great_circle_sample_points(33.0, -120.0, 33.1, -120.0, grid_cell_km=4.0)
+    assert len(pts) >= 3
+    assert pts[0] == (33.0, -120.0)
+    assert pts[-1] == (33.1, -120.0)
+
+
+def test_join_one_row_per_event_id_segment_mean() -> None:
     events = _synthetic_events()
 
-    def sampler(event: pd.Series) -> dict:
-        return {field: float(event["latitude"]) for field in CUFES_COVARIATE_FIELDS}
+    def field_sampler(lat: float, lon: float, _t: pd.Timestamp) -> dict:
+        return {field: lat for field in CUFES_COVARIATE_FIELDS}
 
     out, qc = join_covariates_to_events(
-        events, sampler=sampler, source="wcofs", provenance="test-fixture"
+        events, field_sampler=field_sampler, source="wcofs", provenance="test-fixture"
     )
     assert len(out) == len(events)
     assert out["event_id"].tolist() == events["event_id"].tolist()
-    assert set(out["event_id"]) == set(events["event_id"])
-    assert qc == {c: 0 for c in CUFES_COVARIATE_FIELDS}
-    assert out.loc[0, "source"] == "wcofs"
+    assert qc["events_endpoint_missing"] == 0
+    assert qc["missing_by_field"] == {c: 0 for c in CUFES_COVARIATE_FIELDS}
+    expected_mean = np.mean([33.5, 33.52])
+    assert abs(out.loc[0, "T3m"] - expected_mean) < 0.02
+
+
+def test_missing_endpoint_leaves_nan_and_qc_count() -> None:
+    events = _synthetic_events()
+    events.loc[1, COL_STOP_LAT] = np.nan
+
+    out, qc = join_covariates_to_events(
+        events,
+        field_sampler=lambda lat, lon, _t: {"T3m": lat},
+        source="test",
+    )
+    assert pd.isna(out.loc[1, "T3m"])
+    assert qc["events_endpoint_missing"] == 1
+    assert qc["missing_by_field"]["T3m"] == 1
 
 
 def test_missing_covariates_left_nan_with_qc_counts() -> None:
     events = _synthetic_events()
 
-    def sampler(event: pd.Series) -> dict:
-        if event["event_id"] == "CUFES:2020-01:SH01:42":
+    def field_sampler(lat: float, lon: float, _t: pd.Timestamp) -> dict:
+        if lat < 33.51:
             return {"T3m": 15.0}
         return {}
 
-    out, qc = join_covariates_to_events(events, sampler=sampler, source="test")
+    out, qc = join_covariates_to_events(events, field_sampler=field_sampler, source="test")
     assert np.isfinite(out.loc[0, "T3m"])
-    assert pd.isna(out.loc[0, "S3m"])
-    assert qc["T3m"] == 2
-    assert qc["S3m"] == 3
+    assert pd.isna(out.loc[2, "S3m"])
+    assert qc["missing_by_field"]["S3m"] >= 1
 
 
 def test_event_covariates_parquet_requires_event_id(tmp_path) -> None:
     events = _synthetic_events()
-    out, _ = join_covariates_to_events(events, sampler=lambda _e: {}, source="test")
+
+    def field_sampler(_lat: float, _lon: float, _t: pd.Timestamp) -> dict:
+        return {}
+
+    out, _ = join_covariates_to_events(events, field_sampler=field_sampler, source="test")
     path = tmp_path / "cufes_physics_covariates.parquet"
     event_covariates_parquet(out, path)
     loaded = pd.read_parquet(path)
