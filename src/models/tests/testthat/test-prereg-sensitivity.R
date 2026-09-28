@@ -84,7 +84,7 @@ test_that("run_short_sample_species returns structured pass_fail fields", {
     file.path(FISHAI_ROOT, "src", "models", "tests", "fixtures", "sensitivity_protocol_test.yaml")
   )
   cfg_sard <- load_config_yaml(
-    file.path(FISHAI_ROOT, "configs", "models", "cufes_sardine.yaml")
+    file.path(FISHAI_ROOT, "configs", "models", "cufes_sardine_synthetic.yaml")
   )
   cfg_sard$model$formula_shared <- "~ 1"
   cfg_sard$model$spatial <- list("off", "off")

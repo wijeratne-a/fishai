@@ -2,9 +2,9 @@ test_that("open review flags block hake but not sardine or anchovy", {
   flags <- file.path(FISHAI_ROOT, "src", "models", "tests", "fixtures", "synthetic_cufes_review_flags.json")
   mk <- function(taxon) {
     base <- if (taxon == "anchovy") {
-      file.path(FISHAI_ROOT, "configs", "models", "cufes_anchovy.yaml")
+      file.path(FISHAI_ROOT, "configs", "models", "cufes_anchovy_synthetic.yaml")
     } else {
-      file.path(FISHAI_ROOT, "configs", "models", "cufes_sardine.yaml")
+      file.path(FISHAI_ROOT, "configs", "models", "cufes_sardine_synthetic.yaml")
     }
     cfg <- load_config_yaml(base)
     cfg$species$taxon <- taxon

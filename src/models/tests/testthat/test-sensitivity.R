@@ -49,7 +49,7 @@ test_that("min_duration_min drops short events and logs QC", {
 })
 
 test_that("compare_duration_sensitivity returns full and filtered blocks", {
-  cfg <- load_config_yaml(file.path(FISHAI_ROOT, "configs", "models", "cufes_sardine.yaml"))
+  cfg <- load_config_yaml(file.path(FISHAI_ROOT, "configs", "models", "cufes_sardine_synthetic.yaml"))
   cfg$model$formula_shared <- "~ 1"
   cfg$model$spatial <- list("off", "off")
   cfg$model$spatiotemporal <- list("off", "off")

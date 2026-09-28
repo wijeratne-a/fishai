@@ -33,7 +33,9 @@ load_fishaisdm <- function(root = FISHAI_ROOT) {
 load_fishaisdm(FISHAI_ROOT)
 
 load_sardine_test_cfg <- function(intercept_only = FALSE) {
-  cfg <- load_config_yaml(file.path(FISHAI_ROOT, "configs", "models", "cufes_sardine.yaml"))
+  cfg <- load_config_yaml(
+    file.path(FISHAI_ROOT, "configs", "models", "cufes_sardine_synthetic.yaml")
+  )
   if (isTRUE(intercept_only)) {
     cfg$model$formula_shared <- "~ 1"
     cfg$model$spatial <- list("off", "off")

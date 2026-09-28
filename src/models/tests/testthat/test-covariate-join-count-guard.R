@@ -30,7 +30,7 @@ freeze_with_event_count_guard <- function(summary_json = NULL, guard_overrides =
   proto <- load_short_sample_protocol(
     file.path(FISHAI_ROOT, "src", "models", "tests", "fixtures", "sensitivity_protocol_test.yaml")
   )
-  cfg <- load_config_yaml(file.path(FISHAI_ROOT, "configs", "models", "cufes_sardine.yaml"))
+  cfg <- load_config_yaml(file.path(FISHAI_ROOT, "configs", "models", "cufes_sardine_synthetic.yaml"))
   guard <- proto$event_count_guard
   if (length(guard_overrides)) {
     for (nm in names(guard_overrides)) {

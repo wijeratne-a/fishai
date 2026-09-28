@@ -37,7 +37,7 @@ test_that("event_count_guard reads from config and stops on mismatch", {
 })
 
 test_that("exclude_short_events filters on short_event column", {
-  cfg <- load_config_yaml(file.path(FISHAI_ROOT, "configs", "models", "cufes_sardine.yaml"))
+  cfg <- load_config_yaml(file.path(FISHAI_ROOT, "configs", "models", "cufes_sardine_synthetic.yaml"))
   all <- load_model_data(cfg = cfg)
   red <- load_model_data(cfg = cfg, exclude_short_events = TRUE)
   expect_equal(nrow(all), 46L)
@@ -49,7 +49,7 @@ test_that("synthetic pilot guard counts match fixture events table", {
   proto <- load_short_sample_protocol(
     file.path(FISHAI_ROOT, "src", "models", "tests", "fixtures", "sensitivity_protocol_test.yaml")
   )
-  cfg <- load_config_yaml(file.path(FISHAI_ROOT, "configs", "models", "cufes_sardine.yaml"))
+  cfg <- load_config_yaml(file.path(FISHAI_ROOT, "configs", "models", "cufes_sardine_synthetic.yaml"))
   cfg$data$event_count_guard <- proto$event_count_guard
   expect_no_error(load_model_data(cfg = cfg))
 })

@@ -14,14 +14,12 @@ fishai_engine_config:
     observation_source_id: calcofi_cufes
     covariate_forcing_source_id: glorys
   data:
-    events_path: src/models/tests/fixtures/synthetic_cufes_events.csv
-    counts_path: src/models/tests/fixtures/synthetic_cufes_counts.csv
-    covariates_path: src/models/tests/fixtures/synthetic_cufes_covariates.csv
-    covariate_drops_path: src/models/tests/fixtures/synthetic_covariate_drops.csv
-    covariate_drop_summary_path: src/models/tests/fixtures/synthetic_covariate_drop_summary.json
-    # Pilot production paths (bot2 PR #2; uncomment and disable synthetic fixtures above):
-    # covariate_drops_path: data/processed/cufes/cufes_physics_covariate_drops.parquet
-    # covariate_drop_summary_path: data/processed/cufes/cufes_physics_covariate_drop_summary.json
+    events_path: data/processed/calcofi_cufes/cufes_events.parquet
+    counts_path: data/processed/calcofi_cufes/cufes_counts.parquet
+    covariates_path: data/processed/cufes/cufes_physics_covariates.parquet
+    covariate_drops_path: data/processed/cufes/cufes_physics_covariate_drops.parquet
+    covariate_drop_summary_path: data/processed/cufes/cufes_physics_covariate_drop_summary.json
+    nearshore_max_km: 20
     source_id: calcofi_cufes
   covariates:
     forcing_source_id: glorys
@@ -37,6 +35,14 @@ fishai_engine_config:
       - log_depth
     excluded:
       - bottomT
+    upstream_fields:
+      temp_3m: T3m
+      sal_3m: S3m
+      mld: MLD_m
+      sst_grad: sst_grad
+      dist_front: front_distance_km
+      upwelling: upwelling
+      log_depth: log_depth_z
   response:
     type: density_delta
     column: egg_count
@@ -55,8 +61,12 @@ fishai_engine_config:
     time_varying:
       formula: "~ 1"
       type: rw0
+    priors:
+      pc_matern:
+        range_gt_mult_max_edge: 2
+        sigma_lt: 2
   mesh:
-    cutoff_km: 18
+    cutoff_km: 9
     range_guess_km: 60
     barrier:
       enabled: false

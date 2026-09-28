@@ -1,5 +1,5 @@
 test_that("load_model_data rejects missing effort", {
-  cfg <- load_config_yaml(file.path(FISHAI_ROOT, "configs", "models", "cufes_sardine.yaml"))
+  cfg <- load_config_yaml(file.path(FISHAI_ROOT, "configs", "models", "cufes_sardine_synthetic.yaml"))
   dat <- load_model_data(cfg = cfg)
   expect_true(all(dat$volume_m3 > 0))
   expect_equal(nrow(dat), 46)

@@ -21,7 +21,7 @@ short_sample_sensitivity:
     n_long_event: 24
   species:
     - label: sardine
-      model_config: configs/models/cufes_sardine.yaml
+      model_config: configs/models/cufes_sardine_synthetic.yaml
   output:
     report_json: artifacts/sensitivity/test_short_sample_report.json
     pass_fail_csv: artifacts/sensitivity/test_short_sample_pass_fail.csv

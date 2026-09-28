@@ -1,5 +1,5 @@
 test_that("encounter probability rises with volume under poisson-link offset", {
-  cfg <- load_config_yaml(file.path(FISHAI_ROOT, "configs", "models", "cufes_sardine.yaml"))
+  cfg <- load_config_yaml(file.path(FISHAI_ROOT, "configs", "models", "cufes_sardine_synthetic.yaml"))
   cfg$model$formula_shared <- "~ 1"
   cfg$model$spatial <- list("off", "off")
   cfg$model$spatiotemporal <- list("off", "off")
@@ -24,7 +24,7 @@ test_that("encounter probability rises with volume under poisson-link offset", {
 })
 
 test_that("freeze stores median reference_volume_m3 from training QC data", {
-  cfg <- load_config_yaml(file.path(FISHAI_ROOT, "configs", "models", "cufes_sardine.yaml"))
+  cfg <- load_config_yaml(file.path(FISHAI_ROOT, "configs", "models", "cufes_sardine_synthetic.yaml"))
   cfg$model$formula_shared <- "~ 1"
   cfg$model$spatial <- list("off", "off")
   cfg$model$spatiotemporal <- list("off", "off")
@@ -41,7 +41,7 @@ test_that("freeze stores median reference_volume_m3 from training QC data", {
 })
 
 test_that("map prediction uses log V_ref offset; events use log(volume_m3)", {
-  cfg <- load_config_yaml(file.path(FISHAI_ROOT, "configs", "models", "cufes_sardine.yaml"))
+  cfg <- load_config_yaml(file.path(FISHAI_ROOT, "configs", "models", "cufes_sardine_synthetic.yaml"))
   cfg$model$formula_shared <- "~ 1"
   cfg$model$spatial <- list("off", "off")
   cfg$model$spatiotemporal <- list("off", "off")
@@ -67,7 +67,7 @@ test_that("map prediction uses log V_ref offset; events use log(volume_m3)", {
 })
 
 test_that("predict_engine refuses without reference_volume_m3", {
-  cfg <- load_config_yaml(file.path(FISHAI_ROOT, "configs", "models", "cufes_sardine.yaml"))
+  cfg <- load_config_yaml(file.path(FISHAI_ROOT, "configs", "models", "cufes_sardine_synthetic.yaml"))
   cfg$model$formula_shared <- "~ 1"
   cfg$model$spatial <- list("off", "off")
   cfg$model$spatiotemporal <- list("off", "off")
@@ -86,7 +86,7 @@ test_that("predict_engine refuses without reference_volume_m3", {
 })
 
 test_that("predict output records reference volume basis", {
-  cfg <- load_config_yaml(file.path(FISHAI_ROOT, "configs", "models", "cufes_sardine.yaml"))
+  cfg <- load_config_yaml(file.path(FISHAI_ROOT, "configs", "models", "cufes_sardine_synthetic.yaml"))
   cfg$model$formula_shared <- "~ 1"
   cfg$model$spatial <- list("off", "off")
   cfg$model$spatiotemporal <- list("off", "off")

@@ -3,7 +3,7 @@ test_that("random CV folds are refused", {
 })
 
 test_that("spatial CV runs on synthetic folds", {
-  cfg <- load_config_yaml(file.path(FISHAI_ROOT, "configs", "models", "cufes_sardine.yaml"))
+  cfg <- load_config_yaml(file.path(FISHAI_ROOT, "configs", "models", "cufes_sardine_synthetic.yaml"))
   cfg$model$formula_shared <- "~ 1"
   cfg$model$spatial <- list("off", "off")
   cfg$model$spatiotemporal <- list("off", "off")
@@ -15,7 +15,7 @@ test_that("spatial CV runs on synthetic folds", {
 })
 
 test_that("spatial CV records failed folds instead of crashing", {
-  cfg <- load_config_yaml(file.path(FISHAI_ROOT, "configs", "models", "cufes_sardine.yaml"))
+  cfg <- load_config_yaml(file.path(FISHAI_ROOT, "configs", "models", "cufes_sardine_synthetic.yaml"))
   dat <- load_model_data(cfg = cfg)
   mesh <- build_fishai_mesh(dat, cfg$mesh)
   cv <- run_cv_spatial(dat, mesh, cfg, dat$fold_id)
