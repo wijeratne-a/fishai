@@ -35,6 +35,9 @@ from fishai.ingestion.physics.wcofs_glorys_grid import (
     compute_wcofs_covariates_on_glorys_grid,
     min_wet_fraction_from_config,
 )
+from fishai.ingestion.physics.wcofs_avg_nowcast_availability import (
+    wcofs_avg_nowcast_missing_fit_day_records,
+)
 from fishai.ingestion.physics.wcofs_pull_log import append_wcofs_pull_log, build_wcofs_pull_record
 from fishai.ingestion.physics.wcofs_pds_store import open_wcofs_cycle
 from fishai.ingestion.physics.wcofs_utc_daily_pairing import (
@@ -182,6 +185,11 @@ def open_wcofs_for_overlap_day(
     """Open WCOFS for overlap pairing on UTC calendar day ``day`` (hourly mean or avg.nowcast)."""
     pairing = (config.get("wcofs") or {}).get("daily_pairing", "hourly_utc_mean")
     if pairing == "avg_nowcast":
+        from fishai.ingestion.physics.wcofs_avg_nowcast_availability import (
+            assert_wcofs_avg_nowcast_available,
+        )
+
+        assert_wcofs_avg_nowcast_available(day, config)
         ds = (
             open_wcofs_cycle(day, product="avg_nowcast")
             if wcofs_open is None
@@ -250,10 +258,12 @@ def build_overlap_metadata(config: dict[str, Any]) -> dict[str, Any]:
         "overlap_start": config["overlap"]["start"],
         "overlap_end": config["overlap"]["end"],
         "expected_days": int(config["overlap"]["expected_days"]),
-        "glorys_product_selection": "date_based_my_vs_myint",
+        "glorys_product_selection": "copernicusmarine_catalog_coverage",
+        "glorys_catalog": (config.get("glorys") or {}).get("catalog"),
         "glorys_product_id_overlap_start": glorys_dataset_id_for_date(
             _config_date(config["overlap"]["start"]), config=config
         ),
+        "wcofs_avg_nowcast_missing_fit_days": wcofs_avg_nowcast_missing_fit_day_records(config),
         "glorys_production_status": glorys_cfg["production_status"],
         "glorys_copernicus_doi": glorys_cfg["copernicus_doi"],
         "shoreline_path": str(shoreline_path_from_config(config)),

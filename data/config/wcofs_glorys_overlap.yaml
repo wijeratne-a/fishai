@@ -48,15 +48,38 @@ glorys:
   products:
     my:
       id: cmems_mod_glo_phy_my_0.083deg_P1D-m
-      date_end: 2021-06-30
     myint:
       id: cmems_mod_glo_phy_myint_0.083deg_P1D-m
-      date_end: 2026-06-23
+  catalog:
+    copernicusmarine_version: "2.5.0"
+    checked_at: 2026-09-28
+    preference: [my, myint]
+    products:
+      my:
+        dataset_id: cmems_mod_glo_phy_my_0.083deg_P1D-m
+        catalog_status: found
+        version: "202311"
+        temporal_start: 1993-01-01
+        temporal_end: 2026-06-23
+      myint:
+        dataset_id: cmems_mod_glo_phy_myint_0.083deg_P1D-m
+        catalog_status: dataset_not_found
+        version: null
+        temporal_start: null
+        temporal_end: null
 
 wcofs:
   product: avg.nowcast
   cycle: t03z
   daily_pairing: hourly_utc_mean
+  avg_nowcast_unavailable:
+    reason_code: CycleNotAvailable
+    dates:
+      - 2024-09-05
+      - 2024-09-06
+    ranges:
+      - start: 2024-11-20
+        end: 2024-12-31
 
 depth_grid_m:
   start: 0

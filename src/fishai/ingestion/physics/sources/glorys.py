@@ -13,6 +13,13 @@ from fishai.ingestion.copernicus_compliance import (
     build_pull_record,
     glorys_attribution_bundle,
 )
+from fishai.ingestion.physics.sources.glorys_catalog import (
+    PRODUCT_ID_MY,
+    PRODUCT_ID_MYINT,
+    GlorysDatasetNotCoveredError,
+    glorys_dataset_id_for_calendar_day,
+    refresh_catalog_into_config,
+)
 from fishai.ingestion.physics.vertical import (
     CUFES_SAMPLE_DEPTH_M,
     interp_at_depth_from_z_levels,
@@ -22,9 +29,7 @@ from fishai.ingestion.sources import SourceNotApprovedError, get_source_entry, r
 
 SOURCE_MODULE = "glorys"
 
-PRODUCT_ID_MY = "cmems_mod_glo_phy_my_0.083deg_P1D-m"
-PRODUCT_ID_MYINT = "cmems_mod_glo_phy_myint_0.083deg_P1D-m"
-# Back-compat alias for interim-era default (use ``glorys_product_for_date`` for pulls).
+# Back-compat aliases (dataset ids; selection uses ``glorys.catalog`` coverage).
 PRODUCT_ID = PRODUCT_ID_MYINT
 
 MY_PRODUCT_START = dt.date(1993, 1, 1)
@@ -48,15 +53,22 @@ def _config_date(value: Any) -> dt.date:
 
 
 def myint_product_end(config: dict[str, Any] | None = None) -> dt.date:
-    """Last calendar day covered by the MYINT product (from config or SOURCES default)."""
+    """Last calendar day with any catalog-recorded GLORYS coverage."""
     if config is not None:
         glorys_cfg = config.get("glorys") or {}
+        catalog = glorys_cfg.get("catalog") or {}
+        products = catalog.get("products") or {}
+        ends: list[dt.date] = []
+        for meta in products.values():
+            if meta.get("catalog_status") != "found":
+                continue
+            end = meta.get("temporal_end")
+            if end:
+                ends.append(_config_date(end))
+        if ends:
+            return max(ends)
         if "product_time_end" in glorys_cfg:
             return _config_date(glorys_cfg["product_time_end"])
-        products = glorys_cfg.get("products") or {}
-        myint = products.get("myint") or {}
-        if "date_end" in myint:
-            return _config_date(myint["date_end"])
     entry = get_source_entry("glorys")
     products = entry.get("products") or {}
     myint = products.get("myint") or {}
@@ -73,23 +85,15 @@ def glorys_product_for_date(
     config: dict[str, Any] | None = None,
 ) -> str:
     """
-    Copernicus Marine GLORYS12 dataset id for ``date``.
+    Copernicus Marine GLORYS12 dataset id for ``date`` using catalog-recorded coverage.
 
-    Returns the finished reanalysis (``my``) through 2021-06-30 inclusive and the
-    interim product (``myint``) from 2021-07-01 through the configured MYINT end.
+    Coverage comes from ``glorys.catalog.products`` (populated via ``copernicusmarine describe``).
     """
-    myint_end = myint_product_end(config)
-    if date < MY_PRODUCT_START:
-        raise ValueError(
-            f"glorys: date {date} is before {MY_PRODUCT_START} (my product start)"
-        )
-    if date > myint_end:
-        raise ValueError(
-            f"glorys: date {date} is after myint coverage end {myint_end}"
-        )
-    if date <= MY_PRODUCT_END:
-        return PRODUCT_ID_MY
-    return PRODUCT_ID_MYINT
+    if config is None:
+        from fishai.ingestion.physics.wcofs_glorys_overlap import load_overlap_config
+
+        config = load_overlap_config()
+    return glorys_dataset_id_for_calendar_day(date, config)
 
 
 def glorys_dataset_id_for_date(
@@ -206,3 +210,18 @@ def glorys_column_features(
         "mlotst_crosscheck": float(mlotst_native) if mlotst_native is not None else float("nan"),
     }
     return out
+
+
+__all__ = [
+    "PRODUCT_ID",
+    "PRODUCT_ID_MY",
+    "PRODUCT_ID_MYINT",
+    "GlorysDatasetNotCoveredError",
+    "fetch_day",
+    "glorys_column_features",
+    "glorys_dataset_id_for_date",
+    "glorys_product_for_date",
+    "myint_product_end",
+    "refresh_catalog_into_config",
+    "resolve_glorys_product_id",
+]
