@@ -13,13 +13,24 @@ sources:
   calcofi_cufes:
     module: fishai.ingestion.biology.calcofi_cufes
     erddap_dataset: erdCalCOFIcufes
-    provider: CalCOFI / SCCOOS ERDDAP
-    license: CC-BY-4.0
-    license_url: https://creativecommons.org/licenses/by/4.0/
-    attribution: "CalCOFI and SCCOOS; cite ERDDAP dataset erdCalCOFIcufes and original CalCOFI data providers."
+    provider: NOAA SWFSC / CalCOFI (ERDDAP erdCalCOFIcufes)
+    license: >-
+      NOAA ERDDAP free-use (not CC): data may be used and redistributed for free
+      but is not intended for legal use; no warranty of accuracy or fitness.
+    license_url: https://oceanview.pfeg.noaa.gov/CalCOFI/calcofi_info.html
+    license_text: >-
+      The data may be used and redistributed for free but is not intended for
+      legal use, since it may contain inaccuracies. Neither the data Contributor,
+      ERD, NOAA, nor the United States Government, nor any of their employees or
+      contractors, makes any warranty, express or implied, including warranties of
+      merchantability and fitness for a particular purpose, or assumes any legal
+      liability for the accuracy, completeness, or usefulness, of this information.
+    attribution: "NOAA SWFSC / CalCOFI, erdCalCOFIcufes; https://oceanview.pfeg.noaa.gov/erddap/tabledap/erdCalCOFIcufes.html"
     status: approved
     enabled: true
-    notes: Egg-stage evidence only; not adult presence.
+    notes: >-
+      Egg-stage evidence only; not adult presence. SOURCES.yaml previously listed
+      CC-BY-4.0; ERDDAP metadata for erdCalCOFIcufes carries the NOAA disclaimer above.
 
   wcofs:
     module: fishai.ingestion.physics.wcofs

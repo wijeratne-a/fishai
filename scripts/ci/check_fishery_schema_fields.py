@@ -25,6 +25,9 @@ FORBIDDEN_NAME_PATTERNS: list[tuple[str, re.Pattern[str]]] = [
     ("fishery_observer", re.compile(r"(?i)(?:^|[_-])observer(?:$|[_-]|[_-]id|[_-]program)")),
     ("vms", re.compile(r"(?i)(?:^|[_-])vms(?:$|[_-])|(?:^|[_-])vessel[_-]monitoring")),
     ("landings", re.compile(r"(?i)(?:^|[_-])landings(?:$|[_-])|(?:^|[_-])landing[_-](?:count|weight|qty|volume)")),
+    ("mmsi", re.compile(r"(?i)(?:^|[_-])mmsi(?:$|[_-])")),
+    ("imo", re.compile(r"(?i)(?:^|[_-])imo(?:$|[_-]|[_-]number)")),
+    ("call_sign", re.compile(r"(?i)(?:^|[_-])call[_-]?sign(?:$|[_-])")),
 ]
 
 
