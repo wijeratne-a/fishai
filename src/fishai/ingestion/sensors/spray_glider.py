@@ -28,6 +28,7 @@ SPRAY_VARIABLES = (
 DEFAULT_CACHE_PATH = (
     REPO_ROOT / "artifacts" / "harmonization" / "spray_glider" / "pilot_subset.parquet"
 )
+FIXTURE_CSV_PATH = REPO_ROOT / "tests" / "fixtures" / "spray_glider_pilot.csv"
 FIXTURE_PATH = REPO_ROOT / "tests" / "fixtures" / "spray_glider_pilot.parquet"
 
 PILOT_LAT_MIN = 32.0
@@ -110,6 +111,8 @@ def load_spray_glider_profiles(path: Path | str | None = None) -> pd.DataFrame:
     p = Path(path) if path is not None else DEFAULT_CACHE_PATH
     if not p.is_file() and FIXTURE_PATH.is_file():
         p = FIXTURE_PATH
+    if not p.is_file() and FIXTURE_CSV_PATH.is_file():
+        return _normalize_spray_frame(pd.read_csv(FIXTURE_CSV_PATH))
     if not p.is_file():
         raise FileNotFoundError(f"Spray glider profile cache not found: {p}")
     return _normalize_spray_frame(pd.read_parquet(p))
