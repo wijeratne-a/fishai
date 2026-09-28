@@ -36,7 +36,7 @@ HOLDOUT_OBSERVATION_SOURCES: tuple[HoldoutObservationSource, ...] = (
         source_id="spray_glider_profiles",
         registry_id="spray_glider_profiles",
         pairing_kind="profile_gridded_by_depth",
-        enabled_for_holdout_validation=False,
+        enabled_for_holdout_validation=True,
         display_name="Spray glider profiles (depth-gridded)",
     ),
 )

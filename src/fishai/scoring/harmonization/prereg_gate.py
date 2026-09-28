@@ -6,6 +6,7 @@ from typing import Any
 
 from fishai.evaluation.harmonization_prereg import PLACEHOLDER_TOKEN
 from fishai.scoring.harmonization.grading import normalize_combination_rule
+from fishai.scoring.harmonization.glider_grading import collect_glider_cutoff_gate_violations
 from fishai.scoring.harmonization.input_check_config import collect_graded_input_config_violations
 
 REQUIRED_CUTOFF_NUMERIC_KEYS: tuple[str, ...] = (
@@ -79,6 +80,9 @@ def collect_prereg_gate_violations(doc: dict[str, Any]) -> list[str]:
             val = cutoffs.get(key)
             if _is_blank_or_pending(val) or not isinstance(val, (int, float)):
                 violations.append(f"pass_fail_thresholds.cutoffs.{key}")
+        obs = block.get("observations") or {}
+        if "spray_glider_profiles" in obs:
+            violations.extend(collect_glider_cutoff_gate_violations(cutoffs))
 
     combo = pf.get("combination_rule")
     if _is_blank_or_pending(combo):

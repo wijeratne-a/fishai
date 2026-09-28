@@ -189,11 +189,33 @@ harmonization_wcofs_glorys:
       quality_mask:
         hdop_max: 1.25
         min_sites: 2
+    spray_glider_profiles:
+      erddap:
+        base_url: https://spraydata.ucsd.edu/erddap/tabledap
+        datasets:
+          - binnedCUGN80
+          - binnedCUGN90
+        license: free use and redistribution
+      pilot_bbox:
+        lat_min: 32
+        lat_max: 35
+        lon_min: -121
+        lon_max: -117
+      cache_parquet: artifacts/harmonization/spray_glider/pilot_subset.parquet
+      min_matched_profiles: 100
+      min_distinct_missions: 3
+      grades_model_row: wcofs_coarsened_mapped
+      variables_graded:
+        MLD_m: graded
+        T3m: proxy_for_3m
+        S3m: proxy_for_3m
+        doxy: reported_only
+      glorys_comparison_label: not_independent_reported_only
     ioos_glider_dac:
       status: excluded
       reason: >-
-        Glider feed excluded while IOOS Glider DAC remains pending/disabled in
-        data/SOURCES.yaml; no glider rows enter harmonization scores.
+        IOOS Glider DAC remains disabled for harmonization; Spray ERDDAP profiles
+        are used instead (see spray_glider_profiles).
 
   independence:
     assimilated_sources_registry: config/assimilated_sources.yaml

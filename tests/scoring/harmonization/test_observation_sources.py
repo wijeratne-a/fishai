@@ -8,9 +8,9 @@ from fishai.scoring.harmonization.observation_sources import (
 )
 
 
-def test_spray_glider_source_reserved_not_enabled() -> None:
+def test_spray_glider_source_enabled_for_holdout() -> None:
     glider = observation_source_by_registry_id("spray_glider_profiles")
     assert glider is not None
     assert glider.pairing_kind == "profile_gridded_by_depth"
-    assert glider.enabled_for_holdout_validation is False
-    assert "spray_glider_profiles" not in holdout_validation_registry_ids()
+    assert glider.enabled_for_holdout_validation is True
+    assert "spray_glider_profiles" in holdout_validation_registry_ids()

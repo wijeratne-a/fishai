@@ -35,6 +35,7 @@ from fishai.scoring.harmonization.grading import (
     cutoffs_from_prereg,
     grade_buoy_stratum,
 )
+from fishai.scoring.harmonization.glider_grading import grade_glider_stratum
 from fishai.scoring.harmonization.preflight import run_registry_preflight
 from fishai.scoring.harmonization.io import write_holdout_outputs
 from fishai.scoring.harmonization.manifest import verify_mapping_manifest
@@ -114,6 +115,7 @@ def run_holdout_scoring(
     front_detail_native_sst_grad: list[float] | None = None,
     front_detail_coarsened_sst_grad: list[float] | None = None,
     indirect_buoy_table: pd.DataFrame | None = None,
+    glider_match_table: pd.DataFrame | None = None,
     output_dir: Path | str | None = None,
     map_dir: Path | str | None = None,
     registry_path: Path | str | None = None,
@@ -235,6 +237,10 @@ def run_holdout_scoring(
     combination_rule = str(pf["combination_rule"])
     buoy_var = kept[kept["variable"] == "sea_water_temperature"] if "variable" in kept.columns else kept
     input_cell_check_summary: list[dict[str, Any]] = []
+    glider_grading_summary: list[dict[str, Any]] = []
+    spray_cfg = (block.get("observations") or {}).get("spray_glider_profiles") or {}
+    min_glider_profiles = int(spray_cfg.get("min_matched_profiles", 100))
+    min_glider_missions = int(spray_cfg.get("min_distinct_missions", 3))
 
     for stratum in STRATA_POOL:
         mask = _stratum_mask(buoy_var, stratum)
@@ -279,10 +285,27 @@ def run_holdout_scoring(
                 ),
                 cutoffs,
             )
+            glider_verdict: str | None = None
+            if glider_match_table is not None and not glider_match_table.empty:
+                glider_grade = grade_glider_stratum(
+                    glider_match_table,
+                    stratum=stratum,
+                    cutoffs=cutoffs,
+                    block_days=block_days,
+                    seed=seed,
+                    registry=registry,
+                    min_profiles=min_glider_profiles,
+                    min_missions=min_glider_missions,
+                )
+                glider_verdict = glider_grade.verdict
+                for gm in glider_grade.metrics:
+                    gm["stratum_combined_reason"] = glider_grade.reason
+                    glider_grading_summary.append(gm)
             combined, combined_reason = combine_stratum_verdicts(
                 buoy_grade[0],
                 input_verdicts,
                 combination_rule=combination_rule,
+                glider_verdict=glider_verdict,
             )
         for entry in summary_metrics:
             if (
@@ -324,6 +347,7 @@ def run_holdout_scoring(
         "front_detail_loss": front_loss,
         "metrics": summary_metrics,
         "input_cell_check": input_cell_check_summary,
+        "glider_holdout_grading": glider_grading_summary,
         "indirect_glorys_product_check": indirect_summary,
         "buoy_depth_function": f"{BUOY_DEPTH_FUNCTION.__module__}.{BUOY_DEPTH_FUNCTION.__name__}",
     }

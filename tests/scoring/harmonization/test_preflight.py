@@ -27,10 +27,11 @@ def test_flipping_accepted_by_auditor_false_triggers_no_independent_validation()
     assert run_registry_preflight(reg)["any_independent_validation_source"] is True
 
     reg["sources"]["ndbc_buoy_temperature"]["wcofs"]["accepted_by_auditor"] = False
+    reg["sources"]["spray_glider_profiles"]["wcofs"]["accepted_by_auditor"] = False
     messages = no_independent_validation_messages(reg)
     assert messages
     assert messages[0].startswith("NO_INDEPENDENT_VALIDATION:")
-    assert "NDBC buoy temperature" in messages[0]
+    assert "NDBC buoy temperature" in messages[0] or "Spray glider" in messages[0]
     assert "'unknown' for WCOFS" in messages[0]
     preflight = run_registry_preflight(reg)
     assert preflight["any_independent_validation_source"] is False

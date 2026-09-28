@@ -36,6 +36,19 @@ def harmonization_temperature_at_buoy_depth(
     return interp_at_depth_from_z_levels(depth_levels_m, temperature, depth_m)
 
 
+HARMONIZATION_GLIDER_PROXY_DEPTH_M = 10.0
+
+
+def harmonization_tracer_at_depth_below_surface(
+    depth_levels_m: np.ndarray,
+    values: np.ndarray,
+    *,
+    depth_m: float,
+) -> float:
+    """Shared moving-surface depth interpolation (buoys, glider 10 m proxy for T3m/S3m)."""
+    return interp_at_depth_from_z_levels(depth_levels_m, values, depth_m)
+
+
 @dataclass(frozen=True)
 class WcofsGlorysGrid:
     """WCOFS tracers area-averaged onto a regular lat/lon GLORYS-class grid."""

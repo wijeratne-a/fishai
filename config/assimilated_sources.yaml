@@ -116,21 +116,25 @@ sources:
   spray_glider_profiles:
     display_name: Spray glider profiles (depth-gridded)
     holdout_pairing: profile_gridded_by_depth
-    holdout_validation_enabled: false
-    note: >-
-      Future in-situ holdout source; registry entry reserved. Pairing/scoring not
-      implemented until IOOS Spray ingest is enabled.
+    erddap_datasets:
+      - binnedCUGN80
+      - binnedCUGN90
     wcofs:
-      status: unknown
-      citation: null
-      evidence_valid_from: null
-      evidence_valid_to: null
-      accepted_by_auditor: false
+      status: false
+      citation:
+        title: NOAA Tech Report NOS CO-OPS 097 (Xu et al. 2022)
+        url: https://tidesandcurrents.noaa.gov/ofs/publications/CO-OPS_Techrpt_097_WCOFS_2022.pdf
+        page_section: sec 5.2 p.17; sec 6 p.22
+        quote: >-
+          model does not assimilate in situ observations; gliders listed as future
+          work in sec 6 p.22
+      accepted_by_auditor: true
+      accepted_by: auditbot1
+      accepted_on: 2026-09-28
     glorys:
       status: unknown
       citation: null
-      evidence_valid_from: null
-      evidence_valid_to: null
+      note: CORA may include gliders; status unknown
       accepted_by_auditor: false
 
   ioos_gliders:

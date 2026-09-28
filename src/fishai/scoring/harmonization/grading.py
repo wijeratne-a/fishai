@@ -102,7 +102,7 @@ def grade_buoy_stratum(inp: BuoyGradeInput, cutoffs: dict[str, float]) -> tuple[
         else VERDICT_FAIL
     )
 
-    verdict = _worst_of([ratio_verdict, bias_verdict, r_verdict])
+    verdict = worst_of_verdicts([ratio_verdict, bias_verdict, r_verdict])
     reason = FAIL_EVIDENCE_REASON if verdict == VERDICT_FAIL else None
     return verdict, reason
 
@@ -125,6 +125,7 @@ def combine_stratum_verdicts(
     input_verdicts: list[str],
     *,
     combination_rule: str,
+    glider_verdict: str | None = None,
 ) -> tuple[str, str | None]:
     """
     Worst-of buoy and input checks.
@@ -135,18 +136,21 @@ def combine_stratum_verdicts(
     if any(v == VERDICT_FAIL for v in input_verdicts):
         return VERDICT_UNKNOWN, FAIL_EVIDENCE_REASON
 
-    pool = [buoy_verdict] + [v for v in input_verdicts if v != VERDICT_NOT_GRADABLE]
+    pool = [buoy_verdict]
+    if glider_verdict is not None and glider_verdict != VERDICT_NOT_GRADABLE:
+        pool.append(glider_verdict)
+    pool.extend([v for v in input_verdicts if v != VERDICT_NOT_GRADABLE])
     if not pool:
         return VERDICT_NOT_GRADABLE, None
 
-    worst = _worst_of(pool)
+    worst = worst_of_verdicts(pool)
     reason: str | None = None
     if worst == VERDICT_FAIL:
         reason = FAIL_EVIDENCE_REASON
     return worst, reason
 
 
-def _worst_of(verdicts: list[str]) -> str:
+def worst_of_verdicts(verdicts: list[str]) -> str:
     worst = VERDICT_PASS
     worst_rank = -1
     for v in verdicts:
