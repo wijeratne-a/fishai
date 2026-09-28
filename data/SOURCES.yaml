@@ -44,7 +44,6 @@ sources:
 
   glorys:
     module: fishai.ingestion.physics.sources.glorys
-    product: cmems_mod_glo_phy_myint_0.083deg_P1D-m
     license: Copernicus Marine Service
     license_url: https://marine.copernicus.eu/
     attribution: "Generated using E.U. Copernicus Marine Service Information; https://doi.org/10.48670/moi-00021"
@@ -55,6 +54,15 @@ sources:
     license_valid_until: 2028-06-30
     product_time_start: 1993-01-01
     product_time_end: 2026-06-23
+    products:
+      my:
+        id: cmems_mod_glo_phy_my_0.083deg_P1D-m
+        date_start: 1993-01-01
+        date_end: 2021-06-30
+      myint:
+        id: cmems_mod_glo_phy_myint_0.083deg_P1D-m
+        date_start: 2021-07-01
+        date_end: 2026-06-23
     variables: [thetao, so, bottomT, mlotst, uo, vo, zos]
     pull_log_path: data/provenance/copernicus_pull_log.jsonl
     credentials_policy: personal_non_transferable_runtime_only
