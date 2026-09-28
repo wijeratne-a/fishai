@@ -25,9 +25,10 @@ from fishai.ingestion.physics.wcofs_glorys_overlap import (
     load_overlap_config,
     run_overlap_pairing,
 )
+from fishai.ingestion.physics.wcofs_utc_daily_pairing import valid_time_utc_for_cycle_lead
 
 
-def _synthetic_wcofs_land_heavy() -> xr.Dataset:
+def _synthetic_wcofs_land_heavy(ocean_time: dt.datetime | None = None) -> xr.Dataset:
     n = 6
     s_rho = (np.arange(1, 5) - 5 - 0.5) / 5
     lat = np.linspace(33.05, 33.25, n)
@@ -37,6 +38,7 @@ def _synthetic_wcofs_land_heavy() -> xr.Dataset:
     temp = 15.0 + np.linspace(0, 2, 4)[:, None, None] * np.ones((4, n, n))
     mask = np.zeros((n, n))
     mask[2:4, 2:4] = 1.0
+    ot = ocean_time or dt.datetime(2024, 9, 1, 12, 0)
     return xr.Dataset(
         {
             "temp": (("ocean_time", "s_rho", "eta_rho", "xi_rho"), temp[None, ...]),
@@ -51,8 +53,14 @@ def _synthetic_wcofs_land_heavy() -> xr.Dataset:
             "hc": 50.0,
             "s_rho": ("s_rho", s_rho),
             "Cs_r": ("s_rho", np.linspace(-1, 0, 4)),
-        }
+        },
+        coords={"ocean_time": [np.datetime64(ot.strftime("%Y-%m-%dT%H:%M:%S"))]},
     )
+
+
+def _open_fields_lead_synthetic(cycle: dt.date, lead: str) -> xr.Dataset:
+    when = valid_time_utc_for_cycle_lead(cycle, lead)
+    return _synthetic_wcofs_land_heavy(when)
 
 
 def test_coverage_report_written_on_overlap_run(tmp_path: Path) -> None:
@@ -75,9 +83,6 @@ def test_coverage_report_written_on_overlap_run(tmp_path: Path) -> None:
     }
     z_levels = np.array([0.0, 1.0, 3.0, 10.0])
 
-    def wcofs_open(_day: dt.date) -> xr.Dataset:
-        return _synthetic_wcofs_land_heavy()
-
     def glorys_fetch(_day: dt.date) -> dict:
         la, lo = glorys_grid_from_config(cfg)
         nj, ni = la.size, lo.size
@@ -89,7 +94,7 @@ def test_coverage_report_written_on_overlap_run(tmp_path: Path) -> None:
     _df, meta = run_overlap_pairing(
         config=cfg,
         days=[dt.date(2024, 9, 1)],
-        wcofs_open=wcofs_open,
+        open_fields_lead=_open_fields_lead_synthetic,
         glorys_fetch=glorys_fetch,
     )
     report_path = tmp_path / "coverage_report.json"

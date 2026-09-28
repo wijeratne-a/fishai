@@ -194,7 +194,13 @@ def open_wcofs_for_overlap_day(
         return wcofs_utc_daily_mean_fields(day, open_fields_lead=open_fields_lead)
 
     def _live(cycle: dt.date, lead: str) -> xr.Dataset:
-        return open_wcofs_cycle(cycle, product="fields", lead=lead)
+        from fishai.ingestion.physics.wcofs_utc_daily_s3 import (
+            open_wcofs_fields_lead_pilot_subset,
+            pilot_bbox_from_config,
+        )
+
+        bbox = pilot_bbox_from_config(config)
+        return open_wcofs_fields_lead_pilot_subset(cycle, lead, bbox)
 
     if wcofs_open is None:
         return wcofs_utc_daily_mean_fields(day, open_fields_lead=_live)

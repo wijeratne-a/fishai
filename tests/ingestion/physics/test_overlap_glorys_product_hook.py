@@ -18,9 +18,10 @@ from fishai.ingestion.physics.wcofs_glorys_overlap import (
     load_overlap_config,
     run_overlap_pairing,
 )
+from fishai.ingestion.physics.wcofs_utc_daily_pairing import valid_time_utc_for_cycle_lead
 
 
-def _tiny_wcofs() -> xr.Dataset:
+def _tiny_wcofs(ocean_time: dt.datetime | None = None) -> xr.Dataset:
     n = 4
     s_rho = (np.arange(1, 4) - 4 - 0.5) / 4
     lat = np.linspace(33.05, 33.2, n)
@@ -28,6 +29,7 @@ def _tiny_wcofs() -> xr.Dataset:
     lat2d = np.broadcast_to(lat[:, None], (n, n))
     lon2d = np.broadcast_to(lon[None, :], (n, n))
     temp = 15.0 + np.linspace(0, 1, 3)[:, None, None] * np.ones((3, n, n))
+    ot = ocean_time or dt.datetime(2024, 9, 1, 12, 0)
     return xr.Dataset(
         {
             "temp": (("ocean_time", "s_rho", "eta_rho", "xi_rho"), temp[None, ...]),
@@ -42,8 +44,14 @@ def _tiny_wcofs() -> xr.Dataset:
             "hc": 50.0,
             "s_rho": ("s_rho", s_rho),
             "Cs_r": ("s_rho", np.linspace(-1, 0, 3)),
-        }
+        },
+        coords={"ocean_time": [np.datetime64(ot.strftime("%Y-%m-%dT%H:%M:%S"))]},
     )
+
+
+def _open_fields_lead_tiny(cycle: dt.date, lead: str) -> xr.Dataset:
+    when = valid_time_utc_for_cycle_lead(cycle, lead)
+    return _tiny_wcofs(when)
 
 
 def test_run_overlap_pairing_calls_glorys_dataset_id_for_date(tmp_path) -> None:
@@ -79,7 +87,7 @@ def test_run_overlap_pairing_calls_glorys_dataset_id_for_date(tmp_path) -> None:
         run_overlap_pairing(
             config=cfg,
             days=[dt.date(2024, 9, 1)],
-            wcofs_open=lambda _d: _tiny_wcofs(),
+            open_fields_lead=_open_fields_lead_tiny,
             glorys_fetch=glorys_fetch,
             wcofs_log=tmp_path / "wcofs_pull_log.jsonl",
             glorys_log=tmp_path / "copernicus_pull_log.jsonl",
