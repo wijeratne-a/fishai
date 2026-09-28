@@ -1,4 +1,4 @@
-"""Overlap pairing must use ``glorys_product_for_date`` (PR #7), not duplicated logic."""
+"""Overlap pairing must use ``glorys_dataset_id_for_date`` (PR #7), not duplicated logic."""
 
 from __future__ import annotations
 
@@ -8,7 +8,11 @@ from unittest.mock import patch
 import numpy as np
 import xarray as xr
 
-from fishai.ingestion.physics.sources.glorys import PRODUCT_ID_MYINT, glorys_product_for_date
+from fishai.ingestion.physics.sources.glorys import (
+    PRODUCT_ID_MYINT,
+    glorys_dataset_id_for_date,
+    glorys_product_for_date,
+)
 from fishai.ingestion.physics.wcofs_glorys_overlap import (
     glorys_grid_from_config,
     load_overlap_config,
@@ -42,7 +46,7 @@ def _tiny_wcofs() -> xr.Dataset:
     )
 
 
-def test_run_overlap_pairing_calls_glorys_product_for_date(tmp_path) -> None:
+def test_run_overlap_pairing_calls_glorys_dataset_id_for_date(tmp_path) -> None:
     cfg = load_overlap_config()
     cfg = dict(cfg)
     cfg["pilot_bbox"] = {
@@ -69,8 +73,8 @@ def test_run_overlap_pairing_calls_glorys_product_for_date(tmp_path) -> None:
         }
 
     with patch(
-        "fishai.ingestion.physics.wcofs_glorys_overlap.glorys_product_for_date",
-        wraps=glorys_product_for_date,
+        "fishai.ingestion.physics.wcofs_glorys_overlap.glorys_dataset_id_for_date",
+        wraps=glorys_dataset_id_for_date,
     ) as mocked:
         run_overlap_pairing(
             config=cfg,

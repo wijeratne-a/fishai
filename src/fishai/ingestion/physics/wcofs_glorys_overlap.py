@@ -22,7 +22,7 @@ from fishai.ingestion.physics.coast_distance import nearshore_mask, shoreline_pa
 from fishai.ingestion.physics.harmonize import glorys_target_grid
 from fishai.ingestion.physics.sources.glorys import (
     glorys_column_features,
-    glorys_product_for_date,
+    glorys_dataset_id_for_date,
 )
 from fishai.ingestion.physics.wcofs_glorys_coverage import (
     CoverageAccumulator,
@@ -199,7 +199,7 @@ def build_overlap_metadata(config: dict[str, Any]) -> dict[str, Any]:
         "overlap_end": config["overlap"]["end"],
         "expected_days": int(config["overlap"]["expected_days"]),
         "glorys_product_selection": "date_based_my_vs_myint",
-        "glorys_product_id_overlap_start": glorys_product_for_date(
+        "glorys_product_id_overlap_start": glorys_dataset_id_for_date(
             _config_date(config["overlap"]["start"]), config=config
         ),
         "glorys_production_status": glorys_cfg["production_status"],
@@ -352,7 +352,7 @@ def run_overlap_pairing(
             raise RuntimeError("glorys_fetch is required for live overlap pairing")
         budget.charge(day, 1)
         glorys_payload = glorys_fetch(day)
-        glorys_dataset_id = glorys_product_for_date(day, config=config)
+        glorys_dataset_id = glorys_dataset_id_for_date(day, config=config)
         append_pull_log(
             build_pull_record(
                 dataset_id=glorys_dataset_id,

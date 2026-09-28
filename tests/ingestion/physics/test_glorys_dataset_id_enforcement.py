@@ -82,3 +82,20 @@ def test_no_dataset_id_or_fallback_in_glorys_physics_src() -> None:
         if "product_id or" in text and "glorys" in path.name:
             offenders.append(f"{path.relative_to(REPO_ROOT)}: product_id or")
     assert not offenders, "forbidden GLORYS id fallback: " + "; ".join(offenders)
+
+
+def test_overlap_never_passes_glorys_dataset_id_override() -> None:
+    """WCOFS×GLORYS overlap must resolve Copernicus ids only via date rules."""
+    overlap = REPO_ROOT / "src/fishai/ingestion/physics/wcofs_glorys_overlap.py"
+    text = overlap.read_text(encoding="utf-8")
+    assert "glorys_dataset_id_for_date" in text
+    assert "glorys_product_for_date(" not in text
+    assert "resolve_glorys_product_id(" not in text
+    assert "fetch_day(" not in text
+    forbidden = (
+        "glorys_dataset_id_for_date(day, PRODUCT_ID",
+        "glorys_dataset_id_for_date(day, \"cmems",
+        "dataset_id=PRODUCT_ID",
+    )
+    for token in forbidden:
+        assert token not in text, f"forbidden GLORYS id override pattern: {token}"
