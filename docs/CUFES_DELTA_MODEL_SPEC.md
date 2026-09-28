@@ -48,6 +48,20 @@ If `reference_volume_m3` is absent from the frozen config, prediction **refuses*
 
 **Held-out events** (spatial CV, LFO, frozen-model scoring) use each row’s own **`log(volume_m3)`** offset—the real sample effort. Only gridded map products use \(V_\text{ref}\).
 
+### Pre-fit preferential-sampling diagnostic
+
+Optional **`diagnostics.preferential_sampling`** runs covariate-only encounter (binomial) and positive (Gamma) GLMs with **no spatial field**. Per **cruise**, counts of events in **10 km** EPSG:32611 cells define sampling intensity; Spearman correlation with mean combined Pearson residuals is reported with a **cell-block bootstrap 95% CI**. JSON output sets **`flag_preferential: true`** when the CI excludes zero.
+
+### Positive model fallback
+
+**`positive_model_fallback: encounter_only`**: if the positive component fails convergence or sanity (non-positive-definite Hessian or max gradient > 0.001), FishAI refits with the positive spatial/spatiotemporal field off and reports **encounter-only** (species not dropped).
+
+**`drop_covariates_if_unavailable: [upwelling]`**: at fit time, if every kept row has blank ``upwelling`` and ``excluded_reason == no_consistent_wind_product`` (rows stay ``excluded == FALSE``), FishAI removes ``upwelling`` from the dynamic covariate list and shared formula and logs ``covariate_dropped: upwelling, reason: no_consistent_wind_product`` in fit metadata. Partial blanks or blank with any other reason **stop the fit** (no imputation, no row drops for upwelling).
+
+### CUFES planned vs adaptive sampling
+
+Processed **`cufes_events`** has no planned-transect flag (`artifacts/sensitivity/cufes_planned_vs_adaptive_field_audit.md`). Optional **`egg_split.test_event_filter.mode: planned_line_only`** requires **`planned_line_reference_path`** for time-forward test sensitivity.
+
 ### Spatial-block fold assignment (real CUFES events)
 
 When bot1 ``cufes_events`` has no ``fold_id`` column, FishAI assigns folds on the modeling side from track midpoints in **EPSG:32611** (km):
@@ -73,4 +87,8 @@ Leave-future-out CV trains on the fit window and scores holdout **event dates** 
 
 ### Barrier mesh
 
-Pilot production configs set ``mesh.barrier.enabled: true`` with ``range_fraction: 0.1`` (Bakka land barrier; see ``add_barrier_land()``). Land polygons are loaded from ``mesh.barrier.land_sf_rds``.
+Pilot production configs set ``mesh.barrier.enabled: true`` with ``range_fraction: 0.1`` (Bakka land barrier; see ``add_barrier_land()``). Land polygons are read from the same frozen shoreline GeoJSON as PR #7 harmonization coverage (``mesh.barrier.shoreline.path``). Mesh construction verifies ``mesh.barrier.shoreline.sha256`` against the file bytes and stops on mismatch or while the placeholder hash is unset.
+
+### Covariate upstream columns
+
+``covariates.upstream_fields`` maps model slugs to bot2 training-table columns. Dynamic inputs use the six ``CUFES_COVARIATE_FIELDS`` names (``T3m``, ``S3m``, ``MLD_m``, ``sst_grad``, ``front_distance_km``, ``upwelling``). Static ``log_depth`` maps to ``bottom_depth_m``; FishAI computes ``log(bottom_depth_m)``, standardizes to ``log_depth_z``, and refuses non-excluded rows with ``bottom_depth_m <= 0``. Training tables must also include ``excluded``, ``source_product``, and ``excluded_reason``. Before fit, rows with ``excluded == TRUE`` are removed; the fit logs kept/dropped counts and a per-species ``excluded_reason`` summary. Kept rows with any missing required covariate value stop the fit (no zero-fill). Fit output records ``source_product_counts`` (GLORYS ``my`` vs ``myint``).

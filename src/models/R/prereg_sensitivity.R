@@ -146,7 +146,7 @@ check_coefficient_wald_pass <- function(full_fit, reduced_fit, conf_level = 0.95
     if (nrow(train) < 5L || nrow(test) < 2L) {
       next
     }
-    mesh <- build_fishai_mesh(train, cfg$mesh)
+    mesh <- build_fishai_mesh_with_barrier(train, cfg)
     fit <- tryCatch(fit_delta_engine(train, mesh, cfg), error = function(e) NULL)
     if (is.null(fit)) {
       next
@@ -186,7 +186,7 @@ check_coefficient_wald_pass <- function(full_fit, reduced_fit, conf_level = 0.95
     if (nrow(train) < 5L || nrow(test) < 2L) {
       next
     }
-    mesh <- build_fishai_mesh(train, cfg$mesh)
+    mesh <- build_fishai_mesh_with_barrier(train, cfg)
     fit <- tryCatch(fit_delta_engine(train, mesh, cfg), error = function(e) NULL)
     if (is.null(fit)) {
       next
@@ -276,8 +276,8 @@ run_short_sample_species <- function(protocol, species_entry) {
   } else {
     load_model_data(cfg = cfg, min_duration_min = protocol$reduced_fit_min_duration_min, egg_split_scope = "fit")
   }
-  mesh_full <- build_fishai_mesh(dat_full, cfg$mesh)
-  mesh_red <- build_fishai_mesh(dat_red, cfg$mesh)
+  mesh_full <- build_fishai_mesh_with_barrier(dat_full, cfg)
+  mesh_red <- build_fishai_mesh_with_barrier(dat_red, cfg)
   fit_full <- fit_delta_engine(dat_full, mesh_full, cfg)
   fit_red <- fit_delta_engine(dat_red, mesh_red, cfg)
 

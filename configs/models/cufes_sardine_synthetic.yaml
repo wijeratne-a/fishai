@@ -15,6 +15,13 @@ fishai_engine_config:
     test_end: "2022-04-27"
     glorys_product_boundary: "2021-06-30"
     test_score_include_post_boundary: true
+    test_event_filter:
+      mode: all
+  diagnostics:
+    preferential_sampling:
+      cell_size_km: 10
+      bootstrap_replicates: 500
+      output_path: artifacts/diagnostics/preferential_sampling_synthetic.json
   training:
     observation_source_id: calcofi_cufes
     covariate_forcing_source_id: glorys
@@ -41,6 +48,14 @@ fishai_engine_config:
       - log_depth
     excluded:
       - bottomT
+    upstream_fields:
+      temp_3m: T3m
+      sal_3m: S3m
+      mld: MLD_m
+      sst_grad: sst_grad
+      dist_front: front_distance_km
+      upwelling: upwelling
+      log_depth: bottom_depth_m
   response:
     type: density_delta
     column: egg_count
@@ -49,6 +64,9 @@ fishai_engine_config:
     engine: sdmTMB
     family: delta_gamma
     delta_type: poisson-link
+    positive_model_fallback: encounter_only
+    drop_covariates_if_unavailable:
+      - upwelling
     formula_shared: >-
       ~ s(temp_3m_z, k = 3) + s(sal_3m_z, k = 3) + s(mld_z, k = 3)
       + s(sst_grad_z, k = 3) + s(dist_front_z, k = 3) + s(upwelling_z, k = 3)
@@ -69,7 +87,9 @@ fishai_engine_config:
     barrier:
       enabled: true
       range_fraction: 0.1
-      land_sf_rds: src/models/tests/fixtures/synthetic_land_barrier.rds
+      shoreline:
+        path: data/reference/shoreline/ne_10m_land_pilot_clip.json
+        sha256: 2f677a16aa6c8470846d813eda6d82f2656dea2d697b1511a4c878542d20996c
   prediction:
     nsim: 50
     seed: 20260928

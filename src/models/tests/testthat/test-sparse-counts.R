@@ -21,7 +21,7 @@ test_that("missing cufes_counts row is not a zero for another taxon", {
   writeLines(
     paste(
       cufes_covariates_csv_header(),
-      paste0(eid, ",0.1,0.2,10,0,0,0,0"),
+      cufes_covariate_row(eid, values = c(0.1, 0.2, 10, 0, 0, 0)),
       sep = "\n"
     ),
     cov
@@ -68,8 +68,8 @@ test_that("excluded_no_count_row counts events without taxon row", {
   writeLines(
     paste(
       cufes_covariates_csv_header(),
-      "CUFES:T:AK:a,0,0,0,0,0,0,0,FALSE",
-      "CUFES:T:AK:b,0,0,0,0,0,0,0,FALSE",
+      cufes_covariate_row("CUFES:T:AK:a"),
+      cufes_covariate_row("CUFES:T:AK:b"),
       sep = "\n"
     ),
     cov

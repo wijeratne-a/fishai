@@ -8,15 +8,33 @@ cufes_covariates_csv_header <- function() {
       "sst_grad",
       "front_distance_km",
       "upwelling",
-      "log_depth_z",
+      "bottom_depth_m",
+      "source_product",
+      "excluded_reason",
       "excluded"
     ),
     collapse = ","
   )
 }
 
-cufes_covariate_row <- function(event_id, values = rep(0, 7), excluded = FALSE) {
-  vals <- paste(c(as.character(values), if (isTRUE(excluded)) "TRUE" else "FALSE"), collapse = ",")
+cufes_covariate_row <- function(
+  event_id,
+  values = rep(0, 6),
+  bottom_depth_m = 20 + (sum(utf8ToInt(event_id)) %% 47),
+  source_product = "cmems_mod_glo_phy_my_0.083deg_P1D-m",
+  excluded_reason = "",
+  excluded = FALSE
+) {
+  vals <- paste(
+    c(
+      as.character(values),
+      as.character(bottom_depth_m),
+      source_product,
+      excluded_reason,
+      if (isTRUE(excluded)) "TRUE" else "FALSE"
+    ),
+    collapse = ","
+  )
   paste(event_id, vals, sep = ",")
 }
 

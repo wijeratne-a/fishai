@@ -103,7 +103,7 @@ run_cv_spatial <- function(dat, mesh, cfg, fold_ids) {
       message("CV fold ", fold_id, " failed: ", pre)
       next
     }
-    train_mesh <- build_fishai_mesh(train, cfg$mesh)
+    train_mesh <- build_fishai_mesh_with_barrier(train, cfg)
     fit_res <- tryCatch(
       fit_delta_engine(train, train_mesh, cfg),
       error = function(e) {

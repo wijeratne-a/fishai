@@ -12,7 +12,7 @@ summarize_fit_coefficients <- function(fishai_fit) {
 
 #' Fit + spatial CV summary for one modelling frame.
 .sensitivity_fit_block <- function(dat, cfg) {
-  mesh <- build_fishai_mesh(dat, cfg$mesh)
+  mesh <- build_fishai_mesh_with_barrier(dat, cfg)
   fit <- fit_delta_engine(dat, mesh, cfg)
   fold_ids <- dat$fold_id
   cv <- NULL

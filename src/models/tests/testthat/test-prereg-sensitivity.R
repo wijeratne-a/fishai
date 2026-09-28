@@ -49,7 +49,7 @@ test_that("missing count row species framing excludes taxon without zero imputat
   writeLines(
     paste(
       cufes_covariates_csv_header(),
-      paste0(eid, ",0,0,0,0,0,0,0,FALSE"),
+      cufes_covariate_row(eid),
       sep = "\n"
     ),
     cov
@@ -86,6 +86,7 @@ test_that("run_short_sample_species returns structured pass_fail fields", {
   cfg_sard <- load_config_yaml(
     file.path(FISHAI_ROOT, "configs", "models", "cufes_sardine_synthetic.yaml")
   )
+  cfg_sard$mesh$barrier$enabled <- FALSE
   cfg_sard$model$formula_shared <- "~ 1"
   cfg_sard$model$spatial <- list("off", "off")
   cfg_sard$model$spatiotemporal <- list("off", "off")

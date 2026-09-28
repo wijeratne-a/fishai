@@ -29,6 +29,38 @@ assert_shared_delta_formula <- function(formula_list) {
   regmatches(txt, gregexpr("s\\([^\\)]+\\)", txt, perl = TRUE))[[1]]
 }
 
+.positive_component_sanity_ok <- function(fit) {
+  if (isTRUE(getOption("fishai.test.force_positive_fallback", FALSE))) {
+    return(FALSE)
+  }
+  if (!isTRUE(fit$converged)) {
+    return(FALSE)
+  }
+  g <- fit$gradients
+  if (length(g) && is.finite(max(abs(g), na.rm = TRUE))) {
+    if (max(abs(g), na.rm = TRUE) > 0.001) {
+      return(FALSE)
+    }
+  }
+  ok <- tryCatch(
+    {
+      TMB::sdreport(fit$tmb_obj, getJointPrecision = TRUE)
+      TRUE
+    },
+    error = function(e) FALSE
+  )
+  isTRUE(ok)
+}
+
+.positive_model_fallback_mode <- function(cfg) {
+  cfg$model$positive_model_fallback %||% cfg$positive_model_fallback
+}
+
+#' @export
+positive_component_sanity_ok <- function(fit) {
+  .positive_component_sanity_ok(fit)
+}
+
 #' Fit delta GLMM with FishAI defaults (Poisson-link pilot).
 #'
 #' Effort is ``log(volume_m3)`` via ``offset = \"log_effort\"``. For
@@ -38,6 +70,10 @@ assert_shared_delta_formula <- function(formula_list) {
 #'
 #' @export
 fit_delta_engine <- function(dat, mesh, cfg) {
+  .assert_training_covariate_table_from_cfg(cfg)
+  cfg <- apply_model_cfg_patches(cfg, dat)
+  prep <- .prepare_dat_for_fit_delta(dat, cfg)
+  dat <- prep$data
   model <- cfg$model
   family <- resolve_delta_family(cfg)
 
@@ -94,10 +130,49 @@ fit_delta_engine <- function(dat, mesh, cfg) {
     silent = TRUE
   )
 
+  positive_fitted <- TRUE
+  fallback_applied <- FALSE
+  fallback_mode <- .positive_model_fallback_mode(cfg)
+  if (
+    identical(fallback_mode, "encounter_only") &&
+      !.positive_component_sanity_ok(fit)
+  ) {
+    sp <- .as_pair(model$spatial, list("on", "on"))
+    st <- .as_pair(model$spatiotemporal, list("ar1", "iid"))
+    fit <- sdmTMB::sdmTMB(
+      formula = frm,
+      data = dat,
+      mesh = mesh,
+      time = "time_idx",
+      family = family,
+      offset = "log_effort",
+      spatial = list(sp[[1L]], "off"),
+      spatiotemporal = list(st[[1L]], "off"),
+      share_range = .as_pair(model$share_range, list(TRUE, TRUE)),
+      time_varying = stats::as.formula(model$time_varying$formula %||% "~ 1"),
+      time_varying_type = model$time_varying$type %||% "rw0",
+      extra_time = extra,
+      priors = pri,
+      control = do.call(
+        sdmTMB::sdmTMBcontrol,
+        c(list(newton_loops = 1L, multiphase = TRUE), model$control %||% list())
+      ),
+      silent = TRUE
+    )
+    positive_fitted <- FALSE
+    fallback_applied <- TRUE
+  }
+
   structure(
     list(
       fit = fit,
-      delta_type = cfg$model$delta_type %||% "poisson-link"
+      delta_type = cfg$model$delta_type %||% "poisson-link",
+      covariate_exclusion_summary = prep$exclusion_summary,
+      covariate_dropped = prep$covariate_dropped %||% list(),
+      source_product_counts = prep$source_product_counts,
+      positive_component_fitted = positive_fitted,
+      positive_model_fallback_applied = fallback_applied,
+      positive_model_fallback = if (fallback_applied) fallback_mode else NULL
     ),
     class = "fishai_fit"
   )
