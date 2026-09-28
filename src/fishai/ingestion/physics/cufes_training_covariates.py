@@ -26,6 +26,7 @@ from fishai.ingestion.physics.bathymetry import (
     WCOFS_BOTTOM_DEPTH_SOURCE,
     WCOFS_BOTTOM_DEPTH_VARIABLE,
     glorys_pilot_depth_grid,
+    normalize_lon_for_axis,
     sample_wcofs_h_bottom_depth_m,
 )
 from fishai.ingestion.physics.covariates import (
@@ -44,6 +45,7 @@ from fishai.ingestion.physics.covariates import (
     event_midpoint_lat_lon,
     great_circle_sample_points,
     join_covariates_to_events,
+    normalize_cufes_events_for_physics,
 )
 from fishai.ingestion.physics.features import (
     compute_upwelling,
@@ -227,6 +229,7 @@ class GlorysFieldStore:
 
 
 def _nearest_cell(lat: float, lon: float, lat_axis: np.ndarray, lon_axis: np.ndarray) -> tuple[int, int]:
+    lon = normalize_lon_for_axis(lon, lon_axis)
     j = int(np.argmin(np.abs(lat_axis - lat)))
     i = int(np.argmin(np.abs(lon_axis - lon)))
     return j, i
@@ -248,13 +251,14 @@ def mean_bottom_depth_m_along_segment(
     reasons: list[str] = []
     for lat, lon in points:
         val, reason = store.sample_bottom_depth_with_reason(lat, lon)
-        depths.append(val)
         if reason is not None:
             reasons.append(reason)
-    arr = np.asarray(depths, dtype=float)
-    if not np.isfinite(arr).any():
-        return float("nan"), sorted(set(reasons))
-    return float(np.nanmean(arr)), []
+            continue
+        if np.isfinite(val):
+            depths.append(float(val))
+    if not depths:
+        return float("nan"), sorted(set(reasons)) if reasons else [DROP_REASON_WCOFS_LOW_WET_FRACTION]
+    return float(np.mean(depths)), []
 
 
 def unique_event_days(events: pd.DataFrame) -> list[dt.date]:
@@ -611,7 +615,7 @@ def _subset_batch_live(
 
 def load_events_parquet(path: Path | None = None) -> pd.DataFrame:
     path = path or DEFAULT_EVENTS_PATH
-    return pd.read_parquet(path)
+    return normalize_cufes_events_for_physics(pd.read_parquet(path))
 
 
 def glorys_store_from_synthetic_days(

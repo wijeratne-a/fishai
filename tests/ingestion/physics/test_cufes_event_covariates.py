@@ -2,18 +2,25 @@
 
 from __future__ import annotations
 
+import datetime as dt
+
 import numpy as np
 import pandas as pd
 import pytest
 
 from fishai.ingestion.physics.covariates import (
     CUFES_COVARIATE_FIELDS,
+    COL_START_TIME,
     COL_STOP_LAT,
+    COL_STOP_TIME,
     CufesEventValidationError,
+    event_mid_time,
     great_circle_sample_points,
     join_covariates_to_events,
+    normalize_cufes_events_for_physics,
     validate_cufes_events,
 )
+from fishai.ingestion.physics.cufes_training_covariates import unique_event_days
 from fishai.ingestion.physics.store import event_covariates_parquet
 
 
@@ -39,6 +46,49 @@ def _synthetic_events() -> pd.DataFrame:
             "stop_longitude": [-120.08, -120.07, -119.48],
         }
     )
+
+
+def test_normalize_pr4_cufes_events_parquet_schema() -> None:
+    """PR #4 ``row_to_event`` columns map to the physics join contract."""
+    pr4 = pd.DataFrame(
+        {
+            "event_id": ["CUFES:2020-01:SH01:42"],
+            "time": "2020-01-15T12:00:00+00:00",
+            "lat": 33.5,
+            "lon": -120.1,
+            "stop_time": "2020-01-15T12:10:00+00:00",
+            "stop_lat": 33.52,
+            "stop_lon": -120.08,
+            "volume_m3": 12.0,
+            "pump_readings_used": 2,
+        }
+    )
+    norm = normalize_cufes_events_for_physics(pr4)
+    validate_cufes_events(norm)
+    assert norm[COL_START_TIME].dt.tz is not None
+    out, _, _ = join_covariates_to_events(
+        pr4,
+        field_sampler=lambda *_: {f: 1.0 for f in CUFES_COVARIATE_FIELDS},
+        source="test",
+    )
+    assert len(out) == 1
+
+
+def test_midpoint_utc_date_crosses_midnight_for_glorys_day() -> None:
+    events = pd.DataFrame(
+        {
+            "event_id": ["midnight_cross"],
+            "start_time": pd.to_datetime(["2021-06-30T23:50:00Z"], utc=True),
+            "stop_time": pd.to_datetime(["2021-07-01T00:10:00Z"], utc=True),
+            "start_latitude": [33.0],
+            "start_longitude": [-120.0],
+            "stop_latitude": [33.01],
+            "stop_longitude": [-119.99],
+        }
+    )
+    mid = event_mid_time(events.iloc[0])
+    assert mid.date().isoformat() == "2021-07-01"
+    assert unique_event_days(events) == [dt.date(2021, 7, 1)]
 
 
 def test_rejects_duplicate_event_id() -> None:

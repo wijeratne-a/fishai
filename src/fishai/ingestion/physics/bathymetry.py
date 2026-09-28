@@ -14,12 +14,25 @@ WCOFS_BOTTOM_DEPTH_VARIABLE = "h"
 WCOFS_BOTTOM_DEPTH_SOURCE = "wcofs_roms"
 
 
+def normalize_lon_for_axis(lon: float, lon_axis: np.ndarray) -> float:
+    """Map sample longitude onto the grid axis convention (e.g. 0..360 vs -180..180)."""
+    if lon_axis.size == 0:
+        return lon
+    lon_max = float(np.nanmax(lon_axis))
+    if lon_max > 180.0 and lon < 0.0:
+        return lon + 360.0
+    if lon_max <= 180.0 and lon > 180.0:
+        return lon - 360.0
+    return lon
+
+
 def nearest_glorys_cell_indices(
     lat: float,
     lon: float,
     lat_axis: np.ndarray,
     lon_axis: np.ndarray,
 ) -> tuple[int, int]:
+    lon = normalize_lon_for_axis(lon, lon_axis)
     j = int(np.argmin(np.abs(lat_axis - lat)))
     i = int(np.argmin(np.abs(lon_axis - lon)))
     return j, i

@@ -91,15 +91,17 @@ def test_drop_land_mask() -> None:
     assert qc["drop_summary"][DROP_REASON_LAND_MASK] >= 1
 
 
-def test_land_mask_does_not_inflate_missing_by_field_counts() -> None:
-    events = _events().iloc[[0]]
+def test_land_mask_only_when_all_track_points_are_land() -> None:
+    events = _events().iloc[[0]].copy()
 
-    def sampler(_lat: float, _lon: float, _t: pd.Timestamp) -> dict:
-        vals = {field: 1.0 for field in CUFES_COVARIATE_FIELDS}
-        vals[SAMPLER_LAND_MASK_KEY] = True
-        return vals
+    def sampler(lat: float, _lon: float, _t: pd.Timestamp) -> dict:
+        if abs(lat - 33.0) < 0.002:
+            return {SAMPLER_LAND_MASK_KEY: True, "T3m": 99.0}
+        return {field: 1.0 for field in CUFES_COVARIATE_FIELDS}
 
-    _, qc, _ = join_covariates_to_events(events, field_sampler=sampler, source="t")
+    out, qc, drops = join_covariates_to_events(events, field_sampler=sampler, source="t")
+    assert not bool(out.iloc[0]["excluded"])
+    assert (drops["reason"] == DROP_REASON_LAND_MASK).sum() == 0
     assert qc["missing_by_field"] == {field: 0 for field in CUFES_COVARIATE_FIELDS}
 
 
@@ -110,6 +112,36 @@ def test_drop_too_few_track_points() -> None:
     _, qc, drops = join_covariates_to_events(events, field_sampler=lambda *_: {"T3m": 1.0}, source="t")
     assert (drops["reason"] == DROP_REASON_TOO_FEW_TRACK_POINTS).any()
     assert qc["drop_summary"][DROP_REASON_TOO_FEW_TRACK_POINTS] >= 1
+
+
+def test_upwelling_nan_does_not_drop_or_exclude() -> None:
+    events = _events().iloc[[0]]
+
+    def sampler(_lat: float, _lon: float, _t: pd.Timestamp) -> dict:
+        return {field: (np.nan if field == "upwelling" else 1.0) for field in CUFES_COVARIATE_FIELDS}
+
+    out, qc, drops = join_covariates_to_events(events, field_sampler=sampler, source="t")
+    assert not bool(out.iloc[0]["excluded"])
+    assert pd.isna(out.iloc[0]["upwelling"])
+    upwelling_drops = drops[
+        (drops["reason"] == DROP_REASON_MISSING_COVARIATE) & (drops["covariate"] == "upwelling")
+    ]
+    assert upwelling_drops.empty
+    assert qc["missing_by_field"]["upwelling"] == 1
+
+
+def test_partial_land_along_track_does_not_exclude() -> None:
+    events = _events().iloc[[0]].copy()
+
+    def sampler(lat: float, _lon: float, _t: pd.Timestamp) -> dict:
+        if abs(lat - 33.0) < 0.002:
+            return {SAMPLER_LAND_MASK_KEY: True, "T3m": 99.0}
+        return {field: 1.0 for field in CUFES_COVARIATE_FIELDS}
+
+    out, _, drops = join_covariates_to_events(events, field_sampler=sampler, source="t")
+    assert not bool(out.iloc[0]["excluded"])
+    assert (drops["reason"] == DROP_REASON_LAND_MASK).sum() == 0
+    assert np.isfinite(out.iloc[0]["T3m"])
 
 
 def test_drop_missing_covariate_per_field() -> None:
@@ -159,23 +191,23 @@ def test_drop_summary_two_reasons_one_unique_event() -> None:
 
 def test_excluded_flag_and_nan_covariates_for_land_and_short_track() -> None:
     events = _events().copy()
-    events.loc[1, COL_STOP_LAT] = 33.51
-    events.loc[1, COL_STOP_LON] = -119.99
+    events.loc[1, COL_STOP_LAT] = 33.52
+    events.loc[1, COL_STOP_LON] = -119.98
     events.loc[2, COL_STOP_LAT] = events.loc[2, COL_START_LAT]
     events.loc[2, COL_STOP_LON] = events.loc[2, COL_START_LON]
     fields = ("T3m", "S3m", "MLD_m", "sst_grad", "front_distance_km", "upwelling")
 
     def sampler(lat: float, _lon: float, _t: pd.Timestamp) -> dict:
-        if 33.49 <= lat <= 33.52:
+        if abs(lat - 33.5) < 0.002:
             return {SAMPLER_LAND_MASK_KEY: True, "T3m": 99.0}
         return {field: 1.0 for field in fields}
 
     out, _, _ = join_covariates_to_events(events, field_sampler=sampler, source="t")
-    assert bool(out.loc[1, "excluded"]) is True
+    assert bool(out.loc[1, "excluded"]) is False
+    assert np.isfinite(out.loc[1, "T3m"])
     assert bool(out.loc[2, "excluded"]) is True
-    for idx in (1, 2):
-        for col in fields:
-            assert pd.isna(out.loc[idx, col])
+    for col in fields:
+        assert pd.isna(out.loc[2, col])
     assert bool(out.loc[0, "excluded"]) is False
     assert np.isfinite(out.loc[0, "T3m"])
 

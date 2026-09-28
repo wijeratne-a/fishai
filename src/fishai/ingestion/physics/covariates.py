@@ -11,7 +11,7 @@ from typing import Any
 import numpy as np
 import pandas as pd
 
-# bot1 ``cufes_events.parquet`` column names (PR #4 / feature/bio-cufes-ingest).
+# Canonical physics join columns (internal).
 COL_EVENT_ID = "event_id"
 COL_START_TIME = "start_time"
 COL_STOP_TIME = "stop_time"
@@ -19,6 +19,13 @@ COL_START_LAT = "start_latitude"
 COL_START_LON = "start_longitude"
 COL_STOP_LAT = "stop_latitude"
 COL_STOP_LON = "stop_longitude"
+
+# PR #4 ``cufes_events.parquet`` (``row_to_event`` in bio/cufes/transform.py).
+PR4_COL_START_TIME = "time"
+PR4_COL_START_LAT = "lat"
+PR4_COL_START_LON = "lon"
+PR4_COL_STOP_LAT = "stop_lat"
+PR4_COL_STOP_LON = "stop_lon"
 
 REQUIRED_EVENT_COLUMNS: tuple[str, ...] = (
     COL_EVENT_ID,
@@ -90,6 +97,33 @@ SAMPLER_LAND_MASK_KEY = "land_mask"
 
 class CufesEventValidationError(ValueError):
     """Invalid ``cufes_events`` input for physics covariate join."""
+
+
+def normalize_cufes_events_for_physics(events: pd.DataFrame) -> pd.DataFrame:
+    """
+    Map PR #4 ``cufes_events.parquet`` columns to the physics join contract.
+
+    PR #4 writes ``time``, ``lat``, ``lon``, ``stop_time``, ``stop_lat``, ``stop_lon``.
+    Physics uses ``start_time``, ``start_latitude``, … (already canonical names pass through).
+    """
+    out = events.copy()
+    renames: dict[str, str] = {}
+    if PR4_COL_START_TIME in out.columns and COL_START_TIME not in out.columns:
+        renames[PR4_COL_START_TIME] = COL_START_TIME
+    if PR4_COL_START_LAT in out.columns and COL_START_LAT not in out.columns:
+        renames[PR4_COL_START_LAT] = COL_START_LAT
+    if PR4_COL_START_LON in out.columns and COL_START_LON not in out.columns:
+        renames[PR4_COL_START_LON] = COL_START_LON
+    if PR4_COL_STOP_LAT in out.columns and COL_STOP_LAT not in out.columns:
+        renames[PR4_COL_STOP_LAT] = COL_STOP_LAT
+    if PR4_COL_STOP_LON in out.columns and COL_STOP_LON not in out.columns:
+        renames[PR4_COL_STOP_LON] = COL_STOP_LON
+    if renames:
+        out = out.rename(columns=renames)
+    for col in (COL_START_TIME, COL_STOP_TIME):
+        if col in out.columns:
+            out[col] = pd.to_datetime(out[col], utc=True, errors="coerce")
+    return out
 
 
 def validate_cufes_events(events: pd.DataFrame) -> None:
@@ -198,14 +232,18 @@ def mean_covariates_along_segment(
     if len(points) < 3:
         segment_reasons.append(DROP_REASON_TOO_FEW_TRACK_POINTS)
     stacks: dict[str, list[float]] = {f: [] for f in CUFES_COVARIATE_FIELDS}
+    land_at_point: list[bool] = []
     for lat, lon in points:
         sampled = field_sampler(lat, lon, mid_t)
-        if sampled.get(SAMPLER_LAND_MASK_KEY) is True:
-            if DROP_REASON_LAND_MASK not in segment_reasons:
-                segment_reasons.append(DROP_REASON_LAND_MASK)
+        is_land = sampled.get(SAMPLER_LAND_MASK_KEY) is True
+        land_at_point.append(is_land)
+        if is_land:
+            continue
         for field in CUFES_COVARIATE_FIELDS:
             val = sampled.get(field, np.nan)
             stacks[field].append(float(val) if val is not None else float("nan"))
+    if land_at_point and all(land_at_point):
+        segment_reasons.append(DROP_REASON_LAND_MASK)
     out: dict[str, float] = {}
     for field, vals in stacks.items():
         arr = np.asarray(vals, dtype=float)
@@ -314,6 +352,7 @@ def join_covariates_to_events(
     Optional ``drop_summary_json_path`` writes the flat JSON schema for R
     (``freeze.R`` / ``jsonlite``); see ``build_covariate_drop_summary_json``.
     """
+    events = normalize_cufes_events_for_physics(events)
     validate_cufes_events(events)
     input_event_count = int(events[COL_EVENT_ID].nunique())
     if input_event_count != len(events):
