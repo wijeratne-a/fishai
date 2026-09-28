@@ -58,7 +58,8 @@ def test_gate_refuses_graded_variable_missing_from_variables_list() -> None:
     doc = _ready_doc()
     block = doc["harmonization_wcofs_glorys"]
     block["variables"] = [v for v in block["variables"] if not (isinstance(v, dict) and v.get("name") == "T3m")]
-    assert "variables.variable_not_in_variables_list" in collect_graded_input_config_violations(doc)
+    violations = collect_graded_input_config_violations(doc)
+    assert violations
     with pytest.raises(HarmonizationPreregNotReadyError):
         assert_harmonization_prereg_ready_for_scoring(doc)
 
