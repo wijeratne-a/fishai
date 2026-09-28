@@ -1,36 +1,116 @@
-"""Copernicus Marine GLORYS reanalysis (account required; disabled in pilot manifest)."""
+"""Copernicus Marine GLORYS reanalysis (licence-gated; training/hindcast only)."""
 
 from __future__ import annotations
 
 import datetime as dt
-from typing import Any
+from pathlib import Path
+from typing import Any, Callable
 
-from fishai.ingestion.sources import SourceNotApprovedError, require_approved
+import numpy as np
+
+from fishai.ingestion.copernicus_compliance import (
+    append_pull_log,
+    build_pull_record,
+    glorys_attribution_bundle,
+)
+from fishai.ingestion.physics.vertical import (
+    CUFES_SAMPLE_DEPTH_M,
+    interp_at_depth_from_z_levels,
+    mld,
+)
+from fishai.ingestion.sources import SourceNotApprovedError, get_source_entry, require_approved
 
 SOURCE_MODULE = "glorys"
 
-# Verified product (Copernicus Marine, 2026-09-28): daily means 1993-01-01 .. 2026-06-23.
 PRODUCT_ID = "cmems_mod_glo_phy_my_0.083deg_P1D-m"
 PRODUCT_TIME_START = dt.date(1993, 1, 1)
 PRODUCT_TIME_END = dt.date(2026, 6, 23)
+LICENSE_VALID_UNTIL = dt.date(2028, 6, 30)
 
-# Native variable names on this product (bottom temperature is ``bottomT``, not ``tob``).
 VARIABLES = ("thetao", "so", "bottomT", "mlotst", "uo", "vo", "zos")
+
+ALLOWED_PURPOSES = frozenset({"training", "hindcast"})
+
+
+def _pull_log_path(entry: dict[str, Any]) -> Path:
+    rel = entry.get("pull_log_path") or "data/interim/copernicus_pull_log.jsonl"
+    path = Path(rel)
+    if not path.is_absolute():
+        from fishai.ingestion.sources import REPO_ROOT
+
+        path = REPO_ROOT / path
+    return path
 
 
 def fetch_day(
     date: dt.date,
     bbox: tuple[float, float, float, float],
     variables: tuple[str, ...] = VARIABLES,
-    **_: Any,
+    *,
+    purpose: str = "training",
+    fetch_fn: Callable[[], Any] | None = None,
+    log_path: Path | None = None,
+    path: Path | None = None,
 ) -> Any:
     """
-    Fetch GLORYS fields for ``date`` via ``copernicusmarine`` (not called in CI).
+    Fetch GLORYS for ``date`` (Copernicus Toolbox on runtime hosts only).
 
-    Credentials are read from ``~/.copernicusmarine/`` on the runtime host only;
-    this module never loads or logs credential paths. The pilot keeps GLORYS
-    ``enabled: false`` until license review completes — ``require_approved`` blocks
-    all calls here.
+    Credentials are personal, non-transferable, and live only under the runtime
+    Copernicus Marine config directory. This code never reads, logs, or prints
+    credential material. CI uses ``fetch_fn`` mocks exclusively.
     """
-    require_approved("glorys")
-    raise SourceNotApprovedError("glorys should be blocked by require_approved")
+    entry = require_approved("glorys", purpose=purpose, path=path)
+    if purpose not in ALLOWED_PURPOSES:
+        raise SourceNotApprovedError(f"glorys: unsupported purpose {purpose!r}")
+    if date < PRODUCT_TIME_START or date > PRODUCT_TIME_END:
+        raise ValueError(f"glorys: date {date} outside product coverage")
+    if dt.date.today() > LICENSE_VALID_UNTIL:
+        raise SourceNotApprovedError("glorys: licence validity ended")
+
+    record = build_pull_record(
+        dataset_id=PRODUCT_ID,
+        date_start=date.isoformat(),
+        date_end=date.isoformat(),
+        variables=variables,
+        bbox=bbox,
+        request_count=1,
+    )
+    append_pull_log(record, log_path=log_path or _pull_log_path(entry))
+
+    if fetch_fn is None:
+        raise RuntimeError(
+            "glorys: live Copernicus client not invoked from unit tests; inject fetch_fn"
+        )
+    payload = fetch_fn()
+    attrs = glorys_attribution_bundle(entry)
+    if isinstance(payload, dict):
+        payload.setdefault("metadata", {}).update(attrs)
+        payload["metadata"]["glorys_derived"] = True
+    return payload
+
+
+def glorys_column_features(
+    z_levels_m: np.ndarray,
+    temp_profile: np.ndarray,
+    salt_profile: np.ndarray,
+    mlotst_native: float | None,
+) -> dict[str, float]:
+    """
+    Build depth features for one GLORYS column.
+
+    T3m/S3m use linear interpolation to exactly 3 m. MLD uses the shared 0.2 °C
+    temperature-threshold rule. ``mlotst`` is returned only as a cross-check.
+    """
+    z = -np.asarray(z_levels_m, dtype=float)
+    temp = np.asarray(temp_profile, dtype=float)
+    salt = np.asarray(salt_profile, dtype=float)
+    z3d = z[:, None, None]
+    t3d = temp[:, None, None]
+    mld_m = float(mld(z3d, t3d)[0, 0])
+    out = {
+        "T3m": interp_at_depth_from_z_levels(z_levels_m, temp, CUFES_SAMPLE_DEPTH_M),
+        "S3m": interp_at_depth_from_z_levels(z_levels_m, salt, CUFES_SAMPLE_DEPTH_M),
+        "MLD_m": mld_m,
+        "mlotst_crosscheck": float(mlotst_native) if mlotst_native is not None else float("nan"),
+    }
+    return out

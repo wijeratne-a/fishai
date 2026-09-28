@@ -33,12 +33,24 @@ sources:
   glorys:
     module: fishai.ingestion.physics.sources.glorys
     product: cmems_mod_glo_phy_my_0.083deg_P1D-m
-    license: Copernicus Marine Service (account terms)
+    license: Copernicus Marine Service
     license_url: https://marine.copernicus.eu/
-    attribution: "Copernicus Marine Service GLORYS; cite product DOI and download credentials holder."
-    status: account_required
-    enabled: false
-    notes: "Variables thetao, so, bottomT, mlotst, uo, vo, zos (1993-01-01 to 2026-06-23). bottomT is seafloor temperature; not tob. License review pending."
+    attribution: "Generated using E.U. Copernicus Marine Service Information; DOI 10.48670/moi-00021 (GLORYS12V1)."
+    copernicus_credit: "Generated using E.U. Copernicus Marine Service Information"
+    copernicus_doi: "10.48670/moi-00021"
+    product_doi_label: GLORYS12V1
+    status: approved
+    enabled: true
+    license_valid_until: 2028-06-30
+    product_time_start: 1993-01-01
+    product_time_end: 2026-06-23
+    variables: [thetao, so, bottomT, mlotst, uo, vo, zos]
+    pull_log_path: data/interim/copernicus_pull_log.jsonl
+    credentials_policy: personal_non_transferable_runtime_only
+    use:
+      allowed_purposes: [training, hindcast]
+      forbidden_purposes: [daily_inference]
+    notes: "Training/hindcast only. bottomT in feature store, not CUFES covariates. mlotst cross-check only."
 
   mur_sst:
     module: fishai.ingestion.physics.sources.sst

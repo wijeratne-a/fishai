@@ -21,9 +21,9 @@ class RequireApprovedTests(unittest.TestCase):
         self.assertEqual(entry["license"], "CC-BY-4.0")
         self.assertIn("CalCOFI", attribution_for("calcofi_cufes"))
 
-    def test_glorys_blocked(self) -> None:
+    def test_glorys_daily_inference_blocked(self) -> None:
         with self.assertRaises(SourceNotApprovedError):
-            require_approved("glorys")
+            require_approved("glorys", purpose="daily_inference")
 
     def test_pending_glider_blocked(self) -> None:
         with self.assertRaises(SourceNotApprovedError):

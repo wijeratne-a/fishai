@@ -6,6 +6,9 @@ import numpy as np
 
 EARTH_RADIUS_KM = 6371.0
 
+# CUFES egg-stage covariates sample tracers at exactly 3 m (linear in z, never nearest-level).
+CUFES_SAMPLE_DEPTH_M = 3.0
+
 
 def cs_r_vstretching4(s: np.ndarray, theta_s: float, theta_b: float) -> np.ndarray:
     """Vstretching=4 stretching function C(s) on s in [-1, 0]."""
@@ -42,6 +45,65 @@ def s_to_z(
     return zeta[None, ...] + (zeta[None, ...] + h[None, ...]) * s_term
 
 
+def interp_tracer_at_depth(
+    z: np.ndarray,
+    tracer: np.ndarray,
+    depth_m: float = CUFES_SAMPLE_DEPTH_M,
+) -> float:
+    """
+    Linear interpolation of a tracer to a target depth (positive metres below surface).
+
+    ``z`` is ROMS-style (negative downward). Uses linear interpolation in depth,
+    never nearest-level selection.
+    """
+    z = np.asarray(z, dtype=float)
+    tracer = np.asarray(tracer, dtype=float)
+    mask = np.isfinite(z) & np.isfinite(tracer)
+    if mask.sum() < 2:
+        return float("nan")
+    depth = -z[mask]
+    values = tracer[mask]
+    order = np.argsort(depth)
+    depth_s = depth[order]
+    values_s = values[order]
+    target = abs(depth_m)
+    if target < depth_s[0] or target > depth_s[-1]:
+        return float("nan")
+    return float(np.interp(target, depth_s, values_s))
+
+
+def interp_at_depth_from_z_levels(
+    z_levels_m: np.ndarray,
+    values: np.ndarray,
+    depth_m: float = CUFES_SAMPLE_DEPTH_M,
+) -> float:
+    """GLORYS-style fixed z-level columns (depths positive down, e.g. 2.6 m, 3.8 m)."""
+    z_levels_m = np.asarray(z_levels_m, dtype=float)
+    values = np.asarray(values, dtype=float)
+    return interp_tracer_at_depth(-z_levels_m, values, depth_m=depth_m)
+
+
+def interp_at_depth_from_wcofs_column(
+    h: float,
+    zeta: float,
+    s_rho: np.ndarray,
+    hc: float,
+    tracer: np.ndarray,
+    *,
+    cs_r: np.ndarray | None = None,
+    depth_m: float = CUFES_SAMPLE_DEPTH_M,
+) -> float:
+    """WCOFS s-level column converted to z, then linear interpolation to ``depth_m``."""
+    z = s_to_z(
+        np.array([[h]]),
+        np.array([[zeta]]),
+        s_rho,
+        hc,
+        cs_r=cs_r,
+    )[:, 0, 0]
+    return interp_tracer_at_depth(z, tracer, depth_m=depth_m)
+
+
 def bottom_layer(temp: np.ndarray, salt: np.ndarray | None = None) -> dict[str, np.ndarray]:
     """Bottom rho-layer tracers (k=0 in ROMS bottom-first ordering)."""
     t_b = np.asarray(temp[0], dtype=float)
@@ -61,7 +123,9 @@ def mld(
     """
     Temperature-threshold MLD (positive depth in metres).
 
-    Reference at zref_m below the surface; shallowest depth where T drops by dT.
+    Shared by WCOFS and GLORYS columns. GLORYS native ``mlotst`` is never used as
+    a model covariate (cross-check column only). Reference at zref_m below the
+    surface; shallowest depth where T drops by dT.
     """
     z = np.asarray(z, dtype=float)
     temp = np.asarray(temp, dtype=float)
