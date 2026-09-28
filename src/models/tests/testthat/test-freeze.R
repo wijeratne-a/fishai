@@ -6,7 +6,7 @@ test_that("frozen model scores once", {
   mesh <- build_fishai_mesh(dat, cfg$mesh)
   fit <- fit_delta_engine(dat, mesh, cfg)
   path <- file.path(td, "artifact.rds")
-  freeze_model(fit, cfg, path)
+  freeze_model(fit, cfg, path, training_dat = dat)
   hold <- dat[1:10, ]
   flag <- file.path(td, "scored.flag")
   s1 <- score_frozen_once(path, hold, flag)

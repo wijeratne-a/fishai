@@ -39,9 +39,9 @@ fishai_engine_config:
   model:
     engine: sdmTMB
     family: delta_gamma
-    delta_type: standard
+    delta_type: poisson-link
     formula_shared: >-
-      ~ log_effort + s(temp_3m_z, k = 3) + s(sal_3m_z, k = 3) + s(mld_z, k = 3)
+      ~ s(temp_3m_z, k = 3) + s(sal_3m_z, k = 3) + s(mld_z, k = 3)
       + s(sst_grad_z, k = 3) + s(dist_front_z, k = 3) + s(upwelling_z, k = 3)
       + s(log_depth_z, k = 3)
     spatial: [on, on]
@@ -59,7 +59,6 @@ fishai_engine_config:
   prediction:
     nsim: 50
     seed: 20260928
-    reference_effort: 1.0
     grid_table: src/models/tests/fixtures/synthetic_grid.csv
     inference_forcing_source_id: glorys
   ood:

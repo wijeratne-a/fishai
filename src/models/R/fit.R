@@ -29,31 +29,17 @@ assert_shared_delta_formula <- function(formula_list) {
   regmatches(txt, gregexpr("s\\([^\\)]+\\)", txt, perl = TRUE))[[1]]
 }
 
-#' Fit delta GLMM with FishAI defaults.
+#' Fit delta GLMM with FishAI defaults (Poisson-link pilot).
 #'
-#' Effort is ``log(volume_m3)`` on column ``log_effort``. In sdmTMB delta
-#' families the ``offset`` argument applies to the **positive** component only;
-#' the encounter component uses ``log_effort`` in the shared formula unless
-#' using Poisson-link delta. See ``src/models/README.md``.
+#' Effort is ``log(volume_m3)`` via ``offset = \"log_effort\"``. For
+#' ``delta_* (type = \"poisson-link\")``, the offset enters **both** delta
+#' linear predictors; encounter probability is ``1 - exp(-exp(eta))``. See
+#' ``docs/CUFES_DELTA_MODEL_SPEC.md``.
 #'
 #' @export
 fit_delta_engine <- function(dat, mesh, cfg) {
   model <- cfg$model
-  delta_type <- model$delta_type %||% "standard"
-  family <- switch(
-    model$family %||% "delta_gamma",
-    delta_gamma = if (delta_type == "poisson-link") {
-      sdmTMB::delta_gamma(type = "poisson-link")
-    } else {
-      sdmTMB::delta_gamma()
-    },
-    delta_lognormal = if (delta_type == "poisson-link") {
-      sdmTMB::delta_lognormal(type = "poisson-link")
-    } else {
-      sdmTMB::delta_lognormal()
-    },
-    stop("unsupported family: ", model$family, call. = FALSE)
-  )
+  family <- resolve_delta_family(cfg)
 
   rhs <- model$formula_shared %||% model$formula_encounter
   frm <- build_delta_formula(rhs)
@@ -111,16 +97,14 @@ fit_delta_engine <- function(dat, mesh, cfg) {
   structure(
     list(
       fit = fit,
-      offset_note = "sdmTMB delta: offset column applies to positive component only; encounter uses log_effort as covariate in shared formula."
+      delta_type = cfg$model$delta_type %||% "poisson-link"
     ),
     class = "fishai_fit"
   )
 }
 
-#' Test helper: verify offset is passed only to positive likelihood.
 #' @export
-offset_applies_to_positive_only <- function(fit_obj) {
+fit_uses_log_effort_offset <- function(fit_obj) {
   fit <- fit_obj$fit
-  args <- fit$call
-  identical(as.character(args$offset), "log_effort")
+  identical(as.character(fit$call$offset), "log_effort")
 }

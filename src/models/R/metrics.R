@@ -56,6 +56,44 @@ brier_score <- function(z, p) {
   mean((p - as.numeric(z))^2)
 }
 
+#' Encounter probability on observed events using each row's ``log(volume_m3)`` offset.
+#' @export
+score_encounter_on_events <- function(fit, newdata, cfg) {
+  if (!"log_effort" %in% names(newdata)) {
+    stop("holdout data missing log_effort for per-event offsets", call. = FALSE)
+  }
+  pred <- stats::predict(fit, newdata = newdata, model = 1L)
+  eta <- pred$est1 + newdata$log_effort
+  encounter_probability(eta, cfg = cfg)
+}
+
+#' Map-scale encounter draws using ``log(V_ref)`` offset (never fitted offsets).
+#' @export
+predict_encounter_on_grid <- function(fit, newdata, artifact, cfg, nsim = 1L) {
+  assert_reference_volume(artifact)
+  off <- reference_volume_offset(artifact, nrow(newdata))
+  if (nsim > 1L) {
+    eta_raw <- stats::predict(fit, newdata = newdata, nsim = nsim, model = 1L)
+    eta <- sweep(eta_raw, 1L, off, "+")
+    return(encounter_probability(eta, cfg = cfg))
+  }
+  pred <- stats::predict(fit, newdata = newdata, model = 1L)
+  encounter_probability(pred$est1 + off, cfg = cfg)
+}
+
+#' Positive-component mean on grid with ``log(V_ref)`` offset.
+#' @export
+predict_positive_mean_on_grid <- function(fit, newdata, artifact, nsim = 1L) {
+  assert_reference_volume(artifact)
+  off <- reference_volume_offset(artifact, nrow(newdata))
+  if (nsim > 1L) {
+    eta <- stats::predict(fit, newdata = newdata, nsim = nsim, model = 2L, offset = off)
+    return(exp(eta))
+  }
+  pred <- stats::predict(fit, newdata = newdata, model = 2L, offset = off)
+  exp(pred$est2)
+}
+
 #' Sample-based CRPS.
 #' @export
 crps_sample <- function(y, samples) {

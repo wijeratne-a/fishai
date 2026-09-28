@@ -1,16 +1,18 @@
 # fishaisdm (R modeling core)
 
-CUFES delta models consume processed **`cufes_events`**, **`cufes_counts`**, and
-along-track **event covariates** (see ingest PRs #4 and #2). `load_model_data()`
-joins on `event_id`, projects each tow to a mesh location at the **UTM 11N track
-midpoint** (km), and drops rows with missing endpoints or empty covariates (QC
-summary on attribute `fishai_data_qc`).
+Pilot CUFES models use **Poisson-link delta** (`delta_gamma(type = "poisson-link")`
+or `delta_lognormal(type = "poisson-link")`). See **`docs/CUFES_DELTA_MODEL_SPEC.md`**.
 
-## Effort offset (delta sdmTMB)
+## Effort offset
 
-Sample volume **`volume_m3`** enters as **`log_effort = log(volume_m3)`**.
-`fit_delta_engine()` passes `offset = "log_effort"` to `sdmTMB::sdmTMB()`. For
-**delta** families, sdmTMB applies the offset to the **positive (catch rate)
-component only**; the encounter component uses `log_effort` as a fixed effect in
-the shared formula. Do not zero-fill effort or covariates—drop upstream or in
-`load_model_data()` QC instead.
+Sample volume **`volume_m3`** enters as **`offset = log(volume_m3)`** on both delta
+components. Encounter probability follows **`p = 1 - exp(-exp(eta))`** with **`eta`**
+including **`log(V)`**. Do not add **`log_effort`** to the pilot formula when using
+Poisson-link (effort is offset-only).
+
+## Reference volume (maps)
+
+**`freeze_model(..., training_dat = dat)`** sets **`reference_volume_m3`** to the
+median training volume (QC-passed events) and stores quantile metadata. **`predict_engine()`**
+uses **`offset = rep(log(V_ref), n)`** on maps only; held-out scoring uses each event’s
+own **`log(volume_m3)`** (see **`score_encounter_on_events()`**).

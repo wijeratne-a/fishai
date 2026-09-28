@@ -1,6 +1,6 @@
 # FishAI — Southern California Bight pilot
 
-FishAI is a **50-mile nowcast skeleton** for the Southern California Bight pilot domain (**32–35°N, 121–117°W**). The active program ingests **CalCOFI CUFES sardine/anchovy egg-stage evidence**, **WCOFS/GLORYS-class physics**, and **SCCOOS HF radar / NDBC / IOOS glider consistency checks**, then fits **sdmTMB delta-lognormal** models in R. This branch provides installable layout, CI, and contracts—not live ingestion or published nowcasts.
+FishAI is a **50-mile nowcast skeleton** for the Southern California Bight pilot domain (**32–35°N, 121–117°W**). The active program ingests **CalCOFI CUFES sardine/anchovy egg-stage evidence**, **WCOFS/GLORYS-class physics**, and **SCCOOS HF radar / NDBC / IOOS glider consistency checks**, then fits **sdmTMB Poisson-link delta** egg models in R (see [`docs/CUFES_DELTA_MODEL_SPEC.md`](docs/CUFES_DELTA_MODEL_SPEC.md)). This branch provides installable layout, CI, and contracts—not live ingestion or published nowcasts.
 
 ## Evidence-state vocabulary
 

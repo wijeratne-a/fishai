@@ -4,7 +4,9 @@
 #' coordinates (cell identifiers only). Labels describe **egg encounter**
 #' evidence, not adult fish distribution.
 #'
-#' Refuses to return output when training or inference attributions are missing.
+#' Map prediction uses ``offset = rep(log(V_ref), n)`` with ``V_ref`` from the
+#' frozen artifact (median training ``volume_m3``). Refuses output when
+#' ``reference_volume_m3`` or attributions are missing.
 #'
 #' @export
 predict_engine <- function(artifact, grid, cfg, physics_cycle = "PASS", nsim = NULL) {
@@ -12,13 +14,13 @@ predict_engine <- function(artifact, grid, cfg, physics_cycle = "PASS", nsim = N
     prediction_attribution_metadata(artifact, cfg)
   )
   attr_cols <- .flatten_attributions_for_columns(attr_meta)
+  vref <- assert_reference_volume(artifact)
 
   fit <- artifact$fit
   pred_cfg <- cfg$prediction %||% list()
   nsim <- nsim %||% pred_cfg$nsim %||% 500L
   seed <- pred_cfg$seed %||% 20260928L
-  ref_effort <- pred_cfg$reference_effort %||% 1
-  grid$log_effort <- log(ref_effort)
+  off <- reference_volume_offset(artifact, nrow(grid))
 
   cov_cols <- artifact$reference_cols
   ref <- artifact$reference
@@ -56,21 +58,17 @@ predict_engine <- function(artifact, grid, cfg, physics_cycle = "PASS", nsim = N
       attr_cols,
       artifact,
       nsim,
-      seed
+      seed,
+      vref
     ))
   }
 
   set.seed(seed)
-  eta1 <- stats::predict(fit, newdata = grid, nsim = nsim, model = 1)
+  eta1_raw <- stats::predict(fit, newdata = grid, nsim = nsim, model = 1)
+  eta1 <- sweep(eta1_raw, 1L, off, "+")
   set.seed(seed)
-  eta2 <- stats::predict(
-    fit,
-    newdata = grid,
-    nsim = nsim,
-    model = 2,
-    offset = rep(log(ref_effort), nrow(grid))
-  )
-  p_s <- 1 / (1 + exp(-eta1))
+  eta2 <- stats::predict(fit, newdata = grid, nsim = nsim, model = 2, offset = off)
+  p_s <- encounter_probability(eta1, cfg = cfg)
   mu_s <- exp(eta2)
   d_s <- p_s * mu_s
 
@@ -99,14 +97,20 @@ predict_engine <- function(artifact, grid, cfg, physics_cycle = "PASS", nsim = N
     agg$p_encounter <- pmin(1, agg$p_encounter * w)
   }
 
-  .finalize_prediction_table(agg, attr_cols, artifact, nsim, seed)
+  .finalize_prediction_table(agg, attr_cols, artifact, nsim, seed, vref)
 }
 
-.finalize_prediction_table <- function(agg, attr_cols, artifact, nsim, seed) {
+.finalize_prediction_table <- function(agg, attr_cols, artifact, nsim, seed, vref) {
   agg$metadata_validated_forcing <- "glorys"
   agg$metadata_training_end <- artifact$training_end %||% NA_character_
   agg$metadata_nsim <- nsim
   agg$metadata_seed <- seed
+  agg$reference_volume_m3 <- vref
+  agg$metadata_encounter_effort_basis <- paste0(
+    "encounter probability per ",
+    format(vref, digits = 6),
+    " m^3 filtered"
+  )
   agg$metadata_attribution_training <- attr_cols$metadata_attribution_training
   agg$metadata_attribution_inference <- attr_cols$metadata_attribution_inference
   agg[, c(
@@ -116,6 +120,8 @@ predict_engine <- function(artifact, grid, cfg, physics_cycle = "PASS", nsim = N
     "ood_level",
     "evidence_state",
     "product_label",
+    "reference_volume_m3",
+    "metadata_encounter_effort_basis",
     "metadata_validated_forcing",
     "metadata_training_end",
     "metadata_attribution_training",

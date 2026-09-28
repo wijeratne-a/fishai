@@ -6,7 +6,7 @@ test_that("freeze records training source attributions from SOURCES.yaml", {
   mesh <- build_fishai_mesh(dat, cfg$mesh)
   fit <- fit_delta_engine(dat, mesh, cfg)
   path <- file.path(td, "artifact.rds")
-  art <- freeze_model(fit, cfg, path)
+  art <- freeze_model(fit, cfg, path, training_dat = dat)
   expect_length(art$training_sources, 2)
   ids <- vapply(art$training_sources, function(x) x$source_id, character(1))
   expect_true(all(c("calcofi_cufes", "glorys") %in% ids))
@@ -29,7 +29,7 @@ test_that("predict propagates training and inference attributions", {
   )
   mesh <- build_fishai_mesh(dat, cfg$mesh)
   fit <- fit_delta_engine(dat, mesh, cfg)
-  art <- freeze_model(fit, cfg, tempfile(fileext = ".rds"))
+  art <- freeze_model(fit, cfg, tempfile(fileext = ".rds"), training_dat = dat)
   art$reference <- dat[, ref_cols, drop = FALSE]
   art$reference_cols <- ref_cols
   grid <- read.csv(cfg$prediction$grid_table, stringsAsFactors = FALSE)
@@ -58,7 +58,7 @@ test_that("predict refuses output when attributions are incomplete", {
   )
   cfg_bad <- cfg
   cfg_bad$prediction$inference_forcing_source_id <- NULL
-  good_art <- freeze_model(fit, cfg, tempfile(fileext = ".rds"))
+  good_art <- freeze_model(fit, cfg, tempfile(fileext = ".rds"), training_dat = dat)
   good_art$reference <- dat[, c("temp_3m_z", "sal_3m_z")]
   good_art$reference_cols <- c("temp_3m_z", "sal_3m_z")
   expect_error(

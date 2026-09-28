@@ -1,6 +1,42 @@
-#' Freeze fitted model artifact with config, renv hash, and training source attributions.
+#' Median training volume and provenance for map reference offset.
 #' @export
-freeze_model <- function(fit_obj, cfg, path, sources_manifest = NULL) {
+compute_reference_volume_metadata <- function(training_dat, cfg) {
+  col <- cfg$response$effort_column %||% "volume_m3"
+  if (!col %in% names(training_dat)) {
+    stop("training data missing effort column: ", col, call. = FALSE)
+  }
+  vol <- as.numeric(training_dat[[col]])
+  vol <- vol[is.finite(vol) & vol > 0]
+  if (!length(vol)) {
+    stop("no positive training volumes to define reference_volume_m3", call. = FALSE)
+  }
+  qs <- stats::quantile(vol, probs = c(0.1, 0.5, 0.9), na.rm = TRUE, names = FALSE)
+  list(
+    reference_volume_m3 = unname(stats::median(vol, na.rm = TRUE)),
+    source = list(
+      n_events = length(vol),
+      training_end = cfg$training_end %||% NA_character_,
+      volume_m3_quantiles = stats::setNames(
+        as.list(as.numeric(qs)),
+        c("p10", "p50", "p90")
+      )
+    )
+  )
+}
+
+#' Freeze fitted model artifact with config, renv hash, training source attributions, and V_ref.
+#' @param training_dat Model-ready training table after [load_model_data()] QC.
+#' @export
+freeze_model <- function(fit_obj, cfg, path, training_dat = NULL, sources_manifest = NULL) {
+  if (is.null(training_dat)) {
+    stop("training_dat is required to compute reference_volume_m3", call. = FALSE)
+  }
+  ref_vol <- compute_reference_volume_metadata(training_dat, cfg)
+  cfg <- cfg
+  cfg$prediction <- cfg$prediction %||% list()
+  cfg$prediction$reference_volume_m3 <- ref_vol$reference_volume_m3
+  cfg$prediction$reference_volume_source <- ref_vol$source
+
   lock_hash <- digest_renv_lock()
   manifest <- sources_manifest %||% load_sources_manifest()
   training_sources <- training_sources_metadata(cfg, manifest = manifest)
@@ -12,6 +48,7 @@ freeze_model <- function(fit_obj, cfg, path, sources_manifest = NULL) {
     reference = cfg$reference %||% NULL,
     reference_cols = cfg$reference_cols %||% NULL,
     training_sources = training_sources,
+    reference_volume = ref_vol,
     frozen_at = format(Sys.time(), tz = "UTC", usetz = TRUE)
   )
   saveRDS(artifact, path)
@@ -26,16 +63,16 @@ digest_renv_lock <- function() {
   as.character(tools::md5sum(lock))
 }
 
-#' Score frozen model exactly once on held-out data.
+#' Score frozen model exactly once on held-out data (per-event effort offsets).
 #' @export
 score_frozen_once <- function(artifact_path, holdout, scored_flag_path) {
   if (file.exists(scored_flag_path)) {
     stop("frozen model already scored once", call. = FALSE)
   }
   artifact <- readRDS(artifact_path)
+  cfg <- artifact$config
   z <- as.integer(holdout$y > 0)
-  p <- stats::predict(artifact$fit, newdata = holdout)$est1
-  p <- 1 / (1 + exp(-p))
+  p <- score_encounter_on_events(artifact$fit, holdout, cfg)
   out <- list(
     auc = auc_mw(z, p),
     brier = brier_score(z, p),
@@ -49,6 +86,7 @@ score_frozen_once <- function(artifact_path, holdout, scored_flag_path) {
 #' @export
 degraded_forcing_rescore <- function(artifact_path, holdout, bias_table) {
   artifact <- readRDS(artifact_path)
+  cfg <- artifact$config
   pert <- holdout
   for (nm in names(bias_table)) {
     if (nm %in% names(pert)) {
@@ -56,8 +94,8 @@ degraded_forcing_rescore <- function(artifact_path, holdout, bias_table) {
     }
   }
   z <- as.integer(holdout$y > 0)
-  p_base <- 1 / (1 + exp(-stats::predict(artifact$fit, newdata = holdout)$est1))
-  p_deg <- 1 / (1 + exp(-stats::predict(artifact$fit, newdata = pert)$est1))
+  p_base <- score_encounter_on_events(artifact$fit, holdout, cfg)
+  p_deg <- score_encounter_on_events(artifact$fit, pert, cfg)
   list(
     auc_base = auc_mw(z, p_base),
     auc_degraded = auc_mw(z, p_deg),
