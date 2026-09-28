@@ -103,8 +103,14 @@ def _nearest_curvilinear(
     lon_pts: np.ndarray,
     var: str,
 ) -> np.ndarray:
-    lat_g = model_ds["lat_rho"].values
-    lon_g = model_ds["lon_rho"].values
+    if "lat_rho" in model_ds and "lon_rho" in model_ds:
+        lat_g = model_ds["lat_rho"].values
+        lon_g = model_ds["lon_rho"].values
+    elif "lat" in model_ds and "lon" in model_ds:
+        lat_g = model_ds["lat"].values
+        lon_g = model_ds["lon"].values
+    else:
+        raise KeyError("model_ds must include lat/lon or lat_rho/lon_rho")
     field = np.asarray(model_ds[var].values)
     out = np.full(lat_pts.shape, np.nan, dtype=float)
     if field.ndim == 0:

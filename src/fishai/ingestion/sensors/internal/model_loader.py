@@ -1,26 +1,25 @@
-"""Load WCOFS cycle files from processed storage for validation commands.
-
-After PR #2 merges, physics ingestion will expose ``open_wcofs_cycle`` /
-``list_wcofs_cycles`` (``CycleNotAvailable``). Keep this module as the single
-seam for sensor consistency/holdout until that integration is wired.
-"""
+"""Load WCOFS cycle files from the processed physics store for validation commands."""
 
 from __future__ import annotations
 
-from pathlib import Path
+import datetime as dt
+import logging
 
 import xarray as xr
 
-from fishai.ingestion.sensors.internal.config import REPO_ROOT, load_sensors_config
+from fishai.physics.store import CycleNotAvailable, open_wcofs_cycle
+
+logger = logging.getLogger(__name__)
 
 
-def load_wcofs_cycle(cycle_yyyymmdd: str) -> xr.Dataset:
-    cfg = load_sensors_config()
-    pattern = cfg["paths"]["wcofs_cycle_glob"].replace("{cycle}", cycle_yyyymmdd)
-    root = REPO_ROOT
-    matches = sorted(root.glob(pattern))
-    if not matches:
-        raise FileNotFoundError(
-            f"No WCOFS file for cycle {cycle_yyyymmdd}; expected under {pattern}"
-        )
-    return xr.open_dataset(matches[-1]).load()
+def load_wcofs_cycle(cycle_yyyymmdd: str) -> xr.Dataset | None:
+    """Open one local WCOFS cycle; return None when the cycle is not in the store."""
+    try:
+        cycle_date = dt.datetime.strptime(cycle_yyyymmdd, "%Y%m%d").date()
+    except ValueError as exc:
+        raise ValueError(f"cycle must be YYYYMMDD, got {cycle_yyyymmdd!r}") from exc
+    try:
+        return open_wcofs_cycle(cycle_date)
+    except CycleNotAvailable:
+        logger.warning("WCOFS cycle %s not available in local store; skipping", cycle_yyyymmdd)
+        return None

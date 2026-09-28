@@ -65,25 +65,30 @@ def _grade(value: float, pass_thr: float, degraded_thr: float, higher_is_better:
 
 
 def _align_model_surface(model_ds: xr.Dataset) -> xr.Dataset:
-    """Normalize WCOFS-like fields to lat/lon grid with temp, u_east, v_north."""
-    if "temp" in model_ds:
-        sst = model_ds["temp"]
-        if "s_rho" in sst.dims:
-            sst = sst.isel(s_rho=-1)
-        if "ocean_time" in sst.dims:
-            sst = sst.isel(ocean_time=0)
+    """Normalize WCOFS-like fields to lat/lon grid with sst and optional u_east, v_north."""
+    if "sst" not in model_ds:
+        if "T3m" in model_ds:
+            sst = model_ds["T3m"]
+        elif "temp" in model_ds:
+            sst = model_ds["temp"]
+            if "s_rho" in sst.dims:
+                sst = sst.isel(s_rho=-1)
+        else:
+            raise KeyError("model_ds must include temp, T3m, or sst")
+        for dim in ("lead_hours", "ocean_time"):
+            if dim in sst.dims:
+                sst = sst.isel({dim: 0})
         model_ds = model_ds.assign(sst=sst.squeeze())
-    elif "sst" not in model_ds:
-        raise KeyError("model_ds must include temp or sst")
     if "u_east" in model_ds and "v_north" in model_ds:
         ue = model_ds["u_east"]
         vn = model_ds["v_north"]
         if "s_rho" in ue.dims:
             ue = ue.isel(s_rho=-1)
             vn = vn.isel(s_rho=-1)
-        if "ocean_time" in ue.dims:
-            ue = ue.isel(ocean_time=0)
-            vn = vn.isel(ocean_time=0)
+        for dim in ("lead_hours", "ocean_time"):
+            if dim in ue.dims:
+                ue = ue.isel({dim: 0})
+                vn = vn.isel({dim: 0})
         model_ds = model_ds.assign(u_east=ue.squeeze(), v_north=vn.squeeze())
     return model_ds
 
