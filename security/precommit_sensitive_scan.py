@@ -128,7 +128,10 @@ def scan_file(rel: str) -> list[str]:
         if pattern.search(text):
             hits.append(f"credential:{kind}")
 
-    if suffix in {".csv", ".tsv"} and not rel.startswith("tests/fixtures/"):
+    instrument_fixture = rel.startswith("tests/fixtures/instrument_data/")
+    if suffix in {".csv", ".tsv"} and (
+        not rel.startswith("tests/fixtures/") or instrument_fixture
+    ):
         first = text.splitlines()[0] if text else ""
         delim_fields = csv_header_fields(first.replace("\t", ","))
         field_names = delim_fields
