@@ -120,7 +120,7 @@ test_that("NaN covariate on non-excluded row stops with error", {
     ),
     response = list(column = "egg_count", effort_column = "volume_m3")
   )
-  expect_error(load_model_data(cfg = cfg), "never impute or silently drop")
+  expect_error(load_model_data(cfg = cfg), "kept fit row has missing value in T3m")
 })
 
 test_that("covariate table without excluded column stops with error", {
@@ -146,5 +146,5 @@ test_that("covariate table without excluded column stops with error", {
     covariates = list(dynamic = "temp_3m", static = character()),
     response = list(column = "egg_count", effort_column = "volume_m3")
   )
-  expect_error(load_model_data(cfg = cfg), "missing excluded column")
+  expect_error(load_model_data(cfg = cfg), "missing columns: excluded")
 })

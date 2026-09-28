@@ -113,6 +113,10 @@ load_model_data <- function(
     .validate_excluded_vs_drop_table(cov, drops)
     cov <- cov[cov$event_id %in% dat$event_id, , drop = FALSE]
     dat <- .join_covariates_bot2(dat, cov, cfg)
+    excl <- attr(dat, "fishai_covariate_exclusion")
+    if (!is.null(excl)) {
+      qc$covariate_exclusion <- excl
+    }
     if (!is.null(drops) && nrow(drops)) {
       qc$join_drop_event_ids <- .join_drop_event_ids(drops)
     }
@@ -156,6 +160,9 @@ load_model_data <- function(
   cov_prep <- .map_and_assert_covariates(dat, cfg)
   dat <- cov_prep$dat
   dat <- .ensure_time_idx(dat)
+  if (!is.null(attr(dat, "fishai_covariate_exclusion"))) {
+    qc$covariate_exclusion <- attr(dat, "fishai_covariate_exclusion")
+  }
 
   short_filt <- .apply_short_event_filter(dat, exclude_short_events)
   dat <- short_filt$dat
@@ -747,13 +754,14 @@ fishai_data_prep_qc <- function(dat) {
   for (col in extra_cov_cols) {
     events[[col]] <- cov[[col]]
   }
-  events <- .map_model_covariates(events, cfg)
-  .assert_non_excluded_covariates_complete(events, cfg)
-  ex <- .parse_excluded_logical(events$excluded)
-  events <- events[!(ex %in% TRUE), , drop = FALSE]
+  filt <- .filter_covariate_excluded_for_fit(events, cfg, log = FALSE)
+  attr(filt$data, "fishai_covariate_exclusion") <- filt$exclusion_summary
+  events <- filt$data
   if (nrow(events) == 0L) {
     stop("no events remain after excluding covariate-join failures", call. = FALSE)
   }
+  events <- .map_model_covariates(events, cfg)
+  .assert_required_covariate_values_complete(events, cfg)
   events
 }
 
@@ -830,12 +838,200 @@ fishai_data_prep_qc <- function(dat) {
 }
 
 .required_training_covariate_columns <- function(cfg) {
+  expected <- .cufes_physics_training_covariate_columns()
   upstream_map <- cfg$covariates$upstream_fields %||% .default_upstream_covariate_map()
-  unique(c(
-    unname(unlist(upstream_map, use.names = FALSE)),
+  dynamic_slugs <- cfg$covariates$dynamic %||% character()
+  if (!is.null(cfg$covariates$upstream_fields) && length(dynamic_slugs)) {
+    mapped <- vapply(
+      dynamic_slugs,
+      function(slug) upstream_map[[slug]] %||% NA_character_,
+      character(1)
+    )
+    mapped <- mapped[!is.na(mapped)]
+    mapped <- unname(mapped)
+    physics <- .cufes_physics_covariate_field_names()
+    if (!identical(sort(mapped), sort(physics))) {
+      stop(
+        "covariates.upstream_fields for dynamic inputs must map to ",
+        paste(physics, collapse = ", "),
+        call. = FALSE
+      )
+    }
+  }
+  if (!is.null(cfg$covariates$upstream_fields)) {
+    if (!identical(upstream_map[["log_depth"]] %||% "bottom_depth_m", "bottom_depth_m")) {
+      stop("covariates.upstream_fields.log_depth must be bottom_depth_m", call. = FALSE)
+    }
+  }
+  expected
+}
+
+#' Column names required on bot2 ``cufes_physics_covariates`` training tables.
+#' Matches ``CUFES_COVARIATE_FIELDS`` in ``fishai.ingestion.physics.covariates``.
+#' @export
+cufes_physics_training_covariate_columns <- function() {
+  .cufes_physics_training_covariate_columns()
+}
+
+.cufes_physics_covariate_field_names <- function() {
+  c(
+    "T3m",
+    "S3m",
+    "MLD_m",
+    "sst_grad",
+    "front_distance_km",
+    "upwelling"
+  )
+}
+
+.cufes_physics_training_covariate_columns <- function() {
+  c(
+    .cufes_physics_covariate_field_names(),
+    "bottom_depth_m",
+    "excluded",
     "source_product",
     "excluded_reason"
-  ))
+  )
+}
+
+.required_covariate_value_columns <- function(cfg) {
+  c(.cufes_physics_covariate_field_names(), "bottom_depth_m")
+}
+
+.assert_required_covariate_values_complete <- function(dat, cfg) {
+  cols <- .required_covariate_value_columns(cfg)
+  present <- cols[cols %in% names(dat)]
+  if (!length(present)) {
+    return(invisible(TRUE))
+  }
+  missing_cols <- setdiff(cols, names(dat))
+  if (length(missing_cols)) {
+    stop(
+      "kept fit rows missing required covariate columns: ",
+      paste(missing_cols, collapse = ", "),
+      call. = FALSE
+    )
+  }
+  for (col in cols) {
+    vals <- dat[[col]]
+    if (is.character(vals)) {
+      bad <- is.na(vals) | !nzchar(trimws(vals))
+    } else {
+      bad <- is.na(vals) | !is.finite(as.numeric(vals))
+    }
+    if (any(bad)) {
+      ids <- as.character(dat$event_id[bad])
+      stop(
+        "kept fit row has missing value in ",
+        col,
+        " (never impute or zero-fill); event_id: ",
+        paste(head(ids, 10L), collapse = ", "),
+        if (sum(bad) > 10L) " ..." else "",
+        call. = FALSE
+      )
+    }
+  }
+  invisible(TRUE)
+}
+
+.filter_covariate_excluded_for_fit <- function(dat, cfg, log = FALSE) {
+  taxon <- cfg$species$taxon %||% cfg$species$code %||% "unknown"
+  if (!"excluded" %in% names(dat)) {
+    summary <- list(
+      taxon = taxon,
+      n_input = nrow(dat),
+      n_kept = nrow(dat),
+      n_dropped = 0L,
+      dropped_by_excluded_reason = list()
+    )
+    return(list(data = dat, exclusion_summary = summary))
+  }
+  ex <- .parse_excluded_logical(dat$excluded)
+  n_in <- nrow(dat)
+  dropped_idx <- ex %in% TRUE
+  n_drop <- as.integer(sum(dropped_idx))
+  by_reason <- list()
+  if (n_drop > 0L) {
+    reasons <- as.character(dat$excluded_reason[dropped_idx])
+    reasons[is.na(reasons) | !nzchar(trimws(reasons))] <- "(blank)"
+    tab <- table(reasons)
+    by_reason <- stats::setNames(as.integer(tab), names(tab))
+  }
+  kept <- dat[!dropped_idx, , drop = FALSE]
+  summary <- list(
+    taxon = taxon,
+    n_input = n_in,
+    n_kept = nrow(kept),
+    n_dropped = n_drop,
+    dropped_by_excluded_reason = by_reason
+  )
+  if (isTRUE(log) && n_drop > 0L) {
+    reason_txt <- if (length(by_reason)) {
+      paste(names(by_reason), by_reason, sep = "=", collapse = ", ")
+    } else {
+      "(none labeled)"
+    }
+    message(
+      "covariate exclusion (taxon=", taxon, "): kept ", summary$n_kept,
+      ", dropped ", summary$n_dropped, "; by excluded_reason: ", reason_txt
+    )
+  } else if (isTRUE(log)) {
+    message(
+      "covariate exclusion (taxon=", taxon, "): kept ", summary$n_kept,
+      ", dropped 0"
+    )
+  }
+  list(data = kept, exclusion_summary = summary)
+}
+
+.source_product_glorys_counts <- function(source_product) {
+  sp <- as.character(source_product)
+  my_id <- "cmems_mod_glo_phy_my_0.083deg_P1D-m"
+  myint_id <- "cmems_mod_glo_phy_myint_0.083deg_P1D-m"
+  list(
+    my = as.integer(sum(sp == my_id, na.rm = TRUE)),
+    myint = as.integer(sum(sp == myint_id, na.rm = TRUE))
+  )
+}
+
+.prepare_dat_for_fit_delta <- function(dat, cfg) {
+  stored_excl <- attr(dat, "fishai_covariate_exclusion")
+  filt <- .filter_covariate_excluded_for_fit(dat, cfg, log = FALSE)
+  dat <- filt$data
+  exclusion_summary <- filt$exclusion_summary
+  if (!is.null(stored_excl) && is.list(stored_excl)) {
+    exclusion_summary <- stored_excl
+  }
+  taxon <- exclusion_summary$taxon %||% cfg$species$taxon %||% "unknown"
+  if (exclusion_summary$n_dropped > 0L) {
+    by_reason <- exclusion_summary$dropped_by_excluded_reason
+    reason_txt <- if (length(by_reason)) {
+      paste(names(by_reason), by_reason, sep = "=", collapse = ", ")
+    } else {
+      "(none labeled)"
+    }
+    message(
+      "covariate exclusion (taxon=", taxon, "): kept ", exclusion_summary$n_kept,
+      ", dropped ", exclusion_summary$n_dropped, "; by excluded_reason: ", reason_txt
+    )
+  } else {
+    message(
+      "covariate exclusion (taxon=", taxon, "): kept ", exclusion_summary$n_kept,
+      ", dropped 0"
+    )
+  }
+  if (nrow(dat) == 0L) {
+    stop("no rows remain after covariate excluded=FALSE filter", call. = FALSE)
+  }
+  .assert_required_covariate_values_complete(dat, cfg)
+  if (!"source_product" %in% names(dat)) {
+    stop("kept fit rows missing source_product", call. = FALSE)
+  }
+  list(
+    data = dat,
+    exclusion_summary = exclusion_summary,
+    source_product_counts = .source_product_glorys_counts(dat$source_product)
+  )
 }
 
 #' @export
@@ -942,10 +1138,7 @@ assert_training_covariate_table_schema <- function(cov, cfg) {
     return(list(dat = dat))
   }
   dat <- .map_model_covariates(dat, cfg)
-  .assert_non_excluded_covariates_complete(
-    data.frame(excluded = FALSE, dat, stringsAsFactors = FALSE),
-    cfg
-  )
+  .assert_required_covariate_values_complete(dat, cfg)
   list(dat = dat)
 }
 

@@ -39,6 +39,8 @@ assert_shared_delta_formula <- function(formula_list) {
 #' @export
 fit_delta_engine <- function(dat, mesh, cfg) {
   .assert_training_covariate_table_from_cfg(cfg)
+  prep <- .prepare_dat_for_fit_delta(dat, cfg)
+  dat <- prep$data
   model <- cfg$model
   family <- resolve_delta_family(cfg)
 
@@ -98,7 +100,9 @@ fit_delta_engine <- function(dat, mesh, cfg) {
   structure(
     list(
       fit = fit,
-      delta_type = cfg$model$delta_type %||% "poisson-link"
+      delta_type = cfg$model$delta_type %||% "poisson-link",
+      covariate_exclusion_summary = prep$exclusion_summary,
+      source_product_counts = prep$source_product_counts
     ),
     class = "fishai_fit"
   )

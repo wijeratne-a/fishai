@@ -18,8 +18,8 @@ test_that("min_duration_min drops short events and logs QC", {
   writeLines(
     paste(
       cufes_covariates_csv_header(),
-      "CUFES:T:AK:long,0,0,0,0,0,0,0,FALSE",
-      "CUFES:T:AK:short,0,0,0,0,0,0,0,FALSE",
+      cufes_covariate_row("CUFES:T:AK:long"),
+      cufes_covariate_row("CUFES:T:AK:short"),
       sep = "\n"
     ),
     cov
@@ -50,6 +50,7 @@ test_that("min_duration_min drops short events and logs QC", {
 
 test_that("compare_duration_sensitivity returns full and filtered blocks", {
   cfg <- load_config_yaml(file.path(FISHAI_ROOT, "configs", "models", "cufes_sardine_synthetic.yaml"))
+  cfg$mesh$barrier$enabled <- FALSE
   cfg$model$formula_shared <- "~ 1"
   cfg$model$spatial <- list("off", "off")
   cfg$model$spatiotemporal <- list("off", "off")

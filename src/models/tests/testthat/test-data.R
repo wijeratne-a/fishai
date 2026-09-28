@@ -389,5 +389,5 @@ test_that("empty covariate on non-excluded row stops with error", {
     ),
     response = list(column = "egg_count", effort_column = "volume_m3")
   )
-  expect_error(load_model_data(cfg = cfg), "never impute or silently drop")
+  expect_error(load_model_data(cfg = cfg), "kept fit row has missing value in T3m")
 })
