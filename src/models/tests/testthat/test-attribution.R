@@ -47,7 +47,11 @@ test_that("predict refuses output when attributions are incomplete", {
   fit <- fit_delta_engine(dat, mesh, cfg)
   bad_art <- list(
     fit = fit$fit,
-    training_end = "2021-12-31",
+    egg_split = list(
+      fit_end = "2017-12-31",
+      test_start = "2018-01-01",
+      test_end = "2022-04-27"
+    ),
     reference = dat[, c("temp_3m_z", "sal_3m_z")],
     reference_cols = c("temp_3m_z", "sal_3m_z")
   )

@@ -36,7 +36,11 @@ load_config_yaml <- function(path) {
     cfg$prediction$grid_table <- .abs(cfg$prediction$grid_table)
   }
   if (!is.null(cfg$mesh$barrier$land_sf_rds)) {
-    cfg$mesh$barrier$land_sf_rds <- .abs(cfg$mesh$barrier$land_sf_rds)
+    p <- cfg$mesh$barrier$land_sf_rds
+    if (!grepl("^/", p)) {
+      p <- file.path(root, p)
+    }
+    cfg$mesh$barrier$land_sf_rds <- normalizePath(p, mustWork = FALSE)
   }
   cfg
 }

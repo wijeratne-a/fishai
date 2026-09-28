@@ -34,7 +34,7 @@ Long-format **`event_id` × `taxon` × `count`**. If a taxon was **not** counted
 At freeze time, **`reference_volume_m3`** is the **median** `volume_m3` over the species **final fitting frame** (after count-row join and all QC drops). Metadata records **`n_events_fitting_frame`**.
 
 - `reference_volume_m3`
-- `reference_volume_source` (`n_events_fitting_frame`, `training_end`, volume quantiles)
+- `reference_volume_source` (`n_events_fitting_frame`, `egg_split.fit_end`, volume quantiles)
 
 No hard-coded round reference volumes.
 
@@ -58,4 +58,19 @@ When bot1 ``cufes_events`` has no ``fold_id`` column, FishAI assigns folds on th
 | Assignment seed | ``prediction.seed`` | **20260928** |
 | Number of folds | ``data.spatial_block_cv.n_folds`` | **4** |
 
-Each event maps to one spatial block ``block_id = bx{floor(X/block)}_by{floor(Y/block)}``; ``fold_id`` is a deterministic function of ``block_id``, the seed, and ``n_folds`` (MD5 of ``seed:block_id``, first seven hex digits mod ``n_folds``). The table is species-agnostic (events only) and written as ``fold_assignment.csv`` (`event_id`, `fold_id`, `block_id`) with SHA-256 recorded in sensitivity run metadata. Leave-future-out CV continues to use existing ``time_idx`` logic.
+Each event maps to one spatial block ``block_id = bx{floor(X/block)}_by{floor(Y/block)}``; ``fold_id`` is a deterministic function of ``block_id``, the seed, and ``n_folds`` (MD5 of ``seed:block_id``, first seven hex digits mod ``n_folds``). Assignment uses **fit-period events only** (``egg_split.fit_end``). The table is species-agnostic (events only) and written as ``fold_assignment.csv`` (`event_id`, `fold_id`, `block_id`) with SHA-256 recorded in sensitivity run metadata.
+
+### Egg-model temporal split
+
+| Key | Role | Pilot value |
+| --- | --- | --- |
+| ``egg_split.fit_end`` | Inclusive last date for model fitting and spatial-block assignment | **2017-12-31** |
+| ``egg_split.test_start`` / ``test_end`` | Held-out scoring window (not used as training rows) | **2018-01-01** – **2022-04-27** |
+| ``egg_split.glorys_product_boundary`` | Events after this date use GLORYS **myint** (not **my**) for ocean inputs | **2021-06-30** |
+| ``egg_split.test_score_include_post_boundary`` | When ``false``, test-period scoring excludes events after ``glorys_product_boundary`` | default **true** |
+
+Leave-future-out CV trains on the fit window and scores holdout **event dates** in the test window. Spatial-block CV uses fit-period rows only.
+
+### Barrier mesh
+
+Pilot production configs set ``mesh.barrier.enabled: true`` with ``range_fraction: 0.1`` (Bakka land barrier; see ``add_barrier_land()``). Land polygons are loaded from ``mesh.barrier.land_sf_rds``.

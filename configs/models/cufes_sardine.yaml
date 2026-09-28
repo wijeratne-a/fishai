@@ -9,7 +9,12 @@ fishai_engine_config:
     lat_max: 35.0
     lon_min: -121.0
     lon_max: -117.0
-  training_end: "2021-12-31"
+  egg_split:
+    fit_end: "2017-12-31"
+    test_start: "2018-01-01"
+    test_end: "2022-04-27"
+    glorys_product_boundary: "2021-06-30"
+    test_score_include_post_boundary: true
   training:
     observation_source_id: calcofi_cufes
     covariate_forcing_source_id: glorys
@@ -72,8 +77,9 @@ fishai_engine_config:
     cutoff_km: 9
     range_guess_km: 60
     barrier:
-      enabled: false
+      enabled: true
       range_fraction: 0.1
+      land_sf_rds: data/reference/mesh/scb_pilot_land_sf.rds
   prediction:
     nsim: 50
     seed: 20260928

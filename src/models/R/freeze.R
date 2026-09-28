@@ -47,7 +47,7 @@ compute_reference_volume_metadata <- function(training_dat, cfg) {
       n_events_fitting_frame = n_ev,
       n_events = n_ev,
       taxon = cfg$species$taxon %||% NA_character_,
-      training_end = cfg$training_end %||% NA_character_,
+      training_end = egg_split_fit_end(cfg) %||% cfg$training_end %||% NA_character_,
       volume_m3_quantiles = stats::setNames(
         as.list(as.numeric(qs)),
         c("p10", "p50", "p90")
@@ -78,7 +78,7 @@ freeze_model <- function(fit_obj, cfg, path, training_dat = NULL, sources_manife
     fit = fit_obj$fit,
     config = cfg,
     renv_hash = lock_hash,
-    training_end = cfg$training_end %||% NA_character_,
+    training_end = egg_split_fit_end(cfg) %||% cfg$training_end %||% NA_character_,
     reference = cfg$reference %||% NULL,
     reference_cols = cfg$reference_cols %||% NULL,
     training_sources = training_sources,

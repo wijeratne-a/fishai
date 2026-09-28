@@ -169,17 +169,19 @@ check_coefficient_wald_pass <- function(full_fit, reduced_fit, conf_level = 0.95
 }
 
 .lfo_fold_metric_vectors <- function(dat, cfg, eval_min_duration, n_validations = 3L) {
-  times <- sort(unique(dat$time_idx))
-  if (length(times) < 3L) {
+  es <- parse_egg_split(cfg)
+  d <- .event_date_utc(dat)
+  train <- dat[d <= es$fit_end, , drop = FALSE]
+  test_dates <- sort(unique(d[d >= es$test_start & d <= es$test_end]))
+  if (length(test_dates) < 1L) {
     return(list(mean_log_score = numeric(), boyce_index = numeric()))
   }
-  n_val <- min(n_validations, length(times) - 1L)
-  hold_times <- times[seq(from = length(times) - n_val + 1L, to = length(times))]
+  n_val <- min(n_validations, length(test_dates))
+  hold_dates <- test_dates[seq(from = length(test_dates) - n_val + 1L, to = length(test_dates))]
   mean_log_score <- numeric()
   boyce <- numeric()
-  for (ht in hold_times) {
-    train <- dat[dat$time_idx < ht, , drop = FALSE]
-    test <- dat[dat$time_idx == ht, , drop = FALSE]
+  for (hd in hold_dates) {
+    test <- dat[d == hd, , drop = FALSE]
     test <- .cv_holdout_rows(test, eval_min_duration)
     if (nrow(train) < 5L || nrow(test) < 2L) {
       next
@@ -267,11 +269,12 @@ run_short_sample_species <- function(protocol, species_entry) {
   full_min <- protocol$full_fit_min_duration_min
   prereg_reduced <- isTRUE(protocol$reduced_fit_exclude_short_events %||% TRUE)
 
-  dat_full <- load_model_data(cfg = cfg, min_duration_min = full_min)
+  dat_full <- load_model_data(cfg = cfg, min_duration_min = full_min, egg_split_scope = "fit")
+  dat_all <- load_model_data(cfg = cfg, min_duration_min = full_min, egg_split_scope = "all")
   dat_red <- if (prereg_reduced) {
-    load_model_data(cfg = cfg, exclude_short_events = TRUE)
+    load_model_data(cfg = cfg, exclude_short_events = TRUE, egg_split_scope = "fit")
   } else {
-    load_model_data(cfg = cfg, min_duration_min = protocol$reduced_fit_min_duration_min)
+    load_model_data(cfg = cfg, min_duration_min = protocol$reduced_fit_min_duration_min, egg_split_scope = "fit")
   }
   mesh_full <- build_fishai_mesh(dat_full, cfg$mesh)
   mesh_red <- build_fishai_mesh(dat_red, cfg$mesh)
@@ -284,8 +287,20 @@ run_short_sample_species <- function(protocol, species_entry) {
   cv_sp_red <- .fold_metric_vectors(dat_red, cfg, eval_min, "fold_id")
   cv_sp <- check_cv_design_pass(cv_sp_full, cv_sp_red, margin_se, metrics)
 
-  cv_lfo_full <- .lfo_fold_metric_vectors(dat_full, cfg, eval_min)
-  cv_lfo_red <- .lfo_fold_metric_vectors(dat_red, cfg, eval_min)
+  cv_lfo_full <- .lfo_fold_metric_vectors(dat_all, cfg, eval_min)
+  cv_lfo_red <- .lfo_fold_metric_vectors(
+    if (prereg_reduced) {
+      load_model_data(cfg = cfg, exclude_short_events = TRUE, egg_split_scope = "all")
+    } else {
+      load_model_data(
+        cfg = cfg,
+        min_duration_min = protocol$reduced_fit_min_duration_min,
+        egg_split_scope = "all"
+      )
+    },
+    cfg,
+    eval_min
+  )
   cv_lfo <- check_cv_design_pass(cv_lfo_full, cv_lfo_red, margin_se, metrics)
 
   overall_pass <- isTRUE(coef$pass) && isTRUE(cv_sp$pass) && isTRUE(cv_lfo$pass)
@@ -345,6 +360,9 @@ run_short_sample_sensitivity <- function(protocol_path = NULL, output_override =
   events_ref <- .read_model_table(cfg_ref$data$events_path)
   events_ref <- .normalize_cufes_events_columns(events_ref)
   .validate_cufes_events_schema(events_ref)
+  if (!is.null(cfg_ref$egg_split)) {
+    events_ref <- .filter_events_table_to_fit_end(events_ref, cfg_ref)
+  }
   spatial_params <- spatial_block_cv_params(cfg_ref)
   fold_assignment <- assign_cufes_spatial_block_folds(events_ref, spatial_params)
   fold_csv <- protocol$output$fold_assignment_csv

@@ -14,6 +14,7 @@
 #' @param cfg Config with `data`, `response`, and `covariates` blocks.
 #' @param min_duration_min Optional; drop events with ``duration_min`` below this threshold.
 #' @param exclude_short_events If TRUE, keep only rows with ``short_event == FALSE`` (#4 column).
+#' @param egg_split_scope ``fit`` (default training frame), ``test``, or ``all`` (fit + test windows).
 #' @return Data frame with `event_id`, `X`, `Y`, `y`, `log_effort`, and `*_z`
 #'   covariates. Attribute `fishai_data_qc` holds drop counts (never imputed).
 #' @export
@@ -21,7 +22,8 @@ load_model_data <- function(
   path = NULL,
   cfg = NULL,
   min_duration_min = NULL,
-  exclude_short_events = NULL
+  exclude_short_events = NULL,
+  egg_split_scope = "fit"
 ) {
   if (is.null(cfg)) {
     stop("cfg is required", call. = FALSE)
@@ -166,6 +168,10 @@ load_model_data <- function(
   }
   if (nrow(dat) == 0L) {
     stop("no events remain after data prep filters", call. = FALSE)
+  }
+
+  if (!is.null(cfg$egg_split)) {
+    dat <- filter_egg_split_scope(dat, cfg, scope = egg_split_scope)
   }
 
   dat$y <- dat[[resp_col]]
