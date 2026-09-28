@@ -59,9 +59,9 @@ def main_bio(argv: list[str] | None = None) -> int:
 
 
 def main_physics(argv: list[str] | None = None) -> int:
-    parser = argparse.ArgumentParser(prog="fishai-physics", description="Physics ingestion (WCOFS/GLORYS)")
-    parser.parse_args(argv)
-    return _not_implemented("fishai-physics")
+    from fishai.ingestion.physics.cli import main as physics_main
+
+    return physics_main(argv)
 
 
 def main_sensors(argv: list[str] | None = None) -> int:
