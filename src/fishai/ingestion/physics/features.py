@@ -14,6 +14,13 @@ GRAVITY = 9.81
 RHO0 = 1025.0
 RHO_AIR = 1.22
 
+# Southern California Bight mainland shoreline tangent (CCW from east), pilot box 32–35°N / 117–121°W.
+# Derived from the mean orientation of the mainland coast between Point Conception and the US–Mexico
+# border (~145°), consistent with qualitative Bakun upwelling geometry for this bight.
+PILOT_COAST_ANGLE_DEG = 145.0
+PILOT_COAST_ANGLE_RAD = math.radians(PILOT_COAST_ANGLE_DEG)
+UPWELLING_FORMULA_ID = "ekman_coastal_ui_v1"
+
 
 def _fill_nan_mean(field: np.ndarray) -> np.ndarray:
     f = np.where(np.isfinite(field), field, np.nan)
@@ -165,6 +172,34 @@ def _wind_stress(u10: np.ndarray, v10: np.ndarray) -> tuple[np.ndarray, np.ndarr
     tau_x = RHO_AIR * cd * spd * u10
     tau_y = RHO_AIR * cd * spd * v10
     return tau_x, tau_y
+
+
+def compute_upwelling(
+    u10: np.ndarray,
+    v10: np.ndarray,
+    lat: np.ndarray,
+    *,
+    coast_angle_rad: float | None = None,
+) -> np.ndarray:
+    """
+    Coastal upwelling index (m²/s per m of coast) from 10 m winds.
+
+    Uses ``ekman_upwelling`` with :data:`PILOT_COAST_ANGLE_RAD` as the mainland-shore
+    **tangent** (CCW from east). The returned index is negated so that **positive**
+    values match offshore Ekman transport under equatorward alongshore winds on the
+    US west coast (upwelling-favourable in the Southern California Bight).
+    """
+    angle = coast_angle_rad if coast_angle_rad is not None else PILOT_COAST_ANGLE_RAD
+    ui = ekman_upwelling(u10, v10, lat, coast_angle_rad=angle)["coastal_upwelling_index"]
+    return -ui
+
+
+def upwelling_covariate_metadata(wind_source_id: str) -> dict[str, float | str]:
+    return {
+        "upwelling_formula": UPWELLING_FORMULA_ID,
+        "upwelling_wind_source": wind_source_id,
+        "upwelling_coast_angle_deg": PILOT_COAST_ANGLE_DEG,
+    }
 
 
 def ekman_upwelling(

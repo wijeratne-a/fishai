@@ -1,0 +1,1 @@
+{"_schema":"wind_pull_log_v1","append_only":true,"notes":"One JSON object per ERDDAP wind subset request; dataset_id and dataset_version recorded; no credentials."}

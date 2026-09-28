@@ -97,6 +97,7 @@ sources:
     license: U.S. Government Work
     license_url: https://www.noaa.gov/information-technology/foia
     attribution: "Remote Sensing Systems"
+    pull_log_path: data/provenance/wind_pull_log.jsonl
     status: approved
     enabled: true
 

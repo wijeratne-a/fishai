@@ -39,7 +39,7 @@ class DailyRequestBudgetExceeded(RuntimeError):
     """Raised when the configured daily HTTP request cap is exceeded."""
 
 
-class _DailyRequestBudget:
+class DailyRequestBudget:
     def __init__(self, max_per_day: int) -> None:
         self._max = int(max_per_day)
         self._day: dt.date | None = None
@@ -126,6 +126,9 @@ def wcofs_covariate_arrays_on_glorys_grid(
     lat_dst: np.ndarray,
     lon_dst: np.ndarray,
     config: dict[str, Any],
+    *,
+    u10: np.ndarray | None = None,
+    v10: np.ndarray | None = None,
 ) -> dict[str, np.ndarray]:
     """Shared WCOFS covariates on the GLORYS grid (overlap uses ``wcofs_`` prefixes in rows)."""
     depth = depth_grid_m(config)
@@ -136,7 +139,7 @@ def wcofs_covariate_arrays_on_glorys_grid(
         depth,
         min_wet_fraction=coarsen_min_wet_fraction(config),
     )
-    return compute_wcofs_covariates_on_glorys_grid(gridded)
+    return compute_wcofs_covariates_on_glorys_grid(gridded, u10=u10, v10=v10)
 
 
 def glorys_profiles_on_depth_grid(
@@ -222,11 +225,15 @@ def pair_overlap_from_synthetic(
     lon_dst: np.ndarray,
     *,
     config: dict[str, Any] | None = None,
+    u10: np.ndarray | None = None,
+    v10: np.ndarray | None = None,
 ) -> pd.DataFrame:
     """Test helper: one day, full GLORYS subgrid."""
     config = config or load_overlap_config()
     depth_grid = depth_grid_m(config)
-    wcofs_fields = wcofs_covariate_arrays_on_glorys_grid(wcofs_slab, lat_dst, lon_dst, config)
+    wcofs_fields = wcofs_covariate_arrays_on_glorys_grid(
+        wcofs_slab, lat_dst, lon_dst, config, u10=u10, v10=v10
+    )
     lat2d, lon2d = np.meshgrid(lat_dst, lon_dst, indexing="ij")
     nearshore = nearshore_mask(lat2d, lon2d, config=config)
     rows: list[dict[str, Any]] = []
@@ -272,7 +279,7 @@ def run_overlap_pairing(
     days: Sequence[dt.date] | None = None,
     wcofs_open: Callable[[dt.date], xr.Dataset] | None = None,
     glorys_fetch: Callable[[dt.date], dict[str, Any]] | None = None,
-    budget: _DailyRequestBudget | None = None,
+    budget: DailyRequestBudget | None = None,
     wcofs_log: Path | None = None,
     glorys_log: Path | None = None,
     output_path: Path | None = None,
@@ -290,7 +297,7 @@ def run_overlap_pairing(
         raise ValueError("configured overlap.expected_days does not match date span")
     lat_dst, lon_dst = glorys_grid_from_config(config)
     rate = config.get("rate_limits") or {}
-    budget = budget or _DailyRequestBudget(int(rate.get("max_requests_per_day", 200)))
+    budget = budget or DailyRequestBudget(int(rate.get("max_requests_per_day", 200)))
     wcofs_log = wcofs_log or REPO_ROOT / str(config["pull_logs"]["wcofs"])
     glorys_log = glorys_log or REPO_ROOT / str(config["pull_logs"]["glorys"])
     all_rows: list[dict[str, Any]] = []

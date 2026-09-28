@@ -61,6 +61,7 @@ rate_limits:
 pull_logs:
   wcofs: data/provenance/wcofs_pull_log.jsonl
   glorys: data/provenance/copernicus_pull_log.jsonl
+  winds: data/provenance/wind_pull_log.jsonl
 
 output:
   parquet_name: wcofs_glorys_overlap_pilot.parquet

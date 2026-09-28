@@ -46,10 +46,12 @@ from fishai.ingestion.physics.covariates import (
     join_covariates_to_events,
 )
 from fishai.ingestion.physics.features import (
-    ekman_upwelling,
+    compute_upwelling,
     front_distance_km,
     sst_gradient,
+    upwelling_covariate_metadata,
 )
+from fishai.ingestion.physics.sources.winds import wind_grids_for_days
 from fishai.ingestion.physics.sources.glorys import (
     VARIABLES,
     glorys_column_features,
@@ -143,8 +145,8 @@ class GlorysDayFields:
     thetao: np.ndarray
     so: np.ndarray
     mlotst: np.ndarray
-    uo: np.ndarray
-    vo: np.ndarray
+    u10: np.ndarray
+    v10: np.ndarray
     sst_grad: np.ndarray
     front_distance_km: np.ndarray
     upwelling: np.ndarray
@@ -162,6 +164,7 @@ class GlorysFieldStore:
     hmin_source: str
     lat: np.ndarray
     lon: np.ndarray
+    wind_source_id: str = "ccmp_winds"
     days: dict[dt.date, GlorysDayFields] = field(default_factory=dict)
 
     @classmethod
@@ -287,15 +290,14 @@ def _compute_day_surface_fields(
     thetao: np.ndarray,
     so: np.ndarray,
     mlotst: np.ndarray,
-    uo: np.ndarray,
-    vo: np.ndarray,
+    u10: np.ndarray,
+    v10: np.ndarray,
 ) -> GlorysDayFields:
     sst = thetao[0]
     grad = sst_gradient(sst, lat, lon)
     lat2d, lon2d = np.meshgrid(lat, lon, indexing="ij")
     front_km = front_distance_km(grad, lat2d, lon2d)
-    ek = ekman_upwelling(uo, vo, lat)
-    upwelling = ek.get("coastal_upwelling_index", ek["ekman_pumping"])
+    upwelling = compute_upwelling(u10, v10, lat)
     return GlorysDayFields(
         day=day,
         dataset_id=dataset_id,
@@ -305,8 +307,8 @@ def _compute_day_surface_fields(
         thetao=thetao,
         so=so,
         mlotst=mlotst,
-        uo=uo,
-        vo=vo,
+        u10=u10,
+        v10=v10,
         sst_grad=grad,
         front_distance_km=front_km,
         upwelling=upwelling,
@@ -319,6 +321,8 @@ def build_synthetic_day_fields(
     lon: np.ndarray,
     *,
     nz: int = 5,
+    u10_override: np.ndarray | None = None,
+    v10_override: np.ndarray | None = None,
 ) -> GlorysDayFields:
     """Test helper: constant profiles and winds."""
     if nz == 5:
@@ -342,8 +346,12 @@ def build_synthetic_day_fields(
         axis=0,
     )
     mlotst = np.full((nj, ni), 20.0)
-    uo = np.full((nj, ni), 2.0)
-    vo = np.full((nj, ni), -1.0)
+    u10 = np.full((nj, ni), 2.0)
+    v10 = np.full((nj, ni), -1.0)
+    if u10_override is not None:
+        u10 = np.asarray(u10_override, dtype=float)
+    if v10_override is not None:
+        v10 = np.asarray(v10_override, dtype=float)
     product_id, _, _ = glorys_dataset_for_date(day)
     return _compute_day_surface_fields(
         day,
@@ -354,8 +362,8 @@ def build_synthetic_day_fields(
         thetao,
         so,
         mlotst,
-        uo,
-        vo,
+        u10,
+        v10,
     )
 
 
@@ -453,6 +461,7 @@ def write_training_covariates_parquet(
         "copernicus_doi": GLORYS_DOI,
         "copernicus_credit": GLORYS_CREDIT_TEXT,
         **bottom_depth_metadata(cfg, store=store),
+        **upwelling_covariate_metadata(store.wind_source_id if store else "ccmp_winds"),
     }
     require_glorys_attribution(metadata)
     meta_json = json.dumps(metadata, sort_keys=True)
@@ -570,6 +579,8 @@ def glorys_store_from_synthetic_days(
     lon: np.ndarray | None = None,
     roms_hmin_m: float | None = None,
     hmin_source: str = "wet_cell_minimum_h",
+    wind_by_day: dict[dt.date, tuple[np.ndarray, np.ndarray]] | None = None,
+    wind_source_id: str = "ccmp_winds",
 ) -> GlorysFieldStore:
     cfg = config or load_overlap_config()
     min_wet = coarsen_min_wet_fraction(cfg)
@@ -596,9 +607,19 @@ def glorys_store_from_synthetic_days(
         hmin_source=hmin_source,
         lat=lat,
         lon=lon,
+        wind_source_id=wind_source_id,
     )
     for day in days:
-        store.days[day] = build_synthetic_day_fields(day, lat, lon)
+        u10_ov = v10_ov = None
+        if wind_by_day is not None and day in wind_by_day:
+            u10_ov, v10_ov = wind_by_day[day]
+        store.days[day] = build_synthetic_day_fields(
+            day,
+            lat,
+            lon,
+            u10_override=u10_ov,
+            v10_override=v10_ov,
+        )
     return store
 
 
@@ -608,6 +629,7 @@ def run_build_cufes_training_covariates(
     output_path: Path | None = None,
     dry_run: bool = False,
     subset_fn: Callable[[GlorysSubsetBatch, Path], Path] | None = None,
+    wind_get_fn: Callable[..., bytes] | None = None,
     max_concurrent: int = 2,
 ) -> dict[str, Any]:
     """
@@ -662,8 +684,32 @@ def run_build_cufes_training_covariates(
         for fut in as_completed(futures):
             fut.result()
 
+    bbox = (
+        float(cfg["pilot_bbox"]["lat_min"]),
+        float(cfg["pilot_bbox"]["lat_max"]),
+        float(cfg["pilot_bbox"]["lon_min"]),
+        float(cfg["pilot_bbox"]["lon_max"]),
+    )
+    wind_log = REPO_ROOT / str(cfg["pull_logs"].get("winds", "data/provenance/wind_pull_log.jsonl"))
+    wind_by_day, wind_source_id = wind_grids_for_days(
+        days,
+        lat,
+        lon,
+        bbox,
+        purpose="training",
+        get_fn=wind_get_fn,
+        log_path=wind_log,
+    )
+    store.wind_source_id = wind_source_id
     for day in days:
-        store.days[day] = build_synthetic_day_fields(day, lat, lon)
+        u10, v10 = wind_by_day.get(day, (None, None))
+        store.days[day] = build_synthetic_day_fields(
+            day,
+            lat,
+            lon,
+            u10_override=u10,
+            v10_override=v10,
+        )
 
     out_path = output_path or DEFAULT_OUTPUT_PATH
     drops_path = out_path.parent / DEFAULT_DROPS_NAME
