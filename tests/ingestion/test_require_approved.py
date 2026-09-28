@@ -18,8 +18,13 @@ from fishai.ingestion.sources import (
 class RequireApprovedTests(unittest.TestCase):
     def test_calcofi_requires_approved_manifest(self) -> None:
         entry = require_approved("calcofi_cufes")
-        self.assertEqual(entry["license"], "CC-BY-4.0")
-        self.assertIn("CalCOFI", attribution_for("calcofi_cufes"))
+        self.assertIn("NOAA ERDDAP", entry["license"])
+        self.assertIn("license_text", entry)
+        self.assertEqual(
+            attribution_for("calcofi_cufes"),
+            "NOAA SWFSC / CalCOFI, erdCalCOFIcufes; "
+            "https://oceanview.pfeg.noaa.gov/erddap/tabledap/erdCalCOFIcufes.html",
+        )
 
     def test_glorys_daily_inference_blocked(self) -> None:
         with self.assertRaises(SourceNotApprovedError):

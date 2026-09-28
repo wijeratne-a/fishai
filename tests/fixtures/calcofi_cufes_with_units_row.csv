@@ -1,0 +1,3 @@
+cruise,ship_code,sample_number,time,latitude,longitude,start_pump_speed,stop_time,stop_latitude,stop_longitude,stop_pump_speed,sardine_eggs,anchovy_eggs,jack_mackerel_eggs,hake_eggs,squid_eggs,other_fish_eggs
+,,"","UTC","degrees_north","degrees_east","M^3 per minute","datetime (UTC)","degrees_north","degrees_east","M^3 per minute","count","count","count","count","count","count"
+209901,99,1,2099-06-01T12:00:00Z,10.0,-10.0,0.8,2099-06-01T12:30:00Z,10.01,-10.01,0.9,0,2,0,0,0,0
