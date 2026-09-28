@@ -49,7 +49,7 @@ Scores use `config/assimilated_sources.yaml` (versioned, cited). Unknown assimil
 
 Per variable: **bias**, **RMSE**, **Pearson r**, by season (DJF/MAM/JJA/SON), nearshore/offshore, and pooled, each with **n** and a **7-day block bootstrap 95% CI**. **Front-detail loss** is mean coarsened-WCOFS **sst_grad** divided by native WCOFS on the same days. Test-split **JJA** is **1–23 June only** (`test_split_jja_partial`).
 
-Nearshore uses `shoreline_source` and `nearshore_cutoff_km` from bot2; both are `TO_BE_SET_BEFORE_SCORING` until supplied. Scoring code **must refuse** while placeholders remain.
+Nearshore (bot2): **Natural Earth** `ne_10m_land` (public domain, Channel Islands included), clipped to lat 31–36°N and lon 122–116°W; **20 km** geodesic cutoff from each GLORYS cell centre to the nearest mainland or island shoreline (`nearshore_rule` in YAML). `shoreline_version` and `shoreline_sha256` stay `TO_BE_SET_BEFORE_SCORING` until bot2 posts the exact version and hash; scoring **must refuse** while those two fields are unset. auditbot1 pass/degraded cutoffs remain placeholders.
 
 ## Timing
 

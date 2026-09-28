@@ -67,15 +67,26 @@ def test_scoring_entry_point_raises_while_placeholders_unset() -> None:
     doc = load_harmonization_prereg(PREREG)
     with pytest.raises(HarmonizationPreregNotReadyError, match="unset prereg fields"):
         assert_harmonization_prereg_ready_for_scoring(doc)
-    with pytest.raises(HarmonizationPreregNotReadyError, match="nearshore"):
+    with pytest.raises(HarmonizationPreregNotReadyError, match="shoreline_version"):
         run_harmonization_scoring(PREREG)
+
+
+def test_nearshore_bot2_definition_and_version_placeholders() -> None:
+    doc = load_harmonization_prereg(PREREG)
+    near = doc["harmonization_wcofs_glorys"]["nearshore"]
+    assert near["nearshore_cutoff_km"] == 20
+    assert "ne_10m_land" in near["shoreline_source"]
+    assert "Channel Islands" in near["shoreline_source"]
+    assert "nearshore_rule" in near
+    assert near["shoreline_version"] == PLACEHOLDER_TOKEN
+    assert near["shoreline_sha256"] == PLACEHOLDER_TOKEN
 
 
 def test_scoring_entry_point_passes_gate_when_placeholders_replaced(tmp_path: Path) -> None:
     doc = load_harmonization_prereg(PREREG)
     block = yaml.safe_load(yaml.dump(doc))["harmonization_wcofs_glorys"]
-    block["nearshore"]["shoreline_source"] = "bot2:shoreline_v1"
-    block["nearshore"]["nearshore_cutoff_km"] = 20
+    block["nearshore"]["shoreline_version"] = "ne_10m_land_v5.1.1"
+    block["nearshore"]["shoreline_sha256"] = "abc123"
     block["pass_fail_thresholds"]["cutoffs"] = {"auditbot1": "v1-placeholder-not-gating"}
     patched = {"schema_version": 1, "harmonization_wcofs_glorys": block}
     path = tmp_path / "prereg.yaml"
@@ -88,6 +99,6 @@ def test_scoring_entry_point_passes_gate_when_placeholders_replaced(tmp_path: Pa
 def test_committed_prereg_still_has_expected_placeholders() -> None:
     doc = load_harmonization_prereg(PREREG)
     near = doc["harmonization_wcofs_glorys"]["nearshore"]
-    assert near["shoreline_source"] == PLACEHOLDER_TOKEN
-    assert near["nearshore_cutoff_km"] == PLACEHOLDER_TOKEN
+    assert near["shoreline_version"] == PLACEHOLDER_TOKEN
+    assert near["shoreline_sha256"] == PLACEHOLDER_TOKEN
     assert doc["harmonization_wcofs_glorys"]["pass_fail_thresholds"]["cutoffs"] == PLACEHOLDER_TOKEN

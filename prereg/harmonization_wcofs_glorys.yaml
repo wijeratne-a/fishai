@@ -159,10 +159,20 @@ harmonization_wcofs_glorys:
         scores as test_split_jja_partial, not full-season JJA.
 
   nearshore:
-    shoreline_source: TO_BE_SET_BEFORE_SCORING
-    nearshore_cutoff_km: TO_BE_SET_BEFORE_SCORING
     supplied_by: bot2
-    note: Scoring must refuse until both fields are set to concrete values.
+    shoreline_source: >-
+      Natural Earth 10m land polygons (ne_10m_land, public domain, includes the
+      Channel Islands), clipped to lat 31 to 36 and lon -122 to -116.
+    nearshore_cutoff_km: 20
+    nearshore_rule: >-
+      A GLORYS cell is nearshore when the geodesic distance from its cell centre
+      to the nearest mainland or island shoreline is 20 km or less.
+    shoreline_version: TO_BE_SET_BEFORE_SCORING
+    shoreline_sha256: TO_BE_SET_BEFORE_SCORING
+    version_hash_note: >-
+      bot2 will post the exact Natural Earth version and shoreline file SHA-256;
+      the scoring guard must refuse while shoreline_version or shoreline_sha256
+      remain unset.
 
   pass_fail_thresholds:
     owner: auditbot1
