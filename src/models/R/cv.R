@@ -47,6 +47,9 @@
   if (is.null(obj) || length(obj) != 1L || !is.finite(as.numeric(obj))) {
     return("non-finite objective")
   }
+  if (isFALSE(fit$converged)) {
+    return("non-converged")
+  }
   if (isFALSE(fit$pos_def_hessian)) {
     return("non-positive-definite Hessian")
   }
@@ -84,12 +87,54 @@
   ll
 }
 
+.cv_fold_assignment_table <- function(dat, fold_ids) {
+  block_id <- if ("block_id" %in% names(dat)) {
+    as.character(dat$block_id)
+  } else {
+    rep(NA_character_, nrow(dat))
+  }
+  data.frame(
+    event_id = as.character(dat$event_id),
+    fold_id = as.integer(fold_ids),
+    block_id = block_id,
+    stringsAsFactors = FALSE
+  )
+}
+
+#' Reason code when a spatial CV result may not enter ELPD selection.
+#' @export
+cv_elpd_ineligible_reason <- function(cv_obj) {
+  if (is.null(cv_obj)) {
+    return("cv_missing")
+  }
+  n_failed <- cv_obj$n_failed_folds %||% 0L
+  if (n_failed > 0L) {
+    failures <- unlist(cv_obj$fold_failures, use.names = FALSE)
+    if (length(failures) && any(grepl("non-converged|non-positive-definite|gradient", failures, ignore.case = TRUE))) {
+      return("cv_fold_nonconverged")
+    }
+    return("cv_fold_failed")
+  }
+  ll <- cv_obj$sum_loglik
+  if (is.null(ll) || length(ll) != 1L || !is.finite(as.numeric(ll))) {
+    return("cv_fold_failed")
+  }
+  fold_ll <- cv_obj$fold_loglik
+  if (!is.null(fold_ll) && any(!is.finite(fold_ll))) {
+    return("cv_fold_failed")
+  }
+  NULL
+}
+
 #' Spatial-block cross-validation with explicit fold IDs.
 #' Failed folds are recorded (not fatal); see ``n_failed_folds`` and ``fold_failures``.
 #' @export
 run_cv_spatial <- function(dat, mesh, cfg, fold_ids) {
   .refuse_random_cv(fold_ids)
   dat$fold_id <- fold_ids
+  .assert_cv_fold_assignment_contract(dat, fold_ids, cfg)
+  spatial_meta <- spatial_block_cv_params(cfg)
+  fold_assignment <- .cv_fold_assignment_table(dat, fold_ids)
   folds <- sort(unique(as.character(fold_ids)))
   fold_loglik <- stats::setNames(rep(NA_real_, length(folds)), folds)
   fold_failures <- list()
@@ -142,6 +187,14 @@ run_cv_spatial <- function(dat, mesh, cfg, fold_ids) {
 
   n_failed <- length(fold_failures)
   sum_ll <- if (n_failed > 0L) NA_real_ else sum(fold_loglik)
+  inel <- cv_elpd_ineligible_reason(
+    list(
+      n_failed_folds = n_failed,
+      fold_failures = fold_failures,
+      sum_loglik = sum_ll,
+      fold_loglik = as.numeric(fold_loglik)
+    )
+  )
 
   structure(
     list(
@@ -149,7 +202,11 @@ run_cv_spatial <- function(dat, mesh, cfg, fold_ids) {
       fold_loglik = as.numeric(fold_loglik),
       sum_loglik = sum_ll,
       n_failed_folds = n_failed,
-      fold_failures = fold_failures
+      fold_failures = fold_failures,
+      fold_assignment = fold_assignment,
+      spatial_block_cv = spatial_meta,
+      elpd_eligible = is.null(inel),
+      elpd_ineligible_reason = inel
     ),
     class = "fishai_cv_spatial"
   )
@@ -178,11 +235,36 @@ run_cv_lfo <- function(dat, mesh, cfg, lfo_forecast = 1L, lfo_validations = 3L) 
   )
 }
 
-#' Choose model with higher ELPD (sum_loglik).
+#' Choose model with higher ELPD (sum_loglik) among eligible candidates only.
 #' @export
 select_by_elpd <- function(cv_results) {
-  elpd <- vapply(cv_results, function(x) x$sum_loglik, numeric(1))
-  names(cv_results)[[which.max(elpd)]]
+  if (is.null(names(cv_results)) || !nzchar(names(cv_results)[1L])) {
+    names(cv_results) <- paste0("candidate_", seq_along(cv_results))
+  }
+  report <- lapply(names(cv_results), function(nm) {
+    x <- cv_results[[nm]]
+    inel <- cv_elpd_ineligible_reason(x)
+    list(
+      candidate = nm,
+      sum_loglik = x$sum_loglik %||% NA_real_,
+      elpd_eligible = is.null(inel),
+      elpd_ineligible_reason = inel
+    )
+  })
+  eligible <- vapply(cv_results, function(x) is.null(cv_elpd_ineligible_reason(x)), logical(1))
+  if (!any(eligible)) {
+    stop(
+      "elpd_all_candidates_ineligible: no candidate completed spatial CV without failed folds",
+      call. = FALSE
+    )
+  }
+  elpd <- vapply(cv_results[eligible], function(x) as.numeric(x$sum_loglik), numeric(1))
+  best <- names(cv_results)[eligible][which.max(elpd)]
+  structure(
+    best,
+    elpd_report = report,
+    class = "fishai_elpd_selection"
+  )
 }
 
 #' @export
