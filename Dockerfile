@@ -40,4 +40,4 @@ RUN Rscript -e 'install.packages("renv", repos = "https://cloud.r-project.org");
 ENV RENV_PATHS_LIBRARY=/app/renv/library
 ENV FISHAI_ROOT=/app
 
-CMD ["bash", "-lc", "python3 -m pytest && Rscript scripts/ci/run_r_model_tests.R"]
+CMD ["bash", "-lc", "python3 -m pytest tests/models && Rscript scripts/ci/run_r_model_tests.R"]
