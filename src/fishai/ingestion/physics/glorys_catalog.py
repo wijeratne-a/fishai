@@ -7,6 +7,7 @@ import json
 import re
 from dataclasses import dataclass
 from datetime import datetime, timezone
+from functools import lru_cache
 from pathlib import Path
 from typing import Any, Callable
 
@@ -26,6 +27,13 @@ _REASON_GLORYS_DATASET_NOT_IN_CATALOG = "glorys_dataset_not_in_catalog"
 _REASON_GLORYS_DATE_NOT_COVERED = "glorys_date_not_covered"
 _REASON_CATALOG_UNREACHABLE = "catalog_unreachable"
 _REASON_GLORYS_DATASET_VERSION_CHANGED = "glorys_dataset_version_changed"
+_REASON_GLORYS_DATASET_VERSION_NOT_PINNED = "glorys_dataset_version_not_pinned"
+_FAILURE_REASON_CODES = frozenset(
+    {
+        _REASON_GLORYS_DATASET_VERSION_CHANGED,
+        _REASON_GLORYS_DATASET_VERSION_NOT_PINNED,
+    }
+)
 
 
 class GlorysCatalogError(RuntimeError):
@@ -263,7 +271,7 @@ def recorded_glorys_dataset_version(
         if not line.strip():
             continue
         record = json.loads(line)
-        if record.get("reason_code") == _REASON_GLORYS_DATASET_VERSION_CHANGED:
+        if record.get("reason_code") in _FAILURE_REASON_CODES:
             continue
         if record.get("dataset_id") != dataset_id:
             continue
@@ -280,48 +288,92 @@ def recorded_glorys_dataset_version(
     return next(iter(versions))
 
 
-def ensure_glorys_dataset_version_unchanged(
+@lru_cache(maxsize=1)
+def pinned_glorys_catalog_version() -> str:
+    """Pinned GLORYS catalogue version from harmonization pre-registration."""
+    from fishai.evaluation.harmonization_prereg import load_harmonization_prereg
+
+    doc = load_harmonization_prereg()
+    glorys = doc["harmonization_wcofs_glorys"]["glorys_reference_dataset"]
+    return str(glorys["pinned_catalog_version"])
+
+
+def _append_glorys_version_failure(
+    reason_code: str,
+    resolution: GlorysDatasetResolution,
+    *,
+    log_path: Path | None,
+    extra: dict[str, Any],
+) -> None:
+    failure: dict[str, Any] = {
+        "reason_code": reason_code,
+        "dataset_id": resolution.dataset_id,
+        "dataset_version": resolution.dataset_version,
+        "timestamp": datetime.now(timezone.utc).isoformat(),
+    }
+    failure.update(extra)
+    if log_path is not None:
+        append_pull_log(failure, log_path=log_path)
+
+
+def ensure_glorys_dataset_version_allowed(
     resolution: GlorysDatasetResolution,
     *,
     log_path: Path | None,
 ) -> None:
     """
-    On reruns, block pulls when the live catalogue version differs from the log.
+    Block pulls before fetch when the catalogue version is not allowed.
 
-    Appends a failure record with ``reason_code`` and does not append a pull record.
+    On reruns, compare to the version recorded in the pull log. On first run
+    (empty log), compare to ``pinned_catalog_version`` in harmonization prereg.
+    Appends a failure record with ``reason_code`` only; never appends a pull record.
     """
     recorded = recorded_glorys_dataset_version(log_path, resolution.dataset_id)
-    if recorded is None or recorded == resolution.dataset_version:
+    if recorded is not None:
+        if recorded == resolution.dataset_version:
+            return
+        _append_glorys_version_failure(
+            _REASON_GLORYS_DATASET_VERSION_CHANGED,
+            resolution,
+            log_path=log_path,
+            extra={"recorded_dataset_version": recorded},
+        )
+        raise GlorysCatalogError(
+            _REASON_GLORYS_DATASET_VERSION_CHANGED,
+            (
+                f"glorys: catalogue dataset_version {resolution.dataset_version!r} "
+                f"differs from recorded {recorded!r} for {resolution.dataset_id!r}"
+            ),
+        )
+
+    pinned = pinned_glorys_catalog_version()
+    if resolution.dataset_version == pinned:
         return
-    failure = {
-        "reason_code": _REASON_GLORYS_DATASET_VERSION_CHANGED,
-        "dataset_id": resolution.dataset_id,
-        "dataset_version": resolution.dataset_version,
-        "recorded_dataset_version": recorded,
-        "timestamp": datetime.now(timezone.utc).isoformat(),
-    }
-    if log_path is not None:
-        append_pull_log(failure, log_path=log_path)
+    _append_glorys_version_failure(
+        _REASON_GLORYS_DATASET_VERSION_NOT_PINNED,
+        resolution,
+        log_path=log_path,
+        extra={"pinned_catalog_version": pinned},
+    )
     raise GlorysCatalogError(
-        _REASON_GLORYS_DATASET_VERSION_CHANGED,
+        _REASON_GLORYS_DATASET_VERSION_NOT_PINNED,
         (
             f"glorys: catalogue dataset_version {resolution.dataset_version!r} "
-            f"differs from recorded {recorded!r} for {resolution.dataset_id!r}"
+            f"differs from pinned prereg version {pinned!r}"
         ),
     )
 
 
-def append_glorys_pull_log_record(
+def write_glorys_pull_log_record(
     day: dt.date,
+    resolution: GlorysDatasetResolution,
     *,
     variables: tuple[str, ...] | list[str],
     bbox: tuple[float, float, float, float],
     log_path: Path,
     request_count: int = 1,
 ) -> dict[str, Any]:
-    """Resolve GLORYS metadata, enforce version guard, append one pull log line."""
-    resolution = resolve_glorys_dataset_for_date(day)
-    ensure_glorys_dataset_version_unchanged(resolution, log_path=log_path)
+    """Append one successful GLORYS pull log line (call only after fetch succeeds)."""
     record = build_pull_record(
         dataset_id=resolution.dataset_id,
         date_start=day.isoformat(),
