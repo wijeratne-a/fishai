@@ -37,7 +37,7 @@ The WCOFS-to-GLORYS map is fit by **bot3** on the **fit split only**, then froze
 
 ## Observations
 
-- **NDBC** hull water temperature: stations from `docs/archive/legacy_data/globe_fixtures/stations.json`, nearest cell, same-day daily mean; GLORYS at **0.49 m**, WCOFS nearest level to **1 m**.  
+- **NDBC** hull water temperature: stations from `docs/archive/legacy_data/globe_fixtures/stations.json`, nearest GLORYS cell, same-day daily mean. **All four model rows** (native WCOFS, coarsened, mapped, GLORYS) compare buoys to **0.494 m below the moving sea surface** via bot2’s **single shared depth function** in `wcofs_glorys_grid` (not “nearest WCOFS level to 1 m”).
 - **SCCOOS HF radar** u/v: daily cell means, masked when **hdop > 1.25** or **fewer than 2** sites.  
 - **Gliders:** excluded while the IOOS feed is pending/disabled.
 
@@ -54,3 +54,5 @@ Nearshore (bot2 PR #7 @ cc26ab4): `Natural Earth ne_10m_land` v**5.1.1**, public
 ## Timing
 
 Commit this YAML and markdown **before** generating test-split pairings or score outputs. Downstream tests (e.g. bot2 #7) should read `fit_start`, `fit_end`, `test_start`, and `test_end` from this file rather than hard-coding dates.
+
+**Wet-fraction overlap report** must include nearshore/offshore NaN-cell counts and CUFES event counts in those cells (vs **14,592** kept and **13,326** long events). Such events stay in the table with **`excluded = TRUE`**, reason **`insufficient_model_coverage`**. **Nowcast:** wet-fraction-blanked cells → **UNKNOWN** (“insufficient model coverage”), never blank (test in bot2/nowcast). PR #5 freeze guards must accept this reason when real-data work lands.

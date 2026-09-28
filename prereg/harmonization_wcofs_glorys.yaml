@@ -75,6 +75,12 @@ harmonization_wcofs_glorys:
         Where the top ROMS s_rho level is deeper than 0.494 m below the surface,
         use the top-level value at that level.
     t3m_s3m: Same moving-surface vertical reference as SST before interpolation to 3 m.
+    shared_depth_function:
+      module: fishai.ingestion.physics.wcofs_glorys_grid
+      note: >-
+        bot2 exposes one shared function for model temperature at depth below the
+        moving surface; harmonization buoy scoring and all WCOFS rows use it so rows
+        differ only in horizontal grid and mapping.
 
   glorys_reference_dataset:
     copernicus_product_id: cmems_mod_glo_phy_myint_0.083deg_P1D-m
@@ -140,9 +146,20 @@ harmonization_wcofs_glorys:
     ndbc_hull_temperature:
       stations_manifest: docs/archive/legacy_data/globe_fixtures/stations.json
       variable: sea_water_temperature
+      buoy_matching:
+        applies_to_model_rows:
+          - wcofs_native
+          - wcofs_coarsened_glorys_grid
+          - wcofs_coarsened_mapped
+          - glorys
+        model_depth_m: 0.494
+        depth_reference: moving_sea_surface
+        depth_function: >-
+          bot2 single shared depth function in fishai.ingestion.physics.wcofs_glorys_grid
+          (same as surface_definition.shared_depth_function); all four rows compare
+          buoy temperature to model value 0.494 m below the moving sea surface so
+          rows differ only in grid and harmonization mapping.
       match:
-        glorys_model_level_depth_m: 0.49
-        wcofs_model_level: nearest_to_1m
         spatial: nearest_glorys_cell
         temporal: same_day_daily_mean
     sccoos_hf_radar:
@@ -238,6 +255,45 @@ harmonization_wcofs_glorys:
     gating: >-
       No production or audit pass/degraded gating until auditbot1 replaces cutoffs;
       metrics are reported descriptively only while cutoffs remain unset.
+
+  wet_fraction_reporting:
+    overlap_output_required_fields:
+      - id: nan_cell_count_nearshore
+        description: >-
+          GLORYS ocean cells where wet_fraction < min_wet_fraction (0.5) and values
+          are set to NaN, nearshore stratum.
+      - id: nan_cell_count_offshore
+        description: Same cell count, offshore stratum.
+      - id: cufes_events_in_nan_cells_full
+        description: >-
+          CUFES kept events (bot1 QC) whose matched GLORYS cell is in the NaN set;
+          denominator reference n_events = 14592.
+      - id: cufes_events_in_nan_cells_reduced
+        description: >-
+          Same event count restricted to short_event == FALSE; denominator reference
+          n_long_event = 13326.
+    cufes_drop_contract:
+      drop_reason: insufficient_model_coverage
+      excluded: true
+      rule: >-
+        Events landing in min_wet_fraction-blanked cells keep covariate rows with
+        excluded = TRUE and reason insufficient_model_coverage in the drop summary;
+        they are never converted to absences and never silently removed from the
+        input event table or drop accounting.
+    bot5_sdmTMB_guard_note: >-
+      When PR #5 runs real-data fits, freeze/load_model_data drop-summary schema and
+      input-event checks must tolerate insufficient_model_coverage rows (present,
+      excluded=TRUE) alongside the four PR #2 bot2 reason keys; do not treat them as
+      schema errors or silent drops.
+
+  nowcast_insufficient_coverage:
+    render_rule: >-
+      Any nowcast grid cell blanked by the wet_fraction < min_wet_fraction rule
+      renders as evidence state UNKNOWN with reason 'insufficient model coverage',
+      never as a blank or missing tile.
+    test_requirement: >-
+      Automated test required in bot2/nowcast code (not in this prereg repo); this
+      pre-registration records the requirement only.
 
   known_limitations:
     - id: mapped_wcofs_july_august_untested

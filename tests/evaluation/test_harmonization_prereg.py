@@ -39,6 +39,42 @@ def test_area_weighted_min_wet_fraction_matches_overlap_config_if_present() -> N
     assert cfg_min == prereg_min
 
 
+def test_buoy_matching_all_models_shared_depth() -> None:
+    doc = load_harmonization_prereg(PREREG)
+    ndbc = doc["harmonization_wcofs_glorys"]["observations"]["ndbc_hull_temperature"]
+    bm = ndbc["buoy_matching"]
+    assert bm["model_depth_m"] == 0.494
+    assert len(bm["applies_to_model_rows"]) == 4
+    assert "wcofs_native" in bm["applies_to_model_rows"]
+    match = ndbc["match"]
+    assert "wcofs_model_level" not in match
+    assert match["spatial"] == "nearest_glorys_cell"
+
+
+def test_wet_fraction_reporting_and_cufes_drop_contract() -> None:
+    doc = load_harmonization_prereg(PREREG)
+    wf = doc["harmonization_wcofs_glorys"]["wet_fraction_reporting"]
+    field_ids = {f["id"] for f in wf["overlap_output_required_fields"]}
+    assert field_ids == {
+        "nan_cell_count_nearshore",
+        "nan_cell_count_offshore",
+        "cufes_events_in_nan_cells_full",
+        "cufes_events_in_nan_cells_reduced",
+    }
+    contract = wf["cufes_drop_contract"]
+    assert contract["drop_reason"] == "insufficient_model_coverage"
+    assert contract["excluded"] is True
+    assert "never silently removed" in contract["rule"]
+
+
+def test_nowcast_insufficient_coverage_requirement() -> None:
+    doc = load_harmonization_prereg(PREREG)
+    nc = doc["harmonization_wcofs_glorys"]["nowcast_insufficient_coverage"]
+    assert "UNKNOWN" in nc["render_rule"]
+    assert "insufficient model coverage" in nc["render_rule"]
+    assert "bot2/nowcast" in nc["test_requirement"]
+
+
 def test_surface_definition_and_glorys_reference_dataset() -> None:
     doc = load_harmonization_prereg(PREREG)
     block = doc["harmonization_wcofs_glorys"]
