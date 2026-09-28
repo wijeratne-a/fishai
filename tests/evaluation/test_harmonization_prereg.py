@@ -182,16 +182,19 @@ def test_nearshore_bot2_pr7_fields_and_pending_placeholders() -> None:
     assert near["clip"]["lon_max"] == -116
     assert near["clip"]["includes_channel_islands"] is True
     assert near["shoreline_path"] == "data/reference/shoreline/ne_10m_land_pilot_clip.json"
+    assert near["shoreline_sha256"] == frozen_shoreline_reference_sha256(doc)
     assert near["cutoff_km"] == 20
     assert "Geodesic on WGS84" in near["distance"]
     ref = frozen_shoreline_reference(doc)
     assert ref["frozen"] is True
     assert ref["path"] == near["shoreline_path"]
-    assert ref["pr7_source_commit"] == "8d4bfae"
+    assert ref["pr7_source_commit"] == "3d49b43"
     assert "Natural Earth 10 m land" in near["shoreline_simplification_note"]
     assert "0 GLORYS cells" in near["shoreline_simplification_note"]
     check = near["shoreline_simplification_check"]
     assert check["method"] == "none_bbox_clip_only"
+    assert check["max_coastline_displacement_km"] == 0
+    assert "211 cells" in check["note"]
     assert check["nearshore_flag_mismatches_vs_full_resolution"] == 0
 
 
@@ -216,7 +219,7 @@ def test_shoreline_simplification_check_not_placeholder_and_matches_frozen_hash(
     check = shoreline_simplification_check(doc)
     assert check is not PLACEHOLDER_TOKEN
     assert check["method"] == "none_bbox_clip_only"
-    assert check["source_commit"] == "8d4bfae"
+    assert check["source_commit"] == "3d49b43"
     assert check["rejected_trial"]["nearshore_flag_mismatches"] == 211
     assert check["file_sha256"] == frozen_shoreline_reference_sha256(doc)
     assert_shoreline_simplification_check_valid(doc)

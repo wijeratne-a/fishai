@@ -355,7 +355,7 @@ harmonization_wcofs_glorys:
     path: data/reference/shoreline/ne_10m_land_pilot_clip.json
     sha256: &frozen_pilot_shoreline_file_sha256 2f677a16aa6c8470846d813eda6d82f2656dea2d697b1511a4c878542d20996c
     frozen: true
-    pr7_source_commit: 8d4bfae
+    pr7_source_commit: 3d49b43
     pr7_branch: cursor/wcofs-glorys-overlap-missing-by-field-60e8
     note: >-
       Auditor-cleared pilot shoreline vendored in PR #7; Bot4 scoring (PR #10) and
@@ -364,7 +364,7 @@ harmonization_wcofs_glorys:
 
   nearshore:
     supplied_by: bot2
-    bot2_pr: "PR #7 @ 8d4bfae"
+    bot2_pr: "PR #7 @ 3d49b43"
     frozen_shoreline_reference_key: frozen_shoreline_reference
     shoreline_source: "Natural Earth ne_10m_land"
     shoreline_version: "5.1.1"
@@ -376,9 +376,10 @@ harmonization_wcofs_glorys:
       lon_max: -116
       includes_channel_islands: true
     shoreline_path: data/reference/shoreline/ne_10m_land_pilot_clip.json
+    shoreline_sha256: *frozen_pilot_shoreline_file_sha256
     shoreline_simplification_note: >-
       Natural Earth 10 m land layer (ne_10m_land) clipped to the pilot box. PR #7
-      (8d4bfae) uses an unsimplified clip-only shoreline (no Douglas–Peucker); fidelity
+      (3d49b43) uses an unsimplified clip-only shoreline (no Douglas–Peucker); fidelity
       work reports 0 GLORYS cells whose nearshore flag differs from the full coastline.
     cutoff_km: 20
     distance: >-
@@ -388,13 +389,17 @@ harmonization_wcofs_glorys:
       method: none_bbox_clip_only
       shoreline_source: Natural Earth ne_10m_land
       shoreline_version: "5.1.1"
-      note: clipped to pilot bbox, not simplified
+      note: >-
+        none applied; the full-resolution clip differs from the source by 0 km and
+        changes 0 of the near-coast flags (simplification would have flipped 211 cells,
+        per the #7 check at 3d49b43).
+      max_coastline_displacement_km: 0
       nearshore_flag_mismatches_vs_full_resolution: 0
       rejected_trial:
         description: simplified ~400 vertices
         nearshore_flag_mismatches: 211
       file_sha256: *frozen_pilot_shoreline_file_sha256
-      source_commit: 8d4bfae
+      source_commit: 3d49b43
     simplification_check_requirement: >-
       Production shoreline uses none_bbox_clip_only; nearshore flags must match
       full-resolution coastline (0 mismatches). file_sha256 must match
