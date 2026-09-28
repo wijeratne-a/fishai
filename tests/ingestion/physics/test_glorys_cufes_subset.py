@@ -19,7 +19,8 @@ from fishai.ingestion.physics.glorys_cufes_subset import (
     subset_nc_path,
 )
 from fishai.ingestion.physics.sources.glorys import PRODUCT_ID_MY, glorys_product_for_date
-from fishai.ingestion.physics.cufes_training_covariates import glorys_store_from_synthetic_days
+from fishai.ingestion.physics.cufes_training_covariates import new_glorys_field_store_for_live_build
+from fishai.ingestion.physics.glorys_training_build import GLORYS_COVARIATE_SOURCE_COPERNICUS
 
 
 def _write_toy_subset(path: Path, day: dt.date) -> None:
@@ -63,8 +64,10 @@ def test_subset_loader_roundtrip(tmp_path: Path) -> None:
     fields = glorys_day_fields_from_netcdf(nc, day, lat, lon)
     assert fields.dataset_id == PRODUCT_ID_MY
     assert np.isfinite(fields.thetao).all()
-    store = glorys_store_from_synthetic_days([], lat=lat, lon=lon)
+    store = new_glorys_field_store_for_live_build()
+    store.lat, store.lon = lat, lon
     populate_store_days_from_cache(store, [day], [batch], tmp_path)
+    assert store.covariate_data_source == GLORYS_COVARIATE_SOURCE_COPERNICUS
     sample = store.field_sampler(33.1, -120.2, pd.Timestamp(f"{day}T12:00:00Z"))
     assert np.isfinite(sample["T3m"])
 

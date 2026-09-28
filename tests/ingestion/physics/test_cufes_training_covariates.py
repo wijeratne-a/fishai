@@ -28,11 +28,14 @@ from fishai.ingestion.physics.covariates import (
 from fishai.ingestion.physics.cufes_training_covariates import (
     TRAINING_OUTPUT_COLUMNS,
     build_cufes_training_covariates_table,
-    glorys_store_from_synthetic_days,
     plan_glorys_subset_batches,
     run_build_cufes_training_covariates,
     unique_event_days,
     write_training_covariates_parquet,
+)
+from fishai.ingestion.physics.glorys_training_build import GLORYS_COVARIATE_SOURCE_COPERNICUS
+from tests.ingestion.physics.cufes_glorys_synthetic_fixture import (
+    glorys_store_from_synthetic_days,
 )
 from fishai.ingestion.physics.sources.glorys import (
     PRODUCT_ID_MY,
@@ -213,9 +216,25 @@ def test_pull_log_includes_version_and_sha256(tmp_path: Path) -> None:
 
 
 def test_training_parquet_metadata_has_credit_and_doi(tmp_path: Path) -> None:
+    from fishai.ingestion.physics.cufes_training_covariates import GlorysSubsetBatch, new_glorys_field_store_for_live_build
+    from fishai.ingestion.physics.glorys_cufes_subset import populate_store_days_from_cache, subset_nc_path
+    from tests.ingestion.physics.test_glorys_cufes_subset import _write_toy_subset
+
     events = _synthetic_events().iloc[[0]]
-    lat, lon = _small_glorys_axes()
-    store = glorys_store_from_synthetic_days(unique_event_days(events), lat=lat, lon=lon)
+    day = unique_event_days(events)[0]
+    batch = GlorysSubsetBatch(
+        dataset_id=glorys_product_for_date(day),
+        date_start=day,
+        date_end=day,
+        variables=("thetao", "so", "mlotst"),
+        bbox=(32.0, 35.0, -121.0, -117.0),
+    )
+    nc = subset_nc_path(tmp_path, batch)
+    _write_toy_subset(nc, day)
+    store = new_glorys_field_store_for_live_build()
+    store.lat, store.lon = _small_glorys_axes()
+    populate_store_days_from_cache(store, [day], [batch], tmp_path)
+    assert store.covariate_data_source == GLORYS_COVARIATE_SOURCE_COPERNICUS
     out, _qc, _drops, _floor = build_cufes_training_covariates_table(events, store)
     path = tmp_path / "out.parquet"
     write_training_covariates_parquet(

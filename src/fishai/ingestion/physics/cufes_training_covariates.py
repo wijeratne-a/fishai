@@ -56,12 +56,18 @@ from fishai.ingestion.physics.glorys_cufes_subset import (
     TRAINING_SUBSET_DEPTH_MAX_M,
     TRAINING_SUBSET_DEPTH_MIN_M,
     TRAINING_SUBSET_VARIABLES,
-    assert_copernicus_env_credentials,
     cache_byte_total,
     enforce_subset_request_budget,
     populate_store_days_from_cache,
     product_date_coverage,
     subset_nc_path,
+)
+from fishai.ingestion.physics.glorys_training_build import (
+    GlorysTrainingBuildError,
+    assert_copernicus_env_credentials,
+    assert_may_write_glorys_training_parquet,
+    assert_store_ready_for_copernicus_export,
+    classify_copernicus_subset_error,
 )
 from fishai.ingestion.physics.sources.glorys import (
     glorys_column_features,
@@ -186,6 +192,7 @@ class GlorysFieldStore:
     lat: np.ndarray
     lon: np.ndarray
     wind_source_id: str = "ccmp_winds"
+    covariate_data_source: str = ""
     days: dict[dt.date, GlorysDayFields] = field(default_factory=dict)
 
     @classmethod
@@ -199,6 +206,7 @@ class GlorysFieldStore:
             hmin_source=grid.hmin_source,
             lat=grid.lat,
             lon=grid.lon,
+            covariate_data_source="",
         )
 
     def field_sampler(self, lat: float, lon: float, when: pd.Timestamp) -> dict[str, Any]:
@@ -338,48 +346,6 @@ def _compute_day_surface_fields(
     )
 
 
-def build_synthetic_day_fields(
-    day: dt.date,
-    lat: np.ndarray,
-    lon: np.ndarray,
-    *,
-    nz: int = 5,
-) -> GlorysDayFields:
-    """Test helper: constant profiles and winds."""
-    if nz == 5:
-        depth_levels = np.array([50.0, 20.0, 10.0, 5.0, 0.0])
-        base_temp = np.array([10.0, 15.0, 17.8, 17.9, 18.0])
-    else:
-        depth_levels = np.linspace(0.0, 50.0, nz)
-        base_temp = 18.5 - 0.12 * depth_levels
-    nj, ni = lat.size, lon.size
-    lat2d = lat[:, None] + np.zeros((nj, ni))
-    lon2d = lon[None, :] + np.zeros((nj, ni))
-    thetao = np.stack(
-        [
-            base_temp[k] + 0.03 * lat2d + 0.01 * lon2d
-            for k in range(depth_levels.size)
-        ],
-        axis=0,
-    )
-    so = np.stack(
-        [33.5 + 0.0005 * lat2d for _ in range(depth_levels.size)],
-        axis=0,
-    )
-    mlotst = np.full((nj, ni), 20.0)
-    product_id = glorys_product_for_date(day)
-    return _compute_day_surface_fields(
-        day,
-        product_id,
-        lat,
-        lon,
-        depth_levels,
-        thetao,
-        so,
-        mlotst,
-    )
-
-
 def _excluded_reason_map(drops: pd.DataFrame) -> dict[Any, str]:
     if drops.empty:
         return {}
@@ -476,7 +442,9 @@ def write_training_covariates_parquet(
         **bottom_depth_metadata(cfg, store=store),
         **upwelling_covariate_metadata(store.wind_source_id if store else "ccmp_winds"),
     }
+    assert_may_write_glorys_training_parquet(store)
     require_glorys_attribution(metadata)
+    metadata["covariate_data_source"] = store.covariate_data_source  # type: ignore[union-attr]
     meta_json = json.dumps(metadata, sort_keys=True)
     table = pa.Table.from_pandas(df, preserve_index=False)
     custom = dict(table.schema.metadata or {})
@@ -616,49 +584,24 @@ def load_events_parquet(path: Path | None = None) -> pd.DataFrame:
     return normalize_cufes_events_for_physics(pd.read_parquet(path))
 
 
-def glorys_store_from_synthetic_days(
-    days: Iterable[dt.date],
-    *,
-    config: dict[str, Any] | None = None,
-    wcofs_h_m: np.ndarray | None = None,
-    has_source: np.ndarray | None = None,
-    wet_fraction: np.ndarray | None = None,
-    lat: np.ndarray | None = None,
-    lon: np.ndarray | None = None,
-    roms_hmin_m: float | None = None,
-    hmin_source: str = "wet_cell_minimum_h",
-    wind_source_id: str = "ccmp_winds",
-) -> GlorysFieldStore:
+def new_glorys_field_store_for_live_build(config: dict[str, Any] | None = None) -> GlorysFieldStore:
+    """Empty GLORYS day cache; covariate source set only after Copernicus subsets load."""
     cfg = config or load_overlap_config()
     min_wet = coarsen_min_wet_fraction(cfg)
-    if lat is None or lon is None:
-        bbox = cfg["pilot_bbox"]
-        lat, lon = glorys_pilot_depth_grid(bbox)
+    lat, lon = glorys_pilot_depth_grid(cfg["pilot_bbox"])
     nj, ni = lat.size, lon.size
-    if wcofs_h_m is None:
-        wcofs_h_m = np.full((nj, ni), 500.0)
-    if has_source is None:
-        has_source = np.ones((nj, ni), dtype=bool)
-    if roms_hmin_m is None:
-        wet_vals = wcofs_h_m[has_source]
-        finite = wet_vals[np.isfinite(wet_vals) & (wet_vals > 0)]
-        roms_hmin_m = float(np.min(finite)) if finite.size else float("nan")
-    if wet_fraction is None:
-        wet_fraction = np.ones((nj, ni), dtype=float)
-    store = GlorysFieldStore(
-        wcofs_h_m=wcofs_h_m,
-        has_source=has_source,
-        wet_fraction=wet_fraction,
+    return GlorysFieldStore(
+        wcofs_h_m=np.full((nj, ni), 500.0),
+        has_source=np.ones((nj, ni), dtype=bool),
+        wet_fraction=np.ones((nj, ni), dtype=float),
         min_wet_fraction=min_wet,
-        roms_hmin_m=float(roms_hmin_m),
-        hmin_source=hmin_source,
+        roms_hmin_m=500.0,
+        hmin_source="placeholder_until_wcofs_h_artifact",
         lat=lat,
         lon=lon,
-        wind_source_id=wind_source_id,
+        covariate_data_source="",
+        days={},
     )
-    for day in days:
-        store.days[day] = build_synthetic_day_fields(day, lat, lon)
-    return store
 
 
 def run_build_cufes_training_covariates(
@@ -672,12 +615,14 @@ def run_build_cufes_training_covariates(
     """
     Load QC-kept CUFES events, plan GLORYS subsets, build training covariates table.
 
-    Live Copernicus downloads are never run in CI; inject ``subset_fn`` or use ``dry_run``.
+    Live path requires Copernicus subsets (or injected ``subset_fn`` writing real cache
+    NetCDFs). Use ``dry_run`` to plan only. Never writes output on failure.
     """
     require_approved("glorys", purpose="training")
     events = load_events_parquet(events_path)
     days = unique_event_days(events)
     batches = plan_glorys_subset_batches(days)
+    out_path = output_path or DEFAULT_OUTPUT_PATH
     result: dict[str, Any] = {
         "input_event_count": int(len(events)),
         "unique_days": len(days),
@@ -697,41 +642,59 @@ def run_build_cufes_training_covariates(
         return result
 
     enforce_subset_request_budget(batches)
+    cfg = load_overlap_config()
+    cfg_logs = cfg
+    log_path = REPO_ROOT / str(cfg_logs["pull_logs"]["glorys"])
+
     if subset_fn is None:
         assert_copernicus_env_credentials()
-        cfg_logs = load_overlap_config()
-        log_path = REPO_ROOT / str(cfg_logs["pull_logs"]["glorys"])
 
         def subset_fn(batch: GlorysSubsetBatch, cache_dir: Path) -> Path:
-            return _subset_batch_live(batch, cache_dir, log_path=log_path)
+            try:
+                return _subset_batch_live(batch, cache_dir, log_path=log_path)
+            except ImportError as exc:
+                raise GlorysTrainingBuildError(
+                    classify_copernicus_subset_error(exc),
+                    "copernicusmarine package required for live GLORYS subset",
+                ) from exc
+            except Exception as exc:
+                code = classify_copernicus_subset_error(exc)
+                raise GlorysTrainingBuildError(code, str(exc)) from exc
 
-    cfg = load_overlap_config()
-    lat, lon = glorys_pilot_depth_grid(cfg["pilot_bbox"])
-    nj, ni = lat.size, lon.size
-    store = glorys_store_from_synthetic_days(
-        [],
-        config=cfg,
-        lat=lat,
-        lon=lon,
-        wcofs_h_m=np.full((nj, ni), 500.0),
-    )
+    store = new_glorys_field_store_for_live_build(cfg)
     cache_dir = REPO_ROOT / "data" / "cache" / "glorys_cufes"
     cache_dir.mkdir(parents=True, exist_ok=True)
 
-    with ThreadPoolExecutor(max_workers=max(1, min(max_concurrent, 2))) as pool:
-        futures = {
-            pool.submit(subset_fn, batch, cache_dir): batch for batch in batches
-        }
-        for fut in as_completed(futures):
-            fut.result()
+    try:
+        with ThreadPoolExecutor(max_workers=max(1, min(max_concurrent, 2))) as pool:
+            futures = {
+                pool.submit(subset_fn, batch, cache_dir): batch for batch in batches
+            }
+            for fut in as_completed(futures):
+                try:
+                    fut.result()
+                except GlorysTrainingBuildError:
+                    raise
+                except Exception as exc:
+                    raise GlorysTrainingBuildError(
+                        classify_copernicus_subset_error(exc),
+                        str(exc),
+                    ) from exc
 
-    populate_store_days_from_cache(store, days, batches, cache_dir)
+        populate_store_days_from_cache(store, days, batches, cache_dir)
+        assert_store_ready_for_copernicus_export(store, days)
+    except GlorysTrainingBuildError:
+        raise
+    except Exception as exc:
+        raise GlorysTrainingBuildError(
+            classify_copernicus_subset_error(exc),
+            str(exc),
+        ) from exc
     result["subset_request_count"] = len(batches)
     result["subset_bytes_downloaded"] = cache_byte_total(cache_dir, batches)
     result["glorys_product_coverage"] = product_date_coverage(days)
     result["glorys_cache_dir"] = str(cache_dir)
 
-    out_path = output_path or DEFAULT_OUTPUT_PATH
     drops_path = out_path.parent / DEFAULT_DROPS_NAME
     summary_path = out_path.parent / DEFAULT_DROP_SUMMARY_NAME
     table, qc, _drops, floor_qc = build_cufes_training_covariates_table(

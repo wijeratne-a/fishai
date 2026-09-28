@@ -18,6 +18,7 @@ from fishai.ingestion.physics.sources.glorys import (
     glorys_dataset_id_for_date,
     glorys_product_for_date,
 )
+from fishai.ingestion.physics.glorys_training_build import GLORYS_COVARIATE_SOURCE_COPERNICUS
 from fishai.ingestion.physics.wcofs_glorys_overlap import DailyRequestBudget
 
 # Physics join uses profiles through MLD; subset only what the table needs.
@@ -149,6 +150,7 @@ def populate_store_days_from_cache(
                 store.lat,
                 store.lon,
             )
+        store.covariate_data_source = GLORYS_COVARIATE_SOURCE_COPERNICUS
     finally:
         for ds in open_ds.values():
             ds.close()
@@ -217,19 +219,6 @@ def product_date_coverage(
             "unique_days": len(dlist),
         }
     return out
-
-
-def assert_copernicus_env_credentials() -> None:
-    import os
-
-    user = os.environ.get("COPERNICUSMARINE_SERVICE_USERNAME")
-    password = os.environ.get("COPERNICUSMARINE_SERVICE_PASSWORD")
-    if not user or not password:
-        raise RuntimeError(
-            "Copernicus Marine credentials missing: set "
-            "COPERNICUSMARINE_SERVICE_USERNAME and COPERNICUSMARINE_SERVICE_PASSWORD "
-            "(never commit credential files)"
-        )
 
 
 def enforce_subset_request_budget(batches: list[GlorysSubsetBatch], max_per_day: int = 200) -> None:

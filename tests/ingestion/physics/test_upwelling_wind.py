@@ -3,16 +3,12 @@
 from __future__ import annotations
 
 import datetime as dt
-import json
 import math
 
 import numpy as np
-import pyarrow.parquet as pq
-
 from fishai.ingestion.physics.cufes_training_covariates import (
     _compute_day_surface_fields,
-    glorys_store_from_synthetic_days,
-    write_training_covariates_parquet,
+    upwelling_covariate_metadata,
 )
 from fishai.ingestion.physics.features import (
     PILOT_COAST_ANGLE_DEG,
@@ -22,8 +18,6 @@ from fishai.ingestion.physics.features import (
 )
 from fishai.ingestion.physics.sources.glorys import glorys_product_for_date
 from fishai.ingestion.physics.wind_shared_forcing import UPWELLING_STATUS_NO_CONSISTENT_WIND
-from fishai.ingestion.sources import require_approved
-
 
 def _equatorward_alongshore_wind(speed_m_s: float, shape: tuple[int, ...]) -> tuple[np.ndarray, np.ndarray]:
     """Wind blowing equatorward along the pilot mainland coast tangent."""
@@ -66,21 +60,8 @@ def test_compute_day_surface_fields_does_not_fill_upwelling_from_glorys_inputs()
     assert np.isnan(fields.upwelling).all()
 
 
-def test_training_parquet_metadata_includes_upwelling_fields(tmp_path) -> None:
-    lat = np.linspace(33.0, 33.1, 3)
-    lon = np.linspace(-120.4, -120.3, 3)
-    store = glorys_store_from_synthetic_days(
-        [dt.date(2020, 1, 1)], lat=lat, lon=lon, wind_source_id="ccmp_winds"
-    )
-    df = __import__("pandas").DataFrame({"event_id": ["e1"], "T3m": [1.0]})
-    out = tmp_path / "out.parquet"
-    write_training_covariates_parquet(
-        df,
-        out,
-        entry=require_approved("glorys", purpose="training"),
-        store=store,
-    )
-    meta = json.loads(pq.read_table(out).schema.metadata[b"glorys"].decode())
+def test_upwelling_covariate_metadata_documents_no_consistent_wind() -> None:
+    meta = upwelling_covariate_metadata("ccmp_winds")
     assert meta["upwelling_formula"] == UPWELLING_FORMULA_ID
     assert meta["upwelling_wind_source"] == "ccmp_winds"
     assert meta["upwelling_coast_angle_deg"] == PILOT_COAST_ANGLE_DEG
