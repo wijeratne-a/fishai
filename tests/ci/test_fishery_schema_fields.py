@@ -25,6 +25,11 @@ class FisheryFieldGuardTests(unittest.TestCase):
         self.assertIn("landings", forbidden_in_name("commercial_landings"))
         self.assertEqual(forbidden_in_name("documentation_url"), [])
 
+    def test_flags_mmsi_imo_call_sign(self) -> None:
+        self.assertIn("mmsi", forbidden_in_name("vessel_mmsi"))
+        self.assertIn("imo", forbidden_in_name("imo_number"))
+        self.assertIn("call_sign", forbidden_in_name("call_sign"))
+
 
 if __name__ == "__main__":
     unittest.main()

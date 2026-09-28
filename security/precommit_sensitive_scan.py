@@ -1,9 +1,12 @@
 #!/usr/bin/env python3
-"""Scan all git-tracked text files for credential-like strings and lat/lon CSV headers.
+"""Scan all git-tracked text files for credential-like strings and coordinate exposure.
 
 Uses ``git ls-files`` so ``docs/archive/`` and legacy data are included. Skips only
 gitignored runtime trees: ``data/raw``, ``data/interim``, ``data/restricted``,
 ``data/quarantine``, ``data/processed``. Does not print coordinate values.
+
+Checks CSV/TSV headers, JSON/GeoJSON property names and point-level geometries, and
+Parquet column names when parquet files are tracked.
 
 Exit 1 on ANY hit in any tracked file.
 """
@@ -11,10 +14,12 @@ Exit 1 on ANY hit in any tracked file.
 from __future__ import annotations
 
 import argparse
+import json
 import re
 import subprocess
 import sys
 from pathlib import Path
+from typing import Any
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
 
@@ -33,6 +38,7 @@ TEXT_SUFFIXES = {
     ".csv",
     ".tsv",
     ".json",
+    ".geojson",
     ".yaml",
     ".yml",
     ".env",
@@ -75,6 +81,10 @@ COORD_HEADER_NAMES = {
     "decimallongitude",
     "lat_dd",
     "lon_dd",
+    "start_latitude",
+    "start_longitude",
+    "stop_latitude",
+    "stop_longitude",
 }
 
 
@@ -101,12 +111,82 @@ def csv_header_fields(first_line: str) -> list[str]:
     return [h.strip().strip('"').strip("'").lower() for h in first_line.strip().split(",")]
 
 
+def field_name_exposes_coordinates(name: str) -> bool:
+    normalized = name.replace(" ", "_").lower()
+    if normalized in COORD_HEADER_NAMES:
+        return True
+    # camelCase JSON schema properties
+    snake = re.sub(r"([a-z])([A-Z])", r"\1_\2", name).replace(" ", "_").lower()
+    return snake in COORD_HEADER_NAMES
+
+
 def header_has_coordinates(fields: list[str]) -> bool:
-    for field in fields:
-        normalized = field.replace(" ", "_")
-        if normalized in COORD_HEADER_NAMES:
-            return True
+    return any(field_name_exposes_coordinates(field) for field in fields)
+
+
+def walk_json_property_names(node: object) -> list[str]:
+    names: list[str] = []
+    if isinstance(node, dict):
+        for key, value in node.items():
+            names.append(str(key))
+            names.extend(walk_json_property_names(value))
+    elif isinstance(node, list):
+        for item in node:
+            names.extend(walk_json_property_names(item))
+    return names
+
+
+def geojson_has_point_geometry(node: object) -> bool:
+    if not isinstance(node, dict):
+        return False
+    gtype = node.get("type")
+    if gtype == "Point":
+        coords = node.get("coordinates")
+        return isinstance(coords, list) and len(coords) >= 2
+    if gtype == "Feature":
+        geom = node.get("geometry")
+        return geojson_has_point_geometry(geom) if isinstance(geom, dict) else False
+    if gtype == "FeatureCollection":
+        features = node.get("features")
+        if isinstance(features, list):
+            return any(geojson_has_point_geometry(f) for f in features)
+    geometry = node.get("geometry")
+    if isinstance(geometry, dict) and geojson_has_point_geometry(geometry):
+        return True
     return False
+
+
+def scan_json_text(text: str, *, rel: str = "") -> list[str]:
+    hits: list[str] = []
+    try:
+        data = json.loads(text)
+    except json.JSONDecodeError:
+        return hits
+    schema_contract = rel.startswith("src/fishai/schemas/") or rel.endswith(".schema.json")
+    if not schema_contract:
+        for name in walk_json_property_names(data):
+            if field_name_exposes_coordinates(name):
+                hits.append("json_schema:latitude_or_longitude")
+                break
+    if geojson_has_point_geometry(data):
+        hits.append("geojson:point_geometry")
+    return hits
+
+
+def scan_parquet_file(path: Path) -> list[str]:
+    hits: list[str] = []
+    try:
+        import pyarrow.parquet as pq
+    except ImportError:
+        return hits
+    try:
+        schema = pq.read_schema(path)
+    except OSError:
+        return hits
+    for name in schema.names:
+        if field_name_exposes_coordinates(name):
+            hits.append("parquet_schema:latitude_or_longitude")
+    return hits
 
 
 def scan_file(rel: str) -> list[str]:
@@ -116,7 +196,11 @@ def scan_file(rel: str) -> list[str]:
     path = REPO_ROOT / rel
     if not path.is_file():
         return []
+
     suffix = path.suffix.lower()
+    if suffix == ".parquet":
+        return scan_parquet_file(path)
+
     if suffix not in TEXT_SUFFIXES and path.name not in {".env", "Makefile"}:
         return []
 
@@ -134,6 +218,9 @@ def scan_file(rel: str) -> list[str]:
         delim_fields = csv_header_fields(first.replace("\t", ","))
         if header_has_coordinates(delim_fields):
             hits.append("csv_header:latitude_or_longitude")
+
+    if suffix in {".json", ".geojson"} or rel.endswith(".schema.json"):
+        hits.extend(scan_json_text(text, rel=rel))
 
     return hits
 
