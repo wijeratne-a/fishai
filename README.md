@@ -20,7 +20,7 @@ Map and API outputs must use one primary evidence state (plus uncertainty), not 
 
 ```
 src/fishai/
-  ingestion/biology/     CalCOFI CUFES (erdCalCOFIcufes) stub
+  ingestion/biology/     CalCOFI CUFES (erdCalCOFIcufes); SWFSC CPS trawl haul catch (FRDCPSTrawlLHHaulCatch)
   ingestion/physics/     WCOFS; GLORYS (training/hindcast only; T/S at 3 m linear z)
   physics/store.py       Read-only ``open_wcofs_cycle`` / ``list_wcofs_cycles`` (Bot4 sensors)
   ingestion/sensors/     SCCOOS HF radar, NDBC, IOOS glider stubs
@@ -80,3 +80,17 @@ GitHub Actions runs: editable install, `pytest`, `security/precommit_sensitive_s
 ## Data policy
 
 Do not commit raw coordinates, telemetry, or grid binaries (see `.gitignore`). Tests use synthetic fixtures only.
+
+## SWFSC CPS trawl haul catch (`FRDCPSTrawlLHHaulCatch`)
+
+**Provenance:** NOAA SWFSC Fisheries Resources Division coastal pelagic species (CPS) mid-water trawl surveys (DEPM, acoustic-trawl, SaKe), served on CoastWatch ERDDAP (`oceanview.pfeg.noaa.gov`). Related tables: `FRDCPSTrawlLHSpecimen`, `FRDCPSTrawlLHLengthFrequency` (individuals/length bins for subsets of catches).
+
+**License:** ERDDAP `NC_GLOBAL.license` (recorded verbatim as `license_text` in `data/SOURCES.yaml` and `cps_trawl_metadata.json` after sync).
+
+**Outputs:** `data/processed/swfsc_cps_trawl_haul_catch/cps_trawl_hauls.parquet` (tow metadata and effort) and `cps_trawl_catch.parquet` (long catch). Haul key: `CPSTrawl:{cruise}:{ship}:{haul}`.
+
+**Effort fields:** Tow duration (minutes) and great-circle distance (nautical miles) are computed from start/stop times and coordinates when present. **Net mouth area is not in the dataset** — `net_mouth_area_m2` is always null with reason `not_in_source_dataset`. Ship speed uses `ship_spd_through_water` when reported.
+
+**Zero-catch gate:** The catch table only contains species with rows in ERDDAP. Implied zeros for absent species require a **verified complete haul frame**. `zero_frame_status` defaults to `UNVERIFIED`; `expand_haul_species_matrix()` refuses numeric zeros (raises or returns NA with `fill_reason=zero_frame_unverified`) until humans audit and set `VERIFIED`. `presence_only=Y` rows never receive weights and must not be treated as zero catch for other taxa. Missing weights are never coerced to zero.
+
+**CLI:** `fishai-bio sync cps-trawl --start YYYY-MM-DD --end YYYY-MM-DD` (batched yearly ERDDAP CSV → raw cache → parquet).
