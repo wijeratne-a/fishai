@@ -153,9 +153,15 @@ def read_cufes_csv(path: Path) -> tuple[list[dict[str, Any]], int]:
     reader = csv.DictReader(io.StringIO(text))
     rows: list[dict[str, Any]] = []
     skipped = 0
+    saw_data_row = False
     for data_row_index, row in enumerate(reader):
-        if is_erddap_units_row(row, data_row_index=data_row_index):
+        saw_data_row = True
+        if is_erddap_units_row(row, data_row_index=data_row_index, path=path):
             skipped += 1
             continue
         rows.append(dict(row))
+    if not saw_data_row:
+        raise ValueError(f"expected ERDDAP units row as first data line in {path}, file has no data rows")
+    if skipped == 0:
+        raise ValueError(f"expected ERDDAP units row as first data line in {path}, no units row was skipped")
     return rows, skipped

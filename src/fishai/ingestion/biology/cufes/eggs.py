@@ -8,18 +8,18 @@ from typing import Any, Mapping
 
 from fishai.ingestion.biology.cufes.constants import EGG_CATEGORIES
 
-# ERDDAP tabledap missing values in CSV appear as an empty field or the literal ``NaN``.
-# A whitespace-only cell strips to empty and is treated the same as ERDDAP missing.
-# Any other non-empty text (e.g. ``abc``, ``-1``, ``2.5``) is a hard QC failure for the event.
+# ERDDAP tabledap marks a taxon as not sampled only with a missing-value NaN (float NaN or
+# the literal text ``NaN``, any case, after ASCII strip). Empty or whitespace-only cells are
+# invalid and fail the whole event under QC_COUNT_INVALID.
 
 
 def egg_cell_not_sampled(raw: Any) -> bool:
-    """True when ERDDAP marks the taxon as not sampled for this event."""
+    """True only when ERDDAP marks the taxon as not sampled (NaN missing value)."""
+    if isinstance(raw, float) and math.isnan(raw):
+        return True
     if raw is None:
-        return True
+        return False
     text = str(raw).strip()
-    if text == "":
-        return True
     if text.lower() == "nan":
         return True
     return False
@@ -29,7 +29,11 @@ def egg_cell_invalid(raw: Any) -> bool:
     """True when the cell is present but not a valid non-negative integer count."""
     if egg_cell_not_sampled(raw):
         return False
+    if raw is None:
+        return True
     text = str(raw).strip()
+    if text == "":
+        return True
     try:
         value = float(text)
     except ValueError:

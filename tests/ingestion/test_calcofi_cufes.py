@@ -102,8 +102,36 @@ class CufesEffortTests(unittest.TestCase):
 class CufesUnitsRowTests(unittest.TestCase):
     def test_units_row_is_first_data_line_only(self) -> None:
         units_like = {"time": "UTC", "cruise": "", "ship_code": ""}
-        self.assertTrue(is_erddap_units_row(units_like, data_row_index=0))
-        self.assertFalse(is_erddap_units_row(units_like, data_row_index=1))
+        self.assertTrue(is_erddap_units_row(units_like, data_row_index=0, path="x.csv"))
+        self.assertFalse(is_erddap_units_row(units_like, data_row_index=1, path="x.csv"))
+
+    def test_read_cufes_csv_rejects_missing_units_row(self) -> None:
+        header = (
+            "cruise,ship_code,sample_number,time,latitude,longitude,start_pump_speed,"
+            "stop_time,stop_latitude,stop_longitude,stop_pump_speed,sardine_eggs\n"
+        )
+        data = "209901,99,1,2017-04-01T10:00:00Z,10.0,-10.0,0.8,2099-06-01T12:30:00Z,10.01,-10.01,0.9,0\n"
+        with tempfile.NamedTemporaryFile(mode="w", suffix=".csv", delete=False) as tmp:
+            tmp.write(header + data)
+            bad_path = Path(tmp.name)
+        try:
+            with self.assertRaises(ValueError) as ctx:
+                read_cufes_csv(bad_path)
+            self.assertIn(str(bad_path), str(ctx.exception))
+        finally:
+            bad_path.unlink()
+
+    def test_read_cufes_csv_rejects_header_only(self) -> None:
+        header = "cruise,ship_code,sample_number,time\n"
+        with tempfile.NamedTemporaryFile(mode="w", suffix=".csv", delete=False) as tmp:
+            tmp.write(header)
+            bad_path = Path(tmp.name)
+        try:
+            with self.assertRaises(ValueError) as ctx:
+                read_cufes_csv(bad_path)
+            self.assertIn(str(bad_path), str(ctx.exception))
+        finally:
+            bad_path.unlink()
 
     def test_read_cufes_csv_skips_units_row(self) -> None:
         path = FIXTURES / "calcofi_cufes_with_units_row.csv"
@@ -173,10 +201,24 @@ class CufesInvalidCountTests(unittest.TestCase):
 
     def test_hake_nan_omits_occurrence(self) -> None:
         row = _synthetic_row()
-        row["hake_eggs"] = ""
+        row["hake_eggs"] = "NaN"
         result = transform_rows([row])
         self.assertEqual(len(result.events), 1)
         self.assertNotIn("hake", {c["taxon"] for c in result.counts})
+
+    def test_blank_sardine_eggs_drops_whole_event(self) -> None:
+        row = _synthetic_row(sardine="", anchovy="3")
+        result = transform_rows([row])
+        self.assertEqual(result.events, [])
+        self.assertEqual(result.qc_report["dropped_by_rule"]["count_invalid"], 1)
+
+    def test_blank_hake_eggs_drops_whole_event(self) -> None:
+        row = _synthetic_row()
+        row["hake_eggs"] = ""
+        result = transform_rows([row])
+        self.assertEqual(result.events, [])
+        self.assertEqual(result.counts, [])
+        self.assertEqual(result.qc_report["dropped_by_rule"]["count_invalid"], 1)
 
     def test_all_taxa_nan_drops_no_taxa_sampled(self) -> None:
         row = _synthetic_row()

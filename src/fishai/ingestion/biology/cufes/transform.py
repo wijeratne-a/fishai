@@ -45,14 +45,12 @@ __all__ = [
 
 EGG_CELL_QC_DOCUMENTATION: dict[str, str] = {
     "erddap_not_sampled": (
-        "A taxon was not sampled when the cell is missing (None), an empty string after "
-        "ASCII strip, or the literal text NaN (case-insensitive). ERDDAP tabledap CSV "
-        "writes missing values as an empty field or NaN; both are treated as not sampled."
+        "A taxon was not sampled only when the cell is ERDDAP missing NaN: a float NaN or "
+        "the literal text NaN (case-insensitive) after ASCII strip."
     ),
     "invalid_whole_event": (
-        "Any other cell value (non-numeric text, negative numbers, non-integer fractions, "
-        "or whitespace-only content that does not strip to empty) sets QC_COUNT_INVALID "
-        "and drops the entire event."
+        "Empty or whitespace-only strings, missing keys (None), non-numeric text, negative "
+        "numbers, and non-integer fractions set QC_COUNT_INVALID and drop the entire event."
     ),
 }
 
