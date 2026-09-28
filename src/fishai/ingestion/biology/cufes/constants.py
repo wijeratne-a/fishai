@@ -12,24 +12,15 @@ ERDDAP_TABLEDAP_BASE: Final = (
 
 ERDDAP_FIELDS: Final = (
     "cruise",
-    "ship",
     "ship_code",
     "sample_number",
     "time",
     "latitude",
     "longitude",
-    "start_temperature",
-    "start_salinity",
-    "start_wind_speed",
-    "start_wind_direction",
     "start_pump_speed",
     "stop_time",
     "stop_latitude",
     "stop_longitude",
-    "stop_temperature",
-    "stop_salinity",
-    "stop_wind_speed",
-    "stop_wind_direction",
     "stop_pump_speed",
     "sardine_eggs",
     "anchovy_eggs",
@@ -54,6 +45,10 @@ ZERO_SEMANTICS: Final = "EXPLICIT_ZERO"
 
 # ERDDAP metadata (erdCalCOFIcufes.das): pump speed units are M^3 per minute.
 PUMP_SPEED_UNITS: Final = "m^3/min"
+# Plausible CUFES pump speeds (m^3/min); ERDDAP logged max stop value 40.0 is out of range.
+PUMP_SPEED_MIN_M3_PER_MIN: Final = 0.2
+PUMP_SPEED_MAX_M3_PER_MIN: Final = 1.5
+PUMP_SPEED_MAX_START_STOP_RATIO: Final = 2.0
 
 # Default sample duration bounds (minutes). CUFES underway samples are ~30 min;
 # pilot distribution is mostly 20–45 min with rare shorter/longer segments.

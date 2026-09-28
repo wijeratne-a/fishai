@@ -93,6 +93,34 @@ class CufesEffortTests(unittest.TestCase):
         self.assertEqual(parse_egg_count("3.0"), 3)
 
 
+class CufesPumpQcTests(unittest.TestCase):
+    def test_stop_pump_40_drops_under_pump_invalid(self) -> None:
+        row = _synthetic_row(stop_pump="40.0")
+        result = transform_rows([row])
+        self.assertEqual(result.events, [])
+        self.assertEqual(result.qc_report["dropped_by_rule"]["pump_invalid"], 1)
+        self.assertEqual(result.qc_report["pump_qc_detail"]["pump_out_of_bounds"], 1)
+
+    def test_pump_ratio_above_two_drops(self) -> None:
+        row = _synthetic_row(start_pump="0.564", stop_pump="0.270")
+        result = transform_rows([row])
+        self.assertEqual(result.events, [])
+        self.assertEqual(result.qc_report["dropped_by_rule"]["pump_invalid"], 1)
+        self.assertEqual(result.qc_report["pump_qc_detail"]["pump_ratio"], 1)
+
+    def test_pump_below_min_drops(self) -> None:
+        row = _synthetic_row(start_pump="0.12", stop_pump="0.8")
+        result = transform_rows([row])
+        self.assertEqual(result.events, [])
+        self.assertEqual(result.qc_report["pump_qc_detail"]["pump_out_of_bounds"], 1)
+
+    def test_valid_pump_pair_kept(self) -> None:
+        row = _synthetic_row(start_pump="0.8", stop_pump="0.9")
+        result = transform_rows([row])
+        self.assertEqual(len(result.events), 1)
+        self.assertEqual(result.events[0]["pump_readings_used"], 2)
+
+
 class CufesInvalidCountTests(unittest.TestCase):
     def test_invalid_sardine_eggs_drop_whole_event(self) -> None:
         for sardine in ("", "abc", "-1", "2.5"):
@@ -201,10 +229,7 @@ class CufesQcReportTests(unittest.TestCase):
         self.assertEqual(report["events_read"], 2)
         self.assertEqual(report["events_kept"], 1)
         self.assertEqual(report["dropped_unique_total"], 1)
-        self.assertEqual(
-            report["events_read"],
-            report["events_kept"] + report["dropped_unique_total"],
-        )
+        self.assertEqual(report["events_read"], report["events_kept"] + report["dropped_rows"])
 
 
 class CufesUrlEncodingTests(unittest.TestCase):
@@ -217,9 +242,10 @@ class CufesUrlEncodingTests(unittest.TestCase):
             BBox(10.0, 11.0, -11.0, -10.0),
             fields=("time", "latitude"),
         )
-        self.assertIn("time%3E%3D", url)
+        self.assertIn("time%3E=", url)
         self.assertIn("time%3C", url)
-        self.assertIn("latitude%3E%3D", url)
+        self.assertIn("latitude%3E=", url)
+        self.assertIn("latitude%3C=", url)
         self.assertNotIn("time>=", url)
 
 

@@ -47,7 +47,16 @@ def build_erddap_csv_url(
     field_list = ",".join(fields)
     # ERDDAP requires >= and < as %3E= and %3C (or %3C= for <=).
     def c(name: str, op: str, value: str) -> str:
-        return f"{name}{quote(op, safe='')}={quote(str(value), safe='')}"
+        enc_val = quote(str(value), safe="")
+        if op == ">=":
+            return f"{name}%3E={enc_val}"
+        if op == "<=":
+            return f"{name}%3C={enc_val}"
+        if op == "<":
+            return f"{name}%3C{enc_val}"
+        if op == ">":
+            return f"{name}%3E{enc_val}"
+        raise ValueError(f"unsupported ERDDAP constraint operator: {op}")
 
     constraints = [
         c("time", ">=", _erddap_time(t0)),
@@ -66,7 +75,8 @@ def _erddap_time(dt: datetime) -> str:
         dt = dt.replace(tzinfo=timezone.utc)
     else:
         dt = dt.astimezone(timezone.utc)
-    return dt.strftime("%Y-%m-%dT%H:%M:%SZ")
+    # ERDDAP tabledap constraints accept calendar dates for this dataset.
+    return dt.strftime("%Y-%m-%d")
 
 
 def iter_yearly_windows(

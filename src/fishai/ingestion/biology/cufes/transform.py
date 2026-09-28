@@ -12,6 +12,9 @@ from fishai.ingestion.biology.cufes.constants import (
     DEFAULT_MIN_DURATION_MIN,
     EGG_CATEGORIES,
     LIFE_STAGE_EGG,
+    PUMP_SPEED_MAX_M3_PER_MIN,
+    PUMP_SPEED_MAX_START_STOP_RATIO,
+    PUMP_SPEED_MIN_M3_PER_MIN,
     QC_COORD_INVALID,
     QC_COUNT_INVALID,
     QC_DURATION_OUT_OF_RANGE,
@@ -110,6 +113,49 @@ def parse_egg_count(raw: Any) -> int | None:
     return int(value)
 
 
+def _pump_in_range(value: float) -> bool:
+    return PUMP_SPEED_MIN_M3_PER_MIN <= value <= PUMP_SPEED_MAX_M3_PER_MIN
+
+
+def assess_pump_readings(
+    start_pump: float | None,
+    stop_pump: float | None,
+) -> tuple[int, dict[str, int]]:
+    """
+    Return QC_PUMP_INVALID flags and per-event detail counters (0 or 1 each).
+
+    Detail keys: ``pump_out_of_bounds``, ``pump_ratio``.
+    """
+    detail = {"pump_out_of_bounds": 0, "pump_ratio": 0}
+    flags = 0
+    present = [p for p in (start_pump, stop_pump) if p is not None]
+
+    if not present:
+        flags |= QC_PUMP_INVALID
+        detail["pump_out_of_bounds"] = 1
+        return flags, detail
+
+    for value in present:
+        if not _pump_in_range(value):
+            flags |= QC_PUMP_INVALID
+            detail["pump_out_of_bounds"] = 1
+            break
+
+    in_range = [p for p in present if _pump_in_range(p)]
+    if not in_range:
+        flags |= QC_PUMP_INVALID
+        detail["pump_out_of_bounds"] = 1
+
+    if start_pump is not None and stop_pump is not None:
+        lo = min(start_pump, stop_pump)
+        hi = max(start_pump, stop_pump)
+        if lo > 0 and hi / lo > PUMP_SPEED_MAX_START_STOP_RATIO:
+            flags |= QC_PUMP_INVALID
+            detail["pump_ratio"] = 1
+
+    return flags, detail
+
+
 def parse_row_egg_counts(row: Mapping[str, Any]) -> dict[str, int] | None:
     """Return taxon→count for all six categories, or None if any cell is invalid."""
     parsed: dict[str, int] = {}
@@ -126,6 +172,7 @@ def qc_flags_for_row(
     *,
     min_duration_min: float = DEFAULT_MIN_DURATION_MIN,
     max_duration_min: float = DEFAULT_MAX_DURATION_MIN,
+    pump_qc_detail: dict[str, int] | None = None,
 ) -> int:
     flags = 0
     if keys_invalid(row):
@@ -143,11 +190,11 @@ def qc_flags_for_row(
 
     start_pump = _parse_float(row.get("start_pump_speed"))
     stop_pump = _parse_float(row.get("stop_pump_speed"))
-    if any(p is not None and p <= 0 for p in (start_pump, stop_pump)):
-        flags |= QC_PUMP_INVALID
-    positive_pumps = [p for p in (start_pump, stop_pump) if p is not None and p > 0]
-    if not positive_pumps:
-        flags |= QC_PUMP_INVALID
+    pump_flags, pump_detail = assess_pump_readings(start_pump, stop_pump)
+    flags |= pump_flags
+    if pump_qc_detail is not None and pump_flags:
+        for key, inc in pump_detail.items():
+            pump_qc_detail[key] += inc
 
     start_ok = _valid_lat_lon(_parse_float(row.get("latitude")), _parse_float(row.get("longitude")))
     stop_ok = _valid_lat_lon(
@@ -177,7 +224,7 @@ def volume_m3_for_row(row: Mapping[str, Any]) -> tuple[float | None, int]:
         return None, 0
     start_pump = _parse_float(row.get("start_pump_speed"))
     stop_pump = _parse_float(row.get("stop_pump_speed"))
-    pumps = [p for p in (start_pump, stop_pump) if p is not None and p > 0]
+    pumps = [p for p in (start_pump, stop_pump) if p is not None and _pump_in_range(p)]
     if not pumps:
         return None, 0
     mean_pump = sum(pumps) / len(pumps)
@@ -258,6 +305,11 @@ def _empty_qc_report() -> dict[str, Any]:
     return {
         "events_read": 0,
         "dropped_by_rule": {label: 0 for label, _ in QC_RULE_LABELS},
+        "pump_qc_detail": {
+            "pump_out_of_bounds": 0,
+            "pump_ratio": 0,
+        },
+        "dropped_rows": 0,
         "dropped_unique_total": 0,
         "events_kept": 0,
     }
@@ -270,12 +322,12 @@ def _record_drop(flags: int, dropped_by_rule: dict[str, int]) -> None:
 
 
 def _validate_qc_report(report: dict[str, Any]) -> None:
-    if report["events_read"] != report["events_kept"] + report["dropped_unique_total"]:
+    if report["events_read"] != report["events_kept"] + report["dropped_rows"]:
         raise ValueError(
             "QC report invariant failed: "
             f"events_read={report['events_read']} "
             f"events_kept={report['events_kept']} "
-            f"dropped_unique_total={report['dropped_unique_total']}"
+            f"dropped_rows={report['dropped_rows']}"
         )
 
 
@@ -299,7 +351,8 @@ def transform_rows(
     """
     result = TransformResult()
     report = result.qc_report
-    dropped_ids: set[str] = set()
+    dropped_event_ids: set[str] = set()
+    dropped_rows = 0
     kept_ids: set[str] = set()
     seen_event_ids: set[str] = set()
     duplicate_ids: set[str] = set()
@@ -309,22 +362,29 @@ def transform_rows(
         cruise, ship_code, sample_number = _row_keys(row)
         event_id = make_event_id(cruise, ship_code, sample_number)
 
-        if event_id in seen_event_ids:
-            duplicate_ids.add(event_id)
-        seen_event_ids.add(event_id)
+        if not keys_invalid(row):
+            if event_id in seen_event_ids:
+                duplicate_ids.add(event_id)
+            seen_event_ids.add(event_id)
 
         flags = qc_flags_for_row(
-            row, min_duration_min=min_duration_min, max_duration_min=max_duration_min
+            row,
+            min_duration_min=min_duration_min,
+            max_duration_min=max_duration_min,
+            pump_qc_detail=report["pump_qc_detail"],
         )
         if flags != 0:
             _record_drop(flags, report["dropped_by_rule"])
-            dropped_ids.add(event_id)
+            dropped_rows += 1
+            if not keys_invalid(row):
+                dropped_event_ids.add(event_id)
             continue
 
         vol, pump_used = volume_m3_for_row(row)
         if vol is None or vol <= 0:
             report["dropped_by_rule"]["invalid_volume"] += 1
-            dropped_ids.add(event_id)
+            dropped_rows += 1
+            dropped_event_ids.add(event_id)
             continue
 
         egg_counts = parse_row_egg_counts(row)
@@ -340,7 +400,8 @@ def transform_rows(
         ordered = ", ".join(sorted(duplicate_ids))
         raise ValueError(f"duplicate event_id(s): {ordered}")
 
-    report["dropped_unique_total"] = len(dropped_ids)
+    report["dropped_rows"] = dropped_rows
+    report["dropped_unique_total"] = len(dropped_event_ids)
     report["events_kept"] = len(kept_ids)
     _validate_qc_report(report)
     return result
