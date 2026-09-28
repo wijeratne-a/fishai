@@ -2,10 +2,14 @@
 
 from __future__ import annotations
 
+import json
 import tempfile
 import unittest
+from datetime import date
 from pathlib import Path
+from unittest import mock
 
+import pyarrow.parquet as pq
 import yaml
 
 from fishai.ingestion.biology.cps_trawl.catch import (
@@ -19,6 +23,7 @@ from fishai.ingestion.biology.cps_trawl.constants import (
     WEIGHT_FLAG_PARTIAL,
 )
 from fishai.ingestion.biology.cps_trawl.fetch import read_cps_trawl_csv
+from fishai.ingestion.biology.cps_trawl.pipeline import sync_cps_trawl_haul_catch
 from fishai.ingestion.biology.cps_trawl.matrix import ZeroFrameUnverifiedError, expand_haul_species_matrix
 from fishai.ingestion.biology.cps_trawl.transform import (
     make_haul_id,
@@ -242,6 +247,149 @@ class CpsTrawlMergeSpeciesTests(unittest.TestCase):
         self.assertEqual(merged.subsample_count, 47)
         self.assertIsNone(merged.weight_kg)
         self.assertEqual(merged.weight_flag, WEIGHT_FLAG_PARTIAL)
+
+    def test_collection_split_missing_weights_stays_null_not_zero(self) -> None:
+        """Regression: empty sum() used to pass 0+0 into resolve_weights → weight_kg=0.0."""
+        split_a = parse_catch_row(
+            {
+                "scientific_name": "Sardinops sagax",
+                "subsample_count": "5",
+                "subsample_weight": "NaN",
+                "remaining_weight": "NaN",
+                "presence_only": "N",
+            }
+        )
+        split_b = parse_catch_row(
+            {
+                "scientific_name": "Sardinops sagax",
+                "subsample_count": "3",
+                "subsample_weight": "NaN",
+                "remaining_weight": "NaN",
+                "presence_only": "N",
+            }
+        )
+        assert split_a is not None and split_b is not None
+        merged = merge_catch_values([split_a, split_b])
+        self.assertEqual(merged.subsample_count, 8)
+        self.assertIsNone(merged.weight_kg)
+        self.assertFalse(merged.weight_present)
+        self.assertEqual(merged.weight_null_reason, "weights_missing")
+
+    def test_merge_mixed_missing_and_present_weight_stays_null(self) -> None:
+        missing = parse_catch_row(
+            {
+                "scientific_name": "Sardinops sagax",
+                "subsample_count": "5",
+                "subsample_weight": "NaN",
+                "remaining_weight": "NaN",
+                "presence_only": "N",
+            }
+        )
+        present = parse_catch_row(
+            {
+                "scientific_name": "Sardinops sagax",
+                "subsample_count": "3",
+                "subsample_weight": "1.0",
+                "remaining_weight": "2.0",
+                "presence_only": "N",
+            }
+        )
+        assert missing is not None and present is not None
+        merged = merge_catch_values([missing, present])
+        self.assertIsNone(merged.weight_kg)
+        self.assertFalse(merged.weight_present)
+        self.assertEqual(merged.weight_null_reason, "weights_missing")
+
+
+def _haul1_erddap_base() -> dict[str, str]:
+    return {
+        "cruise": "209901",
+        "ship": "SY",
+        "haul": "1",
+        "latitude": "33.0",
+        "longitude": "-120.0",
+        "stop_latitude": "33.02",
+        "stop_longitude": "-119.98",
+        "time": "2099-06-01T12:00:00Z",
+        "haulback_time": "2099-06-01T12:30:00Z",
+        "presence_only": "N",
+    }
+
+
+def _sync_weight_semantics_fixture_rows() -> list[dict[str, str]]:
+    """One haul: merged missing weights, single present total, genuine zero."""
+    base = _haul1_erddap_base()
+    return [
+        {
+            **base,
+            "collection": "1",
+            "scientific_name": "Sardinops sagax",
+            "subsample_count": "5",
+            "subsample_weight": "NaN",
+            "remaining_weight": "NaN",
+        },
+        {
+            **base,
+            "collection": "2",
+            "scientific_name": "Sardinops sagax",
+            "subsample_count": "3",
+            "subsample_weight": "NaN",
+            "remaining_weight": "NaN",
+        },
+        {
+            **base,
+            "collection": "1",
+            "scientific_name": "Engraulis mordax",
+            "subsample_count": "10",
+            "subsample_weight": "1.0",
+            "remaining_weight": "2.0",
+        },
+        {
+            **base,
+            "collection": "1",
+            "scientific_name": "Clupea pallasii",
+            "subsample_count": "1",
+            "subsample_weight": "0",
+            "remaining_weight": "0",
+        },
+    ]
+
+
+class CpsTrawlSyncMergeWeightTests(unittest.TestCase):
+    def test_sync_merge_keeps_null_present_and_genuine_zero_weights(self) -> None:
+        rows = _sync_weight_semantics_fixture_rows()
+        with tempfile.TemporaryDirectory() as tmp:
+            proc = Path(tmp) / "processed"
+            with (
+                mock.patch(
+                    "fishai.ingestion.biology.cps_trawl.pipeline.processed_dir",
+                    return_value=proc,
+                ),
+                mock.patch(
+                    "fishai.ingestion.biology.cps_trawl.pipeline.load_raw_rows_for_window",
+                ) as load_rows,
+            ):
+                load_rows.return_value = (rows, 0)
+                result = sync_cps_trawl_haul_catch(
+                    date(2099, 1, 1),
+                    date(2099, 12, 31),
+                    fetch=False,
+                )
+            records = pq.read_table(result["catch_path"]).to_pylist()
+            by_species = {r["species"]: r for r in records}
+
+        missing = by_species["Sardinops sagax"]
+        self.assertIsNone(missing["weight_kg"])
+        self.assertFalse(missing["weight_present"])
+        self.assertEqual(missing["subsample_count"], 8)
+
+        present = by_species["Engraulis mordax"]
+        self.assertEqual(present["weight_kg"], 3.0)
+        self.assertTrue(present["weight_present"])
+
+        zero = by_species["Clupea pallasii"]
+        self.assertEqual(zero["weight_kg"], 0.0)
+        self.assertTrue(zero["weight_present"])
 
 
 class CpsTrawlMissingWeightTests(unittest.TestCase):
