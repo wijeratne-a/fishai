@@ -14,11 +14,13 @@ from fishai.evaluation.harmonization_prereg import (
     assert_harmonization_prereg_ready_for_scoring,
     assert_pass_fail_thresholds_ready_for_scoring,
     assert_shoreline_simplification_check_valid,
+    assert_graded_inputs_declared_in_variables,
     frozen_shoreline_reference,
     frozen_shoreline_reference_sha256,
     is_valid_frozen_shoreline_sha256,
     load_harmonization_prereg,
     pass_fail_thresholds_cutoffs,
+    pass_fail_graded_input_names,
     run_harmonization_scoring,
     shoreline_simplification_check,
 )
@@ -273,23 +275,24 @@ def test_pass_fail_thresholds_cutoffs_auditbot1_numeric_values() -> None:
     assert buoy["degraded"]["nowcast_label"] == "reduced_confidence"
     assert buoy["fail"]["verdict"] == "UNKNOWN"
     assert buoy["fail"]["reason"] == "nowcast_forcing_failed_holdout"
-    inputs = cutoffs["graded_inputs_no_buoy"]
-    assert inputs["model_row"] == "wcofs_coarsened_mapped"
-    assert inputs["reference_row"] == "glorys"
-    assert inputs["variables"] == ["T3m", "S3m", "MLD_m", "sst_grad", "front_distance_km"]
-    assert inputs["excluded_from_grading"] == ["upwelling"]
-    rmse_sd = inputs["rmse_vs_glorys_spatial_sd"]
+    graded = cutoffs["graded_inputs"]
+    assert graded == list(pass_fail_graded_input_names(doc))
+    assert len(graded) == 6
+    cell = cutoffs["graded_inputs_cell_gate"]
+    assert cell["model_row"] == "wcofs_coarsened_mapped"
+    assert cell["reference_row"] == "glorys"
+    rmse_sd = cell["rmse_vs_glorys_spatial_sd"]
     assert rmse_sd["pass_max_multiple"] == 0.5
     assert rmse_sd["degraded_max_multiple"] == 1.0
     assert rmse_sd["fail_above_multiple"] == 1.0
-    assert inputs["any_variable_fail_stratum_verdict"] == "UNKNOWN"
+    assert cell["any_variable_fail_stratum_verdict"] == "UNKNOWN"
     assert cutoffs["block_bootstrap_block_days"] == 7
     metrics_days = doc["harmonization_wcofs_glorys"]["metrics"]["reporting"][
         "block_bootstrap_block_days"
     ]
     assert cutoffs["block_bootstrap_block_days"] == metrics_days
     assert cutoffs["combination_rule"] == "worst_of"
-    assert len(cutoffs["input_verdict_variables"]) == 7
+    assert_graded_inputs_declared_in_variables(doc)
     assert_pass_fail_thresholds_ready_for_scoring(doc) is None
 
 
@@ -307,7 +310,7 @@ def test_pass_fail_thresholds_cutoffs_align_with_nowcast_forcing_grading() -> No
         "graded_inputs_gate"
     ]["rmse_vs_glorys_sd"]
     assert (
-        cutoffs["graded_inputs_no_buoy"]["rmse_vs_glorys_spatial_sd"]["pass_max_multiple"]
+        cutoffs["graded_inputs_cell_gate"]["rmse_vs_glorys_spatial_sd"]["pass_max_multiple"]
         == inputs_yaml["pass_max_multiple"]
     )
 
@@ -327,7 +330,8 @@ def test_nowcast_forcing_grading_blocks() -> None:
     assert buoy["per_stratum_aggregation"] == "worst_verdict_across_metrics"
     assert buoy["fail_outcome"]["reason"] == "nowcast_forcing_failed_holdout"
     inputs = grading["graded_inputs_gate"]
-    assert len(inputs["graded_variable_names"]) == 5
+    assert len(inputs["graded_variable_names"]) == 6
+    assert "upwelling" in inputs["graded_variable_names"]
     assert inputs["rmse_vs_glorys_sd"]["pass_max_multiple"] == 0.5
     combo = grading["combination_rules"]
     assert combo["no_gradable_independent_check"]["reason"] == "no_independent_obs_check"
@@ -357,5 +361,5 @@ def test_upwelling_lags_and_shared_forcing_variable() -> None:
     assert lags["selection"]["fit_split_end"] == "2017-12-31"
     assert lags["selection"]["never_reselect_after_freeze"] is True
     vars_by_name = {v["name"]: v for v in doc["harmonization_wcofs_glorys"]["variables"]}
-    assert vars_by_name["upwelling"]["role"] == "shared_forcing"
-    assert vars_by_name["upwelling"]["blank_when"]["reason"] == "no_consistent_wind_product"
+    assert vars_by_name["upwelling"]["role"] == "graded_input"
+    assert vars_by_name["upwelling"]["source_field"] == "upwelling"

@@ -90,6 +90,32 @@ def combination_rule_blocks_scoring(cutoffs: dict[str, Any]) -> bool:
     return isinstance(rule, str) and rule.startswith(PENDING_COMBINATION_RULE_PREFIX)
 
 
+def pass_fail_graded_input_names(doc: dict[str, Any] | None = None) -> tuple[str, ...]:
+    """Return the six cell-gate graded input names from ``pass_fail_thresholds.cutoffs``."""
+    cutoffs = pass_fail_thresholds_cutoffs(doc)
+    names = cutoffs.get("graded_inputs")
+    if not isinstance(names, list) or not names:
+        raise ValueError("pass_fail_thresholds.cutoffs.graded_inputs must be a non-empty list")
+    return tuple(str(n) for n in names)
+
+
+def assert_graded_inputs_declared_in_variables(doc: dict[str, Any]) -> None:
+    """Every ``graded_inputs`` name must appear in harmonization ``variables``."""
+    expected = pass_fail_graded_input_names(doc)
+    if len(expected) != 6:
+        raise ValueError(
+            f"pass_fail_thresholds.cutoffs.graded_inputs must list exactly 6 names, got {len(expected)}"
+        )
+    block = doc["harmonization_wcofs_glorys"]
+    vars_by_name = {v["name"]: v for v in block["variables"]}
+    missing = [n for n in expected if n not in vars_by_name]
+    if missing:
+        raise ValueError(f"graded_inputs missing from variables list: {missing}")
+    for name in expected:
+        if vars_by_name[name].get("role") != "graded_input":
+            raise ValueError(f"variables.{name}.role must be graded_input for cell gate")
+
+
 def assert_pass_fail_thresholds_ready_for_scoring(doc: dict[str, Any]) -> None:
     """Refuse scoring until cutoff combination_rule is auditor-confirmed."""
     cutoffs = pass_fail_thresholds_cutoffs(doc)
@@ -105,15 +131,20 @@ def assert_pass_fail_thresholds_ready_for_scoring(doc: dict[str, Any]) -> None:
         )
     for key in (
         "verdict_rank_worst_first",
-        "input_verdict_variables",
+        "graded_inputs",
         "failed_input_stratum_verdict",
         "not_gradable_cap",
         "no_independent_validation",
+        "graded_inputs_cell_gate",
     ):
         if key not in cutoffs:
             raise HarmonizationPreregNotReadyError(
                 f"harmonization scoring blocked: pass_fail_thresholds.cutoffs missing {key}"
             )
+    try:
+        assert_graded_inputs_declared_in_variables(doc)
+    except ValueError as exc:
+        raise HarmonizationPreregNotReadyError(str(exc)) from exc
 
 
 def iter_placeholder_fields(node: object, prefix: str = "") -> list[str]:

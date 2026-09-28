@@ -9,10 +9,12 @@ import yaml
 
 from fishai.evaluation.harmonization_prereg import (
     HarmonizationPreregNotReadyError,
+    assert_graded_inputs_declared_in_variables,
     assert_harmonization_prereg_ready_for_scoring,
     assert_pass_fail_thresholds_ready_for_scoring,
     combination_rule_blocks_scoring,
     load_harmonization_prereg,
+    pass_fail_graded_input_names,
     pass_fail_thresholds_cutoffs,
     run_harmonization_scoring,
 )
@@ -29,16 +31,24 @@ PREREG = REPO / "prereg" / "harmonization_wcofs_glorys.yaml"
 
 
 def _all_pass_inputs(rules) -> dict[str, str]:
-    return {name: "PASS" for name in rules.input_verdict_variables}
+    return {name: "PASS" for name in rules.graded_inputs}
 
 
-def test_cutoffs_combination_rule_worst_of_and_seven_inputs() -> None:
+def test_cutoffs_combination_rule_worst_of_and_six_graded_inputs() -> None:
     doc = load_harmonization_prereg(PREREG)
     cutoffs = pass_fail_thresholds_cutoffs(doc)
     assert cutoffs["combination_rule"] == "worst_of"
     assert not combination_rule_blocks_scoring(cutoffs)
     assert cutoffs["verdict_rank_worst_first"] == ["UNKNOWN", "FAIL", "DEGRADED", "PASS"]
-    assert len(cutoffs["input_verdict_variables"]) == 7
+    assert cutoffs["graded_inputs"] == [
+        "T3m",
+        "S3m",
+        "MLD_m",
+        "sst_grad",
+        "front_distance_km",
+        "upwelling",
+    ]
+    assert len(cutoffs["graded_inputs"]) == 6
     assert cutoffs["not_gradable_cap"]["verdict"] == "DEGRADED"
     assert cutoffs["not_gradable_cap"]["reason"] == NO_INDEPENDENT_OBS_CHECK
     niv = cutoffs["no_independent_validation"]
@@ -46,6 +56,19 @@ def test_cutoffs_combination_rule_worst_of_and_seven_inputs() -> None:
     assert niv["reason"] == NO_INDEPENDENT_VALIDATION
     assert niv["unknown_assimilation_status"] == "not_independent"
     assert_pass_fail_thresholds_ready_for_scoring(doc) is None
+
+
+def test_every_graded_input_appears_in_variables() -> None:
+    doc = load_harmonization_prereg(PREREG)
+    names = pass_fail_graded_input_names(doc)
+    assert len(names) == 6
+    assert_graded_inputs_declared_in_variables(doc)
+    vars_by_name = {v["name"]: v for v in doc["harmonization_wcofs_glorys"]["variables"]}
+    assert vars_by_name["upwelling"]["source_field"] == "upwelling"
+    assert vars_by_name["upwelling"]["units"] == "m s-1"
+    assert "fishai.ingestion.physics.covariates" in vars_by_name["upwelling"]["note"]
+    assert vars_by_name["u_surf"]["role"] == "report_only"
+    assert vars_by_name["v_surf"]["role"] == "report_only"
 
 
 def test_scoring_entry_point_passes_prereg_gate_on_committed_doc() -> None:

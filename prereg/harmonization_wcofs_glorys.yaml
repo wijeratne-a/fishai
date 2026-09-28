@@ -114,12 +114,14 @@ harmonization_wcofs_glorys:
     - name: front_distance_km
       role: graded_input
     - name: upwelling
-      role: shared_forcing
-      graded: false
+      role: graded_input
+      source_field: upwelling
+      units: m s-1
       note: >-
-        Reported when a single wind product covers CUFES training years and daily
-        nowcasts; never graded because both GLORYS and WCOFS paths use the same wind
-        (comparison would only test regridding).
+        Same column and units as the GLORYS CUFES covariate table field upwelling.
+        WCOFS wcofs_coarsened_mapped values must be computed with the identical
+        formula bot2 uses for GLORYS in fishai.ingestion.physics.covariates
+        (including wind product and trailing-mean window when upwelling is present).
       blank_when:
         reason: no_consistent_wind_product
         pilot_model_action: drop_upwelling_from_pilot_model
@@ -457,22 +459,22 @@ harmonization_wcofs_glorys:
           worse_than: degraded
           verdict: UNKNOWN
           reason: nowcast_forcing_failed_holdout
-      graded_inputs_no_buoy:
+      graded_inputs:
+        - T3m
+        - S3m
+        - MLD_m
+        - sst_grad
+        - front_distance_km
+        - upwelling
+      graded_inputs_cell_gate:
         model_row: wcofs_coarsened_mapped
         reference_row: glorys
         comparison: cell_by_cell_test_period_within_stratum
-        variables:
-          - T3m
-          - S3m
-          - MLD_m
-          - sst_grad
-          - front_distance_km
-        excluded_from_grading:
-          - upwelling
         rmse_vs_glorys_spatial_sd:
           pass_max_multiple: 0.5
           degraded_max_multiple: 1.0
           fail_above_multiple: 1.0
+        per_input_verdict_rule: same_pass_degraded_fail_bands_for_all_graded_inputs
         any_variable_fail_stratum_verdict: UNKNOWN
       combination_rule: worst_of
       verdict_rank_worst_first:
@@ -480,14 +482,9 @@ harmonization_wcofs_glorys:
         - FAIL
         - DEGRADED
         - PASS
-      input_verdict_variables:
-        - T3m
-        - S3m
-        - MLD_m
-        - sst_grad
-        - front_distance_km
-        - u_surf
-        - v_surf
+      combination_rule_note: >-
+        Each stratum verdict is the worst of the buoy verdict and all six
+        graded_inputs cell-gate verdicts (UNKNOWN, FAIL, DEGRADED, PASS).
       failed_input_stratum_verdict: UNKNOWN
       not_gradable_cap:
         verdict: DEGRADED
@@ -555,6 +552,7 @@ harmonization_wcofs_glorys:
         - MLD_m
         - sst_grad
         - front_distance_km
+        - upwelling
       refuse_to_run_if_any_missing_from_variables: true
       reference_per_stratum: glorys_spatial_sd
       rmse_vs_glorys_sd:
@@ -562,8 +560,6 @@ harmonization_wcofs_glorys:
         degraded_max_multiple: 1.0
         fail_above_multiple: 1.0
       fail_stratum_verdict: UNKNOWN
-      shared_forcing_variables_never_graded:
-        - upwelling
       report_only_variables:
         - u_surf
         - v_surf

@@ -17,7 +17,7 @@ NO_INDEPENDENT_VALIDATION = "no_independent_validation"
 class StratumCombinationRules:
     combination_rule: str
     verdict_rank_worst_first: tuple[StratumVerdict, ...]
-    input_verdict_variables: tuple[str, ...]
+    graded_inputs: tuple[str, ...]
     failed_input_stratum_verdict: StratumVerdict
     not_gradable_cap_verdict: StratumVerdict
     not_gradable_cap_reason: str
@@ -50,13 +50,13 @@ def stratum_combination_rules_from_prereg(
     if rule != "worst_of":
         raise ValueError(f"unsupported pass_fail_thresholds.cutoffs.combination_rule: {rule!r}")
     rank = tuple(cutoffs["verdict_rank_worst_first"])
-    inputs = tuple(cutoffs["input_verdict_variables"])
+    graded = tuple(cutoffs["graded_inputs"])
     cap = cutoffs["not_gradable_cap"]
     niv = cutoffs["no_independent_validation"]
     return StratumCombinationRules(
         combination_rule=str(rule),
         verdict_rank_worst_first=rank,
-        input_verdict_variables=inputs,
+        graded_inputs=graded,
         failed_input_stratum_verdict=str(cutoffs["failed_input_stratum_verdict"]),
         not_gradable_cap_verdict=str(cap["verdict"]),
         not_gradable_cap_reason=str(cap["reason"]),
@@ -95,10 +95,10 @@ def combine_stratum_verdict(
     ``DEGRADED`` with ``no_independent_obs_check``.
     """
     r = rules if rules is not None else stratum_combination_rules_from_prereg(doc)
-    missing = set(r.input_verdict_variables) - set(ctx.input_verdicts)
+    missing = set(r.graded_inputs) - set(ctx.input_verdicts)
     if missing:
         raise ValueError(f"missing input verdicts for: {sorted(missing)}")
-    extra = set(ctx.input_verdicts) - set(r.input_verdict_variables)
+    extra = set(ctx.input_verdicts) - set(r.graded_inputs)
     if extra:
         raise ValueError(f"unexpected input verdict keys: {sorted(extra)}")
 
@@ -108,12 +108,12 @@ def combine_stratum_verdict(
             reason=r.no_independent_validation_reason,
         )
 
-    for var in r.input_verdict_variables:
+    for var in r.graded_inputs:
         iv = ctx.input_verdicts[var]
         if iv in ("FAIL", "UNKNOWN"):
             return StratumCombinationResult(verdict=r.failed_input_stratum_verdict)
 
-    input_only = tuple(ctx.input_verdicts[v] for v in r.input_verdict_variables)
+    input_only = tuple(ctx.input_verdicts[v] for v in r.graded_inputs)
     inputs_worst = _worst_verdict(input_only, r.verdict_rank_worst_first)
 
     if not ctx.buoy_gradable:
