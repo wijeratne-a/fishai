@@ -39,8 +39,7 @@ def _ready_block() -> dict:
         "input_rmse_degraded_fraction_glorys_sd": 1.0,
         "bootstrap_seed": 42,
     }
-    block["pass_fail_thresholds"]["combination_rule"] = "worst_of"
-    block["pass_fail_thresholds"]["not_gradable_combination"] = "ignore"
+    block["pass_fail_thresholds"]["combination_rule"] = "worst-of"
     return block
 
 

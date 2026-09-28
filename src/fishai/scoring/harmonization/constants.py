@@ -27,6 +27,9 @@ INPUT_CHECK_VARIABLES: tuple[str, ...] = (
 VERDICT_PASS = "PASS"
 VERDICT_DEGRADED = "DEGRADED"
 VERDICT_FAIL = "FAIL"
+VERDICT_UNKNOWN = "UNKNOWN"
 VERDICT_NOT_GRADABLE = "not_gradable"
 
 FAIL_EVIDENCE_REASON = "nowcast_forcing_failed_holdout"
+NO_INDEPENDENT_VALIDATION_REASON = "no_independent_validation"
+BUOY_INSUFFICIENT_OBS_REASON = "no_independent_obs_check"

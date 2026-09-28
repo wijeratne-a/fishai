@@ -35,8 +35,7 @@ def ready_prereg_path(tmp_path: Path) -> Path:
         "input_rmse_degraded_fraction_glorys_sd": 1.0,
         "bootstrap_seed": 42,
     }
-    block["pass_fail_thresholds"]["combination_rule"] = "worst_of"
-    block["pass_fail_thresholds"]["not_gradable_combination"] = "ignore"
+    block["pass_fail_thresholds"]["combination_rule"] = "worst-of"
     patched = {"schema_version": 1, "harmonization_wcofs_glorys": block}
     path = tmp_path / "prereg.yaml"
     path.write_text(yaml.dump(patched), encoding="utf-8")

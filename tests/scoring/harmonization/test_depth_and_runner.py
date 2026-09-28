@@ -11,6 +11,10 @@ import yaml
 
 from fishai.evaluation.harmonization_prereg import load_harmonization_prereg
 from fishai.ingestion.physics.wcofs_glorys_grid import harmonization_temperature_at_buoy_depth
+from fishai.scoring.harmonization.constants import (
+    NO_INDEPENDENT_VALIDATION_REASON,
+    VERDICT_UNKNOWN,
+)
 from fishai.scoring.harmonization.registry import load_assimilated_sources_registry, wcofs_independent_observation_source
 from fishai.scoring.harmonization.runner import (
     BUOY_DEPTH_FUNCTION,
@@ -56,8 +60,7 @@ def _small_ready_prereg(tmp_path: Path) -> Path:
         "input_rmse_degraded_fraction_glorys_sd": 1.0,
         "bootstrap_seed": 7,
     }
-    block["pass_fail_thresholds"]["combination_rule"] = "worst_of"
-    block["pass_fail_thresholds"]["not_gradable_combination"] = "ignore"
+    block["pass_fail_thresholds"]["combination_rule"] = "worst-of"
     path = tmp_path / "prereg.yaml"
     path.write_text(yaml.dump({"schema_version": 1, "harmonization_wcofs_glorys": block}), encoding="utf-8")
     return path
@@ -121,8 +124,14 @@ def test_runner_writes_outputs(tmp_path: Path) -> None:
     assert (out_dir / "holdout_scores.parquet").is_file()
     assert (out_dir / "summary.json").is_file()
     assert summary["insufficient_model_coverage"]["total"] == 0
+    assert summary["preflight"]["any_independent_validation_source"] is False
+    assert summary["preflight"]["no_independent_validation_messages"][0].startswith(
+        "NO_INDEPENDENT_VALIDATION:"
+    )
     ns = [m for m in summary["metrics"] if m["model_row"] == "wcofs_coarsened_mapped" and m["stratum"] == "pooled"]
     assert ns and ns[0]["n"] == 40
+    assert ns[0]["verdict"] == VERDICT_UNKNOWN
+    assert ns[0]["reason"] == NO_INDEPENDENT_VALIDATION_REASON
     for row in ("wcofs_native", "wcofs_coarsened", "glorys"):
         same_n = [m for m in summary["metrics"] if m["model_row"] == row and m["stratum"] == "pooled"]
         assert same_n[0]["n"] == 40

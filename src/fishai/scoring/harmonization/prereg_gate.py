@@ -5,6 +5,7 @@ from __future__ import annotations
 from typing import Any
 
 from fishai.evaluation.harmonization_prereg import PLACEHOLDER_TOKEN
+from fishai.scoring.harmonization.grading import normalize_combination_rule
 
 REQUIRED_CUTOFF_NUMERIC_KEYS: tuple[str, ...] = (
     "rmse_ratio_pass",
@@ -81,9 +82,11 @@ def collect_prereg_gate_violations(doc: dict[str, Any]) -> list[str]:
     combo = pf.get("combination_rule")
     if _is_blank_or_pending(combo):
         violations.append("pass_fail_thresholds.combination_rule")
-    not_gradable = pf.get("not_gradable_combination")
-    if _is_blank_or_pending(not_gradable):
-        violations.append("pass_fail_thresholds.not_gradable_combination")
+    elif isinstance(combo, str):
+        try:
+            normalize_combination_rule(combo)
+        except ValueError:
+            violations.append("pass_fail_thresholds.combination_rule")
 
     return sorted(violations)
 

@@ -2,18 +2,24 @@
 
 from __future__ import annotations
 
+import copy
+
 from fishai.scoring.harmonization.grading import (
     BuoyGradeInput,
     combine_stratum_verdicts,
     grade_buoy_stratum,
     grade_input_check,
     InputCheckGradeInput,
+    normalize_combination_rule,
 )
 from fishai.scoring.harmonization.constants import (
+    BUOY_INSUFFICIENT_OBS_REASON,
+    FAIL_EVIDENCE_REASON,
     VERDICT_DEGRADED,
     VERDICT_FAIL,
     VERDICT_NOT_GRADABLE,
     VERDICT_PASS,
+    VERDICT_UNKNOWN,
 )
 
 CUTOFFS = {
@@ -47,7 +53,7 @@ def _buoy(**kwargs) -> BuoyGradeInput:
     return BuoyGradeInput(**base)
 
 
-def test_grade_pass_degraded_fail_not_gradable() -> None:
+def test_grade_pass_degraded_fail() -> None:
     assert grade_buoy_stratum(_buoy(), CUTOFFS)[0] == VERDICT_PASS
     assert (
         grade_buoy_stratum(_buoy(rmse_mapped=1.3, rmse_ratio_ci_upper=1.4), CUTOFFS)[0]
@@ -57,20 +63,42 @@ def test_grade_pass_degraded_fail_not_gradable() -> None:
         grade_buoy_stratum(_buoy(rmse_mapped=2.0, rmse_ratio_ci_upper=2.0), CUTOFFS)[0]
         == VERDICT_FAIL
     )
-    assert grade_buoy_stratum(_buoy(n=10), CUTOFFS)[0] == VERDICT_NOT_GRADABLE
+
+
+def test_insufficient_observations_caps_degraded_never_pass() -> None:
+    verdict, reason = grade_buoy_stratum(_buoy(n=10), CUTOFFS)
+    assert verdict == VERDICT_DEGRADED
+    assert reason == BUOY_INSUFFICIENT_OBS_REASON
+    assert verdict != VERDICT_PASS
 
 
 def test_assimilated_source_not_gradable() -> None:
     assert grade_buoy_stratum(_buoy(independent_source=False), CUTOFFS)[0] == VERDICT_NOT_GRADABLE
 
 
-def test_registry_independence_controls_gradability() -> None:
+def test_registry_independence_requires_auditor_acceptance() -> None:
     from fishai.scoring.harmonization.registry import wcofs_independent_observation_source
 
-    assimilated = {"sources": {"ndbc_buoy_temperature": {"wcofs": "unknown"}}}
-    assert wcofs_independent_observation_source("ndbc_buoy_temperature", assimilated) is False
-    independent = {"sources": {"ndbc_buoy_temperature": {"wcofs": "false"}}}
-    assert wcofs_independent_observation_source("ndbc_buoy_temperature", independent) is True
+    pending = {
+        "sources": {
+            "ndbc_buoy_temperature": {
+                "wcofs": {
+                    "status": "false",
+                    "citation": {
+                        "title": "t",
+                        "url": "https://example.com",
+                        "page_section": "p",
+                        "quote": "q",
+                    },
+                    "accepted_by_auditor": False,
+                }
+            }
+        }
+    }
+    assert wcofs_independent_observation_source("ndbc_buoy_temperature", pending) is False
+    accepted = copy.deepcopy(pending)
+    accepted["sources"]["ndbc_buoy_temperature"]["wcofs"]["accepted_by_auditor"] = True
+    assert wcofs_independent_observation_source("ndbc_buoy_temperature", accepted) is True
 
 
 def test_input_check_thresholds() -> None:
@@ -88,13 +116,29 @@ def test_input_check_thresholds() -> None:
     )
 
 
-def test_worst_of_combination() -> None:
+def test_worst_of_combination_and_failed_input_unknown() -> None:
+    assert normalize_combination_rule("worst-of") == "worst_of"
+    verdict, reason = combine_stratum_verdicts(
+        VERDICT_PASS,
+        [VERDICT_DEGRADED, VERDICT_PASS],
+        combination_rule="worst_of",
+    )
+    assert verdict == VERDICT_DEGRADED
+    assert reason is None
+
+    verdict, reason = combine_stratum_verdicts(
+        VERDICT_PASS,
+        [VERDICT_FAIL],
+        combination_rule="worst-of",
+    )
+    assert verdict == VERDICT_UNKNOWN
+    assert reason == FAIL_EVIDENCE_REASON
+
     assert (
         combine_stratum_verdicts(
-            VERDICT_PASS,
-            [VERDICT_DEGRADED, VERDICT_PASS],
+            VERDICT_FAIL,
+            [VERDICT_PASS],
             combination_rule="worst_of",
-            not_gradable_combination="ignore",
-        )
-        == VERDICT_DEGRADED
+        )[0]
+        == VERDICT_FAIL
     )

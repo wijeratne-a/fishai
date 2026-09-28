@@ -1,19 +1,121 @@
-# Versioned registry: whether each observation source is assimilated by WCOFS / GLORYS.
-# Values: true | false | presumed_true | unknown
-schema_version: 1
+# Versioned registry: WCOFS / GLORYS assimilation status per observation source.
+# Per-model fields: status (true|false|presumed_true|unknown), citation, validity window,
+# accepted_by_auditor (false status counts as independent only with citation + accepted true).
+schema_version: 2
 
 sources:
-  sccoos_hf_radar:
-    wcofs: presumed_true
-    glorys: unknown
-    note: >-
-      HF radar surface currents are presumed assimilated by WCOFS unless documented
-      otherwise; GLORYS surface-current assimilation status not confirmed here.
-
   ndbc_buoy_temperature:
-    wcofs: unknown
-    glorys: unknown
-    note: >-
-      NDBC hull water temperature assimilation pending NOAA CO-OPS reply for WCOFS;
-      GLORYS product assimilates in-situ profiles in general — status marked unknown
-      until documented with citation.
+    display_name: NDBC buoy temperature
+    wcofs:
+      status: false
+      citation:
+        title: NOAA Tech Report NOS CO-OPS 097 (Xu et al. 2022)
+        url: https://tidesandcurrents.noaa.gov/ofs/publications/CO-OPS_Techrpt_097_WCOFS_2022.pdf
+        page_section: sec 5.2 p.17
+        quote: >-
+          serve as independent observations for evaluating model performance because
+          the model does not assimilate in situ observations
+      evidence_valid_from: "2022-01-01"
+      evidence_valid_to: null
+      accepted_by_auditor: false
+    glorys:
+      status: unknown
+      citation: null
+      evidence_valid_from: null
+      evidence_valid_to: null
+      accepted_by_auditor: false
+
+  sccoos_hf_radar:
+    display_name: SCCOOS HF radar surface currents
+    wcofs:
+      status: true
+      citation:
+        title: NOAA Tech Report NOS CO-OPS 097 (Xu et al. 2022)
+        url: https://tidesandcurrents.noaa.gov/ofs/publications/CO-OPS_Techrpt_097_WCOFS_2022.pdf
+        page_section: Table 1 p.5
+        quote: HF radar surface currents listed among assimilated observation types
+      evidence_valid_from: "2022-01-01"
+      evidence_valid_to: null
+      accepted_by_auditor: false
+    glorys:
+      status: unknown
+      citation: null
+      evidence_valid_from: null
+      evidence_valid_to: null
+      accepted_by_auditor: false
+
+  satellite_sst_viirs_goes:
+    display_name: Satellite SST (VIIRS, GOES)
+    wcofs:
+      status: true
+      citation:
+        title: NOAA Tech Report NOS CO-OPS 097 (Xu et al. 2022)
+        url: https://tidesandcurrents.noaa.gov/ofs/publications/CO-OPS_Techrpt_097_WCOFS_2022.pdf
+        page_section: Table 1 p.5
+        quote: Satellite SST observations assimilated in WCOFS
+      evidence_valid_from: "2022-01-01"
+      evidence_valid_to: null
+      accepted_by_auditor: false
+    glorys:
+      status: unknown
+      citation: null
+      evidence_valid_from: null
+      evidence_valid_to: null
+      accepted_by_auditor: false
+
+  altimetry_rads:
+    display_name: Altimetry (RADS)
+    wcofs:
+      status: true
+      citation:
+        title: NOAA Tech Report NOS CO-OPS 097 (Xu et al. 2022)
+        url: https://tidesandcurrents.noaa.gov/ofs/publications/CO-OPS_Techrpt_097_WCOFS_2022.pdf
+        page_section: Table 1 p.5
+        quote: Satellite altimetry assimilated in WCOFS
+      evidence_valid_from: "2022-01-01"
+      evidence_valid_to: null
+      accepted_by_auditor: false
+    glorys:
+      status: unknown
+      citation: null
+      evidence_valid_from: null
+      evidence_valid_to: null
+      accepted_by_auditor: false
+
+  argo_profiles:
+    display_name: Argo profiles
+    wcofs:
+      status: false
+      citation:
+        title: NOAA Tech Report NOS CO-OPS 097 (Xu et al. 2022)
+        url: https://tidesandcurrents.noaa.gov/ofs/publications/CO-OPS_Techrpt_097_WCOFS_2022.pdf
+        page_section: sec 6 p.22
+        quote: Argo profiles not assimilated in WCOFS
+      evidence_valid_from: "2022-01-01"
+      evidence_valid_to: null
+      accepted_by_auditor: false
+    glorys:
+      status: unknown
+      citation: null
+      evidence_valid_from: null
+      evidence_valid_to: null
+      accepted_by_auditor: false
+
+  ioos_gliders:
+    display_name: IOOS gliders
+    wcofs:
+      status: false
+      citation:
+        title: NOAA Tech Report NOS CO-OPS 097 (Xu et al. 2022)
+        url: https://tidesandcurrents.noaa.gov/ofs/publications/CO-OPS_Techrpt_097_WCOFS_2022.pdf
+        page_section: sec 6 p.22
+        quote: Glider observations not assimilated in WCOFS
+      evidence_valid_from: "2022-01-01"
+      evidence_valid_to: null
+      accepted_by_auditor: false
+    glorys:
+      status: unknown
+      citation: null
+      evidence_valid_from: null
+      evidence_valid_to: null
+      accepted_by_auditor: false

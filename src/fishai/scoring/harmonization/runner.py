@@ -26,6 +26,10 @@ from fishai.scoring.harmonization.constants import (
     MODEL_ROW_WCOFS_COARSENED_MAPPED,
     MODEL_ROW_WCOFS_NATIVE,
 )
+from fishai.scoring.harmonization.constants import (
+    NO_INDEPENDENT_VALIDATION_REASON,
+    VERDICT_UNKNOWN,
+)
 from fishai.scoring.harmonization.grading import (
     BuoyGradeInput,
     InputCheckGradeInput,
@@ -34,6 +38,7 @@ from fishai.scoring.harmonization.grading import (
     grade_buoy_stratum,
     grade_input_check,
 )
+from fishai.scoring.harmonization.preflight import run_registry_preflight
 from fishai.scoring.harmonization.io import write_holdout_outputs
 from fishai.scoring.harmonization.manifest import verify_mapping_manifest
 from fishai.scoring.harmonization.metrics import compute_metrics
@@ -127,11 +132,15 @@ def run_holdout_scoring(
     doc = load_harmonization_prereg(prereg_file)
     assert_prereg_gate(doc)
 
+    registry = load_assimilated_sources_registry(registry_path)
+    preflight = run_registry_preflight(registry)
+
     if dry_run and pairing_table is None:
         return {
             "status": "ready",
             "prereg_sha256": prereg_file_sha256(prereg_file),
             "buoy_depth_function": BUOY_DEPTH_FUNCTION.__name__,
+            "preflight": preflight,
         }
 
     block = doc["harmonization_wcofs_glorys"]
@@ -147,7 +156,7 @@ def run_holdout_scoring(
     if verify_map:
         verify_mapping_manifest(map_dir, expected_prereg_commit=prereg_commit)
 
-    registry = load_assimilated_sources_registry(registry_path)
+    force_unknown_verdicts = not preflight["any_independent_validation_source"]
 
     if pairing_table is None:
         raise ValueError("pairing_table is required unless dry_run=True")
@@ -227,7 +236,6 @@ def run_holdout_scoring(
     # Grading (mapped row, buoy temperature, graded strata only)
     pf = block["pass_fail_thresholds"]
     combination_rule = str(pf["combination_rule"])
-    not_gradable_combination = str(pf["not_gradable_combination"])
     buoy_var = kept[kept["variable"] == "sea_water_temperature"] if "variable" in kept.columns else kept
 
     for stratum in STRATA_POOL:
@@ -250,44 +258,47 @@ def run_holdout_scoring(
         if np.isfinite(m_mapped.rmse_ci95[1]) and m_glorys.rmse > 0:
             ratio_ci_upper = m_mapped.rmse_ci95[1] / m_glorys.rmse
 
-        buoy_grade = grade_buoy_stratum(
-            BuoyGradeInput(
-                n=m_mapped.n,
-                n_buoys=n_buoys,
-                bias_c=m_mapped.bias,
-                rmse_mapped=m_mapped.rmse,
-                rmse_glorys=m_glorys.rmse,
-                rmse_ratio_ci_upper=ratio_ci_upper,
-                pearson_r_mapped=m_mapped.pearson_r,
-                pearson_r_glorys=m_glorys.pearson_r,
-                independent_source=independent,
-            ),
-            cutoffs,
-        )
-        input_verdicts: list[str] = []
-        if input_check_table is not None:
-            ic = input_check_table.loc[input_check_table.get("stratum", "pooled") == stratum]
-            for var in INPUT_CHECK_VARIABLES:
-                part = ic[ic["variable"] == var]
-                if part.empty:
-                    input_verdicts.append("not_gradable")
-                    continue
-                row = part.iloc[0]
-                input_verdicts.append(
-                    grade_input_check(
-                        InputCheckGradeInput(
-                            rmse=float(row["rmse"]),
-                            glorys_spatial_sd=float(row["glorys_spatial_sd"]),
-                        ),
-                        cutoffs,
+        if force_unknown_verdicts:
+            combined = VERDICT_UNKNOWN
+            combined_reason = NO_INDEPENDENT_VALIDATION_REASON
+        else:
+            buoy_grade = grade_buoy_stratum(
+                BuoyGradeInput(
+                    n=m_mapped.n,
+                    n_buoys=n_buoys,
+                    bias_c=m_mapped.bias,
+                    rmse_mapped=m_mapped.rmse,
+                    rmse_glorys=m_glorys.rmse,
+                    rmse_ratio_ci_upper=ratio_ci_upper,
+                    pearson_r_mapped=m_mapped.pearson_r,
+                    pearson_r_glorys=m_glorys.pearson_r,
+                    independent_source=independent,
+                ),
+                cutoffs,
+            )
+            input_verdicts: list[str] = []
+            if input_check_table is not None:
+                ic = input_check_table.loc[input_check_table.get("stratum", "pooled") == stratum]
+                for var in INPUT_CHECK_VARIABLES:
+                    part = ic[ic["variable"] == var]
+                    if part.empty:
+                        input_verdicts.append("not_gradable")
+                        continue
+                    row = part.iloc[0]
+                    input_verdicts.append(
+                        grade_input_check(
+                            InputCheckGradeInput(
+                                rmse=float(row["rmse"]),
+                                glorys_spatial_sd=float(row["glorys_spatial_sd"]),
+                            ),
+                            cutoffs,
+                        )
                     )
-                )
-        combined = combine_stratum_verdicts(
-            buoy_grade[0],
-            input_verdicts,
-            combination_rule=combination_rule,
-            not_gradable_combination=not_gradable_combination,
-        )
+            combined, combined_reason = combine_stratum_verdicts(
+                buoy_grade[0],
+                input_verdicts,
+                combination_rule=combination_rule,
+            )
         for entry in summary_metrics:
             if (
                 entry["model_row"] == GRADED_MODEL_ROW
@@ -296,7 +307,7 @@ def run_holdout_scoring(
                 and entry.get("season") is None
             ):
                 entry["verdict"] = combined
-                entry["reason"] = buoy_grade[1]
+                entry["reason"] = combined_reason
 
     front_loss = _front_detail_loss(
         np.asarray(front_detail_native_sst_grad or [], dtype=float),
@@ -323,6 +334,7 @@ def run_holdout_scoring(
         "test_start": split["test_start"],
         "test_end": split["test_end"],
         "model_rows": list(ALL_MODEL_ROWS),
+        "preflight": preflight,
         "insufficient_model_coverage": coverage_drop,
         "front_detail_loss": front_loss,
         "metrics": summary_metrics,
