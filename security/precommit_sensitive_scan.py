@@ -7,6 +7,8 @@ Instrument sources declared with ``record_type: instrument`` in ``data/SOURCES.y
 may expose public instrument lat/lon in tracked fixture paths (see
 ``instrument_coordinate_policy.INSTRUMENT_PATH_PREFIXES``) unless fishery-dependent
 fields (species, count, catch*) appear in the same file.
+
+Parquet and JSON/GeoJSON scans fail closed: unreadable or unparseable inputs are hits.
 """
 
 from __future__ import annotations
@@ -136,24 +138,39 @@ def walk_json_property_names(node: object) -> list[str]:
     return names
 
 
-def geojson_has_point_geometry(node: object) -> bool:
+def _coords_look_like_positions(coords: object) -> bool:
+    if not isinstance(coords, list) or len(coords) < 2:
+        return False
+    if isinstance(coords[0], (int, float)):
+        return True
+    if isinstance(coords[0], list) and len(coords[0]) >= 2:
+        return isinstance(coords[0][0], (int, float))
+    return False
+
+
+def geojson_has_coordinate_geometry(node: object) -> bool:
+    """True for GeoJSON Point, MultiPoint, or LineString geometries."""
     if not isinstance(node, dict):
         return False
     gtype = node.get("type")
-    if gtype == "Point":
-        coords = node.get("coordinates")
-        return isinstance(coords, list) and len(coords) >= 2
+    if gtype in {"Point", "MultiPoint", "LineString"}:
+        return _coords_look_like_positions(node.get("coordinates"))
     if gtype == "Feature":
         geom = node.get("geometry")
-        return geojson_has_point_geometry(geom) if isinstance(geom, dict) else False
+        return geojson_has_coordinate_geometry(geom) if isinstance(geom, dict) else False
     if gtype == "FeatureCollection":
         features = node.get("features")
         if isinstance(features, list):
-            return any(geojson_has_point_geometry(f) for f in features)
+            return any(geojson_has_coordinate_geometry(f) for f in features)
     geometry = node.get("geometry")
-    if isinstance(geometry, dict) and geojson_has_point_geometry(geometry):
+    if isinstance(geometry, dict) and geojson_has_coordinate_geometry(geometry):
         return True
     return False
+
+
+def geojson_has_point_geometry(node: object) -> bool:
+    """Backward-compatible alias (Point/MultiPoint/LineString)."""
+    return geojson_has_coordinate_geometry(node)
 
 
 def scan_json_text(text: str, *, rel: str = "") -> tuple[list[str], list[str]]:
@@ -162,7 +179,7 @@ def scan_json_text(text: str, *, rel: str = "") -> tuple[list[str], list[str]]:
     try:
         data = json.loads(text)
     except json.JSONDecodeError:
-        return hits, field_names
+        return ["json:parse_error"], field_names
     field_names = walk_json_property_names(data)
     schema_contract = rel.startswith("src/fishai/schemas/") or rel.endswith(".schema.json")
     if not schema_contract:
@@ -170,22 +187,28 @@ def scan_json_text(text: str, *, rel: str = "") -> tuple[list[str], list[str]]:
             if field_name_exposes_coordinates(name):
                 hits.append("json_schema:latitude_or_longitude")
                 break
-    if geojson_has_point_geometry(data):
-        hits.append("geojson:point_geometry")
+    if geojson_has_coordinate_geometry(data):
+        hits.append("geojson:coordinate_geometry")
     return hits, field_names
 
 
+def _import_pyarrow_parquet():
+    import pyarrow.parquet as pq
+
+    return pq
+
+
 def scan_parquet_file(path: Path) -> tuple[list[str], list[str]]:
-    hits: list[str] = []
     try:
-        import pyarrow.parquet as pq
+        pq = _import_pyarrow_parquet()
     except ImportError:
-        return hits, []
+        return ["parquet:pyarrow_missing"], []
     try:
         schema = pq.read_schema(path)
-    except OSError:
-        return hits, []
+    except Exception:
+        return ["parquet:unreadable"], []
     names = list(schema.names)
+    hits: list[str] = []
     for name in names:
         if field_name_exposes_coordinates(name):
             hits.append("parquet_schema:latitude_or_longitude")
@@ -227,8 +250,10 @@ def scan_file(rel: str) -> list[str]:
             hits.extend(json_hits)
             field_names.extend(json_fields)
 
-    hits = apply_instrument_coordinate_exemption(rel, hits, field_names, path=path)
-    return credential_hits + hits
+    non_exempt = [h for h in hits if h.startswith(("parquet:", "json:"))]
+    exemptable = [h for h in hits if h not in non_exempt]
+    exemptable = apply_instrument_coordinate_exemption(rel, exemptable, field_names, path=path)
+    return credential_hits + non_exempt + exemptable
 
 
 def scan_repository() -> list[tuple[str, str]]:

@@ -28,7 +28,7 @@ class InstrumentCoordinateExceptionTests(unittest.TestCase):
     def test_tracked_fixture_csv_with_lat_lon_passes_scan(self) -> None:
         rel = "tests/fixtures/instrument_data/ndbc_met/public_instrument_sample.csv"
         hits = scan_file(rel)
-        coord_hits = [h for h in hits if "latitude_or_longitude" in h or "point_geometry" in h]
+        coord_hits = [h for h in hits if "latitude_or_longitude" in h or "coordinate_geometry" in h]
         self.assertEqual(coord_hits, [])
 
     def test_instrument_exemption_revoked_when_species_present(self) -> None:

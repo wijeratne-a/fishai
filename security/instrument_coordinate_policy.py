@@ -24,6 +24,7 @@ INSTRUMENT_PATH_PREFIXES: tuple[tuple[str, str], ...] = (
 COORDINATE_HIT_PREFIXES = (
     "csv_header:latitude_or_longitude",
     "json_schema:latitude_or_longitude",
+    "geojson:coordinate_geometry",
     "geojson:point_geometry",
     "parquet_schema:latitude_or_longitude",
 )

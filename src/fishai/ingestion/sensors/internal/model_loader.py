@@ -1,4 +1,9 @@
-"""Load WCOFS cycle files from processed storage for validation commands."""
+"""Load WCOFS cycle files from processed storage for validation commands.
+
+After PR #2 merges, physics ingestion will expose ``open_wcofs_cycle`` /
+``list_wcofs_cycles`` (``CycleNotAvailable``). Keep this module as the single
+seam for sensor consistency/holdout until that integration is wired.
+"""
 
 from __future__ import annotations
 

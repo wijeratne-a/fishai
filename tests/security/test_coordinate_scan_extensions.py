@@ -38,7 +38,7 @@ class CoordinateScanExtensionTests(unittest.TestCase):
         }
         self.assertTrue(geojson_has_point_geometry(payload))
         hits, _ = scan_json_text(json.dumps(payload), rel="data/manifests/x.geojson")
-        self.assertIn("geojson:point_geometry", hits)
+        self.assertIn("geojson:coordinate_geometry", hits)
 
     def test_parquet_schema_latitude_column(self) -> None:
         import pyarrow as pa
