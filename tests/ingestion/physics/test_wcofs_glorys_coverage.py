@@ -69,6 +69,10 @@ def test_coverage_report_written_on_overlap_run(tmp_path: Path) -> None:
         "json_path": str(tmp_path / "coverage_report.json"),
         "csv_path": str(tmp_path / "coverage_cells.csv"),
     }
+    cfg["pull_logs"] = {
+        "wcofs": str(tmp_path / "wcofs_pull_log.jsonl"),
+        "glorys": str(tmp_path / "copernicus_pull_log.jsonl"),
+    }
     z_levels = np.array([0.0, 1.0, 3.0, 10.0])
 
     def wcofs_open(_day: dt.date) -> xr.Dataset:
