@@ -92,12 +92,35 @@ def glorys_product_for_date(
     return PRODUCT_ID_MYINT
 
 
+def glorys_dataset_id_for_date(
+    date: dt.date,
+    dataset_id: str | None = None,
+    *,
+    config: dict[str, Any] | None = None,
+) -> str:
+    """
+    Canonical Copernicus dataset id for ``date``.
+
+    When ``dataset_id`` is provided it must equal ``glorys_product_for_date(date)``;
+    otherwise ``ValueError`` is raised.
+    """
+    expected = glorys_product_for_date(date, config=config)
+    if dataset_id is not None and dataset_id != expected:
+        raise ValueError(
+            f"glorys: dataset_id {dataset_id!r} does not match glorys_product_for_date("
+            f"{date!r}) (expected {expected!r})"
+        )
+    return expected
+
+
 def resolve_glorys_product_id(
     day: dt.date,
     config: dict[str, Any] | None = None,
+    *,
+    dataset_id: str | None = None,
 ) -> str:
     """Resolve GLORYS dataset id for overlap pairing and pull logs (date-based)."""
-    return glorys_product_for_date(day, config=config)
+    return glorys_dataset_id_for_date(day, dataset_id, config=config)
 
 
 def _pull_log_path(entry: dict[str, Any]) -> Path:
@@ -135,7 +158,7 @@ def fetch_day(
     if dt.date.today() > LICENSE_VALID_UNTIL:
         raise SourceNotApprovedError("glorys: licence validity ended")
 
-    ds_id = dataset_id or glorys_product_for_date(date, config=config)
+    ds_id = glorys_dataset_id_for_date(date, dataset_id, config=config)
     record = build_pull_record(
         dataset_id=ds_id,
         date_start=date.isoformat(),
