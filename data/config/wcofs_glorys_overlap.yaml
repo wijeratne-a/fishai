@@ -15,6 +15,17 @@ split:
   test_start: 2025-09-01
 
 nearshore_km: 20.0
+
+shoreline:
+  path: data/reference/shoreline/ne_10m_land_pilot_clip.json
+  natural_earth_dataset: ne_10m_land
+  natural_earth_version: 5.1.1
+  source_url: https://www.naturalearthdata.com/downloads/10m-physical-vectors/10m-land/
+  license: public_domain
+  densify_spacing_km: 1.0
+  distance_method: pyproj_geod_fwd
+
+# Simplified polyline for unit tests only (not used in production nearshore).
 coastline_fixture: tests/fixtures/pilot_coastline_vertices.csv
 
 glorys:

@@ -8,7 +8,7 @@ from __future__ import annotations
 
 import datetime as dt
 import json
-from collections.abc import Callable, Iterable, Sequence
+from collections.abc import Callable, Sequence
 from pathlib import Path
 from typing import Any
 
@@ -18,17 +18,15 @@ import yaml
 import xarray as xr
 
 from fishai.ingestion.copernicus_compliance import append_pull_log, build_pull_record
-from fishai.ingestion.physics.coast_distance import distance_to_coast_km
-from fishai.ingestion.physics.features import front_distance_km, sst_gradient
-from fishai.ingestion.physics.harmonize import area_weighted_regrid, glorys_target_grid
+from fishai.ingestion.physics.coast_distance import nearshore_mask, shoreline_path_from_config
+from fishai.ingestion.physics.harmonize import glorys_target_grid
 from fishai.ingestion.physics.sources.glorys import (
     PRODUCT_ID,
     glorys_column_features,
 )
-from fishai.ingestion.physics.vertical import (
-    interp_at_depth_from_z_levels,
-    mld,
-    s_to_z,
+from fishai.ingestion.physics.wcofs_glorys_grid import (
+    coarsen_wcofs_to_glorys,
+    compute_wcofs_covariates_on_glorys_grid,
 )
 from fishai.ingestion.physics.wcofs_pull_log import append_wcofs_pull_log, build_wcofs_pull_record
 from fishai.ingestion.physics.wcofs_pds_store import open_wcofs_cycle
@@ -62,9 +60,15 @@ def load_overlap_config(path: Path | str | None = None) -> dict[str, Any]:
     return yaml.safe_load(cfg_path.read_text(encoding="utf-8"))
 
 
+def _config_date(value: Any) -> dt.date:
+    if isinstance(value, dt.date):
+        return value
+    return dt.date.fromisoformat(str(value))
+
+
 def overlap_dates(config: dict[str, Any]) -> list[dt.date]:
-    start = dt.date.fromisoformat(str(config["overlap"]["start"]))
-    end = dt.date.fromisoformat(str(config["overlap"]["end"]))
+    start = _config_date(config["overlap"]["start"])
+    end = _config_date(config["overlap"]["end"])
     days: list[dt.date] = []
     cur = start
     while cur <= end:
@@ -74,8 +78,8 @@ def overlap_dates(config: dict[str, Any]) -> list[dt.date]:
 
 
 def split_label(day: dt.date, config: dict[str, Any]) -> str:
-    fit_end = dt.date.fromisoformat(str(config["split"]["fit_end"]))
-    test_start = dt.date.fromisoformat(str(config["split"]["test_start"]))
+    fit_end = _config_date(config["split"]["fit_end"])
+    test_start = _config_date(config["split"]["test_start"])
     if day <= fit_end:
         return "fit"
     if day >= test_start:
@@ -102,58 +106,26 @@ def depth_grid_m(config: dict[str, Any]) -> np.ndarray:
     return np.arange(start, end + step, step, dtype=float)
 
 
-def _surface_slab(ds: xr.Dataset) -> xr.Dataset:
-    return ds.isel(ocean_time=0) if "ocean_time" in ds.dims else ds
+def glorys_grid_from_config(config: dict[str, Any]) -> tuple[np.ndarray, np.ndarray]:
+    bbox = config["pilot_bbox"]
+    return glorys_target_grid(
+        float(bbox["lat_min"]),
+        float(bbox["lat_max"]),
+        float(bbox["lon_min"]),
+        float(bbox["lon_max"]),
+    )
 
 
-def wcofs_profiles_positive_down(
-    slab: xr.Dataset,
-    depth_grid: np.ndarray,
-) -> tuple[np.ndarray, np.ndarray, np.ndarray]:
-    """Return (depth_grid, temp_profile, salt_profile) on ``depth_grid`` (1d)."""
-    ref = _surface_slab(slab)
-    h = ref.h.values
-    zeta = ref.zeta.values
-    temp = ref.temp.values
-    salt = ref.salt.values
-    if temp.ndim == 4:
-        temp = temp[0]
-        salt = salt[0]
-    s_rho = ref.s_rho.values
-    hc = float(ref.hc.values)
-    cs_r = ref.Cs_r.values if "Cs_r" in ref else None
-    z_roms = s_to_z(h, zeta, s_rho, hc, cs_r=cs_r)
-    depth = -z_roms
-    ny, nx, nz = depth.shape[1], depth.shape[2], depth.shape[0]
-    temp_out = np.full((ny, nx, depth_grid.size), np.nan)
-    salt_out = np.full((ny, nx, depth_grid.size), np.nan)
-    for j in range(ny):
-        for i in range(nx):
-            dcol = depth[:, j, i]
-            tcol = temp[:, j, i]
-            scol = salt[:, j, i]
-            order = np.argsort(dcol)
-            d_sorted = dcol[order]
-            t_sorted = tcol[order]
-            s_sorted = scol[order]
-            temp_out[j, i, :] = np.interp(depth_grid, d_sorted, t_sorted, left=np.nan, right=np.nan)
-            salt_out[j, i, :] = np.interp(depth_grid, d_sorted, s_sorted, left=np.nan, right=np.nan)
-    return depth_grid, temp_out, salt_out
-
-
-def wcofs_column_metrics(
-    depth_grid: np.ndarray,
-    temp_profile: np.ndarray,
-    salt_profile: np.ndarray,
-) -> dict[str, float]:
-    z3d = (-depth_grid)[:, None, None]
-    t3d = temp_profile[:, None, None]
-    mld_m = float(mld(z3d, t3d)[0, 0])
-    return {
-        "wcofs_T3m": interp_at_depth_from_z_levels(depth_grid, temp_profile, 3.0),
-        "wcofs_S3m": interp_at_depth_from_z_levels(depth_grid, salt_profile, 3.0),
-        "wcofs_MLD_m": mld_m,
-    }
+def wcofs_covariate_arrays_on_glorys_grid(
+    ds_wcofs: xr.Dataset,
+    lat_dst: np.ndarray,
+    lon_dst: np.ndarray,
+    config: dict[str, Any],
+) -> dict[str, np.ndarray]:
+    """Shared WCOFS covariates on the GLORYS grid (overlap uses ``wcofs_`` prefixes in rows)."""
+    depth = depth_grid_m(config)
+    gridded = coarsen_wcofs_to_glorys(ds_wcofs, lat_dst, lon_dst, depth)
+    return compute_wcofs_covariates_on_glorys_grid(gridded)
 
 
 def glorys_profiles_on_depth_grid(
@@ -170,27 +142,6 @@ def glorys_profiles_on_depth_grid(
         np.interp(depth_grid, z_sorted, t_sorted, left=np.nan, right=np.nan),
         np.interp(depth_grid, z_sorted, s_sorted, left=np.nan, right=np.nan),
     )
-
-
-def coarsen_wcofs_surface_fields(
-    slab: xr.Dataset,
-    lat_dst: np.ndarray,
-    lon_dst: np.ndarray,
-) -> dict[str, np.ndarray]:
-    ref = _surface_slab(slab)
-    lat = ref.lat_rho.values
-    lon = ref.lon_rho.values
-    lon = np.where(lon > 180, lon - 360, lon)
-    wet = ref.mask_rho.values == 1
-    temp_da = ref.temp
-    if "ocean_time" in temp_da.dims:
-        temp_da = temp_da.isel(ocean_time=0)
-    sst = temp_da.isel(s_rho=-1).values
-    sst_coarse = area_weighted_regrid(sst, lat, lon, lat_dst, lon_dst, wet_mask=wet)
-    grad = sst_gradient(sst_coarse, lat_dst, lon_dst)
-    lat2d, lon2d = np.meshgrid(lat_dst, lon_dst, indexing="ij")
-    front_km = front_distance_km(grad, lat2d, lon2d)
-    return {"wcofs_sst_grad": grad, "wcofs_front_distance_km": front_km}
 
 
 def pair_day_cell(
@@ -226,6 +177,7 @@ def pair_day_cell(
 
 def build_overlap_metadata(config: dict[str, Any]) -> dict[str, Any]:
     glorys_cfg = config["glorys"]
+    shore = config.get("shoreline", {})
     return {
         "schema_version": "wcofs_glorys_overlap_v1",
         "overlap_start": config["overlap"]["start"],
@@ -234,6 +186,8 @@ def build_overlap_metadata(config: dict[str, Any]) -> dict[str, Any]:
         "glorys_product_id": glorys_cfg["product_id"],
         "glorys_production_status": glorys_cfg["production_status"],
         "glorys_copernicus_doi": glorys_cfg["copernicus_doi"],
+        "shoreline_path": str(shoreline_path_from_config(config)),
+        "natural_earth_version": shore.get("natural_earth_version"),
         "wcofs_attribution": attribution_for("wcofs"),
         "glorys_attribution": attribution_for("glorys"),
     }
@@ -245,22 +199,6 @@ def write_overlap_parquet(df: pd.DataFrame, path: Path, metadata: dict[str, Any]
     meta_json = json.dumps(metadata, sort_keys=True)
     df.to_parquet(path, index=False, custom_metadata={"overlap": meta_json.encode()})
     return path
-
-
-def _glorys_to_wcofs_indices(
-    lat_dst: np.ndarray,
-    lon_dst: np.ndarray,
-    lat_rho: np.ndarray,
-    lon_rho: np.ndarray,
-) -> tuple[np.ndarray, np.ndarray]:
-    lon_rho = np.where(lon_rho > 180, lon_rho - 360, lon_rho)
-    jj = np.zeros((lat_dst.size, lon_dst.size), dtype=int)
-    ii = np.zeros((lat_dst.size, lon_dst.size), dtype=int)
-    for j, la in enumerate(lat_dst):
-        for i, lo in enumerate(lon_dst):
-            flat = np.argmin((lat_rho - la) ** 2 + (lon_rho - lo) ** 2)
-            jj[j, i], ii[j, i] = np.unravel_index(flat, lat_rho.shape)
-    return jj, ii
 
 
 def pair_overlap_from_synthetic(
@@ -277,34 +215,23 @@ def pair_overlap_from_synthetic(
     """Test helper: one day, full GLORYS subgrid."""
     config = config or load_overlap_config()
     depth_grid = depth_grid_m(config)
-    _, temp_vol, salt_vol = wcofs_profiles_positive_down(wcofs_slab, depth_grid)
-    ref = _surface_slab(wcofs_slab)
-    w_jj, w_ii = _glorys_to_wcofs_indices(
-        lat_dst, lon_dst, ref.lat_rho.values, ref.lon_rho.values
-    )
-    surface = coarsen_wcofs_surface_fields(wcofs_slab, lat_dst, lon_dst)
-    coast_path = REPO_ROOT / str(config["coastline_fixture"])
+    wcofs_fields = wcofs_covariate_arrays_on_glorys_grid(wcofs_slab, lat_dst, lon_dst, config)
     lat2d, lon2d = np.meshgrid(lat_dst, lon_dst, indexing="ij")
-    coast_km = distance_to_coast_km(lat2d, lon2d, coastline_fixture=coast_path)
-    nearshore = coast_km <= float(config["nearshore_km"])
+    nearshore = nearshore_mask(lat2d, lon2d, config=config)
     rows: list[dict[str, Any]] = []
     for j, la in enumerate(lat_dst):
         for i, lo in enumerate(lon_dst):
-            wj, wi = int(w_jj[j, i]), int(w_ii[j, i])
-            wcofs_metrics = wcofs_column_metrics(
-                depth_grid, temp_vol[wj, wi, :], salt_vol[wj, wi, :]
-            )
-            g_temp, g_salt = glorys_profiles_on_depth_grid(
-                z_levels, glorys_thetao[:, j, i], glorys_so[:, j, i], depth_grid
-            )
+            wcofs_metrics = {f"wcofs_{k}": float(wcofs_fields[k][j, i]) for k in wcofs_fields}
             glorys_metrics = {
                 f"glorys_{k}": v
-                for k, v in glorys_column_features(z_levels, glorys_thetao[:, j, i], glorys_so[:, j, i], None).items()
+                for k, v in glorys_column_features(
+                    z_levels, glorys_thetao[:, j, i], glorys_so[:, j, i], None
+                ).items()
                 if k != "mlotst_crosscheck"
             }
             wcofs_surface = {
-                "wcofs_sst_grad": float(surface["wcofs_sst_grad"][j, i]),
-                "wcofs_front_distance_km": float(surface["wcofs_front_distance_km"][j, i]),
+                "wcofs_sst_grad": wcofs_metrics["wcofs_sst_grad"],
+                "wcofs_front_distance_km": wcofs_metrics["wcofs_front_distance_km"],
             }
             glorys_surface = {
                 "glorys_sst_grad": float("nan"),
@@ -350,13 +277,7 @@ def run_overlap_pairing(
     expected = int(config["overlap"]["expected_days"])
     if days is not None and len(days) == expected and len(overlap_dates(config)) != expected:
         raise ValueError("configured overlap.expected_days does not match date span")
-    bbox = config["pilot_bbox"]
-    lat_dst, lon_dst = glorys_target_grid(
-        float(bbox["lat_min"]),
-        float(bbox["lat_max"]),
-        float(bbox["lon_min"]),
-        float(bbox["lon_max"]),
-    )
+    lat_dst, lon_dst = glorys_grid_from_config(config)
     rate = config.get("rate_limits") or {}
     budget = budget or _DailyRequestBudget(int(rate.get("max_requests_per_day", 200)))
     wcofs_log = wcofs_log or REPO_ROOT / str(config["pull_logs"]["wcofs"])
@@ -388,10 +309,10 @@ def run_overlap_pairing(
                 date_end=day.isoformat(),
                 variables=("thetao", "so"),
                 bbox=(
-                    float(bbox["lat_min"]),
-                    float(bbox["lat_max"]),
-                    float(bbox["lon_min"]),
-                    float(bbox["lon_max"]),
+                    float(config["pilot_bbox"]["lat_min"]),
+                    float(config["pilot_bbox"]["lat_max"]),
+                    float(config["pilot_bbox"]["lon_min"]),
+                    float(config["pilot_bbox"]["lon_max"]),
                 ),
             ),
             log_path=glorys_log,
