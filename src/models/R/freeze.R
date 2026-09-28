@@ -11,10 +11,13 @@ compute_reference_volume_metadata <- function(training_dat, cfg) {
     stop("no positive training volumes to define reference_volume_m3", call. = FALSE)
   }
   qs <- stats::quantile(vol, probs = c(0.1, 0.5, 0.9), na.rm = TRUE, names = FALSE)
+  n_ev <- length(vol)
   list(
     reference_volume_m3 = unname(stats::median(vol, na.rm = TRUE)),
     source = list(
-      n_events = length(vol),
+      n_events_fitting_frame = n_ev,
+      n_events = n_ev,
+      taxon = cfg$species$taxon %||% NA_character_,
       training_end = cfg$training_end %||% NA_character_,
       volume_m3_quantiles = stats::setNames(
         as.list(as.numeric(qs)),

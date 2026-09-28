@@ -33,7 +33,7 @@ test_that("freeze stores median reference_volume_m3 from training QC data", {
     art$config$prediction$reference_volume_m3,
     unname(stats::median(dat$volume_m3))
   )
-  expect_equal(art$reference_volume$source$n_events, nrow(dat))
+  expect_equal(art$reference_volume$source$n_events_fitting_frame, nrow(dat))
   expect_false(art$config$prediction$reference_volume_m3 == 1)
 })
 

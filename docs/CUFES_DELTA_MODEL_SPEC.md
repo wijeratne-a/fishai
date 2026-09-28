@@ -25,9 +25,13 @@ where \(\eta\) includes \(\log(V)\). The **positive (component 2)** mean carries
 
 Training formulas should **not** duplicate effort as `log_effort` in the fixed effects when using Poisson-link; effort is only the offset column.
 
+## Counts (`cufes_counts`)
+
+Long-format **`event_id` × `taxon` × `count`**. If a taxon was **not** counted on an event, there is **no row** (never an implicit zero). Each species model inner-joins events to that taxon’s rows only; QC logs **`excluded_no_count_row`**.
+
 ## Reference volume \(V_\text{ref}\) (maps only)
 
-At freeze time, **`reference_volume_m3`** is the **median** `volume_m3` over training events that passed `load_model_data()` QC. The frozen artifact stores:
+At freeze time, **`reference_volume_m3`** is the **median** `volume_m3` over the species **final fitting frame** (after count-row join and all QC drops). Metadata records **`n_events_fitting_frame`**.
 
 - `reference_volume_m3`
 - `reference_volume_source` (`n_events`, `training_end`, volume quantiles)

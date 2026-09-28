@@ -29,9 +29,21 @@ def main(argv: list[str] | None = None) -> int:
         default=str(DEFAULT_SARDINE),
         help="YAML config (default: cufes_sardine.yaml)",
     )
+    train.add_argument(
+        "--min-duration-min",
+        type=float,
+        default=None,
+        help="Optional sensitivity refit excluding events shorter than N minutes",
+    )
 
     cv = sub.add_parser("cv", help="Spatial-block and LFO cross-validation")
     cv.add_argument("--config", default=str(DEFAULT_SARDINE))
+    cv.add_argument(
+        "--min-duration-min",
+        type=float,
+        default=None,
+        help="Optional sensitivity refit excluding events shorter than N minutes",
+    )
 
     predict = sub.add_parser("predict", help="Predict egg encounter surfaces")
     predict.add_argument("--config", default=str(DEFAULT_SARDINE))
@@ -42,10 +54,17 @@ def main(argv: list[str] | None = None) -> int:
     )
 
     ns = parser.parse_args(argv)
+
+    def _r_args(config: str, min_duration_min: float | None) -> list[str]:
+        args = [config]
+        if min_duration_min is not None:
+            args.append(f"--min-duration-min={min_duration_min}")
+        return args
+
     if ns.command == "train":
-        return _run_r("train.R", [ns.config])
+        return _run_r("train.R", _r_args(ns.config, ns.min_duration_min))
     if ns.command == "cv":
-        return _run_r("cv.R", [ns.config])
+        return _run_r("cv.R", _r_args(ns.config, ns.min_duration_min))
     if ns.command == "predict":
         return _run_r("predict.R", [ns.config, ns.artifact])
     return 1

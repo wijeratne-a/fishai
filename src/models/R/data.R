@@ -3,25 +3,33 @@
 #' Production ingest provides ``cufes_events`` (one row per ``event_id`` with
 #' start/stop positions and ``volume_m3``), ``cufes_counts`` (long counts by
 #' taxon), and along-track covariates keyed by ``event_id`` only (PR #2).
-#' Events are placed on the mesh at the track midpoint in UTM zone 11N (km).
+#' Only events with a ``cufes_counts`` row for ``species.taxon`` enter the
+#' modelling frame; absent rows are **not** zeros (see ``excluded_no_count_row``
+#' in QC). Events are placed on the mesh at the track midpoint in UTM zone 11N (km).
 #' Effort enters as ``log(volume_m3)`` via ``log_effort``; [fit_delta_engine()]
 #' passes that column to sdmTMB as ``offset``, which applies to the **positive**
 #' delta component only.
 #'
 #' @param path Deprecated single-table override (tests only).
 #' @param cfg Config with `data`, `response`, and `covariates` blocks.
+#' @param min_duration_min Optional; drop events with ``duration_min`` below this threshold.
 #' @return Data frame with `event_id`, `X`, `Y`, `y`, `log_effort`, and `*_z`
 #'   covariates. Attribute `fishai_data_qc` holds drop counts (never imputed).
 #' @export
-load_model_data <- function(path = NULL, cfg = NULL) {
+load_model_data <- function(path = NULL, cfg = NULL, min_duration_min = NULL) {
   if (is.null(cfg)) {
     stop("cfg is required", call. = FALSE)
   }
 
   qc <- list(
     dropped_missing_endpoint = 0L,
-    dropped_missing_covariate = list()
+    dropped_missing_covariate = list(),
+    excluded_no_count_row = 0L,
+    dropped_short_duration = 0L,
+    taxon = NA_character_
   )
+
+  min_duration_min <- min_duration_min %||% cfg$data$min_duration_min %||% cfg$sensitivity$min_duration_min
 
   effort_col <- cfg$response$effort_column %||% "volume_m3"
   resp_col <- cfg$response$column %||% "egg_count"
@@ -40,11 +48,25 @@ load_model_data <- function(path = NULL, cfg = NULL) {
       stop("cufes_counts must include event_id, taxon, count", call. = FALSE)
     }
     .assert_unique_keys(events$event_id, "event_id in cufes_events")
-    counts <- counts[counts$taxon == taxon, , drop = FALSE]
-    .assert_unique_keys(counts$event_id, paste0("event_id in cufes_counts (taxon=", taxon, ")"))
-    dat <- merge(events, counts[, c("event_id", "count"), drop = FALSE], by = "event_id", sort = FALSE)
-    if (any(is.na(dat$count))) {
-      stop("cufes_counts missing rows for some events after taxon filter", call. = FALSE)
+    counts_taxon <- counts[counts$taxon == taxon, , drop = FALSE]
+    .assert_unique_keys(counts_taxon$event_id, paste0("event_id in cufes_counts (taxon=", taxon, ")"))
+    qc$taxon <- taxon
+    ev_ids <- unique(as.character(events$event_id))
+    taxon_count_ids <- unique(as.character(counts_taxon$event_id))
+    qc$excluded_no_count_row <- as.integer(length(setdiff(ev_ids, taxon_count_ids)))
+    dat <- merge(
+      events,
+      counts_taxon[, c("event_id", "count"), drop = FALSE],
+      by = "event_id",
+      sort = FALSE
+    )
+    if (nrow(dat) == 0L) {
+      stop(
+        "no events with a cufes_counts row for taxon=",
+        taxon,
+        "; missing count rows are not treated as zero",
+        call. = FALSE
+      )
     }
     dat[[resp_col]] <- dat$count
     dat$count <- NULL
@@ -58,6 +80,7 @@ load_model_data <- function(path = NULL, cfg = NULL) {
       stop("covariate table missing event_id", call. = FALSE)
     }
     .assert_unique_keys(cov$event_id, "event_id in covariates")
+    cov <- cov[cov$event_id %in% dat$event_id, , drop = FALSE]
     dat <- .join_covariates_strict(dat, cov)
   } else {
     table_path <- path %||% cfg$data$table_path
@@ -103,6 +126,15 @@ load_model_data <- function(path = NULL, cfg = NULL) {
   }
   dat <- .ensure_time_idx(dat)
 
+  dur <- .apply_min_duration_filter(dat, min_duration_min)
+  dat <- dur$dat
+  if (!is.null(dur$dropped_short_duration)) {
+    qc$dropped_short_duration <- dur$dropped_short_duration
+  }
+  if (nrow(dat) == 0L) {
+    stop("no events remain after data prep filters", call. = FALSE)
+  }
+
   dat$y <- dat[[resp_col]]
   dat$log_effort <- log(dat[[effort_col]])
   attr(dat, "fishai_data_qc") <- qc
@@ -119,7 +151,7 @@ fishai_data_prep_qc <- function(dat) {
   qc
 }
 
-.join_covariates_strict <- function(events, cov, qc) {
+.join_covariates_strict <- function(events, cov) {
   ev_ids <- sort(unique(as.character(events$event_id)))
   cov_ids <- sort(unique(as.character(cov$event_id)))
   if (!identical(ev_ids, cov_ids)) {
@@ -334,6 +366,22 @@ fishai_data_prep_qc <- function(dat) {
     return(dat)
   }
   stop("events need time_idx or time for sdmTMB time index", call. = FALSE)
+}
+
+.apply_min_duration_filter <- function(dat, min_duration_min) {
+  if (is.null(min_duration_min)) {
+    return(list(dat = dat, dropped_short_duration = NULL))
+  }
+  if (!"duration_min" %in% names(dat)) {
+    stop("duration_min column required for min-duration filter", call. = FALSE)
+  }
+  dur <- as.numeric(dat$duration_min)
+  keep <- !is.na(dur) & dur >= min_duration_min
+  dropped <- as.integer(sum(!keep))
+  list(
+    dat = dat[keep, , drop = FALSE],
+    dropped_short_duration = dropped
+  )
 }
 
 .read_model_table <- function(path) {

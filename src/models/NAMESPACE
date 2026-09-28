@@ -1,3 +1,6 @@
+export(compare_duration_sensitivity)
+export(write_duration_sensitivity_report)
+export(summarize_fit_coefficients)
 export(load_model_data)
 export(fishai_data_prep_qc)
 export(build_fishai_mesh)
