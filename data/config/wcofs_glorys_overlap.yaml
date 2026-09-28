@@ -58,7 +58,7 @@ wcofs:
   cycle: t03z
   daily_pairing: hourly_utc_mean
   avg_nowcast_unavailable:
-    reason_code: CycleNotAvailable
+    reason_code: wcofs_nowcast_missing
     dates:
       - 2024-09-05
       - 2024-09-06

@@ -47,7 +47,7 @@ The WCOFS-to-GLORYS map is fit by **bot3** on the **fit split only**, then froze
 
 **GLORYS product ids (item 7):** Overlap pairing calls the shared `glorys_dataset_id_for_date` from `main` only (catalog-aware fixes land in a separate PR). PR #14 wraps shared `ValueError` as `OverlapGlorysDayMissingError` (`glorys_dataset_resolution_failed`) — no local id/cutoff logic and no silent fallback.
 
-**WCOFS avg.nowcast gaps:** `wcofs.avg_nowcast_unavailable` records 44 fit-window days without avg.nowcast on PDS (`CycleNotAvailable`); exposed in overlap metadata as `wcofs_avg_nowcast_missing_fit_days`.
+**WCOFS nowcast gaps:** `wcofs.avg_nowcast_unavailable` records 44 fit-window days without nowcast on PDS (`wcofs_nowcast_missing`, evidence `UNKNOWN`); excluded from overlap pairing counts (no fill, no forecast substitution).
 
 **WCOFS (default `hourly_utc_mean`):** For UTC day **D**, build the daily mean from **24** WCOFS `fields` nowcast files whose valid times are **D 00Z … D 23Z** (exclusive of **D+1 00Z**), using each file’s `ocean_time` semantics: cycle **R** lead **nNNN** valid at **R 03Z + (NNN−24) h**; hours **00–03Z** on **D** from cycle **D** leads **n021–n024**; hours **04–23Z** from cycle **D+1** leads **n001–n020**. Each file’s `ocean_time` must match its scheduled hour; **24 distinct** hours are required or the whole UTC day is rejected with a reason code (no partial averages). Per-day provenance records cycle, lead, and S3 key for each slab. Lazy pilot-bbox reads: `fishai.ingestion.physics.wcofs_utc_daily_s3` (`fsspec` + `h5netcdf` + `s3fs`). Overlap transfer counting: `python -m fishai.ingestion.physics.wcofs_utc_daily_s3`.
 

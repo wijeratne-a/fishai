@@ -36,7 +36,9 @@ from fishai.ingestion.physics.wcofs_glorys_grid import (
     min_wet_fraction_from_config,
 )
 from fishai.ingestion.physics.wcofs_avg_nowcast_availability import (
+    is_wcofs_nowcast_missing_day,
     wcofs_avg_nowcast_missing_fit_day_records,
+    wcofs_nowcast_missing_day_records,
 )
 from fishai.ingestion.physics.wcofs_pull_log import append_wcofs_pull_log, build_wcofs_pull_record
 from fishai.ingestion.physics.wcofs_pds_store import open_wcofs_cycle
@@ -213,10 +215,10 @@ def open_wcofs_for_overlap_day(
     pairing = (config.get("wcofs") or {}).get("daily_pairing", "hourly_utc_mean")
     if pairing == "avg_nowcast":
         from fishai.ingestion.physics.wcofs_avg_nowcast_availability import (
-            assert_wcofs_avg_nowcast_available,
+            assert_wcofs_nowcast_available,
         )
 
-        assert_wcofs_avg_nowcast_available(day, config)
+        assert_wcofs_nowcast_available(day, config)
         ds = (
             open_wcofs_cycle(day, product="avg_nowcast")
             if wcofs_open is None
@@ -290,6 +292,7 @@ def build_overlap_metadata(config: dict[str, Any]) -> dict[str, Any]:
             _config_date(config["overlap"]["start"]), config
         ),
         "wcofs_avg_nowcast_missing_fit_days": wcofs_avg_nowcast_missing_fit_day_records(config),
+        "wcofs_nowcast_missing_fit_days": wcofs_avg_nowcast_missing_fit_day_records(config),
         "glorys_production_status": glorys_cfg["production_status"],
         "glorys_copernicus_doi": glorys_cfg["copernicus_doi"],
         "shoreline_path": str(shoreline_path_from_config(config)),
@@ -424,7 +427,13 @@ def run_overlap_pairing(
     all_rows: list[dict[str, Any]] = []
     pairing = (config.get("wcofs") or {}).get("daily_pairing", "hourly_utc_mean")
     wcofs_requests_per_day = 24 if pairing == "hourly_utc_mean" else 1
+    skipped_nowcast_missing: list[dt.date] = []
+    paired_days: list[dt.date] = []
     for day in days:
+        if is_wcofs_nowcast_missing_day(day, config):
+            skipped_nowcast_missing.append(day)
+            continue
+        paired_days.append(day)
         budget.charge(day, wcofs_requests_per_day)
         ds = open_wcofs_for_overlap_day(
             day, config, wcofs_open, open_fields_lead=open_fields_lead
@@ -479,6 +488,13 @@ def run_overlap_pairing(
         all_rows.extend(frame.to_dict(orient="records"))
     df = pd.DataFrame(all_rows)
     metadata = build_overlap_metadata(config)
+    metadata["overlap_pairing_days_requested"] = len(days)
+    metadata["overlap_pairing_days_paired"] = len(paired_days)
+    metadata["overlap_pairing_days_skipped_wcofs_nowcast_missing"] = len(skipped_nowcast_missing)
+    if skipped_nowcast_missing:
+        metadata["wcofs_nowcast_missing_days"] = wcofs_nowcast_missing_day_records(
+            config, days=skipped_nowcast_missing
+        )
     metadata["glorys_production_status"] = str(config["glorys"]["production_status"])
     cov_paths = coverage_paths_from_config(config)
     kept_n, reduced_n = expected_cufes_counts(config)
