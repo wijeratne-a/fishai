@@ -11,6 +11,7 @@ import yaml
 
 from fishai.evaluation.harmonization_prereg import load_harmonization_prereg
 from fishai.ingestion.physics.wcofs_glorys_grid import harmonization_temperature_at_buoy_depth
+from fishai.scoring.harmonization.constants import VERDICT_PASS
 from fishai.scoring.harmonization.input_check_config import SCORER_GRADED_INPUT_VARIABLES
 from fishai.scoring.harmonization.registry import load_assimilated_sources_registry, wcofs_independent_observation_source
 from fishai.scoring.harmonization.runner import (
@@ -111,6 +112,15 @@ def test_runner_writes_outputs(tmp_path: Path) -> None:
                     "glorys_spatial_sd": 1.0,
                 }
             )
+        # shared_forcing: extreme RMSE must not change buoy+graded verdict
+        input_rows.append(
+            {
+                "stratum": stratum,
+                "variable": "upwelling",
+                "rmse": 99.0,
+                "glorys_spatial_sd": 1.0,
+            }
+        )
     out_dir = tmp_path / "scores"
     summary = run_holdout_scoring(
         prereg_path,
@@ -129,7 +139,10 @@ def test_runner_writes_outputs(tmp_path: Path) -> None:
     assert summary["preflight"]["no_independent_validation_messages"] == []
     ns = [m for m in summary["metrics"] if m["model_row"] == "wcofs_coarsened_mapped" and m["stratum"] == "pooled"]
     assert ns and ns[0]["n"] == 40
-    assert ns[0]["verdict"] is not None
+    assert ns[0]["verdict"] == VERDICT_PASS
+    up_rows = [r for r in summary["input_cell_check"] if r["variable"] == "upwelling"]
+    assert up_rows and up_rows[0]["reason"] == "shared_forcing"
+    assert up_rows[0]["verdict"] is None
     for row in ("wcofs_native", "wcofs_coarsened", "glorys"):
         same_n = [m for m in summary["metrics"] if m["model_row"] == row and m["stratum"] == "pooled"]
         assert same_n[0]["n"] == 40

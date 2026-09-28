@@ -113,6 +113,26 @@ sources:
       evidence_valid_to: null
       accepted_by_auditor: false
 
+  spray_glider_profiles:
+    display_name: Spray glider profiles (depth-gridded)
+    holdout_pairing: profile_gridded_by_depth
+    holdout_validation_enabled: false
+    note: >-
+      Future in-situ holdout source; registry entry reserved. Pairing/scoring not
+      implemented until IOOS Spray ingest is enabled.
+    wcofs:
+      status: unknown
+      citation: null
+      evidence_valid_from: null
+      evidence_valid_to: null
+      accepted_by_auditor: false
+    glorys:
+      status: unknown
+      citation: null
+      evidence_valid_from: null
+      evidence_valid_to: null
+      accepted_by_auditor: false
+
   ioos_gliders:
     display_name: IOOS gliders
     wcofs:

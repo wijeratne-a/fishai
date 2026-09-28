@@ -14,8 +14,7 @@ DEFAULT_REGISTRY_PATH = REPO_ROOT / "config" / "assimilated_sources.yaml"
 WCOFS_ASSIMILATED_STATUSES = frozenset({"true", "presumed_true"})
 WCOFS_NOT_INDEPENDENT_STATUSES = frozenset({"true", "presumed_true", "unknown"})
 
-# Observation sources that can support graded holdout buoy validation vs WCOFS.
-HOLDOUT_VALIDATION_SOURCE_IDS: tuple[str, ...] = ("ndbc_buoy_temperature",)
+from fishai.scoring.harmonization.observation_sources import holdout_validation_registry_ids
 
 
 def load_assimilated_sources_registry(path: Path | str | None = None) -> dict[str, Any]:
@@ -81,7 +80,7 @@ def wcofs_independent_observation_source(source_id: str, registry: dict[str, Any
 def any_holdout_validation_source_independent_of_wcofs(registry: dict[str, Any]) -> bool:
     return any(
         wcofs_independent_observation_source(source_id, registry)
-        for source_id in HOLDOUT_VALIDATION_SOURCE_IDS
+        for source_id in holdout_validation_registry_ids()
     )
 
 
@@ -95,7 +94,7 @@ def no_independent_validation_messages(registry: dict[str, Any]) -> list[str]:
         return []
     messages: list[str] = []
     sources = registry.get("sources") or {}
-    for source_id in HOLDOUT_VALIDATION_SOURCE_IDS:
+    for source_id in holdout_validation_registry_ids():
         entry = sources.get(source_id)
         if not isinstance(entry, dict):
             messages.append(

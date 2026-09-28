@@ -27,14 +27,13 @@ from fishai.scoring.harmonization.constants import (
     NO_INDEPENDENT_VALIDATION_REASON,
     VERDICT_UNKNOWN,
 )
-from fishai.scoring.harmonization.input_check_config import graded_input_variables_from_prereg
+from fishai.scoring.harmonization.input_cell_check import build_input_cell_check_summary
+from fishai.scoring.harmonization.observation_sources import primary_buoy_validation_registry_id
 from fishai.scoring.harmonization.grading import (
     BuoyGradeInput,
-    InputCheckGradeInput,
     combine_stratum_verdicts,
     cutoffs_from_prereg,
     grade_buoy_stratum,
-    grade_input_check,
 )
 from fishai.scoring.harmonization.preflight import run_registry_preflight
 from fishai.scoring.harmonization.io import write_holdout_outputs
@@ -234,13 +233,13 @@ def run_holdout_scoring(
     # Grading (mapped row, buoy temperature, graded strata only)
     pf = block["pass_fail_thresholds"]
     combination_rule = str(pf["combination_rule"])
-    graded_input_variables = graded_input_variables_from_prereg(doc)
     buoy_var = kept[kept["variable"] == "sea_water_temperature"] if "variable" in kept.columns else kept
+    input_cell_check_summary: list[dict[str, Any]] = []
 
     for stratum in STRATA_POOL:
         mask = _stratum_mask(buoy_var, stratum)
         sub = buoy_var.loc[mask]
-        source_id = "ndbc_buoy_temperature"
+        source_id = primary_buoy_validation_registry_id()
         independent = wcofs_independent_observation_source(source_id, registry)
         n_buoys = int(sub["obs_id"].nunique()) if "obs_id" in sub.columns else 0
         dates = pd.to_datetime(sub["date"]).values.astype("datetime64[D]")
@@ -256,6 +255,11 @@ def run_holdout_scoring(
         )
         if np.isfinite(m_mapped.rmse_ci95[1]) and m_glorys.rmse > 0:
             ratio_ci_upper = m_mapped.rmse_ci95[1] / m_glorys.rmse
+
+        input_verdicts, input_rows = build_input_cell_check_summary(
+            doc, input_check_table, stratum, cutoffs
+        )
+        input_cell_check_summary.extend(input_rows)
 
         if force_unknown_verdicts:
             combined = VERDICT_UNKNOWN
@@ -275,24 +279,6 @@ def run_holdout_scoring(
                 ),
                 cutoffs,
             )
-            input_verdicts: list[str] = []
-            if input_check_table is not None:
-                ic = input_check_table.loc[input_check_table.get("stratum", "pooled") == stratum]
-                for var in graded_input_variables:
-                    part = ic[ic["variable"] == var]
-                    if part.empty:
-                        input_verdicts.append("not_gradable")
-                        continue
-                    row = part.iloc[0]
-                    input_verdicts.append(
-                        grade_input_check(
-                            InputCheckGradeInput(
-                                rmse=float(row["rmse"]),
-                                glorys_spatial_sd=float(row["glorys_spatial_sd"]),
-                            ),
-                            cutoffs,
-                        )
-                    )
             combined, combined_reason = combine_stratum_verdicts(
                 buoy_grade[0],
                 input_verdicts,
@@ -337,6 +323,7 @@ def run_holdout_scoring(
         "insufficient_model_coverage": coverage_drop,
         "front_detail_loss": front_loss,
         "metrics": summary_metrics,
+        "input_cell_check": input_cell_check_summary,
         "indirect_glorys_product_check": indirect_summary,
         "buoy_depth_function": f"{BUOY_DEPTH_FUNCTION.__module__}.{BUOY_DEPTH_FUNCTION.__name__}",
     }
