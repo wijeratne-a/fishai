@@ -3,11 +3,16 @@
 from __future__ import annotations
 
 import datetime as dt
+import json
 import re
 from dataclasses import dataclass
+from datetime import datetime, timezone
+from pathlib import Path
 from typing import Any, Callable
 
 import requests
+
+from fishai.ingestion.copernicus_compliance import append_pull_log, build_pull_record
 
 CLIENTS_CONFIG_URLS = (
     "https://s3.waw3-1.cloudferro.com/mdl-metadata/clientsConfigV1.json",
@@ -20,6 +25,7 @@ GLORYS_CANDIDATE_DATASET_IDS: tuple[str, ...] = (GLORYS_DATASET_ID,)
 _REASON_GLORYS_DATASET_NOT_IN_CATALOG = "glorys_dataset_not_in_catalog"
 _REASON_GLORYS_DATE_NOT_COVERED = "glorys_date_not_covered"
 _REASON_CATALOG_UNREACHABLE = "catalog_unreachable"
+_REASON_GLORYS_DATASET_VERSION_CHANGED = "glorys_dataset_version_changed"
 
 
 class GlorysCatalogError(RuntimeError):
@@ -243,3 +249,87 @@ def resolve_glorys_dataset_for_date(day: dt.date) -> GlorysDatasetResolution:
         dataset_version=entry.dataset_version,
         catalog_coverage=entry.coverage_dict(),
     )
+
+
+def recorded_glorys_dataset_version(
+    log_path: Path | None,
+    dataset_id: str,
+) -> str | None:
+    """Return the dataset_version previously logged for ``dataset_id``, if any."""
+    if log_path is None or not log_path.is_file():
+        return None
+    versions: set[str] = set()
+    for line in log_path.read_text(encoding="utf-8").splitlines():
+        if not line.strip():
+            continue
+        record = json.loads(line)
+        if record.get("reason_code") == _REASON_GLORYS_DATASET_VERSION_CHANGED:
+            continue
+        if record.get("dataset_id") != dataset_id:
+            continue
+        version = record.get("dataset_version")
+        if version is not None:
+            versions.add(str(version))
+    if not versions:
+        return None
+    if len(versions) > 1:
+        raise GlorysCatalogError(
+            _REASON_GLORYS_DATASET_VERSION_CHANGED,
+            f"glorys: inconsistent dataset_version values in pull log for {dataset_id!r}",
+        )
+    return next(iter(versions))
+
+
+def ensure_glorys_dataset_version_unchanged(
+    resolution: GlorysDatasetResolution,
+    *,
+    log_path: Path | None,
+) -> None:
+    """
+    On reruns, block pulls when the live catalogue version differs from the log.
+
+    Appends a failure record with ``reason_code`` and does not append a pull record.
+    """
+    recorded = recorded_glorys_dataset_version(log_path, resolution.dataset_id)
+    if recorded is None or recorded == resolution.dataset_version:
+        return
+    failure = {
+        "reason_code": _REASON_GLORYS_DATASET_VERSION_CHANGED,
+        "dataset_id": resolution.dataset_id,
+        "dataset_version": resolution.dataset_version,
+        "recorded_dataset_version": recorded,
+        "timestamp": datetime.now(timezone.utc).isoformat(),
+    }
+    if log_path is not None:
+        append_pull_log(failure, log_path=log_path)
+    raise GlorysCatalogError(
+        _REASON_GLORYS_DATASET_VERSION_CHANGED,
+        (
+            f"glorys: catalogue dataset_version {resolution.dataset_version!r} "
+            f"differs from recorded {recorded!r} for {resolution.dataset_id!r}"
+        ),
+    )
+
+
+def append_glorys_pull_log_record(
+    day: dt.date,
+    *,
+    variables: tuple[str, ...] | list[str],
+    bbox: tuple[float, float, float, float],
+    log_path: Path,
+    request_count: int = 1,
+) -> dict[str, Any]:
+    """Resolve GLORYS metadata, enforce version guard, append one pull log line."""
+    resolution = resolve_glorys_dataset_for_date(day)
+    ensure_glorys_dataset_version_unchanged(resolution, log_path=log_path)
+    record = build_pull_record(
+        dataset_id=resolution.dataset_id,
+        date_start=day.isoformat(),
+        date_end=day.isoformat(),
+        variables=variables,
+        bbox=bbox,
+        request_count=request_count,
+    )
+    record.update(resolution.pull_log_fields())
+    append_pull_log(record, log_path=log_path)
+    return record

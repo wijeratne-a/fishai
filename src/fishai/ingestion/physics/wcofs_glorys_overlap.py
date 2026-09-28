@@ -17,10 +17,11 @@ import pandas as pd
 import yaml
 import xarray as xr
 
-from fishai.ingestion.copernicus_compliance import append_pull_log, build_pull_record
 from fishai.ingestion.physics.coast_distance import nearshore_mask, shoreline_path_from_config
 from fishai.ingestion.physics.harmonize import glorys_target_grid
-from fishai.ingestion.physics.glorys_catalog import resolve_glorys_dataset_for_date
+from fishai.ingestion.physics.glorys_catalog import (
+    append_glorys_pull_log_record,
+)
 from fishai.ingestion.physics.sources.glorys import glorys_column_features
 from fishai.ingestion.physics.wcofs_glorys_coverage import (
     CoverageAccumulator,
@@ -350,19 +351,14 @@ def run_overlap_pairing(
             raise RuntimeError("glorys_fetch is required for live overlap pairing")
         budget.charge(day, 1)
         glorys_payload = glorys_fetch(day)
-        glorys_dataset_id = resolve_glorys_product_id(day, config)
-        append_pull_log(
-            build_pull_record(
-                dataset_id=glorys_dataset_id,
-                date_start=day.isoformat(),
-                date_end=day.isoformat(),
-                variables=("thetao", "so"),
-                bbox=(
-                    float(config["pilot_bbox"]["lat_min"]),
-                    float(config["pilot_bbox"]["lat_max"]),
-                    float(config["pilot_bbox"]["lon_min"]),
-                    float(config["pilot_bbox"]["lon_max"]),
-                ),
+        append_glorys_pull_log_record(
+            day,
+            variables=("thetao", "so"),
+            bbox=(
+                float(config["pilot_bbox"]["lat_min"]),
+                float(config["pilot_bbox"]["lat_max"]),
+                float(config["pilot_bbox"]["lon_min"]),
+                float(config["pilot_bbox"]["lon_max"]),
             ),
             log_path=glorys_log,
         )

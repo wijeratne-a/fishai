@@ -8,12 +8,8 @@ from typing import Any, Callable
 
 import numpy as np
 
-from fishai.ingestion.copernicus_compliance import (
-    append_pull_log,
-    build_pull_record,
-    glorys_attribution_bundle,
-)
-from fishai.ingestion.physics.glorys_catalog import resolve_glorys_dataset_for_date
+from fishai.ingestion.copernicus_compliance import glorys_attribution_bundle
+from fishai.ingestion.physics.glorys_catalog import append_glorys_pull_log_record
 from fishai.ingestion.physics.vertical import (
     CUFES_SAMPLE_DEPTH_M,
     interp_at_depth_from_z_levels,
@@ -63,6 +59,8 @@ def glorys_product_for_date(
         raise ValueError(
             f"glorys: date {date} is before {MY_PRODUCT_START} (my product start)"
         )
+    from fishai.ingestion.physics.glorys_catalog import resolve_glorys_dataset_for_date
+
     return resolve_glorys_dataset_for_date(date).dataset_id
 
 
@@ -132,18 +130,14 @@ def fetch_day(
     if dt.date.today() > LICENSE_VALID_UNTIL:
         raise SourceNotApprovedError("glorys: licence validity ended")
 
-    resolution = resolve_glorys_dataset_for_date(date)
     ds_id = glorys_dataset_id_for_date(date, dataset_id, config=config)
-    record = build_pull_record(
-        dataset_id=ds_id,
-        date_start=date.isoformat(),
-        date_end=date.isoformat(),
+    pull_log = log_path or _pull_log_path(entry)
+    append_glorys_pull_log_record(
+        date,
         variables=variables,
         bbox=bbox,
-        request_count=1,
+        log_path=pull_log,
     )
-    record.update(resolution.pull_log_fields())
-    append_pull_log(record, log_path=log_path or _pull_log_path(entry))
 
     if fetch_fn is None:
         raise RuntimeError(
