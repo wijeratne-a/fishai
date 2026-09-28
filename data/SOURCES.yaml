@@ -31,6 +31,7 @@ sources:
     notes: >-
       Egg-stage evidence only; not adult presence. Modeling and predict metadata
       use only the attribution field above (not license or license_text).
+      ERDDAP metadata for erdCalCOFIcufes carries the NOAA disclaimer in license_text.
 
   wcofs:
     module: fishai.ingestion.physics.wcofs

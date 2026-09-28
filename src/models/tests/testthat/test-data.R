@@ -12,7 +12,7 @@ test_that("missing effort rows are refused", {
   cov <- tempfile(fileext = ".csv")
   writeLines(
     paste(
-      "event_id,time,lat,lon,stop_time,stop_lat,stop_lon,volume_m3,time_idx",
+      "event_id,time,lat,lon,stop_time,stop_lat,stop_lon,volume_m3,pump_readings_used,duration_min,short_event,time_idx",
       "CUFES:T:AK:a,2020-01-01T00:00:00Z,33, -119,2020-01-01T00:05:00Z,33.01,-118.99,NA,1",
       "CUFES:T:AK:b,2020-01-01T00:00:00Z,33, -119,2020-01-01T00:05:00Z,33.01,-118.99,10,1",
       sep = "\n"
@@ -49,9 +49,9 @@ test_that("duplicate event_id is refused", {
   ct <- tempfile(fileext = ".csv")
   writeLines(
     paste(
-      "event_id,time,lat,lon,stop_time,stop_lat,stop_lon,volume_m3",
-      "CUFES:T:AK:1,2020-01-01T00:00:00Z,33,-119,2020-01-01T00:05:00Z,33.01,-118.99,10",
-      "CUFES:T:AK:1,2020-01-01T00:00:00Z,33,-119,2020-01-01T00:05:00Z,33.01,-118.99,10",
+      "event_id,time,lat,lon,stop_time,stop_lat,stop_lon,volume_m3,pump_readings_used,duration_min,short_event",
+      "CUFES:T:AK:1,2020-01-01T00:00:00Z,33,-119,2020-01-01T00:05:00Z,33.01,-118.99,10,2,5,FALSE",
+      "CUFES:T:AK:1,2020-01-01T00:00:00Z,33,-119,2020-01-01T00:05:00Z,33.01,-118.99,10,2,5,FALSE",
       sep = "\n"
     ),
     ev
@@ -93,7 +93,7 @@ test_that("cufes_events counts and covariates join on event_id", {
   cov <- tempfile(fileext = ".csv")
   writeLines(
     paste(
-      "event_id,time,lat,lon,stop_time,stop_lat,stop_lon,volume_m3,time_idx",
+      "event_id,time,lat,lon,stop_time,stop_lat,stop_lon,volume_m3,pump_readings_used,duration_min,short_event,time_idx",
       "CUFES:2024:SH:1,2020-01-01T00:00:00Z,33.0,-120.0,2020-01-01T00:08:00Z,33.02,-119.98,100,1",
       "CUFES:2024:SH:2,2020-01-01T00:00:00Z,33.1,-120.1,2020-01-01T00:08:00Z,33.12,-119.88,200,1",
       sep = "\n"
@@ -143,7 +143,7 @@ test_that("mesh X/Y are UTM 11N track midpoints", {
   lon1 <- -119.23
   writeLines(
     paste(
-      "event_id,time,lat,lon,stop_time,stop_lat,stop_lon,volume_m3,time_idx",
+      "event_id,time,lat,lon,stop_time,stop_lat,stop_lon,volume_m3,pump_readings_used,duration_min,short_event,time_idx",
       sprintf(
         "CUFES:T:AK:mid,2020-01-01T00:00:00Z,%s,%s,2020-01-01T00:10:00Z,%s,%s,50,1",
         lat0, lon0, lat1, lon1
@@ -178,7 +178,7 @@ test_that("covariate event_id mismatch is refused when covariates omit an event"
   cov <- tempfile(fileext = ".csv")
   writeLines(
     paste(
-      "event_id,time,lat,lon,stop_time,stop_lat,stop_lon,volume_m3,time_idx",
+      "event_id,time,lat,lon,stop_time,stop_lat,stop_lon,volume_m3,pump_readings_used,duration_min,short_event,time_idx",
       "CUFES:T:AK:ok,2020-01-01T00:00:00Z,33,-119,2020-01-01T00:05:00Z,33.01,-118.99,10,1",
       "CUFES:T:AK:bad,2020-01-01T00:00:00Z,33,-119,2020-01-01T00:05:00Z,NA,-118.99,10,1",
       sep = "\n"
@@ -208,7 +208,7 @@ test_that("missing endpoint dropped with aligned covariate ids", {
   cov <- tempfile(fileext = ".csv")
   writeLines(
     paste(
-      "event_id,time,lat,lon,stop_time,stop_lat,stop_lon,volume_m3,time_idx",
+      "event_id,time,lat,lon,stop_time,stop_lat,stop_lon,volume_m3,pump_readings_used,duration_min,short_event,time_idx",
       "CUFES:T:AK:ok,2020-01-01T00:00:00Z,33,-119,2020-01-01T00:05:00Z,33.01,-118.99,10,1",
       "CUFES:T:AK:bad,2020-01-01T00:00:00Z,33,-119,2020-01-01T00:05:00Z,NA,-118.99,10,1",
       sep = "\n"
@@ -246,7 +246,7 @@ test_that("covariate event_id mismatch is refused", {
   cov <- tempfile(fileext = ".csv")
   writeLines(
     paste(
-      "event_id,time,lat,lon,stop_time,stop_lat,stop_lon,volume_m3,time_idx",
+      "event_id,time,lat,lon,stop_time,stop_lat,stop_lon,volume_m3,pump_readings_used,duration_min,short_event,time_idx",
       "CUFES:T:AK:a,2020-01-01T00:00:00Z,33,-119,2020-01-01T00:05:00Z,33.01,-118.99,10,1",
       sep = "\n"
     ),
@@ -269,15 +269,84 @@ test_that("covariate event_id mismatch is refused", {
   expect_error(load_model_data(cfg = cfg), "event_id set mismatch")
 })
 
+test_that("load_model_data rejects NA counts in cufes_counts", {
+  ev <- tempfile(fileext = ".csv")
+  ct <- tempfile(fileext = ".csv")
+  writeLines(
+    paste(
+      cufes_events_csv_header(),
+      cufes_event_row("CUFES:T:AK:na", 10),
+      sep = "\n"
+    ),
+    ev
+  )
+  writeLines("event_id,taxon,count\nCUFES:T:AK:na,sardine,NA", ct)
+  cfg <- list(
+    species = list(taxon = "sardine"),
+    data = list(events_path = ev, counts_path = ct, covariates_path = ct),
+    response = list(column = "egg_count", effort_column = "volume_m3")
+  )
+  expect_error(load_model_data(cfg = cfg), "must not contain NA counts")
+})
+
+test_that("cufes_events schema requires pump_readings_used and short_event", {
+  ev <- tempfile(fileext = ".csv")
+  writeLines(
+    paste(
+      "event_id,time,lat,lon,stop_time,stop_lat,stop_lon,volume_m3,duration_min",
+      "CUFES:T:AK:x,2020-01-01T00:00:00Z,33,-119,2020-01-01T00:05:00Z,33.01,-118.99,10,5",
+      sep = "\n"
+    ),
+    ev
+  )
+  cfg <- list(
+    species = list(taxon = "sardine"),
+    data = list(events_path = ev, counts_path = ev, covariates_path = ev),
+    response = list(column = "egg_count", effort_column = "volume_m3")
+  )
+  expect_error(load_model_data(cfg = cfg), "missing required columns")
+})
+
+test_that("bot1 start_latitude columns are accepted on cufes_events", {
+  ev <- tempfile(fileext = ".csv")
+  ct <- tempfile(fileext = ".csv")
+  cov <- tempfile(fileext = ".csv")
+  writeLines(
+    paste(
+      "event_id,start_time,start_latitude,start_longitude,stop_time,stop_latitude,stop_longitude,volume_m3,pump_readings_used,duration_min,short_event",
+      "CUFES:T:AK:bot,2020-01-01T00:00:00Z,33,-119,2020-01-01T00:05:00Z,33.01,-118.99,10,2,5,FALSE",
+      sep = "\n"
+    ),
+    ev
+  )
+  writeLines("event_id,taxon,count\nCUFES:T:AK:bot,sardine,1", ct)
+  writeLines(
+    "event_id,T3m,S3m,MLD_m,sst_grad,front_distance_km,upwelling,log_depth_z\nCUFES:T:AK:bot,0,0,0,0,0,0,0",
+    cov
+  )
+  cfg <- list(
+    species = list(taxon = "sardine"),
+    data = list(events_path = ev, counts_path = ct, covariates_path = cov),
+    covariates = list(
+      dynamic = c("temp_3m", "sal_3m", "mld", "sst_grad", "dist_front", "upwelling"),
+      static = "log_depth"
+    ),
+    response = list(column = "egg_count", effort_column = "volume_m3")
+  )
+  dat <- load_model_data(cfg = cfg)
+  expect_equal(nrow(dat), 1L)
+  expect_equal(dat$pump_readings_used, 2L)
+})
+
 test_that("empty covariate drops row and counts per column", {
   ev <- tempfile(fileext = ".csv")
   ct <- tempfile(fileext = ".csv")
   cov <- tempfile(fileext = ".csv")
   writeLines(
     paste(
-      "event_id,time,lat,lon,stop_time,stop_lat,stop_lon,volume_m3,time_idx",
-      "CUFES:T:AK:ok,2020-01-01T00:00:00Z,33,-119,2020-01-01T00:05:00Z,33.01,-118.99,10,1",
-      "CUFES:T:AK:na,2020-01-01T00:00:00Z,33.1,-119.1,2020-01-01T00:05:00Z,33.11,-119.09,10,1",
+      "event_id,time,lat,lon,stop_time,stop_lat,stop_lon,volume_m3,pump_readings_used,duration_min,short_event,time_idx",
+      "CUFES:T:AK:ok,2020-01-01T00:00:00Z,33,-119,2020-01-01T00:05:00Z,33.01,-118.99,10,2,5,FALSE,1",
+      "CUFES:T:AK:na,2020-01-01T00:00:00Z,33.1,-119.1,2020-01-01T00:05:00Z,33.11,-119.09,10,2,5,FALSE,1",
       sep = "\n"
     ),
     ev

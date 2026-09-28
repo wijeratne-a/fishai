@@ -26,7 +26,8 @@ load_model_data <- function(path = NULL, cfg = NULL, min_duration_min = NULL) {
     dropped_missing_covariate = list(),
     excluded_no_count_row = 0L,
     dropped_short_duration = 0L,
-    taxon = NA_character_
+    taxon = NA_character_,
+    join_drop_event_ids = character()
   )
 
   min_duration_min <- min_duration_min %||% cfg$data$min_duration_min %||% cfg$sensitivity$min_duration_min
@@ -34,9 +35,16 @@ load_model_data <- function(path = NULL, cfg = NULL, min_duration_min = NULL) {
   effort_col <- cfg$response$effort_column %||% "volume_m3"
   resp_col <- cfg$response$column %||% "egg_count"
 
+  taxon_eligible_ids <- character()
+  taxon_positive_ids <- character()
+  events_for_dist <- NULL
+
   if (!is.null(cfg$data$events_path) && !is.null(cfg$data$counts_path)) {
     events <- .read_model_table(cfg$data$events_path)
+    events <- .normalize_cufes_events_columns(events)
+    .validate_cufes_events_schema(events)
     counts <- .read_model_table(cfg$data$counts_path)
+    .validate_cufes_counts(counts)
     taxon <- cfg$species$taxon
     if (is.null(taxon) || !nzchar(taxon)) {
       stop("species.taxon is required to select rows from cufes_counts", call. = FALSE)
@@ -44,15 +52,15 @@ load_model_data <- function(path = NULL, cfg = NULL, min_duration_min = NULL) {
     if (!"event_id" %in% names(events)) {
       stop("cufes_events missing event_id column", call. = FALSE)
     }
-    if (!all(c("event_id", "taxon", "count") %in% names(counts))) {
-      stop("cufes_counts must include event_id, taxon, count", call. = FALSE)
-    }
     .assert_unique_keys(events$event_id, "event_id in cufes_events")
     counts_taxon <- counts[counts$taxon == taxon, , drop = FALSE]
     .assert_unique_keys(counts_taxon$event_id, paste0("event_id in cufes_counts (taxon=", taxon, ")"))
     qc$taxon <- taxon
+    events_for_dist <- events
     ev_ids <- unique(as.character(events$event_id))
     taxon_count_ids <- unique(as.character(counts_taxon$event_id))
+    taxon_eligible_ids <- taxon_count_ids
+    taxon_positive_ids <- as.character(counts_taxon$event_id[as.numeric(counts_taxon$count) > 0])
     qc$excluded_no_count_row <- as.integer(length(setdiff(ev_ids, taxon_count_ids)))
     dat <- merge(
       events,
@@ -82,6 +90,10 @@ load_model_data <- function(path = NULL, cfg = NULL, min_duration_min = NULL) {
     .assert_unique_keys(cov$event_id, "event_id in covariates")
     cov <- cov[cov$event_id %in% dat$event_id, , drop = FALSE]
     dat <- .join_covariates_strict(dat, cov)
+    drops <- .read_covariate_drop_table(cfg$data$covariate_drops_path)
+    if (!is.null(drops)) {
+      qc$join_drop_event_ids <- .join_drop_event_ids(drops)
+    }
   } else {
     table_path <- path %||% cfg$data$table_path
     if (is.null(table_path) || !nzchar(table_path)) {
@@ -138,8 +150,168 @@ load_model_data <- function(path = NULL, cfg = NULL, min_duration_min = NULL) {
   dat$y <- dat[[resp_col]]
   dat$log_effort <- log(dat[[effort_col]])
   attr(dat, "fishai_data_qc") <- qc
+  if (length(taxon_eligible_ids)) {
+    attr(dat, "fishai_taxon_eligible_event_ids") <- taxon_eligible_ids
+    attr(dat, "fishai_taxon_positive_event_ids") <- taxon_positive_ids
+    if (!is.null(events_for_dist) && "dist_shore_km" %in% names(events_for_dist)) {
+      attr(dat, "fishai_dist_shore_km_by_event") <- stats::setNames(
+        as.numeric(events_for_dist$dist_shore_km),
+        as.character(events_for_dist$event_id)
+      )
+    }
+  }
   dat
 }
+
+.cufes_events_required_columns <- function() {
+  c(
+    "event_id",
+    "time",
+    "lat",
+    "lon",
+    "stop_time",
+    "stop_lat",
+    "stop_lon",
+    "volume_m3",
+    "pump_readings_used",
+    "duration_min",
+    "short_event"
+  )
+}
+
+.normalize_cufes_events_columns <- function(events) {
+  out <- events
+  if ("start_time" %in% names(out) && !"time" %in% names(out)) {
+    out$time <- out$start_time
+  }
+  if ("start_latitude" %in% names(out) && !"lat" %in% names(out)) {
+    out$lat <- out$start_latitude
+  }
+  if ("start_longitude" %in% names(out) && !"lon" %in% names(out)) {
+    out$lon <- out$start_longitude
+  }
+  if ("stop_latitude" %in% names(out) && !"stop_lat" %in% names(out)) {
+    out$stop_lat <- out$stop_latitude
+  }
+  if ("stop_longitude" %in% names(out) && !"stop_lon" %in% names(out)) {
+    out$stop_lon <- out$stop_longitude
+  }
+  out
+}
+
+.validate_cufes_events_schema <- function(events) {
+  req <- .cufes_events_required_columns()
+  missing <- setdiff(req, names(events))
+  if (length(missing)) {
+    stop(
+      "cufes_events missing required columns: ",
+      paste(missing, collapse = ", "),
+      call. = FALSE
+    )
+  }
+  pumps <- as.integer(events$pump_readings_used)
+  if (any(!pumps %in% c(1L, 2L))) {
+    stop("pump_readings_used must be 1 or 2 on every cufes_events row", call. = FALSE)
+  }
+  invisible(TRUE)
+}
+
+.validate_cufes_counts <- function(counts) {
+  if (!all(c("event_id", "taxon", "count") %in% names(counts))) {
+    stop("cufes_counts must include event_id, taxon, count", call. = FALSE)
+  }
+  if (any(is.na(counts$count))) {
+    stop(
+      "cufes_counts must not contain NA counts; ERDDAP NaN means taxon not sampled (omit row)",
+      call. = FALSE
+    )
+  }
+  invisible(TRUE)
+}
+
+.read_covariate_drop_table <- function(path) {
+  if (is.null(path) || !nzchar(path)) {
+    return(NULL)
+  }
+  root <- Sys.getenv("FISHAI_ROOT", unset = normalizePath(getwd()))
+  if (!grepl("^/", path)) {
+    path <- file.path(root, path)
+  }
+  if (!file.exists(path)) {
+    stop("covariate_drops_path not found: ", path, call. = FALSE)
+  }
+  drops <- .read_model_table(path)
+  need <- c("event_id", "reason", "covariate", "latitude", "longitude")
+  if (!all(need %in% names(drops))) {
+    stop(
+      "covariate drop table must include: ",
+      paste(need, collapse = ", "),
+      call. = FALSE
+    )
+  }
+  drops
+}
+
+.join_drop_event_ids <- function(drops) {
+  unique(as.character(drops$event_id))
+}
+
+#' Summarize covariate-join drops for reference-volume metadata (PR #2 drop table).
+#' @export
+summarize_covariate_join_drops <- function(
+  taxon_eligible_ids,
+  taxon_positive_ids,
+  join_drop_ids,
+  dist_by_event_id = NULL,
+  nearshore_km = 20
+) {
+  if (is.null(join_drop_ids) || !length(join_drop_ids)) {
+    return(NULL)
+  }
+  drop_ids <- unique(as.character(join_drop_ids))
+  eligible <- unique(as.character(taxon_eligible_ids))
+  if (!length(eligible)) {
+    return(NULL)
+  }
+  pos_ids <- unique(as.character(taxon_positive_ids))
+  if (!length(pos_ids)) {
+    pos_ids <- eligible
+  }
+  dist_map <- dist_by_event_id
+  stratum_ids <- function(ids) {
+    if (is.null(dist_map) || !length(dist_map)) {
+      return(list(nearshore = character(), offshore = character()))
+    }
+    d <- dist_map[ids]
+    list(
+      nearshore = ids[!is.na(d) & d <= nearshore_km],
+      offshore = ids[!is.na(d) & d > nearshore_km]
+    )
+  }
+  drop_in_eligible <- intersect(eligible, drop_ids)
+  .share <- function(num, den) {
+    if (!den) {
+      return(NA_real_)
+    }
+    num / den
+  }
+  out <- list(
+    n_eligible = length(eligible),
+    n_join_dropped = length(drop_in_eligible),
+    share_all_events = .share(length(drop_in_eligible), length(eligible)),
+    share_positive_events = .share(length(intersect(drop_in_eligible, pos_ids)), length(pos_ids)),
+    nearshore_max_km = nearshore_km
+  )
+  for (label in c("nearshore", "offshore")) {
+    ids <- stratum_ids(eligible)[[label]]
+    ddrop <- intersect(ids, drop_ids)
+    dpos <- intersect(ids, pos_ids)
+    out[[paste0("share_all_events_", label)]] <- .share(length(ddrop), length(ids))
+    out[[paste0("share_positive_events_", label)]] <- .share(length(intersect(ddrop, dpos)), length(dpos))
+  }
+  out
+}
+
 
 #' Read data-prep QC summary from [load_model_data()] result.
 #' @export

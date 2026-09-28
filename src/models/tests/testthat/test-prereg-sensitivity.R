@@ -23,7 +23,7 @@ test_that("missing count row species framing excludes taxon without zero imputat
   eid <- "CUFES:T:AK:mixed"
   writeLines(
     paste(
-      "event_id,time,lat,lon,stop_time,stop_lat,stop_lon,volume_m3,time_idx,duration_min",
+      "event_id,time,lat,lon,stop_time,stop_lat,stop_lon,volume_m3,pump_readings_used,duration_min,short_event,time_idx,duration_min",
       paste0(eid, ",2020-01-01T00:00:00Z,33,-119,2020-01-01T00:12:00Z,33.01,-118.99,100,1,12"),
       sep = "\n"
     ),

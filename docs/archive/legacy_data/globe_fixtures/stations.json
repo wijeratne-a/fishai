@@ -13,13 +13,7 @@
         "units": "°C",
         "note": "Fictional in-water sensor. Not an animal. Not a farm."
       },
-      "geometry": {
-        "type": "Point",
-        "coordinates": [
-          -124.03546987259091,
-          46.696
-        ]
-      }
+      "geometry": null
     },
     {
       "type": "Feature",
@@ -32,13 +26,7 @@
         "units": "°C",
         "note": "Fictional in-water sensor. Not an animal. Not a farm."
       },
-      "geometry": {
-        "type": "Point",
-        "coordinates": [
-          -123.97,
-          46.696
-        ]
-      }
+      "geometry": null
     },
     {
       "type": "Feature",
@@ -51,13 +39,7 @@
         "units": "°C",
         "note": "Fictional in-water sensor. Not an animal. Not a farm."
       },
-      "geometry": {
-        "type": "Point",
-        "coordinates": [
-          -123.87179519111363,
-          46.579
-        ]
-      }
+      "geometry": null
     }
   ]
 }

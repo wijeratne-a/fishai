@@ -12,6 +12,17 @@ compute_reference_volume_metadata <- function(training_dat, cfg) {
   }
   qs <- stats::quantile(vol, probs = c(0.1, 0.5, 0.9), na.rm = TRUE, names = FALSE)
   n_ev <- length(vol)
+  join_report <- NULL
+  qc <- attr(training_dat, "fishai_data_qc")
+  if (!is.null(qc) && length(qc$join_drop_event_ids)) {
+    join_report <- summarize_covariate_join_drops(
+      taxon_eligible_ids = attr(training_dat, "fishai_taxon_eligible_event_ids"),
+      taxon_positive_ids = attr(training_dat, "fishai_taxon_positive_event_ids"),
+      join_drop_ids = qc$join_drop_event_ids,
+      dist_by_event_id = attr(training_dat, "fishai_dist_shore_km_by_event"),
+      nearshore_km = cfg$data$nearshore_max_km %||% 20
+    )
+  }
   list(
     reference_volume_m3 = unname(stats::median(vol, na.rm = TRUE)),
     source = list(
@@ -22,7 +33,8 @@ compute_reference_volume_metadata <- function(training_dat, cfg) {
       volume_m3_quantiles = stats::setNames(
         as.list(as.numeric(qs)),
         c("p10", "p50", "p90")
-      )
+      ),
+      covariate_join_drops = join_report
     )
   )
 }

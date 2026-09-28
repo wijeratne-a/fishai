@@ -1,9 +1,11 @@
 #!/usr/bin/env python3
-"""Scan all git-tracked text files for credential-like strings and lat/lon CSV headers.
+"""Scan all git-tracked text files for credential-like strings and coordinate exposure.
 
 Uses ``git ls-files`` so ``docs/archive/`` and legacy data are included. Skips only
 gitignored runtime trees: ``data/raw``, ``data/interim``, ``data/restricted``,
 ``data/quarantine``, ``data/processed``. Does not print coordinate values.
+
+Coordinate rules live in ``security.coordinate_exposure`` (shared with other CI entrypoints).
 
 Exit 1 on ANY hit in any tracked file.
 """
@@ -15,6 +17,15 @@ import re
 import subprocess
 import sys
 from pathlib import Path
+
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+
+from coordinate_exposure import (
+    csv_header_fields,
+    header_has_coordinates,
+    scan_json_content,
+    scan_parquet_path,
+)
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
 
@@ -34,6 +45,7 @@ TEXT_SUFFIXES = {
     ".csv",
     ".tsv",
     ".json",
+    ".geojson",
     ".yaml",
     ".yml",
     ".env",
@@ -64,20 +76,6 @@ CREDENTIAL_PATTERNS = [
     ("password_assignment", re.compile(r"(?i)\bpassword\s*[=:]\s*['\"][^'\"]{6,}['\"]")),
 ]
 
-COORD_HEADER_NAMES = {
-    "latitude",
-    "longitude",
-    "lat",
-    "lon",
-    "lng",
-    "decimal_latitude",
-    "decimal_longitude",
-    "decimallatitude",
-    "decimallongitude",
-    "lat_dd",
-    "lon_dd",
-}
-
 
 def git_ls_files() -> list[str]:
     out = subprocess.check_output(["git", "ls-files"], cwd=REPO_ROOT, text=True)
@@ -98,18 +96,6 @@ def read_text_limited(path: Path, max_bytes: int = 2_000_000) -> str | None:
     return data.decode("utf-8", errors="replace")
 
 
-def csv_header_fields(first_line: str) -> list[str]:
-    return [h.strip().strip('"').strip("'").lower() for h in first_line.strip().split(",")]
-
-
-def header_has_coordinates(fields: list[str]) -> bool:
-    for field in fields:
-        normalized = field.replace(" ", "_")
-        if normalized in COORD_HEADER_NAMES:
-            return True
-    return False
-
-
 def scan_file(rel: str) -> list[str]:
     """Return hit kind strings for a tracked relative path."""
     if should_skip(rel):
@@ -117,7 +103,11 @@ def scan_file(rel: str) -> list[str]:
     path = REPO_ROOT / rel
     if not path.is_file():
         return []
+
     suffix = path.suffix.lower()
+    if suffix == ".parquet":
+        return scan_parquet_path(path)
+
     if suffix not in TEXT_SUFFIXES and path.name not in {".env", "Makefile"}:
         return []
 
@@ -130,11 +120,14 @@ def scan_file(rel: str) -> list[str]:
         if pattern.search(text):
             hits.append(f"credential:{kind}")
 
-    if suffix in {".csv", ".tsv"}:
+    if suffix in {".csv", ".tsv"} and not rel.startswith("tests/fixtures/"):
         first = text.splitlines()[0] if text else ""
         delim_fields = csv_header_fields(first.replace("\t", ","))
         if header_has_coordinates(delim_fields):
             hits.append("csv_header:latitude_or_longitude")
+
+    if suffix in {".json", ".geojson"} or rel.endswith(".schema.json"):
+        hits.extend(scan_json_content(text, rel=rel))
 
     return hits
 
