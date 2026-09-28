@@ -62,6 +62,7 @@ from fishai.ingestion.physics.glorys_cufes_subset import (
     product_date_coverage,
     subset_nc_path,
 )
+from fishai.ingestion.physics.glorys_catalog import guard_glorys_version_before_fetch
 from fishai.ingestion.physics.glorys_training_build import (
     GlorysTrainingBuildError,
     REASON_WCOFS_BATHYMETRY_ARTIFACT_MISSING,
@@ -545,6 +546,7 @@ def _subset_batch_live(
     output_dir.mkdir(parents=True, exist_ok=True)
     out_file = subset_nc_path(output_dir, batch)
     glorys_dataset_id_for_date(batch.date_start, batch.dataset_id)
+    guard_glorys_version_before_fetch(batch.date_start, log_path=log_path)
     la0, la1, lo0, lo1 = batch.bbox
     copernicusmarine.subset(
         dataset_id=batch.dataset_id,
