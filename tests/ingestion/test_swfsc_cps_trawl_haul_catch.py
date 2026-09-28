@@ -16,8 +16,12 @@ from fishai.ingestion.biology.cps_trawl.catch import (
 )
 from fishai.ingestion.biology.cps_trawl.constants import (
     ANIMALIA_ONLY_ZERO_FRAME_REASON,
+    HAUL_META_MISSING_REASON,
+    UNPARSEABLE_CATCH_ROW_REASON,
+    UNRESOLVED_HIGHER_TAXON_REASON,
     WEIGHT_FLAG_PARTIAL,
 )
+from fishai.ingestion.biology.cps_trawl.taxonomy import SUBSPECIES_TSN_TO_SPECIES_TSN
 from fishai.ingestion.biology.cps_trawl.fetch import read_cps_trawl_csv
 from fishai.ingestion.biology.cps_trawl.matrix import ZeroFrameUnverifiedError, expand_haul_species_matrix
 from fishai.ingestion.biology.cps_trawl.transform import (
@@ -33,6 +37,41 @@ from fishai.ingestion.biology.cps_trawl.zero_frame import (
 
 FIXTURES = Path(__file__).resolve().parents[1] / "fixtures"
 EVIDENCE_FIXTURE = FIXTURES / "cps_trawl_zero_frame_evidence_test.yaml"
+
+# ITIS species TSNs used in matrix expansion tests (no network).
+TSN_SARDINOPS_SAGAX = 161997
+TSN_ENGRAULIS_MORDAX = 161728
+TSN_SARDINOPS_CAERULEA = next(
+    k for k, v in SUBSPECIES_TSN_TO_SPECIES_TSN.items() if v == TSN_SARDINOPS_SAGAX
+)
+
+SPECIES_TSN = {
+    "Sardinops sagax": TSN_SARDINOPS_SAGAX,
+    "Engraulis mordax": TSN_ENGRAULIS_MORDAX,
+}
+
+
+def _evidence_yaml_tmp(tmpdir: Path, *, hauls: list[int] = [1]) -> Path:
+    path = tmpdir / "evidence.yaml"
+    path.write_text(
+        yaml.dump(
+            {
+                "version": 1,
+                "cruise_frames": [
+                    {
+                        "cruise": "209901",
+                        "ship": "SY",
+                        "source_report_citation": "Temp-dir e2e fixture.",
+                        "report_haul_log": hauls,
+                        "aborted_tows": [],
+                        "expected_hauls": hauls,
+                    }
+                ],
+            }
+        ),
+        encoding="utf-8",
+    )
+    return path
 
 
 class CpsTrawlHaulIdTests(unittest.TestCase):
@@ -138,6 +177,7 @@ class CpsTrawlZeroFrameGateTests(unittest.TestCase):
         return {
             "haul_id": "CPSTrawl:209901:SY:1",
             "species": "Sardinops sagax",
+            "itis_tsn": TSN_SARDINOPS_SAGAX,
             "subsample_count": 1,
             "count_raised_est": None,
             "weight_kg": 1.0,
@@ -150,6 +190,8 @@ class CpsTrawlZeroFrameGateTests(unittest.TestCase):
                 [self._catch_row()],
                 ["CPSTrawl:209901:SY:1"],
                 ["Sardinops sagax", "Engraulis mordax"],
+                species_itis_tsn=SPECIES_TSN,
+                haul_meta=[{"haul_id": "CPSTrawl:209901:SY:1", "animalia_only_haul": False}],
                 evidence_path=self.empty_evidence,
                 on_unverified="raise",
             )
@@ -160,6 +202,7 @@ class CpsTrawlZeroFrameGateTests(unittest.TestCase):
                 [],
                 ["CPSTrawl:209901:SY:99"],
                 ["Sardinops sagax"],
+                species_itis_tsn=SPECIES_TSN,
                 evidence_path=EVIDENCE_FIXTURE,
                 haul_meta=[{"haul_id": "CPSTrawl:209901:SY:99", "animalia_only_haul": False}],
                 on_unverified="raise",
@@ -171,6 +214,7 @@ class CpsTrawlZeroFrameGateTests(unittest.TestCase):
             [self._catch_row()],
             ["CPSTrawl:209901:SY:1"],
             ["Sardinops sagax", "Engraulis mordax"],
+            species_itis_tsn=SPECIES_TSN,
             evidence_path=EVIDENCE_FIXTURE,
             haul_meta=[{"haul_id": "CPSTrawl:209901:SY:1", "animalia_only_haul": False}],
         )
@@ -180,9 +224,18 @@ class CpsTrawlZeroFrameGateTests(unittest.TestCase):
 
     def test_animalia_only_haul_never_gets_zeros(self) -> None:
         matrix = expand_haul_species_matrix(
-            [{"haul_id": "CPSTrawl:209901:SY:1", "species": "Animalia", "subsample_count": None, "presence_only": False}],
+            [
+                {
+                    "haul_id": "CPSTrawl:209901:SY:1",
+                    "species": "Animalia",
+                    "itis_tsn": None,
+                    "subsample_count": None,
+                    "presence_only": False,
+                }
+            ],
             ["CPSTrawl:209901:SY:1"],
             ["Sardinops sagax"],
+            species_itis_tsn=SPECIES_TSN,
             evidence_path=EVIDENCE_FIXTURE,
             haul_meta=[{"haul_id": "CPSTrawl:209901:SY:1", "animalia_only_haul": True}],
             on_unverified="na",
@@ -242,6 +295,170 @@ class CpsTrawlMergeSpeciesTests(unittest.TestCase):
         self.assertEqual(merged.subsample_count, 47)
         self.assertIsNone(merged.weight_kg)
         self.assertEqual(merged.weight_flag, WEIGHT_FLAG_PARTIAL)
+
+
+class CpsTrawlFalseZeroGapTests(unittest.TestCase):
+    """Dedicated tests for haul_meta, TSN matching, and unparseable catch rows."""
+
+    def test_haul_meta_missing_blocks_zero_generation(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            evidence = _evidence_yaml_tmp(Path(tmp))
+            matrix = expand_haul_species_matrix(
+                [],
+                ["CPSTrawl:209901:SY:1"],
+                ["Sardinops sagax"],
+                species_itis_tsn=SPECIES_TSN,
+                evidence_path=evidence,
+                haul_meta=None,
+                on_unverified="na",
+            )
+        self.assertEqual(matrix[0]["fill_reason"], HAUL_META_MISSING_REASON)
+
+    def test_haul_meta_missing_entry_blocks_animalia_only_haul(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            evidence = _evidence_yaml_tmp(Path(tmp))
+            matrix = expand_haul_species_matrix(
+                [
+                    {
+                        "haul_id": "CPSTrawl:209901:SY:1",
+                        "species": "Animalia",
+                        "itis_tsn": None,
+                        "subsample_count": None,
+                        "presence_only": False,
+                    }
+                ],
+                ["CPSTrawl:209901:SY:1"],
+                ["Sardinops sagax"],
+                species_itis_tsn=SPECIES_TSN,
+                evidence_path=evidence,
+                haul_meta=[],
+                on_unverified="na",
+            )
+        self.assertEqual(matrix[0]["fill_reason"], HAUL_META_MISSING_REASON)
+
+    def test_subspecies_tsn_suppresses_implied_zero_for_species(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            evidence = _evidence_yaml_tmp(Path(tmp))
+            matrix = expand_haul_species_matrix(
+                [
+                    {
+                        "haul_id": "CPSTrawl:209901:SY:1",
+                        "species": "Sardinops sagax caerulea",
+                        "itis_tsn": TSN_SARDINOPS_CAERULEA,
+                        "subsample_count": 3,
+                        "count_raised_est": 3,
+                        "weight_kg": 1.0,
+                        "presence_only": False,
+                    }
+                ],
+                ["CPSTrawl:209901:SY:1"],
+                ["Sardinops sagax", "Engraulis mordax"],
+                species_itis_tsn=SPECIES_TSN,
+                evidence_path=evidence,
+                haul_meta=[{"haul_id": "CPSTrawl:209901:SY:1", "animalia_only_haul": False}],
+            )
+        sard = next(m for m in matrix if m["species"] == "Sardinops sagax")
+        self.assertFalse(sard["is_implied_zero"])
+        self.assertEqual(sard["subsample_count"], 3)
+        anch = next(m for m in matrix if m["species"] == "Engraulis mordax")
+        self.assertTrue(anch["is_implied_zero"])
+
+    def test_unresolved_higher_taxon_blocks_target_zero(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            evidence = _evidence_yaml_tmp(Path(tmp))
+            matrix = expand_haul_species_matrix(
+                [
+                    {
+                        "haul_id": "CPSTrawl:209901:SY:1",
+                        "species": "Sardinops sp.",
+                        "itis_tsn": 999001,
+                        "subsample_count": 1,
+                        "weight_kg": None,
+                        "presence_only": False,
+                    }
+                ],
+                ["CPSTrawl:209901:SY:1"],
+                ["Sardinops sagax", "Engraulis mordax"],
+                species_itis_tsn=SPECIES_TSN,
+                evidence_path=evidence,
+                haul_meta=[{"haul_id": "CPSTrawl:209901:SY:1", "animalia_only_haul": False}],
+                on_unverified="na",
+            )
+        sard = next(m for m in matrix if m["species"] == "Sardinops sagax")
+        self.assertEqual(sard["fill_reason"], UNRESOLVED_HIGHER_TAXON_REASON)
+        anch = next(m for m in matrix if m["species"] == "Engraulis mordax")
+        self.assertTrue(anch["is_implied_zero"])
+
+    def test_transform_counts_unparseable_rows(self) -> None:
+        rows = [
+            {
+                "cruise": "209901",
+                "ship": "SY",
+                "haul": "3",
+                "latitude": "33.0",
+                "longitude": "-120.0",
+                "stop_latitude": "33.02",
+                "stop_longitude": "-119.98",
+                "time": "2099-06-01T12:00:00Z",
+                "haulback_time": "2099-06-01T12:30:00Z",
+                "scientific_name": "",
+                "subsample_count": "1",
+                "subsample_weight": "1.0",
+                "remaining_weight": "1.0",
+                "presence_only": "N",
+            },
+            {
+                "cruise": "209901",
+                "ship": "SY",
+                "haul": "3",
+                "latitude": "33.0",
+                "longitude": "-120.0",
+                "stop_latitude": "33.02",
+                "stop_longitude": "-119.98",
+                "time": "2099-06-01T12:00:00Z",
+                "haulback_time": "2099-06-01T12:30:00Z",
+                "scientific_name": "Engraulis mordax",
+                "itis_tsn": str(TSN_ENGRAULIS_MORDAX),
+                "subsample_count": "2",
+                "subsample_weight": "1.0",
+                "remaining_weight": "1.0",
+                "presence_only": "N",
+            },
+        ]
+        result = transform_rows(rows)
+        haul = result.hauls[0]
+        self.assertEqual(haul["unparseable_catch_rows"], 1)
+        self.assertEqual(result.qc_report["unparseable_catch_rows_dropped"], 1)
+
+    def test_unparseable_catch_row_blocks_haul_zeros_e2e(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            evidence = _evidence_yaml_tmp(Path(tmp), hauls=[3])
+            matrix = expand_haul_species_matrix(
+                [
+                    {
+                        "haul_id": "CPSTrawl:209901:SY:3",
+                        "species": "Engraulis mordax",
+                        "itis_tsn": TSN_ENGRAULIS_MORDAX,
+                        "subsample_count": 2,
+                        "weight_kg": 2.0,
+                        "presence_only": False,
+                    }
+                ],
+                ["CPSTrawl:209901:SY:3"],
+                ["Sardinops sagax", "Engraulis mordax"],
+                species_itis_tsn=SPECIES_TSN,
+                evidence_path=evidence,
+                haul_meta=[
+                    {
+                        "haul_id": "CPSTrawl:209901:SY:3",
+                        "animalia_only_haul": False,
+                        "unparseable_catch_rows": 1,
+                    }
+                ],
+                on_unverified="na",
+            )
+        sard = next(m for m in matrix if m["species"] == "Sardinops sagax")
+        self.assertEqual(sard["fill_reason"], UNPARSEABLE_CATCH_ROW_REASON)
 
 
 class CpsTrawlMissingWeightTests(unittest.TestCase):

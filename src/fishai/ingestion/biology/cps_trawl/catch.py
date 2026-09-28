@@ -93,6 +93,12 @@ class CatchValues:
     weight_null_reason: str | None
 
 
+def catch_row_unparseable(row: Mapping[str, Any]) -> bool:
+    """True when ``parse_catch_row`` would drop the row (missing scientific name)."""
+    species = str(row.get("scientific_name", "")).strip()
+    return not species
+
+
 def parse_catch_row(row: Mapping[str, Any]) -> CatchValues | None:
     """
     Parse one ERDDAP species row.
@@ -232,7 +238,7 @@ def catch_row_invalid(row: Mapping[str, Any]) -> bool:
     """True when presence_only=N but weights are non-numeric garbage."""
     species = str(row.get("scientific_name", "")).strip()
     if not species:
-        return True
+        return False
     if is_presence_only(row.get("presence_only")):
         return False
     for key in ("subsample_weight", "remaining_weight"):
