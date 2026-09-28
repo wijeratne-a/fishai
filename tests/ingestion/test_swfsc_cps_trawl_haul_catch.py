@@ -21,6 +21,9 @@ from fishai.ingestion.biology.cps_trawl.catch import (
 from fishai.ingestion.biology.cps_trawl.constants import (
     ANIMALIA_ONLY_ZERO_FRAME_REASON,
     HAUL_META_MISSING_REASON,
+    ITIS_TSN_ENGRAULIS_MORDAX,
+    ITIS_TSN_SARDINOPS_SAGAX,
+    PILOT_SPECIES_ITIS_TSN,
     UNPARSEABLE_CATCH_ROW_REASON,
     UNRESOLVED_HIGHER_TAXON_REASON,
     WEIGHT_FLAG_PARTIAL,
@@ -44,17 +47,13 @@ from fishai.ingestion.biology.cps_trawl.zero_frame import (
 FIXTURES = Path(__file__).resolve().parents[1] / "fixtures"
 EVIDENCE_FIXTURE = FIXTURES / "cps_trawl_zero_frame_evidence_test.yaml"
 
-# ITIS species TSNs used in matrix expansion tests (no network).
-TSN_SARDINOPS_SAGAX = 161997
-TSN_ENGRAULIS_MORDAX = 161728
+TSN_SARDINOPS_SAGAX = ITIS_TSN_SARDINOPS_SAGAX
+TSN_ENGRAULIS_MORDAX = ITIS_TSN_ENGRAULIS_MORDAX
 TSN_SARDINOPS_CAERULEA = next(
-    k for k, v in SUBSPECIES_TSN_TO_SPECIES_TSN.items() if v == TSN_SARDINOPS_SAGAX
+    k for k, v in SUBSPECIES_TSN_TO_SPECIES_TSN.items() if v == ITIS_TSN_SARDINOPS_SAGAX
 )
 
-SPECIES_TSN = {
-    "Sardinops sagax": TSN_SARDINOPS_SAGAX,
-    "Engraulis mordax": TSN_ENGRAULIS_MORDAX,
-}
+SPECIES_TSN = dict(PILOT_SPECIES_ITIS_TSN)
 
 
 def _evidence_yaml_tmp(tmpdir: Path, *, hauls: list[int] = [1]) -> Path:
@@ -342,7 +341,7 @@ def _collection_split_missing_weight_rows() -> list[dict[str, str]]:
         "time": "2099-06-01T12:00:00Z",
         "haulback_time": "2099-06-01T12:30:00Z",
         "scientific_name": "Sardinops sagax",
-        "itis_tsn": "161996",
+        "itis_tsn": str(ITIS_TSN_SARDINOPS_SAGAX),
         "subsample_weight": "NaN",
         "remaining_weight": "NaN",
         "presence_only": "N",
@@ -383,6 +382,58 @@ class CpsTrawlSyncMissingWeightTests(unittest.TestCase):
             self.assertEqual(sard["subsample_count"], 8)
             qc = json.loads(Path(result["qc_report_path"]).read_text(encoding="utf-8"))
             self.assertEqual(qc["catch_rows_kept"], 1)
+
+
+class CpsTrawlPilotItisTsnTests(unittest.TestCase):
+    def test_pilot_species_itis_tsn_exact_values(self) -> None:
+        self.assertEqual(PILOT_SPECIES_ITIS_TSN["Sardinops sagax"], 161729)
+        self.assertEqual(PILOT_SPECIES_ITIS_TSN["Engraulis mordax"], 161828)
+        self.assertEqual(ITIS_TSN_SARDINOPS_SAGAX, 161729)
+        self.assertEqual(ITIS_TSN_ENGRAULIS_MORDAX, 161828)
+
+
+class CpsTrawlHigherTaxonGapTests(unittest.TestCase):
+    """auditbot1: order/family/unid/larvae patterns must block implied zeros."""
+
+    def _assert_blocks_sardine_zero(self, scientific_name: str, itis_tsn: int = 999001) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            evidence = _evidence_yaml_tmp(Path(tmp))
+            matrix = expand_haul_species_matrix(
+                [
+                    {
+                        "haul_id": "CPSTrawl:209901:SY:1",
+                        "species": scientific_name,
+                        "itis_tsn": itis_tsn,
+                        "subsample_count": 1,
+                        "weight_kg": None,
+                        "presence_only": False,
+                    }
+                ],
+                ["CPSTrawl:209901:SY:1"],
+                ["Sardinops sagax", "Engraulis mordax"],
+                species_itis_tsn=SPECIES_TSN,
+                evidence_path=evidence,
+                haul_meta=[{"haul_id": "CPSTrawl:209901:SY:1", "animalia_only_haul": False}],
+                on_unverified="na",
+            )
+        sard = next(m for m in matrix if m["species"] == "Sardinops sagax")
+        self.assertEqual(sard["fill_reason"], UNRESOLVED_HIGHER_TAXON_REASON)
+        self.assertFalse(sard["is_implied_zero"])
+
+    def test_order_clupeiformes_blocks_zero(self) -> None:
+        self._assert_blocks_sardine_zero("Clupeiformes")
+
+    def test_family_idae_suffix_case_insensitive_blocks_zero(self) -> None:
+        self._assert_blocks_sardine_zero("clupeidae")
+
+    def test_unid_token_blocks_zero(self) -> None:
+        self._assert_blocks_sardine_zero("Clupeid unid.")
+
+    def test_unidentified_in_name_blocks_zero(self) -> None:
+        self._assert_blocks_sardine_zero("unidentified clupeid")
+
+    def test_larvae_in_name_blocks_zero(self) -> None:
+        self._assert_blocks_sardine_zero("Sardinops sagax larvae")
 
 
 class CpsTrawlFalseZeroGapTests(unittest.TestCase):

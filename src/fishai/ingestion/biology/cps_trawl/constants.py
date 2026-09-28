@@ -41,10 +41,12 @@ UNPARSEABLE_CATCH_ROW_REASON: Final = "unparseable_catch_row"
 WEIGHT_FLAG_PARTIAL: Final = "weight_partial"
 
 # Pilot species for haul×species matrix expansion during sync (ITIS species TSNs).
+ITIS_TSN_SARDINOPS_SAGAX: Final = 161729
+ITIS_TSN_ENGRAULIS_MORDAX: Final = 161828
 PILOT_MATRIX_SPECIES: Final = ("Sardinops sagax", "Engraulis mordax")
 PILOT_SPECIES_ITIS_TSN: Final = {
-    "Sardinops sagax": 161997,
-    "Engraulis mordax": 161728,
+    "Sardinops sagax": ITIS_TSN_SARDINOPS_SAGAX,
+    "Engraulis mordax": ITIS_TSN_ENGRAULIS_MORDAX,
 }
 
 HAUL_SPECIES_MATRIX_FILENAME: Final = "cps_trawl_haul_species_matrix.parquet"
