@@ -25,7 +25,7 @@ sources:
       contractors, makes any warranty, express or implied, including warranties of
       merchantability and fitness for a particular purpose, or assumes any legal
       liability for the accuracy, completeness, or usefulness, of this information.
-    attribution: "NOAA SWFSC / CalCOFI; cite ERDDAP dataset erdCalCOFIcufes and CalCOFI program."
+    attribution: "NOAA SWFSC / CalCOFI, erdCalCOFIcufes; https://oceanview.pfeg.noaa.gov/erddap/tabledap/erdCalCOFIcufes.html"
     status: approved
     enabled: true
     notes: >-

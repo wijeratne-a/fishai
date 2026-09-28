@@ -39,6 +39,8 @@ def main_bio(argv: list[str] | None = None) -> int:
     if args.command == "sync" and args.source == "cufes":
         from fishai.ingestion.biology.cufes_pipeline import sync_cufes
 
+        from fishai.ingestion.biology.cufes_pipeline import format_qc_summary
+
         result = sync_cufes(
             args.start,
             args.end,
@@ -50,6 +52,8 @@ def main_bio(argv: list[str] | None = None) -> int:
             f"occurrence_rows={result['n_occurrence_rows']} "
             f"→ {result['events_path']}"
         )
+        print(format_qc_summary(result["qc_report"]))
+        print(f"qc report → {result['qc_report_path']}")
         return 0
 
     parser.print_help(file=sys.stderr)

@@ -20,7 +20,11 @@ class RequireApprovedTests(unittest.TestCase):
         entry = require_approved("calcofi_cufes")
         self.assertIn("NOAA ERDDAP", entry["license"])
         self.assertIn("license_text", entry)
-        self.assertIn("NOAA SWFSC", attribution_for("calcofi_cufes"))
+        self.assertEqual(
+            attribution_for("calcofi_cufes"),
+            "NOAA SWFSC / CalCOFI, erdCalCOFIcufes; "
+            "https://oceanview.pfeg.noaa.gov/erddap/tabledap/erdCalCOFIcufes.html",
+        )
 
     def test_glorys_blocked(self) -> None:
         with self.assertRaises(SourceNotApprovedError):

@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import json
 from datetime import date
 from pathlib import Path
 from typing import Any
@@ -18,6 +19,8 @@ try:
 except ImportError:  # pragma: no cover - exercised when pyarrow installed
     pa = None  # type: ignore[assignment]
     pq = None  # type: ignore[assignment]
+
+QC_REPORT_FILENAME = "cufes_qc_report.json"
 
 
 def pilot_bbox_from_manifest(manifest_path: Path | None = None) -> BBox:
@@ -51,6 +54,13 @@ def write_parquet_contracts(events: list[dict[str, Any]], counts: list[dict[str,
     return events_path, counts_path
 
 
+def write_qc_report(report: dict[str, Any], dest: Path) -> Path:
+    dest.mkdir(parents=True, exist_ok=True)
+    path = dest / QC_REPORT_FILENAME
+    path.write_text(json.dumps(report, indent=2, sort_keys=True) + "\n", encoding="utf-8")
+    return path
+
+
 def load_raw_rows_for_window(t0: date, t1: date, raw_dir: Path) -> list[dict[str, Any]]:
     rows: list[dict[str, Any]] = []
     for win_start, _ in iter_yearly_windows(t0, t1):
@@ -58,6 +68,19 @@ def load_raw_rows_for_window(t0: date, t1: date, raw_dir: Path) -> list[dict[str
         if path.is_file():
             rows.extend(read_cufes_csv(path))
     return rows
+
+
+def format_qc_summary(report: dict[str, Any]) -> str:
+    dropped = report.get("dropped_by_rule") or {}
+    parts = [
+        f"read={report.get('events_read', 0)}",
+        f"kept={report.get('events_kept', 0)}",
+        f"dropped_unique={report.get('dropped_unique_total', 0)}",
+    ]
+    for key, count in sorted(dropped.items()):
+        if count:
+            parts.append(f"{key}={count}")
+    return "qc " + " ".join(parts)
 
 
 def sync_cufes(
@@ -77,12 +100,18 @@ def sync_cufes(
     if fetch:
         fetched = fetch_cufes(start, end, box, dest_dir=raw, manifest_path=manifest_path)
     rows = load_raw_rows_for_window(start, end, raw)
-    events, counts = transform_rows(rows)
+    transformed = transform_rows(rows)
+    events = transformed.events
+    counts = transformed.counts
+    qc_report = transformed.qc_report
     out = processed_dir()
     events_path, counts_path = write_parquet_contracts(events, counts, out)
+    qc_path = write_qc_report(qc_report, out)
     result: dict[str, Any] = {
         "events_path": str(events_path),
         "counts_path": str(counts_path),
+        "qc_report_path": str(qc_path),
+        "qc_report": qc_report,
         "n_events": len(events),
         "n_occurrence_rows": len(counts),
         "fetched_files": [str(p) for p in fetched],

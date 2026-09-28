@@ -17,9 +17,7 @@ def write_dwc_triplet(
     occ_path = dest_dir / "occurrence.txt"
     emof_path = dest_dir / "measurementorfact.txt"
 
-    occ_by_sample: dict[str, list[dict[str, Any]]] = {}
-    for occ in occurrences:
-        occ_by_sample.setdefault(str(occ["sample_id"]), []).append(occ)
+    kept_event_ids = {str(ev["event_id"]) for ev in events}
 
     with event_path.open("w", newline="", encoding="utf-8") as handle:
         writer = csv.DictWriter(
@@ -40,9 +38,9 @@ def write_dwc_triplet(
             writer.writerow(
                 {
                     "eventID": ev["event_id"],
-                    "eventDate": f"{ev['start_time']}/{ev['stop_time']}",
-                    "decimalLatitude": ev["start_latitude"],
-                    "decimalLongitude": ev["start_longitude"],
+                    "eventDate": f"{ev['time']}/{ev['stop_time']}",
+                    "decimalLatitude": ev["lat"],
+                    "decimalLongitude": ev["lon"],
                     "footprintWKT": ev.get("track_wkt"),
                     "eventType": "cufes_sample",
                     "sampleSizeValue": ev.get("volume_m3"),
@@ -64,11 +62,14 @@ def write_dwc_triplet(
         )
         writer.writeheader()
         for occ in occurrences:
-            oid = f"{occ['sample_id']}:{occ['taxon']}"
+            eid = str(occ["event_id"])
+            if eid not in kept_event_ids:
+                continue
+            oid = f"{eid}:{occ['taxon']}"
             writer.writerow(
                 {
                     "occurrenceID": oid,
-                    "eventID": occ["sample_id"],
+                    "eventID": eid,
                     "organismQuantity": occ["count"],
                     "organismQuantityType": "individuals",
                     "occurrenceStatus": occ["occurrence_status"],
@@ -83,7 +84,10 @@ def write_dwc_triplet(
         )
         writer.writeheader()
         for occ in occurrences:
-            oid = f"{occ['sample_id']}:{occ['taxon']}"
+            eid = str(occ["event_id"])
+            if eid not in kept_event_ids:
+                continue
+            oid = f"{eid}:{occ['taxon']}"
             density = occ.get("density")
             if density is not None:
                 writer.writerow(

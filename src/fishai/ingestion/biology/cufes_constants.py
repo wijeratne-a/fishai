@@ -66,3 +66,14 @@ QC_REVERSED_TIME: Final = 1 << 1
 QC_PUMP_INVALID: Final = 1 << 2
 QC_COORD_INVALID: Final = 1 << 3
 QC_DURATION_OUT_OF_RANGE: Final = 1 << 4
+QC_INVALID_VOLUME: Final = 1 << 5
+
+# Human-readable keys for ``cufes_qc_report.json`` (one counter per bit).
+QC_RULE_LABELS: Final = (
+    ("missing_stop_time", QC_MISSING_STOP_TIME),
+    ("reversed_time", QC_REVERSED_TIME),
+    ("pump_invalid", QC_PUMP_INVALID),
+    ("coord_invalid", QC_COORD_INVALID),
+    ("duration_out_of_range", QC_DURATION_OUT_OF_RANGE),
+    ("invalid_volume", QC_INVALID_VOLUME),
+)
