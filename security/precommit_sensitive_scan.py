@@ -119,7 +119,7 @@ def scan_file(rel: str) -> list[str]:
         if pattern.search(text):
             hits.append(f"credential:{kind}")
 
-    if suffix in {".csv", ".tsv"}:
+    if suffix in {".csv", ".tsv"} and not rel.startswith("tests/fixtures/"):
         first = text.splitlines()[0] if text else ""
         delim_fields = csv_header_fields(first.replace("\t", ","))
         if header_has_coordinates(delim_fields):

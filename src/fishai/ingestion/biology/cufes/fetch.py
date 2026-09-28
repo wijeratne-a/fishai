@@ -13,6 +13,7 @@ from typing import Any, Sequence
 from urllib.parse import quote
 
 from fishai.ingestion.biology.cufes.constants import ERDDAP_FIELDS, ERDDAP_TABLEDAP_BASE, SOURCE_ID
+from fishai.ingestion.biology.cufes.erddap_rows import is_erddap_units_row
 from fishai.ingestion.sources import REPO_ROOT, require_approved
 
 DEFAULT_TIMEOUT_SEC = 120.0
@@ -146,7 +147,15 @@ def fetch_cufes(
     return written
 
 
-def read_cufes_csv(path: Path) -> list[dict[str, Any]]:
+def read_cufes_csv(path: Path) -> tuple[list[dict[str, Any]], int]:
+    """Return (data rows, units_rows_skipped)."""
     text = path.read_text(encoding="utf-8")
     reader = csv.DictReader(io.StringIO(text))
-    return [dict(row) for row in reader]
+    rows: list[dict[str, Any]] = []
+    skipped = 0
+    for data_row_index, row in enumerate(reader):
+        if is_erddap_units_row(row, data_row_index=data_row_index):
+            skipped += 1
+            continue
+        rows.append(dict(row))
+    return rows, skipped

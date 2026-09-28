@@ -61,13 +61,16 @@ def write_qc_report(report: dict[str, Any], dest: Path) -> Path:
     return path
 
 
-def load_raw_rows_for_window(t0: date, t1: date, raw_dir: Path) -> list[dict[str, Any]]:
+def load_raw_rows_for_window(t0: date, t1: date, raw_dir: Path) -> tuple[list[dict[str, Any]], int]:
     rows: list[dict[str, Any]] = []
+    units_skipped = 0
     for win_start, _ in iter_yearly_windows(t0, t1):
         path = raw_dir / f"erdCalCOFIcufes_{win_start.year}.csv"
         if path.is_file():
-            rows.extend(read_cufes_csv(path))
-    return rows
+            chunk, skipped = read_cufes_csv(path)
+            rows.extend(chunk)
+            units_skipped += skipped
+    return rows, units_skipped
 
 
 def format_qc_summary(report: dict[str, Any]) -> str:
@@ -99,8 +102,8 @@ def sync_cufes(
     fetched: list[Path] = []
     if fetch:
         fetched = fetch_cufes(start, end, box, dest_dir=raw, manifest_path=manifest_path)
-    rows = load_raw_rows_for_window(start, end, raw)
-    transformed = transform_rows(rows)
+    rows, units_skipped = load_raw_rows_for_window(start, end, raw)
+    transformed = transform_rows(rows, units_rows_skipped=units_skipped)
     events = transformed.events
     counts = transformed.counts
     qc_report = transformed.qc_report

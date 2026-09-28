@@ -14,15 +14,21 @@ from fishai.ingestion.biology.cufes.constants import (
     EGG_CATEGORIES,
     QC_COUNT_INVALID,
     QC_DURATION_OUT_OF_RANGE,
+    QC_DURATION_SHORT_MINUTE,
     QC_KEY_INVALID,
+    QC_NO_TAXA_SAMPLED,
 )
+from fishai.ingestion.biology.cufes.erddap_rows import is_erddap_units_row
 from fishai.ingestion.biology.cufes.transform import parse_egg_count
+from fishai.ingestion.biology.cufes.fetch import read_cufes_csv
 from fishai.ingestion.biology.cufes.transform import (
     make_event_id,
     qc_flags_for_row,
     transform_rows,
     volume_m3_for_row,
 )
+
+FIXTURES = Path(__file__).resolve().parents[1] / "fixtures"
 
 
 def _synthetic_row(
@@ -93,7 +99,32 @@ class CufesEffortTests(unittest.TestCase):
         self.assertEqual(parse_egg_count("3.0"), 3)
 
 
+class CufesUnitsRowTests(unittest.TestCase):
+    def test_units_row_is_first_data_line_only(self) -> None:
+        units_like = {"time": "UTC", "cruise": "", "ship_code": ""}
+        self.assertTrue(is_erddap_units_row(units_like, data_row_index=0))
+        self.assertFalse(is_erddap_units_row(units_like, data_row_index=1))
+
+    def test_read_cufes_csv_skips_units_row(self) -> None:
+        path = FIXTURES / "calcofi_cufes_with_units_row.csv"
+        rows, skipped = read_cufes_csv(path)
+        self.assertEqual(skipped, 1)
+        self.assertEqual(len(rows), 1)
+        result = transform_rows(rows, units_rows_skipped=skipped)
+        self.assertEqual(result.qc_report["units_rows_skipped"], 1)
+        self.assertEqual(result.qc_report["events_read"], 1)
+        self.assertEqual(len(result.events), 1)
+
+
 class CufesPumpQcTests(unittest.TestCase):
+    def test_both_pump_nan_counts_pump_missing_not_oob(self) -> None:
+        row = _synthetic_row(start_pump="NaN", stop_pump="NaN")
+        result = transform_rows([row])
+        self.assertEqual(result.events, [])
+        detail = result.qc_report["pump_qc_detail"]
+        self.assertEqual(detail["pump_missing"], 1)
+        self.assertEqual(detail["pump_out_of_bounds"], 0)
+
     def test_stop_pump_40_drops_under_pump_invalid(self) -> None:
         row = _synthetic_row(stop_pump="40.0")
         result = transform_rows([row])
@@ -123,7 +154,7 @@ class CufesPumpQcTests(unittest.TestCase):
 
 class CufesInvalidCountTests(unittest.TestCase):
     def test_invalid_sardine_eggs_drop_whole_event(self) -> None:
-        for sardine in ("", "abc", "-1", "2.5"):
+        for sardine in ("abc", "-1", "2.5"):
             with self.subTest(sardine=sardine):
                 row = _synthetic_row(sardine=sardine, anchovy="5")
                 result = transform_rows([row])
@@ -131,6 +162,30 @@ class CufesInvalidCountTests(unittest.TestCase):
                 self.assertEqual(result.counts, [])
                 self.assertTrue(qc_flags_for_row(row) & QC_COUNT_INVALID)
                 self.assertGreater(result.qc_report["dropped_by_rule"]["count_invalid"], 0)
+
+    def test_sardine_nan_omits_occurrence_not_whole_event(self) -> None:
+        row = _synthetic_row(sardine="NaN", anchovy="3")
+        result = transform_rows([row])
+        self.assertEqual(len(result.events), 1)
+        taxa = {c["taxon"] for c in result.counts}
+        self.assertNotIn("sardine", taxa)
+        self.assertIn("anchovy", taxa)
+
+    def test_hake_nan_omits_occurrence(self) -> None:
+        row = _synthetic_row()
+        row["hake_eggs"] = ""
+        result = transform_rows([row])
+        self.assertEqual(len(result.events), 1)
+        self.assertNotIn("hake", {c["taxon"] for c in result.counts})
+
+    def test_all_taxa_nan_drops_no_taxa_sampled(self) -> None:
+        row = _synthetic_row()
+        for col, _ in EGG_CATEGORIES:
+            row[col] = "NaN"
+        self.assertTrue(qc_flags_for_row(row) & QC_NO_TAXA_SAMPLED)
+        result = transform_rows([row])
+        self.assertEqual(result.events, [])
+        self.assertEqual(result.qc_report["dropped_by_rule"]["no_taxa_sampled"], 1)
 
 
 class CufesKeyTests(unittest.TestCase):
@@ -175,6 +230,25 @@ class CufesQcTests(unittest.TestCase):
         self.assertEqual(result.qc_report["dropped_by_rule"]["duration_out_of_range"], 1)
         self.assertEqual(result.qc_report["events_kept"], 0)
 
+    def test_duration_short_minute_precision_when_on_whole_minute(self) -> None:
+        row = _synthetic_row(
+            start_time="2099-06-01T12:00:00Z",
+            stop_time="2099-06-01T12:04:00Z",
+        )
+        self.assertTrue(qc_flags_for_row(row) & QC_DURATION_SHORT_MINUTE)
+        result = transform_rows([row])
+        self.assertEqual(result.qc_report["dropped_by_rule"]["duration_short_minute_precision"], 1)
+
+    def test_two_minute_event_kept_with_short_event_flag(self) -> None:
+        row = _synthetic_row(
+            start_time="2099-06-01T12:00:01Z",
+            stop_time="2099-06-01T12:02:01Z",
+        )
+        result = transform_rows([row])
+        self.assertEqual(len(result.events), 1)
+        self.assertTrue(result.events[0]["short_event"])
+        self.assertIsNotNone(result.events[0]["implied_speed_kn"])
+
 
 class CufesOccurrenceTests(unittest.TestCase):
     def test_six_categories_with_explicit_zeros(self) -> None:
@@ -212,6 +286,10 @@ class CufesEventsContractTests(unittest.TestCase):
                 "stop_lon",
                 "volume_m3",
                 "pump_readings_used",
+                "duration_min",
+                "short_event",
+                "implied_speed_kn",
+                "speed_review_flag",
             ):
                 self.assertIsNotNone(ev[key])
             self.assertIn(ev["pump_readings_used"], (1, 2))
@@ -258,7 +336,7 @@ class CufesSyncTests(unittest.TestCase):
                 mock.patch("fishai.ingestion.biology.cufes.pipeline.processed_dir", return_value=proc),
                 mock.patch("fishai.ingestion.biology.cufes.pipeline.load_raw_rows_for_window") as load_rows,
             ):
-                load_rows.return_value = [row]
+                load_rows.return_value = ([row], 0)
                 result = sync_cufes(date(2099, 1, 1), date(2099, 12, 31), fetch=False)
             self.assertEqual(result["n_events"], 1)
             self.assertTrue(Path(result["events_path"]).is_file())
