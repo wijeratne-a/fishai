@@ -15,7 +15,7 @@
 
 **Clip box (WGS84):** latitude 31°N–36°N, longitude 122°W–116°W (includes the Southern California Bight pilot and Channel Islands).
 
-**SHA-256 (`ne_10m_land_pilot_clip.json`):** `2f677a16aa6c8470846d813eda6d82f2656dea2d697b1511a4c878542d20996c`
+**SHA-256 (`ne_10m_land_pilot_clip.json`):** `38bdcb32aea96b40d5e94026d8a4f548b0df4de8bc92bfa6db1cb7ebd904faae` (polygon vertices decimated for CI scan size limit; geodesic distance uses densified edges at runtime).
 
 ## Distance method
 
