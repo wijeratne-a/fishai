@@ -96,7 +96,7 @@ def load_pull_index(log_path: Path) -> dict[str, dict[str, Any]]:
     out: dict[str, dict[str, Any]] = {}
     for line in log_path.read_text(encoding="utf-8").splitlines():
         if not line.strip():
-            continue:
+            continue
         rec = json.loads(line)
         key = rec.get("s3_key")
         if key and rec.get("status") == "ok":
