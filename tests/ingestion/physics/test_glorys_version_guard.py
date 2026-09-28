@@ -11,12 +11,16 @@ import pytest
 import xarray as xr
 
 from fishai.ingestion.copernicus_compliance import append_pull_log, build_pull_record
+from unittest.mock import patch
+
 from fishai.ingestion.physics.glorys_catalog import (
     GlorysCatalogEntry,
     GlorysCatalogError,
+    GlorysDatasetResolution,
     clear_glorys_catalog_cache,
     pinned_glorys_catalog_version,
     set_catalog_fetch_hook,
+    write_glorys_pull_log_record,
 )
 from fishai.ingestion.physics.sources.glorys import PRODUCT_ID_MY, fetch_day
 from fishai.ingestion.physics.wcofs_glorys_overlap import load_overlap_config, run_overlap_pairing
@@ -31,6 +35,27 @@ def _my_entry(version: str) -> list[GlorysCatalogEntry]:
             coverage_end=dt.date(2026, 6, 23),
         )
     ]
+
+
+def test_write_pull_log_record_does_not_invoke_version_guard(tmp_path: Path) -> None:
+    resolution = GlorysDatasetResolution(
+        dataset_id=PRODUCT_ID_MY,
+        dataset_version="202311",
+        catalog_coverage={"start": "1993-01-01", "end": "2026-06-23"},
+    )
+    log_path = tmp_path / "log.jsonl"
+    bbox = (32.0, 35.0, -121.0, -117.0)
+    with patch(
+        "fishai.ingestion.physics.glorys_catalog.ensure_glorys_dataset_version_allowed"
+    ) as guard:
+        write_glorys_pull_log_record(
+            dt.date(2020, 6, 1),
+            resolution,
+            variables=("thetao",),
+            bbox=bbox,
+            log_path=log_path,
+        )
+        guard.assert_not_called()
 
 
 def test_fetch_day_blocks_catalog_version_change(tmp_path: Path) -> None:

@@ -364,6 +364,23 @@ def ensure_glorys_dataset_version_allowed(
     )
 
 
+def guard_glorys_version_before_fetch(
+    day: dt.date,
+    *,
+    log_path: Path | None,
+) -> GlorysDatasetResolution:
+    """
+    Resolve catalogue metadata and enforce version policy **before** any data fetch.
+
+    Call this from ``fetch_day`` and overlap pairing immediately prior to
+    ``fetch_fn`` / ``glorys_fetch``. ``write_glorys_pull_log_record`` does not
+    re-run this guard.
+    """
+    resolution = resolve_glorys_dataset_for_date(day)
+    ensure_glorys_dataset_version_allowed(resolution, log_path=log_path)
+    return resolution
+
+
 def write_glorys_pull_log_record(
     day: dt.date,
     resolution: GlorysDatasetResolution,

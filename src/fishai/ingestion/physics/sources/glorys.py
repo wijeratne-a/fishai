@@ -10,7 +10,7 @@ import numpy as np
 
 from fishai.ingestion.copernicus_compliance import glorys_attribution_bundle
 from fishai.ingestion.physics.glorys_catalog import (
-    ensure_glorys_dataset_version_allowed,
+    guard_glorys_version_before_fetch,
     resolve_glorys_dataset_for_date,
     write_glorys_pull_log_record,
 )
@@ -131,8 +131,7 @@ def fetch_day(
 
     glorys_dataset_id_for_date(date, dataset_id, config=config)
     pull_log = log_path or _pull_log_path(entry)
-    resolution = resolve_glorys_dataset_for_date(date)
-    ensure_glorys_dataset_version_allowed(resolution, log_path=pull_log)
+    resolution = guard_glorys_version_before_fetch(date, log_path=pull_log)
 
     if fetch_fn is None:
         raise RuntimeError(
