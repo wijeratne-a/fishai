@@ -34,7 +34,7 @@ Long-format **`event_id` × `taxon` × `count`**. If a taxon was **not** counted
 At freeze time, **`reference_volume_m3`** is the **median** `volume_m3` over the species **final fitting frame** (after count-row join and all QC drops). Metadata records **`n_events_fitting_frame`**.
 
 - `reference_volume_m3`
-- `reference_volume_source` (`n_events`, `training_end`, volume quantiles)
+- `reference_volume_source` (`n_events_fitting_frame`, `training_end`, volume quantiles)
 
 No hard-coded round reference volumes.
 
