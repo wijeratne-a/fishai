@@ -41,6 +41,7 @@ sources:
 
   sccoos_hfr:
     module: fishai.ingestion.sensors.sccoos_hfr
+    record_type: instrument
     erddap_dataset: ucsdHfrW6
     provider: NOAA IOOS Surface Currents Program (CoastWatch ERDDAP)
     license: ERDDAP dataset license (free use/redistribution; not for legal use)
@@ -51,6 +52,7 @@ sources:
 
   ndbc_met:
     module: fishai.ingestion.sensors.ndbc_met
+    record_type: instrument
     erddap_dataset: cwwcNDBCMet
     provider: NOAA NDBC / NOAA NMFS SWFSC ERD (CoastWatch ERDDAP)
     license: ERDDAP dataset license (free use/redistribution; not for legal use)
@@ -61,6 +63,7 @@ sources:
 
   ioos_glider_dac:
     module: fishai.ingestion.sensors.ioos_glider_dac
+    record_type: instrument
     erddap_base: https://gliders.ioos.us/erddap
     provider: IOOS Glider DAC
     license: Pending ERDDAP NC_GLOBAL license confirmation

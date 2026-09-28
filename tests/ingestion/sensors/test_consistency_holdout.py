@@ -36,15 +36,17 @@ class ConsistencyTests(unittest.TestCase):
             {"latitude": [33.0], "longitude": [-119.0], "WTMP": [18.0]}
         )
         cfg = {
+            "bbox": {"lat_min": 32.0, "lat_max": 35.0, "lon_min": -121.0, "lon_max": -117.0},
+            "training_grid": {"spacing_km": 10.0},
             "consistency": {
                 "current_vector_corr": {"pass": 0.9, "degraded": 0.5},
                 "current_rmse_ms": {"pass": 0.05, "degraded": 0.2},
                 "sst_bias_c": {"pass": 0.1, "degraded": 0.5},
                 "sst_rmse_c": {"pass": 0.1, "degraded": 0.5},
-            }
+            },
         }
         scores = score_cycle(model, {"hfr": hfr, "ndbc": ndbc}, cfg=cfg)
-        corr_row = scores[(scores["metric"] == "vector_corr") & (scores["grid_mode"] == "native")].iloc[0]
+        corr_row = scores[(scores["metric"] == "vector_corr") & (scores["grid_mode"] == "grid_10km")].iloc[0]
         self.assertGreaterEqual(corr_row["value"], 0.99)
         self.assertEqual(corr_row["status"], "PASS")
 
@@ -64,11 +66,26 @@ class HoldoutTests(unittest.TestCase):
                 "profile_id": [1, 1, 1],
                 "depth": [5, 25, 40],
                 "temperature": [20.0, 17.0, 14.0],
+                "latitude": [33.0, 33.0, 33.0],
+                "longitude": [-119.0, -119.0, -119.0],
                 "time": pd.to_datetime(["2026-09-28T00:00:00Z"] * 3, utc=True),
             }
         )
-        model = xr.Dataset({"temp": (("s_rho",), np.array([16.0, 15.0]))}, coords={"s_rho": [0, 1]})
-        cfg = {"holdout": {"independent_confirmed": False, "mld_delta_c": 0.2, "depth_bands_m": [[20, 50]]}}
+        model = xr.Dataset(
+            {"temp": (("s_rho", "eta_rho", "xi_rho"), np.full((2, 1, 1), 16.0))},
+            coords={
+                "s_rho": [0, 1],
+                "eta_rho": [0],
+                "xi_rho": [0],
+                "lat_rho": (("eta_rho", "xi_rho"), np.array([[33.0]])),
+                "lon_rho": (("eta_rho", "xi_rho"), np.array([[-119.0]])),
+            },
+        )
+        cfg = {
+            "bbox": {"lat_min": 32.0, "lat_max": 35.0, "lon_min": -121.0, "lon_max": -117.0},
+            "training_grid": {"spacing_km": 10.0},
+            "holdout": {"independent_confirmed": False, "mld_delta_c": 0.2, "depth_bands_m": [[20, 50]]},
+        }
         out = score_holdout(model, profiles, cfg=cfg)
         self.assertEqual(out.iloc[0]["check_type"], "holdout")
         self.assertFalse(out.iloc[0]["independent"])

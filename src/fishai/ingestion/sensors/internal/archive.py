@@ -7,6 +7,8 @@ from pathlib import Path
 from typing import Any
 
 import pandas as pd
+import pyarrow as pa
+import pyarrow.parquet as pq
 import xarray as xr
 
 from fishai.ingestion.sensors.internal.config import REPO_ROOT, load_sensors_config
@@ -30,6 +32,14 @@ def _prepare_tabular_archive(df: pd.DataFrame) -> pd.DataFrame:
     if drop_cols:
         out = out.drop(columns=drop_cols)
     return out
+
+
+def _write_instrument_parquet(df: pd.DataFrame, path: Path, source_id: str) -> None:
+    table = pa.Table.from_pandas(df, preserve_index=False)
+    meta = dict(table.schema.metadata or {})
+    meta[b"fishai_source_id"] = source_id.encode("utf-8")
+    table = table.replace_schema_metadata(meta)
+    pq.write_table(table, path)
 
 
 def _assert_processed_path(path: Path) -> None:
@@ -67,7 +77,7 @@ def write_ndbc_parquet(df: pd.DataFrame, day: datetime, cfg: dict[str, Any] | No
     part = root / f"date={day:%Y-%m-%d}" / "observations.parquet"
     _ensure_parent(part)
     _assert_processed_path(part)
-    _prepare_tabular_archive(df).to_parquet(part, index=False)
+    _write_instrument_parquet(_prepare_tabular_archive(df), part, "ndbc_met")
     return part
 
 
@@ -89,5 +99,5 @@ def write_glider_parquet(
     part = root / f"date={day:%Y-%m-%d}" / f"{safe_id}.parquet"
     _ensure_parent(part)
     _assert_processed_path(part)
-    _prepare_tabular_archive(df).to_parquet(part, index=False)
+    _write_instrument_parquet(_prepare_tabular_archive(df), part, "ioos_glider_dac")
     return part

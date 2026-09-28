@@ -1,4 +1,4 @@
-"""WCOFS holdout scoring vs glider subsurface profiles."""
+"""WCOFS holdout scoring vs glider subsurface profiles on the 10 km grid."""
 
 from __future__ import annotations
 
@@ -8,7 +8,11 @@ import numpy as np
 import pandas as pd
 import xarray as xr
 
+from fishai.ingestion.sensors.internal.consistency import _align_model_surface
+from fishai.ingestion.sensors.internal.grid import build_training_grid_10km, model_on_training_grid
+
 CHECK_TYPE = "holdout"
+GRID_MODE = "grid_10km"
 
 
 def mixed_layer_depth(
@@ -68,16 +72,24 @@ def profiles_below_mld(df: pd.DataFrame, cfg: dict[str, Any]) -> pd.DataFrame:
     return pd.concat(rows, ignore_index=True)
 
 
-def band_means(profiles: pd.DataFrame, bands: list[list[float]]) -> pd.DataFrame:
+def band_means_by_grid(profiles: pd.DataFrame, bands: list[list[float]], grid: xr.Dataset) -> pd.DataFrame:
+    lat_col = "latitude" if "latitude" in profiles.columns else "lat"
+    lon_col = "longitude" if "longitude" in profiles.columns else "lon"
     out_rows = []
     for lo, hi in bands:
         band = profiles[(profiles["depth"] >= lo) & (profiles["depth"] < hi)]
         if band.empty:
             continue
-        for pid, grp in band.groupby("profile_id" if "profile_id" in band.columns else "time"):
+        group_cols = ["profile_id"] if "profile_id" in band.columns else ["time"]
+        for pid, grp in band.groupby(group_cols):
+            la = float(np.nanmean(grp[lat_col]))
+            lo_ = float(np.nanmean(grp[lon_col]))
+            bi = int(np.argmin(np.abs(grid["lat"].values - la)))
+            bj = int(np.argmin(np.abs(grid["lon"].values - lo_)))
             out_rows.append(
                 {
-                    "profile_id": pid,
+                    "grid_lat": float(grid["lat"].values[bi]),
+                    "grid_lon": float(grid["lon"].values[bj]),
                     "depth_band_lo": lo,
                     "depth_band_hi": hi,
                     "obs_temp_c": float(np.nanmean(grp["temperature"])),
@@ -101,18 +113,21 @@ def score_holdout(
     glider_profiles: pd.DataFrame,
     *,
     cfg: dict[str, Any],
+    training_grid: xr.Dataset | None = None,
 ) -> pd.DataFrame:
     hold = cfg.get("holdout", {})
     independent = bool(hold.get("independent_confirmed", False))
+    grid = training_grid or build_training_grid_10km(cfg)
     below = profiles_below_mld(glider_profiles, cfg)
     bands = hold.get("depth_bands_m", [[20, 50], [50, 100], [100, 200]])
-    band_obs = band_means(below, bands)
+    band_obs = band_means_by_grid(below, bands, grid)
     if band_obs.empty:
         return pd.DataFrame(
             [
                 {
                     "check_type": CHECK_TYPE,
                     "metric": "temperature_rmse",
+                    "grid_mode": GRID_MODE,
                     "status": "FAIL",
                     "value": float("nan"),
                     "independent": independent,
@@ -120,19 +135,16 @@ def score_holdout(
             ]
         )
 
-    # Synthetic model comparison: sample model temp at obs lat/lon/depth mid-band (stub surface temp if 3D missing).
-    if "temp" in model_ds:
-        temp3d = model_ds["temp"]
-        if "ocean_time" in temp3d.dims:
-            temp3d = temp3d.isel(ocean_time=0)
-    else:
-        temp3d = model_ds.get("sst")
+    model_aligned = _align_model_surface(model_ds)
+    model_grid = model_on_training_grid(model_aligned, grid)
 
     preds = []
     for _, row in band_obs.iterrows():
-        mid = 0.5 * (row["depth_band_lo"] + row["depth_band_hi"])
-        # Without full 3D interpolation in pilot skeleton, use surface as placeholder if depth index unavailable.
-        val = float(temp3d.isel(s_rho=-1).mean()) if hasattr(temp3d, "isel") else float(temp3d.mean())
+        val = float(
+            model_grid["sst"]
+            .sel(lat=row["grid_lat"], lon=row["grid_lon"], method="nearest")
+            .values
+        )
         preds.append(val)
     band_obs = band_obs.copy()
     band_obs["model_temp_c"] = preds
@@ -144,6 +156,7 @@ def score_holdout(
             {
                 "check_type": CHECK_TYPE,
                 "metric": "temperature_rmse",
+                "grid_mode": GRID_MODE,
                 "status": status,
                 "value": rmse,
                 "independent": independent,

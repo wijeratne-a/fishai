@@ -1,20 +1,26 @@
 #!/usr/bin/env python3
-"""Scan all git-tracked text files for credential-like strings and lat/lon CSV headers.
+"""Scan git-tracked files for credentials and coordinate exposure.
 
-Uses ``git ls-files`` so ``docs/archive/`` and legacy data are included. Skips only
-gitignored runtime trees: ``data/raw``, ``data/interim``, ``data/restricted``,
-``data/quarantine``, ``data/processed``. Does not print coordinate values.
+Uses ``git ls-files``. Skips gitignored runtime trees under ``data/processed/``, etc.
 
-Exit 1 on ANY hit in any tracked file.
+Instrument sources declared with ``record_type: instrument`` in ``data/SOURCES.yaml``
+may expose public instrument lat/lon in tracked fixture paths (see
+``instrument_coordinate_policy.INSTRUMENT_PATH_PREFIXES``) unless fishery-dependent
+fields (species, count, catch*) appear in the same file.
 """
 
 from __future__ import annotations
 
 import argparse
+import csv
+import json
 import re
 import subprocess
 import sys
 from pathlib import Path
+
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+from instrument_coordinate_policy import apply_instrument_coordinate_exemption
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
 
@@ -33,6 +39,7 @@ TEXT_SUFFIXES = {
     ".csv",
     ".tsv",
     ".json",
+    ".geojson",
     ".yaml",
     ".yml",
     ".env",
@@ -75,6 +82,10 @@ COORD_HEADER_NAMES = {
     "decimallongitude",
     "lat_dd",
     "lon_dd",
+    "start_latitude",
+    "start_longitude",
+    "stop_latitude",
+    "stop_longitude",
 }
 
 
@@ -98,15 +109,87 @@ def read_text_limited(path: Path, max_bytes: int = 2_000_000) -> str | None:
 
 
 def csv_header_fields(first_line: str) -> list[str]:
-    return [h.strip().strip('"').strip("'").lower() for h in first_line.strip().split(",")]
+    return [h.strip().strip('"').strip("'") for h in first_line.strip().split(",")]
+
+
+def field_name_exposes_coordinates(name: str) -> bool:
+    normalized = name.replace(" ", "_").lower()
+    if normalized in COORD_HEADER_NAMES:
+        return True
+    snake = re.sub(r"([a-z])([A-Z])", r"\1_\2", name).replace(" ", "_").lower()
+    return snake in COORD_HEADER_NAMES
 
 
 def header_has_coordinates(fields: list[str]) -> bool:
-    for field in fields:
-        normalized = field.replace(" ", "_")
-        if normalized in COORD_HEADER_NAMES:
-            return True
+    return any(field_name_exposes_coordinates(field) for field in fields)
+
+
+def walk_json_property_names(node: object) -> list[str]:
+    names: list[str] = []
+    if isinstance(node, dict):
+        for key, value in node.items():
+            names.append(str(key))
+            names.extend(walk_json_property_names(value))
+    elif isinstance(node, list):
+        for item in node:
+            names.extend(walk_json_property_names(item))
+    return names
+
+
+def geojson_has_point_geometry(node: object) -> bool:
+    if not isinstance(node, dict):
+        return False
+    gtype = node.get("type")
+    if gtype == "Point":
+        coords = node.get("coordinates")
+        return isinstance(coords, list) and len(coords) >= 2
+    if gtype == "Feature":
+        geom = node.get("geometry")
+        return geojson_has_point_geometry(geom) if isinstance(geom, dict) else False
+    if gtype == "FeatureCollection":
+        features = node.get("features")
+        if isinstance(features, list):
+            return any(geojson_has_point_geometry(f) for f in features)
+    geometry = node.get("geometry")
+    if isinstance(geometry, dict) and geojson_has_point_geometry(geometry):
+        return True
     return False
+
+
+def scan_json_text(text: str, *, rel: str = "") -> tuple[list[str], list[str]]:
+    hits: list[str] = []
+    field_names: list[str] = []
+    try:
+        data = json.loads(text)
+    except json.JSONDecodeError:
+        return hits, field_names
+    field_names = walk_json_property_names(data)
+    schema_contract = rel.startswith("src/fishai/schemas/") or rel.endswith(".schema.json")
+    if not schema_contract:
+        for name in field_names:
+            if field_name_exposes_coordinates(name):
+                hits.append("json_schema:latitude_or_longitude")
+                break
+    if geojson_has_point_geometry(data):
+        hits.append("geojson:point_geometry")
+    return hits, field_names
+
+
+def scan_parquet_file(path: Path) -> tuple[list[str], list[str]]:
+    hits: list[str] = []
+    try:
+        import pyarrow.parquet as pq
+    except ImportError:
+        return hits, []
+    try:
+        schema = pq.read_schema(path)
+    except OSError:
+        return hits, []
+    names = list(schema.names)
+    for name in names:
+        if field_name_exposes_coordinates(name):
+            hits.append("parquet_schema:latitude_or_longitude")
+    return hits, names
 
 
 def scan_file(rel: str) -> list[str]:
@@ -116,26 +199,36 @@ def scan_file(rel: str) -> list[str]:
     path = REPO_ROOT / rel
     if not path.is_file():
         return []
+
     suffix = path.suffix.lower()
-    if suffix not in TEXT_SUFFIXES and path.name not in {".env", "Makefile"}:
-        return []
-
-    text = read_text_limited(path)
-    if text is None:
-        return []
-
+    credential_hits: list[str] = []
     hits: list[str] = []
-    for kind, pattern in CREDENTIAL_PATTERNS:
-        if pattern.search(text):
-            hits.append(f"credential:{kind}")
+    field_names: list[str] = []
 
-    if suffix in {".csv", ".tsv"}:
-        first = text.splitlines()[0] if text else ""
-        delim_fields = csv_header_fields(first.replace("\t", ","))
-        if header_has_coordinates(delim_fields):
-            hits.append("csv_header:latitude_or_longitude")
+    if suffix == ".parquet":
+        hits, field_names = scan_parquet_file(path)
+    else:
+        if suffix not in TEXT_SUFFIXES and path.name not in {".env", "Makefile"}:
+            return []
+        text = read_text_limited(path)
+        if text is None:
+            return []
+        for kind, pattern in CREDENTIAL_PATTERNS:
+            if pattern.search(text):
+                credential_hits.append(f"credential:{kind}")
+        if suffix in {".csv", ".tsv"}:
+            first = text.splitlines()[0] if text else ""
+            delim_fields = csv_header_fields(first.replace("\t", ","))
+            field_names = delim_fields
+            if header_has_coordinates(delim_fields):
+                hits.append("csv_header:latitude_or_longitude")
+        if suffix in {".json", ".geojson"} or rel.endswith(".schema.json"):
+            json_hits, json_fields = scan_json_text(text, rel=rel)
+            hits.extend(json_hits)
+            field_names.extend(json_fields)
 
-    return hits
+    hits = apply_instrument_coordinate_exemption(rel, hits, field_names, path=path)
+    return credential_hits + hits
 
 
 def scan_repository() -> list[tuple[str, str]]:

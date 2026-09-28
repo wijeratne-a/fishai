@@ -6,6 +6,9 @@ bbox:
   lon_min: -121.0
   lon_max: -117.0
 
+training_grid:
+  spacing_km: 10.0
+
 paths:
   hfr_zarr: data/processed/sensors/hfradar/surface_currents.zarr
   ndbc_parquet_root: data/processed/sensors/ndbc
