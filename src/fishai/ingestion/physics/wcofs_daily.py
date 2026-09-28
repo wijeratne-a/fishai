@@ -38,11 +38,10 @@ SALT_MAX_PSU = 42.0
 
 @dataclass(frozen=True)
 class LeadPlan:
-    lead_hour: int
+    valid_offset_h: int
     cycle_date: dt.date
     lead_tag: str
     fallback: str | None = None
-    lead_hours_used: int | None = None
 
 
 @dataclass
@@ -51,7 +50,7 @@ class DailyPlan:
     bbox: tuple[float, float, float, float]
     primary_available: bool
     leads: list[LeadPlan] = field(default_factory=list)
-    unknown_leads: list[dict[str, Any]] = field(default_factory=list)
+    unknown_slots: list[dict[str, Any]] = field(default_factory=list)
     s3_keys: list[str] = field(default_factory=list)
     request_count: int = 0
     zarr_path: Path | None = None
@@ -80,81 +79,188 @@ def _cycle_init_utc(day: dt.date) -> dt.datetime:
 
 
 def requested_cycle_time(target: dt.date) -> dt.datetime:
-    return _cycle_init_utc(target)
+    return wcofs_src.cycle_run_time(target)
 
 
-def valid_time_for_step(target: dt.date, operational_lead_hour: int) -> dt.datetime:
-    """Valid time on the requested-cycle timeline (first slot at requested 03Z)."""
-    req = requested_cycle_time(target)
-    if operational_lead_hour == 3:
-        return req
-    return req + dt.timedelta(hours=operational_lead_hour - 3)
+def read_ocean_time_utc(ds: xr.Dataset) -> dt.datetime:
+    import pandas as pd
+
+    da = ds["ocean_time"]
+    scalar = float(da.values.flat[0]) if da.size else float(da.values)
+    units = str(da.attrs.get("units", ""))
+    if units.startswith("seconds since"):
+        ref = units[len("seconds since") :].strip()
+        base = pd.Timestamp(ref)
+        if base.tzinfo is None:
+            base = base.tz_localize("UTC")
+        ts = base + pd.Timedelta(seconds=scalar)
+        return ts.to_pydatetime().astimezone(dt.timezone.utc)
+    ts = pd.Timestamp(scalar)
+    if ts.tzinfo is None:
+        ts = ts.tz_localize("UTC")
+    return ts.to_pydatetime().astimezone(dt.timezone.utc)
 
 
-def forecast_age_hours(lp: LeadPlan, target: dt.date) -> float:
-    valid = valid_time_for_step(target, lp.lead_hour)
-    source = _cycle_init_utc(lp.cycle_date)
-    return (valid - source).total_seconds() / 3600.0
+def forecast_age_hours(valid: dt.datetime, source_cycle: dt.date) -> float:
+    r_src = wcofs_src.cycle_run_time(source_cycle)
+    return (valid.astimezone(dt.timezone.utc) - r_src).total_seconds() / 3600.0
 
 
-def step_fallback_used(lp: LeadPlan, target: dt.date) -> bool:
-    return lp.fallback is not None or lp.cycle_date != target
-
-
-def evidence_state_for_step(lp: LeadPlan, target: dt.date) -> tuple[str, int | None]:
-    age = forecast_age_hours(lp, target)
-    if step_fallback_used(lp, target):
-        return "forecast", int(math.ceil(age / 24.0))
+def evidence_from_forecast_age(age: float, *, fallback_used: bool) -> tuple[str, int | None]:
+    if fallback_used:
+        lead_days = max(1, int(math.ceil(age / 24.0)))
+        return "forecast", lead_days
     if age <= 0.0:
         return "nowcast", None
     return "forecast", int(math.ceil(age / 24.0))
 
 
-def step_provenance_record(lp: LeadPlan, target: dt.date, *, primary_available: bool) -> dict[str, Any]:
-    valid = valid_time_for_step(target, lp.lead_hour)
-    source = _cycle_init_utc(lp.cycle_date)
+def step_provenance_record(
+    lp: LeadPlan,
+    ds: xr.Dataset,
+    target: dt.date,
+    *,
+    primary_available: bool,
+) -> dict[str, Any]:
+    valid = read_ocean_time_utc(ds)
+    source = wcofs_src.cycle_run_time(lp.cycle_date)
     requested = requested_cycle_time(target)
-    age = forecast_age_hours(lp, target)
-    hint, lead_days = evidence_state_for_step(lp, target)
+    age = forecast_age_hours(valid, lp.cycle_date)
+    fallback_used = lp.cycle_date != target or lp.fallback is not None
+    hint, lead_days = evidence_from_forecast_age(age, fallback_used=fallback_used)
     rec: dict[str, Any] = {
-        "operational_lead_hour": lp.lead_hour,
+        "valid_offset_h": lp.valid_offset_h,
         "requested_cycle_time": requested.isoformat(),
         "source_cycle_time": source.isoformat(),
         "valid_time": valid.isoformat(),
-        "lead_hours": age,
-        "fallback_used": step_fallback_used(lp, target),
+        "forecast_age_hours": age,
+        "fallback_used": fallback_used,
         "evidence_state_hint": hint,
         "primary_cycle_available": primary_available,
+        "lead_tag": lp.lead_tag,
     }
     if lead_days is not None:
         rec["lead_days"] = lead_days
     if lp.fallback:
         rec["fallback"] = lp.fallback
-        rec["lead_hours_used"] = lp.lead_hours_used
     return rec
 
 
-def unknown_step_record(target: dt.date, operational_lead_hour: int) -> dict[str, Any]:
+def unknown_slot_record(
+    target: dt.date,
+    valid_offset_h: int,
+    *,
+    reason: str,
+) -> dict[str, Any]:
+    valid = requested_cycle_time(target) + dt.timedelta(hours=valid_offset_h)
     return {
-        "operational_lead_hour": operational_lead_hour,
+        "valid_offset_h": valid_offset_h,
         "requested_cycle_time": requested_cycle_time(target).isoformat(),
-        "valid_time": valid_time_for_step(target, operational_lead_hour).isoformat(),
+        "valid_time": valid.isoformat(),
         "state": "UNKNOWN",
-        "reason": "missing_operational_cycle",
+        "reason": reason,
         "evidence_state_hint": "UNKNOWN",
     }
 
 
-def build_step_provenance_table(plan: DailyPlan) -> list[dict[str, Any]]:
-    rows = [
-        step_provenance_record(lp, plan.target_date, primary_available=plan.primary_available)
-        for lp in plan.leads
-    ]
-    for unk in plan.unknown_leads:
-        rows.append(
-            unknown_step_record(plan.target_date, int(unk["lead_hour"])),
-        )
+def build_step_provenance_table(
+    plan: DailyPlan,
+    lead_slices: Sequence[tuple[LeadPlan, xr.Dataset]] | None = None,
+) -> list[dict[str, Any]]:
+    rows: list[dict[str, Any]] = []
+    if lead_slices:
+        for lp, ds in lead_slices:
+            rows.append(
+                step_provenance_record(
+                    lp, ds, plan.target_date, primary_available=plan.primary_available
+                )
+            )
+    else:
+        for lp in plan.leads:
+            rows.append(
+                {
+                    "valid_offset_h": lp.valid_offset_h,
+                    "lead_tag": lp.lead_tag,
+                    "source_cycle_time": wcofs_src.cycle_run_time(lp.cycle_date).isoformat(),
+                    "requested_cycle_time": requested_cycle_time(plan.target_date).isoformat(),
+                    "valid_time": (
+                        requested_cycle_time(plan.target_date)
+                        + dt.timedelta(hours=lp.valid_offset_h)
+                    ).isoformat(),
+                    "fallback_used": lp.cycle_date != plan.target_date or lp.fallback is not None,
+                }
+            )
+    for unk in plan.unknown_slots:
+        rows.append(unk)
     return rows
+
+
+def resolve_lead_for_offset(
+    target: dt.date,
+    valid_offset_h: int,
+    *,
+    primary_available: bool,
+    cycle_exists_fn: Callable[[dt.date], bool],
+    max_missed_cycles: int,
+) -> LeadPlan | None:
+    if primary_available and cycle_exists_fn(target):
+        tag = wcofs_src.lead_tag_for_valid_offset(valid_offset_h)
+        return LeadPlan(valid_offset_h, target, tag)
+    for days_back in range(1, max_missed_cycles + 1):
+        prev = target - dt.timedelta(days=days_back)
+        if not cycle_exists_fn(prev):
+            continue
+        age_h = valid_offset_h + 24 * days_back
+        if age_h < -21 or age_h > 72:
+            continue
+        try:
+            tag = wcofs_src.lead_tag_for_age_from_source(age_h)
+        except ValueError:
+            continue
+        expected = wcofs_src.valid_time_for_lead_tag(prev, tag)
+        wanted = requested_cycle_time(target) + dt.timedelta(hours=valid_offset_h)
+        if expected != wanted:
+            continue
+        return LeadPlan(valid_offset_h, prev, tag, fallback="previous_cycle")
+    return None
+
+
+def build_lead_plan(
+    target: dt.date,
+    *,
+    primary_available: bool,
+    max_missed_cycles: int = DEFAULT_MAX_MISSED_CYCLES,
+    cycle_exists_fn: Callable[[dt.date], bool] | None = None,
+) -> DailyPlan:
+    exists = cycle_exists_fn if cycle_exists_fn is not None else (lambda _d: True)
+    bbox = _pilot_bbox()
+    plan = DailyPlan(target_date=target, bbox=bbox, primary_available=primary_available)
+    for offset_h in wcofs_src.TARGET_VALID_OFFSETS_H:
+        if primary_available:
+            if not exists(target):
+                plan.unknown_slots.append(
+                    unknown_slot_record(target, offset_h, reason="missing_operational_cycle")
+                )
+                continue
+            tag = wcofs_src.lead_tag_for_valid_offset(offset_h)
+            lp = LeadPlan(offset_h, target, tag)
+        else:
+            lp = resolve_lead_for_offset(
+                target,
+                offset_h,
+                primary_available=False,
+                cycle_exists_fn=exists,
+                max_missed_cycles=max_missed_cycles,
+            )
+            if lp is None:
+                plan.unknown_slots.append(
+                    unknown_slot_record(target, offset_h, reason="missing_operational_cycle")
+                )
+                continue
+        plan.leads.append(lp)
+        plan.s3_keys.append(wcofs_src.fields_s3_key(lp.cycle_date, lp.lead_tag))
+    plan.request_count = len(plan.s3_keys)
+    return plan
 
 
 def wait_for_primary_cycle(
@@ -186,54 +292,6 @@ def wait_for_primary_cycle(
         attempt += 1
 
 
-def build_lead_plan(
-    target: dt.date,
-    *,
-    primary_available: bool,
-    max_missed_cycles: int = DEFAULT_MAX_MISSED_CYCLES,
-) -> DailyPlan:
-    bbox = _pilot_bbox()
-    plan = DailyPlan(target_date=target, bbox=bbox, primary_available=primary_available)
-    for lh in wcofs_src.OPERATIONAL_LEAD_HOURS:
-        if primary_available:
-            tag = wcofs_src.lead_tag_for_hour(lh)
-            lp = LeadPlan(lead_hour=lh, cycle_date=target, lead_tag=tag)
-            plan.leads.append(lp)
-            plan.s3_keys.append(wcofs_src.fields_s3_key(target, tag))
-            continue
-        resolved: LeadPlan | None = None
-        for missed in range(1, max_missed_cycles + 1):
-            prev = target - dt.timedelta(days=missed)
-            used = lh + 24 * missed
-            if used > FORECAST_HORIZON_H:
-                break
-            try:
-                tag = wcofs_src.lead_tag_for_hour(used)
-            except ValueError:
-                break
-            resolved = LeadPlan(
-                lead_hour=lh,
-                cycle_date=prev,
-                lead_tag=tag,
-                fallback="previous_cycle",
-                lead_hours_used=used,
-            )
-            break
-        if resolved is None:
-            plan.unknown_leads.append(
-                {
-                    "lead_hour": lh,
-                    "state": "UNKNOWN",
-                    "reason": "missing_operational_cycle",
-                }
-            )
-        else:
-            plan.leads.append(resolved)
-            plan.s3_keys.append(wcofs_src.fields_s3_key(resolved.cycle_date, resolved.lead_tag))
-    plan.request_count = len(plan.s3_keys)
-    return plan
-
-
 def plan_daily(
     target: dt.date,
     *,
@@ -242,13 +300,17 @@ def plan_daily(
     head_fn: Callable[[str], bool] | None = None,
     max_missed_cycles: int = DEFAULT_MAX_MISSED_CYCLES,
     provenance_dir: Path | None = None,
+    cycle_exists_fn: Callable[[dt.date], bool] | None = None,
 ) -> DailyPlan:
     if primary_available is None:
         primary_available = wcofs_src.cycle_available(target, head_fn=head_fn)
+    if cycle_exists_fn is None and head_fn is not None:
+        cycle_exists_fn = lambda d: wcofs_src.cycle_available(d, head_fn=head_fn)
     plan = build_lead_plan(
         target,
         primary_available=primary_available,
         max_missed_cycles=max_missed_cycles,
+        cycle_exists_fn=cycle_exists_fn,
     )
     plan.zarr_path = cycle_zarr_path(target, out_root)
     log_dir = resolve_pull_log_dir(out_root, provenance_dir)
@@ -280,15 +342,15 @@ def fetch_and_log_leads(
     head_meta_fn: Callable[[str], dict[str, Any]] | None = None,
     log_path: Path | None = None,
     skip_if_etag_matches: bool = True,
-) -> tuple[list[tuple[LeadPlan, xr.Dataset]], list[str]]:
-    """Fetch each planned lead, append pull log lines, return datasets and missing tags."""
+) -> tuple[list[tuple[LeadPlan, xr.Dataset]], list[dict[str, Any]]]:
+    """Fetch each planned lead, append pull log lines, return datasets and failed slots."""
     log_path = log_path or plan.pull_log
     assert log_path is not None
     index = load_pull_index(log_path) if skip_if_etag_matches else {}
     merged: list[tuple[LeadPlan, xr.Dataset]] = []
-    missing: list[str] = []
+    failed: list[dict[str, Any]] = []
     bbox = plan.bbox
-    for lp in plan.leads:
+    for lp in list(plan.leads):
         s3_key = wcofs_src.fields_s3_key(lp.cycle_date, lp.lead_tag)
         url = wcofs_src._fields_url_s3(lp.cycle_date, lp.lead_tag)
         try:
@@ -297,10 +359,10 @@ def fetch_and_log_leads(
             )
             ds = wcofs_src.open_dataset_from_bytes(data)
             sub = wcofs_src.subset_bbox(ds, bbox)
-            merged.append((lp, sub))
             prov = step_provenance_record(
-                lp, plan.target_date, primary_available=plan.primary_available
+                lp, sub, plan.target_date, primary_available=plan.primary_available
             )
+            merged.append((lp, sub))
             prior = index.get(s3_key)
             if skip_if_etag_matches and prior and prior.get("etag") == meta.get("etag"):
                 continue
@@ -309,16 +371,12 @@ def fetch_and_log_leads(
                 url=url,
                 cycle=cycle_id(lp.cycle_date),
                 lead=lp.lead_tag,
-                lead_hour=lp.lead_hour,
+                lead_hour=lp.valid_offset_h,
                 status="ok",
                 etag=meta.get("etag"),
                 size_bytes=meta.get("size_bytes"),
                 sha256=meta.get("sha256"),
-                extra={
-                    "target_cycle": cycle_id(plan.target_date),
-                    "fallback": lp.fallback,
-                    "lead_hours_used": lp.lead_hours_used,
-                },
+                extra={"target_cycle": cycle_id(plan.target_date), "fallback": lp.fallback},
             )
             rec.update(
                 {
@@ -327,7 +385,7 @@ def fetch_and_log_leads(
                         "requested_cycle_time",
                         "source_cycle_time",
                         "valid_time",
-                        "lead_hours",
+                        "forecast_age_hours",
                         "fallback_used",
                         "evidence_state_hint",
                         "lead_days",
@@ -337,18 +395,25 @@ def fetch_and_log_leads(
             )
             append_pull_log(rec, log_path=log_path)
         except Exception as exc:  # noqa: BLE001
-            missing.append(lp.lead_tag)
+            failed.append(
+                unknown_slot_record(plan.target_date, lp.valid_offset_h, reason="download_failed")
+            )
             rec = build_pull_record(
                 s3_key=s3_key,
                 url=url,
                 cycle=cycle_id(lp.cycle_date),
                 lead=lp.lead_tag,
-                lead_hour=lp.lead_hour,
+                lead_hour=lp.valid_offset_h,
                 status="error",
-                extra={"error": str(exc), "target_cycle": cycle_id(plan.target_date)},
+                extra={
+                    "error": str(exc),
+                    "target_cycle": cycle_id(plan.target_date),
+                    "reason": "download_failed",
+                    "evidence_state_hint": "UNKNOWN",
+                },
             )
             append_pull_log(rec, log_path=log_path)
-    return merged, missing
+    return merged, failed
 
 
 def assemble_merged_dataset(
@@ -357,52 +422,40 @@ def assemble_merged_dataset(
 ) -> xr.Dataset:
     datasets: list[xr.Dataset] = []
     ref_raw: xr.Dataset | None = None
-    fallback_meta: list[dict[str, Any]] = []
-    for lp, sub in sorted(lead_slices, key=lambda x: x[0].lead_hour):
+    for lp, sub in sorted(lead_slices, key=lambda x: x[0].valid_offset_h):
         if ref_raw is None:
             ref_raw = sub
-        sub = sub.expand_dims(lead_hours=[lp.lead_hour])
+        sub = sub.expand_dims(valid_offset_h=[lp.valid_offset_h])
         if lp.fallback:
             sub = sub.assign_attrs(
                 fallback=lp.fallback,
-                lead_hours_used=int(lp.lead_hours_used or 0),
                 source_cycle=cycle_id(lp.cycle_date),
-            )
-            fallback_meta.append(
-                {
-                    "lead_hour": lp.lead_hour,
-                    "fallback": lp.fallback,
-                    "source_cycle": cycle_id(lp.cycle_date),
-                    "lead_hours_used": lp.lead_hours_used,
-                }
             )
         datasets.append(sub)
 
-    merged = xr.concat(datasets, dim="lead_hours")
+    merged = xr.concat(datasets, dim="valid_offset_h")
     merged.attrs["attribution"] = attribution_for("wcofs")
     merged.attrs["source"] = "wcofs"
     merged.attrs["cycle"] = cycle_id(plan.target_date)
-    table = build_step_provenance_table(plan)
+    table = build_step_provenance_table(plan, lead_slices)
     merged.attrs["step_provenance"] = json.dumps(table)
     merged.attrs["requested_cycle_time"] = requested_cycle_time(plan.target_date).isoformat()
     merged.attrs["fallback_used"] = str(
-        any(step_fallback_used(lp, plan.target_date) for lp in plan.leads)
+        any(lp.cycle_date != plan.target_date or lp.fallback for lp, _ in lead_slices)
         or not plan.primary_available
     ).lower()
     source_times = {
-        step_provenance_record(lp, plan.target_date, primary_available=plan.primary_available)[
+        step_provenance_record(lp, sub, plan.target_date, primary_available=plan.primary_available)[
             "source_cycle_time"
         ]
-        for lp in plan.leads
+        for lp, sub in lead_slices
     }
     if len(source_times) == 1:
         merged.attrs["source_cycle_time"] = next(iter(source_times))
     else:
         merged.attrs["source_cycle_time"] = json.dumps(sorted(source_times))
-    if plan.unknown_leads:
-        merged.attrs["unknown_valid_times"] = json.dumps(plan.unknown_leads)
-    if fallback_meta:
-        merged.attrs["fallback_leads"] = json.dumps(fallback_meta)
+    if plan.unknown_slots:
+        merged.attrs["unknown_valid_times"] = json.dumps(plan.unknown_slots)
 
     ref = ref_raw
     assert ref is not None
@@ -434,7 +487,11 @@ def run_cycle_qc(
     *,
     previous: xr.Dataset | None = None,
 ) -> dict[str, Any]:
-    ref = packaged.isel(lead_hours=0)
+    ref = (
+        packaged.isel(valid_offset_h=0)
+        if "valid_offset_h" in packaged.dims
+        else packaged.isel(lead_hours=0)
+    )
     wet = ref["MLD_m"].notnull() if "MLD_m" in packaged else ref["temp"].isel(s_rho=0).notnull()
     wet_count = int(wet.sum())
     total = int(wet.size) or 1
@@ -546,17 +603,19 @@ def run_wcofs_daily(
     if zpath.is_dir() and _pull_complete(plan.pull_log, plan.s3_keys):
         return plan
 
-    lead_slices, missing = fetch_and_log_leads(
+    lead_slices, failed = fetch_and_log_leads(
         plan,
         get_fn=get_fn,
         head_meta_fn=head_meta_fn,
         log_path=plan.pull_log,
     )
-    partial = bool(missing)
+    if failed:
+        plan.unknown_slots.extend(failed)
+    partial = bool(failed)
     merged = assemble_merged_dataset(plan, lead_slices)
     extra_attrs = {
         "partial_cycle": partial,
-        "missing_leads": json.dumps(missing),
+        "missing_leads": json.dumps([f["valid_offset_h"] for f in failed]),
         "operational_target_cycle": cycle_id(target),
         "primary_cycle_available": plan.primary_available,
     }
@@ -572,7 +631,7 @@ def run_wcofs_daily(
     qc = run_cycle_qc(packaged, previous=previous)
     if partial:
         qc["partial_cycle"] = True
-        qc["missing_leads"] = missing
+        qc["missing_leads"] = [f["valid_offset_h"] for f in failed]
     write_wcofs_cycle(merged, target, out_root, extra_attrs=extra_attrs, packaged=packaged)
     write_qc_report(qc, plan.qc_report_path or out_root / f"wcofs_{target:%Y%m%d}_qc.json")
     return plan

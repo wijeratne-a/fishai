@@ -28,10 +28,13 @@ def cycle_zarr_path(cycle_date: dt.date, store_root: Path | None = None) -> Path
 
 def package_wcofs_cycle(merged: xr.Dataset, cycle_date: dt.date) -> xr.Dataset:
     """Normalize ``fetch_cycle`` output to the processed-store schema (depth positive down)."""
+    from fishai.ingestion.physics.wcofs_daily import read_ocean_time_utc
+
     def _surface(da: xr.DataArray) -> xr.DataArray:
         return da.isel(ocean_time=0) if "ocean_time" in da.dims else da
 
-    ref = merged.isel(lead_hours=0) if "lead_hours" in merged.dims else merged
+    time_dim = "valid_offset_h" if "valid_offset_h" in merged.dims else "lead_hours"
+    ref = merged.isel({time_dim: 0}) if time_dim in merged.dims else merged
     h = ref.h.values
     s_rho = ref.s_rho.values
     hc = float(ref.hc.values)
@@ -41,14 +44,14 @@ def package_wcofs_cycle(merged: xr.Dataset, cycle_date: dt.date) -> xr.Dataset:
     lon = ref.lon_rho.values
     lon = np.where(lon > 180, lon - 360, lon)
 
-    lead_values = list(merged.lead_hours.values) if "lead_hours" in merged.dims else [0]
+    step_values = list(merged[time_dim].values) if time_dim in merged.dims else [0]
     step_by_op: dict[int, dict[str, Any]] = {}
     step_raw = merged.attrs.get("step_provenance")
     if step_raw:
         for row in json.loads(step_raw):
             if row.get("state") == "UNKNOWN":
                 continue
-            step_by_op[int(row["operational_lead_hour"])] = row
+            step_by_op[int(row["valid_offset_h"])] = row
     temp_leads = []
     salt_leads = []
     z_leads = []
@@ -56,8 +59,8 @@ def package_wcofs_cycle(merged: xr.Dataset, cycle_date: dt.date) -> xr.Dataset:
     s3m_leads = []
     mld_leads = []
     times = []
-    for lh in lead_values:
-        slab = merged.sel(lead_hours=lh) if "lead_hours" in merged.dims else merged
+    for step in step_values:
+        slab = merged.sel({time_dim: step}) if time_dim in merged.dims else merged
         zeta = _surface(slab.zeta).values
         temp = _surface(slab.temp).values
         salt = _surface(slab.salt).values
@@ -95,31 +98,28 @@ def package_wcofs_cycle(merged: xr.Dataset, cycle_date: dt.date) -> xr.Dataset:
         t3m_leads.append(t3m)
         s3m_leads.append(s3m)
         mld_leads.append(mld_m)
-        if int(lh) in step_by_op:
-            times.append(np.datetime64(step_by_op[int(lh)]["valid_time"]))
+        if int(step) in step_by_op:
+            times.append(np.datetime64(step_by_op[int(step)]["valid_time"]))
         elif "ocean_time" in slab:
-            try:
-                times.append(np.datetime64(_surface(slab.ocean_time).values))
-            except (ValueError, TypeError):
-                times.append(np.datetime64("NaT"))
+            times.append(np.datetime64(read_ocean_time_utc(slab).replace(tzinfo=None)))
         else:
             times.append(np.datetime64("NaT"))
 
     out = xr.Dataset(
         data_vars={
-            "temp": (("lead_hours", "s_rho", "eta_rho", "xi_rho"), np.stack(temp_leads)),
-            "salt": (("lead_hours", "s_rho", "eta_rho", "xi_rho"), np.stack(salt_leads)),
-            "z": (("lead_hours", "s_rho", "eta_rho", "xi_rho"), np.stack(z_leads)),
-            "T3m": (("lead_hours", "eta_rho", "xi_rho"), np.stack(t3m_leads)),
-            "S3m": (("lead_hours", "eta_rho", "xi_rho"), np.stack(s3m_leads)),
-            "MLD_m": (("lead_hours", "eta_rho", "xi_rho"), np.stack(mld_leads)),
+            "temp": ((time_dim, "s_rho", "eta_rho", "xi_rho"), np.stack(temp_leads)),
+            "salt": ((time_dim, "s_rho", "eta_rho", "xi_rho"), np.stack(salt_leads)),
+            "z": ((time_dim, "s_rho", "eta_rho", "xi_rho"), np.stack(z_leads)),
+            "T3m": ((time_dim, "eta_rho", "xi_rho"), np.stack(t3m_leads)),
+            "S3m": ((time_dim, "eta_rho", "xi_rho"), np.stack(s3m_leads)),
+            "MLD_m": ((time_dim, "eta_rho", "xi_rho"), np.stack(mld_leads)),
             "lat": (("eta_rho", "xi_rho"), lat),
             "lon": (("eta_rho", "xi_rho"), lon),
         },
         coords={
-            "lead_hours": np.asarray(lead_values, dtype=int),
+            time_dim: np.asarray(step_values, dtype=int),
             "s_rho": s_rho,
-            "time": ("lead_hours", np.array(times, dtype="datetime64[ns]")),
+            "time": (time_dim, np.array(times, dtype="datetime64[ns]")),
         },
     )
     out["z"].attrs.update(units="m", long_name="depth", positive="down")
@@ -142,25 +142,21 @@ def package_wcofs_cycle(merged: xr.Dataset, cycle_date: dt.date) -> xr.Dataset:
         valids: list[np.datetime64] = []
         sources: list[np.datetime64] = []
         hints: list[str] = []
-        ldays: list[int] = []
-        for lh in lead_values:
-            row = step_by_op[int(lh)]
-            ages.append(float(row["lead_hours"]))
+        ldays: list[float] = []
+        for step in step_values:
+            row = step_by_op[int(step)]
+            ages.append(float(row["forecast_age_hours"]))
             valids.append(np.datetime64(row["valid_time"]))
             sources.append(np.datetime64(row["source_cycle_time"]))
             hints.append(str(row["evidence_state_hint"]))
-            ldays.append(int(row.get("lead_days", -1)))
-        out = out.assign_coords(valid_time=("lead_hours", np.array(valids, dtype="datetime64[ns]")))
-        out["forecast_age_hours"] = ("lead_hours", np.asarray(ages, dtype=float))
-        out["forecast_age_hours"].attrs.update(
-            long_name="lead_hours",
-            description="Hours from source cycle analysis time to valid_time",
-            units="hours",
-        )
-        out["source_cycle_time"] = ("lead_hours", np.array(sources, dtype="datetime64[ns]"))
-        out["evidence_state_hint"] = ("lead_hours", np.asarray(hints, dtype=object))
-        out["lead_days"] = ("lead_hours", np.asarray(ldays, dtype=int))
-        out["time"] = ("lead_hours", np.array(valids, dtype="datetime64[ns]"))
+            ldays.append(float("nan") if "lead_days" not in row else float(row["lead_days"]))
+        out = out.assign_coords(valid_time=(time_dim, np.array(valids, dtype="datetime64[ns]")))
+        out["forecast_age_hours"] = (time_dim, np.asarray(ages, dtype=float))
+        out["forecast_age_hours"].attrs.update(units="hours")
+        out["source_cycle_time"] = (time_dim, np.array(sources, dtype="datetime64[ns]"))
+        out["evidence_state_hint"] = (time_dim, np.asarray(hints, dtype=object))
+        out["lead_days"] = (time_dim, np.asarray(ldays, dtype=float))
+        out["time"] = (time_dim, np.array(valids, dtype="datetime64[ns]"))
         for key in ("requested_cycle_time", "fallback_used", "source_cycle_time"):
             if key in merged.attrs:
                 out.attrs[key] = merged.attrs[key]

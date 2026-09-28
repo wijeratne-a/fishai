@@ -2,14 +2,29 @@
 
 from __future__ import annotations
 
+import datetime as dt
 import tempfile
 from pathlib import Path
 
 import netCDF4 as nc
 import numpy as np
 
+from fishai.ingestion.physics.sources.wcofs import cycle_run_time, valid_time_for_lead_tag
 
-def write_mini_wcofs_bytes(n_eta: int = 6, n_xi: int = 6, n_s: int = 4) -> bytes:
+
+def write_mini_wcofs_bytes(
+    n_eta: int = 6,
+    n_xi: int = 6,
+    n_s: int = 4,
+    *,
+    cycle_date: dt.date | None = None,
+    lead_tag: str = "n024",
+) -> bytes:
+    cycle_date = cycle_date or dt.date(2026, 9, 26)
+    valid = valid_time_for_lead_tag(cycle_date, lead_tag)
+    epoch = dt.datetime(1970, 1, 1, tzinfo=dt.timezone.utc)
+    ocean_seconds = (valid - epoch).total_seconds()
+
     with tempfile.NamedTemporaryFile(suffix=".nc", delete=False) as tmp:
         tmp_path = tmp.name
     with nc.Dataset(tmp_path, mode="w") as ds:
@@ -41,7 +56,9 @@ def write_mini_wcofs_bytes(n_eta: int = 6, n_xi: int = 6, n_s: int = 4) -> bytes
         temp[0] = np.linspace(10, 18, n_s)[:, None, None]
         salt[0] = 33.0
         ot = ds.createVariable("ocean_time", "f8", ("ocean_time",))
-        ot[:] = 0.0
+        ot.units = "seconds since 1970-01-01 00:00:00 UTC"
+        ot.calendar = "standard"
+        ot[:] = ocean_seconds
     data = Path(tmp_path).read_bytes()
     Path(tmp_path).unlink(missing_ok=True)
     return data

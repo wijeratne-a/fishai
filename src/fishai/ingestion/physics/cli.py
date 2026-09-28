@@ -68,8 +68,8 @@ def cmd_wcofs_daily(args: argparse.Namespace) -> int:
             print(f"pull_log={plan.pull_log}")
         if plan.qc_report_path:
             print(f"qc_report={plan.qc_report_path}")
-        if plan.unknown_leads:
-            print(f"unknown={plan.unknown_leads}")
+        if plan.unknown_slots:
+            print(f"unknown={plan.unknown_slots}")
         return 0
     print(f"wrote {plan.zarr_path}")
     return 0

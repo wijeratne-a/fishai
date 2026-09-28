@@ -20,17 +20,61 @@ THREDDS_BASE = "https://opendap.co-ops.nos.noaa.gov/thredds/dodsC/NOAA/WCOFS/MOD
 
 NOWCAST_LEADS = tuple(f"n{k:03d}" for k in range(3, 25, 3))
 FORECAST_LEADS = tuple(f"f{k:03d}" for k in range(3, 73, 3))
-OPERATIONAL_LEAD_HOURS = tuple(range(3, 73, 3))
+ALL_FIELD_LEADS = NOWCAST_LEADS + FORECAST_LEADS
 CYCLE_PROBE_LEAD = "n024"
 DEFAULT_SUBSET_MARGIN_CELLS = 2
 
+# Target timeline: hours from requested run time R (03Z) at 3-hourly steps.
+TARGET_VALID_OFFSETS_H = tuple(list(range(-21, 1, 3)) + list(range(3, 73, 3)))
+
+
+def cycle_run_time(cycle_date: dt.date) -> dt.datetime:
+    return dt.datetime.combine(cycle_date, dt.time(3, 0), tzinfo=dt.timezone.utc)
+
+
+def valid_time_for_lead_tag(cycle_date: dt.date, lead_tag: str) -> dt.datetime:
+    """WCOFS fields valid time: nNNN at R-(24-NNN), fNNN at R+NNN."""
+    r = cycle_run_time(cycle_date)
+    suffix = int(lead_tag[1:])
+    if lead_tag.startswith("n"):
+        return r - dt.timedelta(hours=24 - suffix)
+    return r + dt.timedelta(hours=suffix)
+
+
+def valid_time_offset_from_r(cycle_date: dt.date, lead_tag: str, *, requested: dt.date) -> int:
+    valid = valid_time_for_lead_tag(cycle_date, lead_tag)
+    r_req = cycle_run_time(requested)
+    return int((valid - r_req).total_seconds() // 3600)
+
+
+def lead_tag_for_valid_offset(hours_from_requested_r: int) -> str:
+    if hours_from_requested_r <= 0:
+        n = 24 + hours_from_requested_r
+        tag = f"n{n:03d}"
+        if tag not in NOWCAST_LEADS:
+            raise ValueError(f"invalid nowcast offset {hours_from_requested_r}")
+        return tag
+    tag = f"f{hours_from_requested_r:03d}"
+    if tag not in FORECAST_LEADS:
+        raise ValueError(f"invalid forecast offset {hours_from_requested_r}")
+    return tag
+
+
+def lead_tag_for_age_from_source(age_hours: int) -> str:
+    """Map hours from a source cycle's R to the fields lead tag covering that valid time."""
+    if age_hours <= 0:
+        tag = f"n{24 + age_hours:03d}"
+        if tag not in NOWCAST_LEADS:
+            raise ValueError(f"age {age_hours} outside nowcast range")
+        return tag
+    tag = f"f{age_hours:03d}"
+    if tag not in FORECAST_LEADS:
+        raise ValueError(f"age {age_hours} outside forecast range")
+    return tag
+
 
 def operational_lead_tags() -> tuple[str, ...]:
-    """Distinct WCOFS field files covering 3–72 h (nowcast preferred through 24 h)."""
-    tags: list[str] = []
-    for h in OPERATIONAL_LEAD_HOURS:
-        tags.append(lead_tag_for_hour(h))
-    return tuple(tags)
+    return ALL_FIELD_LEADS
 
 
 def lead_hour_from_tag(lead: str) -> int:
@@ -38,14 +82,8 @@ def lead_hour_from_tag(lead: str) -> int:
 
 
 def lead_tag_for_hour(hour: int) -> str:
-    if hour <= 24:
-        tag = f"n{hour:03d}"
-        if tag in NOWCAST_LEADS:
-            return tag
-    tag = f"f{hour:03d}"
-    if tag in FORECAST_LEADS:
-        return tag
-    raise ValueError(f"unsupported WCOFS lead hour {hour}")
+    """Legacy helper: hour is forecast age from source R (nowcast hours map to n*, else f*)."""
+    return lead_tag_for_age_from_source(hour)
 
 
 def fields_s3_key(day: dt.date, lead: str) -> str:
