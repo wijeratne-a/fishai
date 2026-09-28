@@ -53,7 +53,7 @@ Per stratum, take the **worst** verdict in order **UNKNOWN → FAIL → DEGRADED
 
 ## Upwelling lags (if `upwelling` survives)
 
-Trailing means over **0, 7, 14, and 28** days ending the day before the event (no other lags). Selected by time-forward CV on the fit split through **2017-12-31** by mean out-of-fold log-likelihood; frozen before **2018-01-01** and never re-selected for the **2018-01-01–2022-04-27** test (auditor accepted).
+Trailing means over **0, 7, 14, and 28** days ending the day before the event (no other lags). Selected by time-forward CV on the fit split through **2017-12-31** by mean out-of-fold log-likelihood; frozen before **2018-01-01** and never re-selected for the **2018-01-01–2022-04-27** test (auditor accepted). **Do not re-select lags after test results or holdout diagnostics are seen.**
 
 ## Independence
 

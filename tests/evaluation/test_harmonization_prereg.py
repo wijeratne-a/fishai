@@ -15,12 +15,15 @@ from fishai.evaluation.harmonization_prereg import (
     assert_pass_fail_thresholds_ready_for_scoring,
     assert_shoreline_simplification_check_valid,
     assert_graded_inputs_declared_in_variables,
+    assert_upwelling_lags_prereg,
     frozen_shoreline_reference,
     frozen_shoreline_reference_sha256,
     is_valid_frozen_shoreline_sha256,
     load_harmonization_prereg,
     pass_fail_thresholds_cutoffs,
     pass_fail_graded_input_names,
+    upwelling_lags_prereg,
+    upwelling_survives_in_pilot_variables,
     run_harmonization_scoring,
     shoreline_simplification_check,
 )
@@ -356,11 +359,14 @@ def test_buoy_and_glider_forcing_gate_observations() -> None:
 
 def test_upwelling_lags_and_shared_forcing_variable() -> None:
     doc = load_harmonization_prereg(PREREG)
-    lags = doc["harmonization_wcofs_glorys"]["upwelling_lags"]
+    assert_upwelling_lags_prereg(doc)
+    lags = upwelling_lags_prereg(doc)
     days = [c["trailing_mean_days"] for c in lags["candidates"]]
     assert days == [0, 7, 14, 28]
     assert lags["selection"]["fit_split_end"] == "2017-12-31"
     assert lags["selection"]["never_reselect_after_freeze"] is True
+    assert "re-select" in lags["selection"]["note"].lower()
+    assert upwelling_survives_in_pilot_variables(doc) is True
     vars_by_name = {v["name"]: v for v in doc["harmonization_wcofs_glorys"]["variables"]}
     assert vars_by_name["upwelling"]["grading"] == "shared_forcing"
     assert vars_by_name["upwelling"]["role"] == "report_only"
