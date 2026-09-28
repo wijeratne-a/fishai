@@ -2,6 +2,9 @@
 
 from __future__ import annotations
 
+import json
+from typing import Any
+
 import numpy as np
 import pandas as pd
 
@@ -14,13 +17,28 @@ from fishai.ingestion.physics.covariates import (
     COL_STOP_LAT,
     COL_STOP_LON,
     CufesEventValidationError,
+    DEFAULT_COVARIATE_DROP_SUMMARY_JSON_NAME,
+    DEFAULT_COVARIATE_DROPS_PARQUET_NAME,
     DROP_REASON_LAND_MASK,
     DROP_REASON_MISSING_COVARIATE,
     DROP_REASON_MISSING_ENDPOINT,
     DROP_REASON_TOO_FEW_TRACK_POINTS,
+    DROP_REASONS_ALL,
+    DROP_SUMMARY_JSON_SCHEMA_VERSION,
     SAMPLER_LAND_MASK_KEY,
     join_covariates_to_events,
 )
+
+
+def _assert_json_ints(obj: Any) -> None:
+    if isinstance(obj, dict):
+        for v in obj.values():
+            _assert_json_ints(v)
+    elif isinstance(obj, list):
+        for v in obj:
+            _assert_json_ints(v)
+    else:
+        assert isinstance(obj, int)
 
 
 def _events() -> pd.DataFrame:
@@ -148,7 +166,7 @@ def test_excluded_flag_and_nan_covariates_for_land_and_short_track() -> None:
 
 def test_writes_drop_parquet(tmp_path) -> None:
     events = _events()
-    drops_path = tmp_path / "cufes_physics_covariate_drops.parquet"
+    drops_path = tmp_path / DEFAULT_COVARIATE_DROPS_PARQUET_NAME
     _, qc, _ = join_covariates_to_events(
         events,
         field_sampler=lambda *_: {},
@@ -157,3 +175,58 @@ def test_writes_drop_parquet(tmp_path) -> None:
     )
     assert drops_path.is_file()
     assert qc["drops_parquet_path"] == str(drops_path)
+
+
+def test_writes_drop_summary_json_round_trip(tmp_path) -> None:
+    events = _events()
+    events.loc[0, COL_STOP_LAT] = np.nan
+    drops_path = tmp_path / DEFAULT_COVARIATE_DROPS_PARQUET_NAME
+    summary_path = tmp_path / DEFAULT_COVARIATE_DROP_SUMMARY_JSON_NAME
+
+    def sampler(_lat: float, _lon: float, _t: pd.Timestamp) -> dict:
+        return {field: 1.0 for field in CUFES_COVARIATE_FIELDS}
+
+    _, qc, drops = join_covariates_to_events(
+        events,
+        field_sampler=sampler,
+        source="t",
+        drops_parquet_path=drops_path,
+        drop_summary_json_path=summary_path,
+    )
+    assert summary_path.is_file()
+    assert qc["drop_summary_json_path"] == str(summary_path)
+    loaded = json.loads(summary_path.read_text(encoding="utf-8"))
+    unique_in = int(events["event_id"].nunique())
+    assert loaded["schema_version"] == DROP_SUMMARY_JSON_SCHEMA_VERSION
+    assert loaded["input_event_count"] == unique_in
+    assert loaded["input_event_count"] == qc["drop_summary"]["input_event_count"]
+    assert loaded["dropped_unique_total"] == int(drops["event_id"].nunique())
+    assert loaded["dropped_unique_total"] == qc["drop_summary"]["dropped_unique_total"]
+    for reason in DROP_REASONS_ALL:
+        assert reason in loaded["unique_by_reason"]
+        assert reason in loaded["rows_by_reason"]
+        assert loaded["unique_by_reason"][reason] == qc["drop_summary"].get(reason, 0)
+        assert loaded["rows_by_reason"][reason] == qc["rows_by_reason"].get(reason, 0)
+    assert loaded["unique_by_reason"][DROP_REASON_MISSING_ENDPOINT] >= 1
+    assert loaded["unique_by_reason"][DROP_REASON_LAND_MASK] == 0
+    _assert_json_ints(loaded)
+
+
+def test_drop_summary_json_all_reasons_zero_when_no_drops(tmp_path) -> None:
+    events = _events().iloc[[0]].copy()
+    summary_path = tmp_path / DEFAULT_COVARIATE_DROP_SUMMARY_JSON_NAME
+
+    def sampler(_lat: float, _lon: float, _t: pd.Timestamp) -> dict:
+        return {field: 1.0 for field in CUFES_COVARIATE_FIELDS}
+
+    join_covariates_to_events(
+        events,
+        field_sampler=sampler,
+        source="t",
+        drop_summary_json_path=summary_path,
+    )
+    loaded = json.loads(summary_path.read_text(encoding="utf-8"))
+    for reason in DROP_REASONS_ALL:
+        assert loaded["unique_by_reason"][reason] == 0
+        assert loaded["rows_by_reason"][reason] == 0
+    assert loaded["dropped_unique_total"] == 0

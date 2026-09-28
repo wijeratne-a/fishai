@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import json
 import math
 from collections.abc import Callable
 from pathlib import Path
@@ -56,6 +57,17 @@ DROP_REASON_LAND_MASK = "land_mask"
 DROP_REASON_MISSING_COVARIATE = "missing_covariate"
 DROP_REASON_TOO_FEW_TRACK_POINTS = "too_few_track_points"
 DROP_REASON_MISSING_ENDPOINT = "missing_endpoint"
+
+DROP_REASONS_ALL: tuple[str, ...] = (
+    DROP_REASON_LAND_MASK,
+    DROP_REASON_MISSING_COVARIATE,
+    DROP_REASON_TOO_FEW_TRACK_POINTS,
+    DROP_REASON_MISSING_ENDPOINT,
+)
+
+DROP_SUMMARY_JSON_SCHEMA_VERSION = 1
+DEFAULT_COVARIATE_DROPS_PARQUET_NAME = "cufes_physics_covariate_drops.parquet"
+DEFAULT_COVARIATE_DROP_SUMMARY_JSON_NAME = "cufes_physics_covariate_drop_summary.json"
 
 DROP_TABLE_COLUMNS: tuple[str, ...] = (
     "event_id",
@@ -221,6 +233,47 @@ def write_covariate_drop_table(drops: pd.DataFrame, path: Path) -> Path:
     return path
 
 
+def build_covariate_drop_summary_json(
+    drop_summary: dict[str, Any],
+    rows_by_reason: dict[str, int],
+) -> dict[str, Any]:
+    """
+    Map in-memory ``qc['drop_summary']`` to the JSON document for R (``jsonlite``).
+
+    Schema (``schema_version`` 1)::
+
+        {
+          "schema_version": 1,
+          "input_event_count": <int>,
+          "dropped_unique_total": <int>,
+          "unique_by_reason": {<reason>: <int>, ...},
+          "rows_by_reason": {<reason>: <int>, ...}
+        }
+
+    Every ``DROP_REASON_*`` appears in both reason maps (0 when unused).
+    Default artifact name: ``cufes_physics_covariate_drop_summary.json`` beside
+    ``cufes_physics_covariate_drops.parquet``.
+    """
+    unique_by_reason = {reason: int(drop_summary.get(reason, 0)) for reason in DROP_REASONS_ALL}
+    row_counts = {reason: int(rows_by_reason.get(reason, 0)) for reason in DROP_REASONS_ALL}
+    return {
+        "schema_version": DROP_SUMMARY_JSON_SCHEMA_VERSION,
+        "input_event_count": int(drop_summary["input_event_count"]),
+        "dropped_unique_total": int(drop_summary["dropped_unique_total"]),
+        "unique_by_reason": unique_by_reason,
+        "rows_by_reason": row_counts,
+    }
+
+
+def write_covariate_drop_summary(summary: dict[str, Any], path: Path) -> Path:
+    """Write UTF-8 JSON with sorted keys and plain ``int`` values (no numpy types)."""
+    path = Path(path)
+    path.parent.mkdir(parents=True, exist_ok=True)
+    text = json.dumps(summary, sort_keys=True, indent=2) + "\n"
+    path.write_text(text, encoding="utf-8")
+    return path
+
+
 def join_covariates_to_events(
     events: pd.DataFrame,
     *,
@@ -229,6 +282,7 @@ def join_covariates_to_events(
     provenance: str = "",
     grid_cell_km: float = DEFAULT_GRID_CELL_KM,
     drops_parquet_path: Path | None = None,
+    drop_summary_json_path: Path | None = None,
 ) -> tuple[pd.DataFrame, dict[str, Any], pd.DataFrame]:
     """
     One covariate row per input ``event_id``.
@@ -249,6 +303,9 @@ def join_covariates_to_events(
 
     ``drop_summary`` reports ``input_event_count``, unique events per ``reason``,
     and ``dropped_unique_total``.
+
+    Optional ``drop_summary_json_path`` writes the flat JSON schema for R
+    (``freeze.R`` / ``jsonlite``); see ``build_covariate_drop_summary_json``.
     """
     validate_cufes_events(events)
     input_event_count = int(events[COL_EVENT_ID].nunique())
@@ -337,4 +394,8 @@ def join_covariates_to_events(
     if drops_parquet_path is not None:
         written = write_covariate_drop_table(drops, Path(drops_parquet_path))
         qc["drops_parquet_path"] = str(written)
+    if drop_summary_json_path is not None:
+        summary_doc = build_covariate_drop_summary_json(drop_summary, rows_by_reason)
+        written_json = write_covariate_drop_summary(summary_doc, Path(drop_summary_json_path))
+        qc["drop_summary_json_path"] = str(written_json)
     return out, qc, drops
