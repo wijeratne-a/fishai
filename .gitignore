@@ -1,25 +1,52 @@
+# FishAI — strict ignore for data, secrets, and binary artifacts
+
 node_modules/
 dist/
 .DS_Store
 *.log
 .env
 .env.*
+!.env.example
 coverage/
 .vite/
 __pycache__/
 *.pyc
+.pytest_cache/
+.ruff_cache/
+.mypy_cache/
+.venv/
+venv/
+
+# Data trees (never commit raw/processed survey or grid files)
 data/raw/
+data/processed/
 data/interim/
 data/restricted/
 data/quarantine/*
 !data/quarantine/README.md
+
+# Secrets and credentials
+credentials/
+secrets/
+*.pem
+*.key
+
+# Geospatial and model binaries
 *.nc
 *.grib
 *.grib2
 *.parquet
+*.zarr
+*.zarr/
+*.h5
+*.hdf5
 *.gpkg
 *.tif
 *.tiff
-credentials/
-secrets/
 *.pdf
+
+# R renv library (lockfile is tracked)
+renv/library/
+renv/local/
+renv/cellar/
+renv/staging/

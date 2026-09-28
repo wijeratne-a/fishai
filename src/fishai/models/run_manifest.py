@@ -11,7 +11,7 @@ from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
 
-REPO_ROOT = Path(__file__).resolve().parents[2]
+REPO_ROOT = Path(__file__).resolve().parents[3]
 REQUIRED = (
     "experiment_id",
     "random_seed",
@@ -95,7 +95,7 @@ def write_manifest(dest: Path, manifest: dict[str, Any]) -> Path:
 
 
 def main() -> int:
-    dest = REPO_ROOT / "audit" / "prediction-test" / "SYNTHETIC_RUN_MANIFEST.json"
+    dest = REPO_ROOT / "data" / "processed" / "manifests" / "SYNTHETIC_RUN_MANIFEST.json"
     manifest = build_manifest(
         experiment_id="syn_frozen_protocol_1",
         random_seed=20260926,

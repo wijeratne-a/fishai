@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import unittest
 
-from evaluation.support.mask import (
+from fishai.evaluation.support.mask import (
     SUPPORT_LABELS,
     label_support_point,
     nearest_train_distance,

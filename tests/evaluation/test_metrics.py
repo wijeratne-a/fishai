@@ -5,7 +5,7 @@ from __future__ import annotations
 import math
 import unittest
 
-from evaluation.engine.metrics import brier_score, log_loss
+from fishai.evaluation.engine.metrics import brier_score, log_loss
 
 
 class MetricsTests(unittest.TestCase):

@@ -10,8 +10,8 @@ from pathlib import Path
 import jsonschema
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
-SCHEMAS = REPO_ROOT / "schemas"
-AUDIT = REPO_ROOT / "audit" / "contracts"
+SCHEMAS = REPO_ROOT / "src" / "fishai" / "schemas"
+AUDIT = REPO_ROOT / "docs" / "archive" / "audit" / "contracts"
 
 
 def load_schema(name: str) -> dict:

@@ -10,7 +10,7 @@ import yaml
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
 SCIENCE = REPO_ROOT / "science" / "measurements"
-AUDIT = REPO_ROOT / "audit" / "measurements"
+AUDIT = REPO_ROOT / "docs" / "archive" / "audit" / "measurements"
 
 
 def load_registry() -> dict:

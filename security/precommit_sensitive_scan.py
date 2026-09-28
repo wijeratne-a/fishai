@@ -28,17 +28,22 @@ SKIP_DIR_NAMES = {
 
 PROTECTED_PREFIXES = (
     "data/raw",
+    "data/processed",
     "data/interim",
     "data/restricted",
     "data/quarantine",
+    "docs/archive",
 )
 
 SCANNABLE_PREFIXES = (
-    "audit",
+    "src",
+    "tests",
+    "security",
+    "labels",
+    "science",
     "scripts",
     "docs",
     "data/manifests",
-    "data/processed",
     "data/metadata",
 )
 

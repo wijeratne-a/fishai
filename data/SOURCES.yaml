@@ -1,0 +1,51 @@
+# License manifest for ingestion source modules under src/fishai/ingestion/
+# Every non-__init__ module must appear here (enforced in CI).
+
+pilot:
+  name: Southern California Bight 50-mile nowcast
+  bbox:
+    lat_min: 32.0
+    lat_max: 35.0
+    lon_min: -121.0
+    lon_max: -117.0
+
+sources:
+  calcofi_cufes:
+    module: fishai.ingestion.biology.calcofi_cufes
+    erddap_dataset: erdCalCOFIcufes
+    provider: CalCOFI / SCCOOS ERDDAP
+    license_status: approved
+    ingestion_enabled: true
+    notes: Egg-stage evidence only; not adult presence.
+
+  wcofs:
+    module: fishai.ingestion.physics.wcofs
+    endpoint_family: NOAA WCOFS public S3
+    license_status: approved
+    ingestion_enabled: true
+
+  glorys:
+    module: fishai.ingestion.physics.glorys
+    product: Copernicus Marine GLORYS
+    license_status: account_required
+    ingestion_enabled: false
+
+  sccoos_hfr:
+    module: fishai.ingestion.sensors.sccoos_hfr
+    erddap_dataset: ucsdHfrW6
+    provider: SCCOOS HF radar
+    license_status: approved
+    ingestion_enabled: true
+
+  ndbc_met:
+    module: fishai.ingestion.sensors.ndbc_met
+    erddap_dataset: cwwcNDBCMet
+    provider: NDBC via ERDDAP
+    license_status: approved
+    ingestion_enabled: true
+
+  ioos_glider_dac:
+    module: fishai.ingestion.sensors.ioos_glider_dac
+    provider: IOOS Glider DAC
+    license_status: license_pending
+    ingestion_enabled: false

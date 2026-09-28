@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import unittest
 
-from models.frameworks.baselines.prevalence import PrevalenceBaseline
+from fishai.models.frameworks.baselines.prevalence import PrevalenceBaseline
 
 
 class PrevalenceBaselineTests(unittest.TestCase):
