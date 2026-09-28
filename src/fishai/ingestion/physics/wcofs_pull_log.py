@@ -1,4 +1,4 @@
-"""Immutable pull log records for WCOFS NetCDF fetches."""
+"""Append-only WCOFS pull provenance (daily job + PDS overlap helpers)."""
 
 from __future__ import annotations
 
@@ -11,6 +11,7 @@ from typing import Any
 from fishai.ingestion.sources import REPO_ROOT
 
 DEFAULT_PULL_LOG_DIR = REPO_ROOT / "data" / "provenance"
+DEFAULT_WCOFS_PULL_LOG = DEFAULT_PULL_LOG_DIR / "wcofs_pull_log.jsonl"
 
 
 def resolve_pull_log_dir(
@@ -95,9 +96,37 @@ def load_pull_index(log_path: Path) -> dict[str, dict[str, Any]]:
     out: dict[str, dict[str, Any]] = {}
     for line in log_path.read_text(encoding="utf-8").splitlines():
         if not line.strip():
-            continue
+            continue:
         rec = json.loads(line)
         key = rec.get("s3_key")
         if key and rec.get("status") == "ok":
             out[str(key)] = rec
     return out
+
+
+def append_wcofs_pull_log(record: dict[str, Any], *, log_path: Path | None = None) -> Path:
+    path = log_path or DEFAULT_WCOFS_PULL_LOG
+    path.parent.mkdir(parents=True, exist_ok=True)
+    line = json.dumps(record, sort_keys=True) + "\n"
+    with path.open("a", encoding="utf-8") as handle:
+        handle.write(line)
+    return path
+
+
+def build_wcofs_pull_record(
+    *,
+    cycle_date: str,
+    s3_key: str,
+    attribution: str,
+    request_count: int = 1,
+    timestamp: datetime | None = None,
+) -> dict[str, Any]:
+    ts = timestamp or datetime.now(timezone.utc)
+    return {
+        "source": "wcofs",
+        "cycle_date": cycle_date,
+        "s3_key": s3_key,
+        "attribution": attribution,
+        "timestamp": ts.isoformat(),
+        "request_count": int(request_count),
+    }

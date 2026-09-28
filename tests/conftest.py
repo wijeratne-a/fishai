@@ -1,22 +1,34 @@
-"""Pytest configuration: allow imports of co-located test helpers."""
+"""Shared pytest hooks (provenance / artifacts immutability)."""
 
 from __future__ import annotations
 
+import hashlib
 import sys
 from pathlib import Path
 
 import pytest
 
-from fishai.ingestion.sources import REPO_ROOT
+REPO_ROOT = Path(__file__).resolve().parents[1]
+_TRACKED_PREFIXES = (
+    REPO_ROOT / "data" / "provenance",
+    REPO_ROOT / "artifacts",
+)
 
 _PHYSICS_TEST_DIR = Path(__file__).resolve().parent / "ingestion" / "physics"
 if str(_PHYSICS_TEST_DIR) not in sys.path:
     sys.path.insert(0, str(_PHYSICS_TEST_DIR))
 
-_GUARD_ROOTS = (
-    REPO_ROOT / "data" / "provenance",
-    REPO_ROOT / "artifacts",
-)
+
+def _tracked_repo_files() -> dict[Path, str]:
+    out: dict[Path, str] = {}
+    for base in _TRACKED_PREFIXES:
+        if not base.is_dir():
+            continue
+        for path in sorted(base.rglob("*")):
+            if path.is_file():
+                rel = path.relative_to(REPO_ROOT)
+                out[rel] = hashlib.sha256(path.read_bytes()).hexdigest()
+    return out
 
 
 def _tree_snapshot(root: Path) -> dict[str, tuple[int, int]]:
@@ -30,11 +42,25 @@ def _tree_snapshot(root: Path) -> dict[str, tuple[int, int]]:
 
 
 @pytest.fixture(scope="session", autouse=True)
-def _guard_repo_provenance_and_artifacts() -> None:
-    before = {str(root): _tree_snapshot(root) for root in _GUARD_ROOTS}
+def _provenance_and_artifacts_unchanged_by_tests() -> None:
+    before = _tracked_repo_files()
     yield
-    after = {str(root): _tree_snapshot(root) for root in _GUARD_ROOTS}
-    assert before == after, "Test run modified data/provenance or artifacts/"
+    after = _tracked_repo_files()
+    if before.keys() != after.keys():
+        added = set(after) - set(before)
+        removed = set(before) - set(after)
+        msg = []
+        if added:
+            msg.append("new files: " + ", ".join(str(p) for p in sorted(added)))
+        if removed:
+            msg.append("removed files: " + ", ".join(str(p) for p in sorted(removed)))
+        pytest.fail("data/provenance or artifacts tree changed during tests: " + "; ".join(msg))
+    changed = [rel for rel in before if before[rel] != after[rel]]
+    if changed:
+        pytest.fail(
+            "data/provenance or artifacts file content changed during tests: "
+            + ", ".join(str(p) for p in sorted(changed))
+        )
 
 
 @pytest.fixture

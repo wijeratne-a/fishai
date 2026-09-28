@@ -212,6 +212,48 @@ def ekman_upwelling(
     return out
 
 
+def front_distance_km(
+    sst_grad: np.ndarray,
+    lat: np.ndarray,
+    lon: np.ndarray,
+    *,
+    grad_threshold: float | None = None,
+) -> np.ndarray:
+    """
+    Distance (km) from each grid cell to the nearest SST-gradient front.
+
+    Front cells are those with ``sst_grad`` at or above ``grad_threshold`` (defaults
+    to the 90th percentile of finite gradients on the field).
+    """
+    sst_grad = np.asarray(sst_grad, dtype=float)
+    lat = np.asarray(lat, dtype=float)
+    lon = np.asarray(lon, dtype=float)
+    if lat.ndim == 1 and lon.ndim == 1:
+        lat2d, lon2d = np.meshgrid(lat, lon, indexing="ij")
+    else:
+        lat2d, lon2d = lat, lon
+    finite = np.isfinite(sst_grad)
+    if not finite.any():
+        return np.full(sst_grad.shape, np.nan, dtype=float)
+    thr = (
+        float(grad_threshold)
+        if grad_threshold is not None
+        else float(np.nanpercentile(sst_grad[finite], 90))
+    )
+    front = finite & (sst_grad >= thr)
+    if not front.any():
+        return np.full(sst_grad.shape, np.nan, dtype=float)
+    fj, fi = np.where(front)
+    out = np.full(sst_grad.shape, np.nan, dtype=float)
+    for j in range(sst_grad.shape[0]):
+        for i in range(sst_grad.shape[1]):
+            if not finite[j, i]:
+                continue
+            dists = _haversine_km(lat2d[j, i], lon2d[j, i], lat2d[fj, fi], lon2d[fj, fi])
+            out[j, i] = float(np.min(dists))
+    return out
+
+
 def _haversine_km(lat1: float, lon1: float, lat2: np.ndarray, lon2: np.ndarray) -> np.ndarray:
     p1, p2 = math.radians(lat1), np.radians(lat2)
     dphi = p2 - p1

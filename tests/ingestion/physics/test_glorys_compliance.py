@@ -18,9 +18,10 @@ from fishai.ingestion.copernicus_compliance import (
     require_glorys_attribution,
 )
 from fishai.ingestion.physics.sources.glorys import (
-    PRODUCT_ID,
+    PRODUCT_ID_MY,
     fetch_day,
     glorys_column_features,
+    glorys_product_for_date,
 )
 from fishai.ingestion.physics.vertical import (
     CUFES_SAMPLE_DEPTH_M,
@@ -50,8 +51,9 @@ def test_glorys_fetch_appends_pull_log(tmp_path: Path) -> None:
     def fake_fetch() -> dict:
         return {"variables": ["thetao"]}
 
+    pull_day = dt.date(2020, 6, 1)
     fetch_day(
-        dt.date(2020, 6, 1),
+        pull_day,
         bbox,
         purpose="hindcast",
         fetch_fn=fake_fetch,
@@ -60,7 +62,8 @@ def test_glorys_fetch_appends_pull_log(tmp_path: Path) -> None:
     lines = log_path.read_text(encoding="utf-8").strip().splitlines()
     assert len(lines) == 1
     rec = json.loads(lines[0])
-    assert rec["dataset_id"] == PRODUCT_ID
+    assert rec["dataset_id"] == glorys_product_for_date(pull_day)
+    assert rec["dataset_id"] == PRODUCT_ID_MY
     assert rec["variables"]
     assert rec["request_count"] == 1
     assert "timestamp" in rec
