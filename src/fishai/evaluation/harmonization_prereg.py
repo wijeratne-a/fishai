@@ -11,6 +11,7 @@ import yaml
 REPO_ROOT = Path(__file__).resolve().parents[3]
 DEFAULT_PREREG_PATH = REPO_ROOT / "prereg" / "harmonization_wcofs_glorys.yaml"
 PLACEHOLDER_TOKEN = "TO_BE_SET_BEFORE_SCORING"
+PENDING_COMBINATION_RULE_PREFIX = "PENDING_AUDITOR_CONFIRMATION"
 FROZEN_SHORELINE_SHA256_PREFIX = "2f677a16"
 FROZEN_SHORELINE_SHA256_SUFFIX = "20996c"
 _SHA256_HEX_RE = re.compile(r"^[0-9a-f]{64}$")
@@ -71,6 +72,34 @@ def is_valid_frozen_shoreline_sha256(value: object) -> bool:
 FROZEN_PILOT_SHORELINE_REFERENCE_SHA256 = frozen_shoreline_reference_sha256()
 
 
+def pass_fail_thresholds_cutoffs(doc: dict[str, Any] | None = None) -> dict[str, Any]:
+    """Return auditbot1 cutoff block from ``pass_fail_thresholds.cutoffs``."""
+    raw = doc if doc is not None else load_harmonization_prereg()
+    block = raw["harmonization_wcofs_glorys"].get("pass_fail_thresholds")
+    if not isinstance(block, dict):
+        raise ValueError("missing pass_fail_thresholds in harmonization prereg")
+    cutoffs = block.get("cutoffs")
+    if not isinstance(cutoffs, dict):
+        raise ValueError("pass_fail_thresholds.cutoffs must be a mapping")
+    return cutoffs
+
+
+def combination_rule_blocks_scoring(cutoffs: dict[str, Any]) -> bool:
+    """True while ``combination_rule`` awaits auditor confirmation."""
+    rule = cutoffs.get("combination_rule")
+    return isinstance(rule, str) and rule.startswith(PENDING_COMBINATION_RULE_PREFIX)
+
+
+def assert_pass_fail_thresholds_ready_for_scoring(doc: dict[str, Any]) -> None:
+    """Refuse scoring until cutoff combination_rule is auditor-confirmed."""
+    cutoffs = pass_fail_thresholds_cutoffs(doc)
+    if combination_rule_blocks_scoring(cutoffs):
+        raise HarmonizationPreregNotReadyError(
+            "harmonization scoring blocked: pass_fail_thresholds.cutoffs.combination_rule "
+            "pending auditor confirmation"
+        )
+
+
 def iter_placeholder_fields(node: object, prefix: str = "") -> list[str]:
     """Return dotted paths whose value equals ``TO_BE_SET_BEFORE_SCORING``."""
     found: list[str] = []
@@ -127,6 +156,12 @@ def assert_harmonization_prereg_ready_for_scoring(doc: dict[str, Any]) -> None:
         )
     try:
         assert_shoreline_simplification_check_valid(doc)
+    except ValueError as exc:
+        raise HarmonizationPreregNotReadyError(str(exc)) from exc
+    try:
+        assert_pass_fail_thresholds_ready_for_scoring(doc)
+    except HarmonizationPreregNotReadyError:
+        raise
     except ValueError as exc:
         raise HarmonizationPreregNotReadyError(str(exc)) from exc
 

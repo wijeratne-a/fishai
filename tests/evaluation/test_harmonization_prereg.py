@@ -12,11 +12,14 @@ from fishai.evaluation.harmonization_prereg import (
     HarmonizationPreregNotReadyError,
     PLACEHOLDER_TOKEN,
     assert_harmonization_prereg_ready_for_scoring,
+    assert_pass_fail_thresholds_ready_for_scoring,
     assert_shoreline_simplification_check_valid,
+    combination_rule_blocks_scoring,
     frozen_shoreline_reference,
     frozen_shoreline_reference_sha256,
     is_valid_frozen_shoreline_sha256,
     load_harmonization_prereg,
+    pass_fail_thresholds_cutoffs,
     run_harmonization_scoring,
     shoreline_simplification_check,
 )
@@ -165,11 +168,26 @@ def test_native_wcofs_diagnostic_never_through_harmonization_map() -> None:
     assert native.get("role") == "diagnostic_only"
 
 
-def test_scoring_entry_point_passes_prereg_gate_on_committed_doc() -> None:
+def test_scoring_entry_point_blocked_until_combination_rule_confirmed() -> None:
     doc = load_harmonization_prereg(PREREG)
-    assert_harmonization_prereg_ready_for_scoring(doc)
+    cutoffs = pass_fail_thresholds_cutoffs(doc)
+    assert combination_rule_blocks_scoring(cutoffs)
+    with pytest.raises(HarmonizationPreregNotReadyError, match="combination_rule"):
+        assert_harmonization_prereg_ready_for_scoring(doc)
+    with pytest.raises(HarmonizationPreregNotReadyError, match="combination_rule"):
+        run_harmonization_scoring(PREREG, dry_run=True)
+
+
+def test_scoring_entry_point_ready_when_combination_rule_confirmed(tmp_path: Path) -> None:
+    doc = yaml.safe_load(yaml.dump(load_harmonization_prereg(PREREG)))
+    doc["harmonization_wcofs_glorys"]["pass_fail_thresholds"]["cutoffs"][
+        "combination_rule"
+    ] = "worst_of_buoy_and_input_verdicts_per_stratum"
+    path = tmp_path / "prereg.yaml"
+    path.write_text(yaml.dump(doc), encoding="utf-8")
+    assert_harmonization_prereg_ready_for_scoring(load_harmonization_prereg(path))
     with pytest.raises(NotImplementedError):
-        run_harmonization_scoring(PREREG)
+        run_harmonization_scoring(path)
 
 
 def test_nearshore_bot2_pr7_fields_and_pending_placeholders() -> None:
@@ -243,9 +261,70 @@ def test_shoreline_simplification_check_not_placeholder_and_matches_frozen_hash(
         assert_shoreline_simplification_check_valid(bad3)
 
 
-def test_committed_prereg_has_no_pass_fail_thresholds_placeholder_block() -> None:
+def test_pass_fail_thresholds_cutoffs_auditbot1_numeric_values() -> None:
     doc = load_harmonization_prereg(PREREG)
-    assert "pass_fail_thresholds" not in doc["harmonization_wcofs_glorys"]
+    cutoffs = pass_fail_thresholds_cutoffs(doc)
+    assert cutoffs["graded_model_row"] == "wcofs_coarsened_mapped"
+    assert cutoffs["model_rows"]["wcofs_coarsened_mapped"] == "graded"
+    assert cutoffs["model_rows"]["glorys"] == "report_only"
+    graded_obs = cutoffs["graded_observations"]
+    assert graded_obs["independent_of_wcofs_only"] is True
+    assert graded_obs["graded"]["buoy_temperature_0_494m"]["depth_m"] == 0.494
+    assert graded_obs["report_only"] == ["hf_radar_u_surf", "hf_radar_v_surf"]
+    strata = cutoffs["strata"]
+    assert strata["names"] == ["pooled", "nearshore", "offshore"]
+    assert strata["seasonal_scores"] == "report_only"
+    assert strata["gradability"]["min_matched_daily_values"] == 100
+    assert strata["gradability"]["min_distinct_buoys"] == 3
+    assert strata["gradability"]["status_when_unmet"] == "not_gradable"
+    buoy = cutoffs["buoy_gate"]
+    assert buoy["pass_requires_all"]["rmse_ratio_max"] == 1.2
+    assert buoy["pass_requires_all"]["rmse_ratio_bootstrap_upper_95_max"] == 1.5
+    assert buoy["pass_requires_all"]["absolute_bias_C_max"] == 0.5
+    assert buoy["pass_requires_all"]["pearson_r_max_deficit_vs_glorys_r"] == 0.10
+    assert buoy["degraded"]["rmse_ratio_min_exclusive"] == 1.2
+    assert buoy["degraded"]["rmse_ratio_max_inclusive"] == 1.5
+    assert buoy["degraded"]["absolute_bias_C_min_exclusive"] == 0.5
+    assert buoy["degraded"]["absolute_bias_C_max_inclusive"] == 1.0
+    assert buoy["degraded"]["nowcast_label"] == "reduced_confidence"
+    assert buoy["fail"]["verdict"] == "UNKNOWN"
+    assert buoy["fail"]["reason"] == "nowcast_forcing_failed_holdout"
+    inputs = cutoffs["graded_inputs_no_buoy"]
+    assert inputs["model_row"] == "wcofs_coarsened_mapped"
+    assert inputs["reference_row"] == "glorys"
+    assert inputs["variables"] == ["T3m", "S3m", "MLD_m", "sst_grad", "front_distance_km"]
+    assert inputs["excluded_from_grading"] == ["upwelling"]
+    rmse_sd = inputs["rmse_vs_glorys_spatial_sd"]
+    assert rmse_sd["pass_max_multiple"] == 0.5
+    assert rmse_sd["degraded_max_multiple"] == 1.0
+    assert rmse_sd["fail_above_multiple"] == 1.0
+    assert inputs["any_variable_fail_stratum_verdict"] == "UNKNOWN"
+    assert cutoffs["block_bootstrap_block_days"] == 7
+    metrics_days = doc["harmonization_wcofs_glorys"]["metrics"]["reporting"][
+        "block_bootstrap_block_days"
+    ]
+    assert cutoffs["block_bootstrap_block_days"] == metrics_days
+    with pytest.raises(HarmonizationPreregNotReadyError, match="combination_rule"):
+        assert_pass_fail_thresholds_ready_for_scoring(doc)
+
+
+def test_pass_fail_thresholds_cutoffs_align_with_nowcast_forcing_grading() -> None:
+    doc = load_harmonization_prereg(PREREG)
+    cutoffs = pass_fail_thresholds_cutoffs(doc)
+    buoy_yaml = doc["harmonization_wcofs_glorys"]["nowcast_forcing_grading"]["buoy_gate"]
+    assert cutoffs["buoy_gate"]["pass_requires_all"]["rmse_ratio_max"] == buoy_yaml[
+        "rmse_ratio_to_glorys"
+    ]["pass"]["ratio_max"]
+    assert cutoffs["buoy_gate"]["pass_requires_all"][
+        "rmse_ratio_bootstrap_upper_95_max"
+    ] == buoy_yaml["rmse_ratio_to_glorys"]["pass"]["bootstrap_upper_95_max"]
+    inputs_yaml = doc["harmonization_wcofs_glorys"]["nowcast_forcing_grading"][
+        "graded_inputs_gate"
+    ]["rmse_vs_glorys_sd"]
+    assert (
+        cutoffs["graded_inputs_no_buoy"]["rmse_vs_glorys_spatial_sd"]["pass_max_multiple"]
+        == inputs_yaml["pass_max_multiple"]
+    )
 
 
 def test_nowcast_forcing_grading_blocks() -> None:
