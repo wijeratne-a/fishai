@@ -194,11 +194,23 @@ def compute_upwelling(
     return -ui
 
 
-def upwelling_covariate_metadata(wind_source_id: str) -> dict[str, float | str]:
+def upwelling_covariate_metadata(wind_source_id: str) -> dict[str, float | str | bool]:
+    from fishai.ingestion.physics.wind_shared_forcing import (
+        CCMP_NRT_ERDDAP_ID,
+        CCMP_NRT_PRODUCT_VERSION,
+        UPWELLING_SHARED_FORCING_QUALIFIED,
+        wind_product_audit_summary,
+    )
+
+    audit = wind_product_audit_summary()
     return {
         "upwelling_formula": UPWELLING_FORMULA_ID,
         "upwelling_wind_source": wind_source_id,
         "upwelling_coast_angle_deg": PILOT_COAST_ANGLE_DEG,
+        "upwelling_shared_forcing": UPWELLING_SHARED_FORCING_QUALIFIED,
+        "upwelling_wind_dataset_id": CCMP_NRT_ERDDAP_ID,
+        "upwelling_wind_product_version": CCMP_NRT_PRODUCT_VERSION,
+        "upwelling_wind_audit": audit,
     }
 
 

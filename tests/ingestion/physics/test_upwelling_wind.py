@@ -147,3 +147,4 @@ def test_training_parquet_metadata_includes_upwelling_fields(tmp_path) -> None:
     assert meta["upwelling_formula"] == UPWELLING_FORMULA_ID
     assert meta["upwelling_wind_source"] == "ccmp_winds"
     assert meta["upwelling_coast_angle_deg"] == PILOT_COAST_ANGLE_DEG
+    assert meta["upwelling_shared_forcing"] is False

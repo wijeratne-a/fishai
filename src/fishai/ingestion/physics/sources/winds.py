@@ -1,4 +1,10 @@
-"""Wind products: CCMP daily NRT with NCEP global fallback."""
+"""
+Wind products for upwelling (CCMP V2.1 NRT ERDDAP).
+
+Training/hindcast uses CCMP only (no product mixing). Operational ``fetch_winds`` may
+fall back to PacIOOS NCEP GFS when CCMP is unavailable; that path is **not** qualified
+for ``upwelling_shared_forcing`` (see ``wind_shared_forcing.py``).
+"""
 
 from __future__ import annotations
 
@@ -14,11 +20,15 @@ import xarray as xr
 from fishai.ingestion.physics.http_util import get_bytes
 from fishai.ingestion.physics.wcofs_glorys_overlap import DailyRequestBudget, DailyRequestBudgetExceeded
 from fishai.ingestion.physics.wind_pull_log import append_wind_pull_log, build_wind_pull_record
+from fishai.ingestion.physics.wind_shared_forcing import (
+    CCMP_NRT_ERDDAP_ID,
+    require_day_within_ccmp_nrt,
+)
 from fishai.ingestion.sources import REPO_ROOT, attribution_for, get_source_entry, require_approved
 
 SOURCE_MODULE = "ccmp_winds"
 
-CCMP_DATASET_ID = "ccmp-daily-v2-1-NRT"
+CCMP_DATASET_ID = CCMP_NRT_ERDDAP_ID
 NCEP_DATASET_ID = "ncep_global"
 WIND_VARIABLES = ("uwnd", "vwnd")
 
@@ -116,40 +126,36 @@ def fetch_winds_for_day(
     """
     Historical daily 10 m winds for ``day`` (training / hindcast only).
 
-    CCMP is tried first; NCEP global is the approved fallback. Appends one pull-log
-    line per successful request.
+    Uses only the approved CCMP V2.1 NRT ERDDAP stream (no alternate product fallback).
+    Appends one pull-log line per successful request.
     """
     require_approved("ccmp_winds", purpose=purpose)
+    require_day_within_ccmp_nrt(day)
     get_fn = get_fn or get_bytes
     time_sel = f"{day.isoformat()}T12:00:00Z"
     if budget is not None:
         budget.charge(day, 1)
-    for template, source_id, dataset_id in (
-        (CCMP_DAY_URL, "ccmp_winds", CCMP_DATASET_ID),
-        (NCEP_DAY_URL, "ncep_winds", NCEP_DATASET_ID),
-    ):
-        try:
-            url = _url(template, bbox, time_sel=time_sel)
-            data = get_fn(url, extra_cache_key=f"{source_id}:{day.isoformat()}")
-            ds = _normalize_wind_dataset(_open_erddap_bytes(data), source_id)
-            version = _dataset_version(ds, dataset_id)
-            append_wind_pull_log(
-                build_wind_pull_record(
-                    dataset_id=dataset_id,
-                    date_start=day.isoformat(),
-                    date_end=day.isoformat(),
-                    variables=WIND_VARIABLES if source_id == "ccmp_winds" else ("uwind", "vwind"),
-                    bbox=bbox,
-                    dataset_version=version,
-                ),
-                log_path=log_path or _pull_log_path(source_id),
-            )
-            return ds
-        except DailyRequestBudgetExceeded:
-            raise
-        except Exception:
-            continue
-    raise RuntimeError(f"wind ERDDAP fetch failed for {day.isoformat()}")
+    try:
+        url = _url(CCMP_DAY_URL, bbox, time_sel=time_sel)
+        data = get_fn(url, extra_cache_key=f"ccmp_winds:{day.isoformat()}")
+        ds = _normalize_wind_dataset(_open_erddap_bytes(data), "ccmp_winds")
+        version = _dataset_version(ds, CCMP_DATASET_ID)
+        append_wind_pull_log(
+            build_wind_pull_record(
+                dataset_id=CCMP_DATASET_ID,
+                date_start=day.isoformat(),
+                date_end=day.isoformat(),
+                variables=WIND_VARIABLES,
+                bbox=bbox,
+                dataset_version=version,
+            ),
+            log_path=log_path or _pull_log_path("ccmp_winds"),
+        )
+        return ds
+    except DailyRequestBudgetExceeded:
+        raise
+    except Exception as exc:
+        raise RuntimeError(f"wind ERDDAP fetch failed for {day.isoformat()}") from exc
 
 
 def fetch_winds_date_range(
