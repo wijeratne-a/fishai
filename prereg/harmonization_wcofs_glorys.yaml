@@ -90,12 +90,17 @@ harmonization_wcofs_glorys:
         differ only in horizontal grid and mapping.
 
   glorys_reference_dataset:
-    copernicus_product_id: cmems_mod_glo_phy_myint_0.083deg_P1D-m
-    product_kind: interim
+    selection_rule: date_based_source_product_column
+    note: >-
+      Matches the existing CUFES covariate source_product column rule: finished
+      reanalysis through 2021-06-30, interim from 2021-07-01 onward.
+    products_by_calendar_date:
+      - copernicus_product_id: cmems_mod_glo_phy_my_0.083deg_P1D-m
+        through_date: "2021-06-30"
+      - copernicus_product_id: cmems_mod_glo_phy_myint_0.083deg_P1D-m
+        from_date: "2021-07-01"
+    pilot_harmonization_window_uses: cmems_mod_glo_phy_myint_0.083deg_P1D-m
     coverage: every calendar date in fit_start through test_end (fit and test splits)
-    finished_reanalysis_note: >-
-      Finished GLORYS reanalysis (cmems_mod_glo_phy_my_0.083deg_P1D-m) ends
-      2021-06-30; see known_limitations.
 
   variables:
     - name: T3m
@@ -329,8 +334,8 @@ harmonization_wcofs_glorys:
           in the harmonization score report under insufficient_model_coverage, split
           nearshore/offshore (using the matched GLORYS cell nearshore flag).
       pass_fail_scope: >-
-        auditbot1 pass/degraded cutoffs (when set) apply to this common-support
-        observation set only, not to row-specific supersets.
+        auditbot1 pass/degraded cutoffs apply to this common-support observation
+        set only, not to row-specific supersets.
       test_requirement: >-
         Scoring tests must assert that every model row uses the same observation
         count n within each metric stratum (season × nearshore/offshore × variable).
@@ -346,9 +351,21 @@ harmonization_wcofs_glorys:
       Harmonization and nowcast map products describe egg-stage encounter likelihood
       per the CUFES delta contract, not spawning habitat maps or adult distributions.
 
+  frozen_shoreline_reference:
+    path: data/reference/shoreline/ne_10m_land_pilot_clip.json
+    sha256: &frozen_pilot_shoreline_file_sha256 2f677a16aa6c8470846d813eda6d82f2656dea2d697b1511a4c878542d20996c
+    frozen: true
+    pr7_source_commit: 3d49b43
+    pr7_branch: cursor/wcofs-glorys-overlap-missing-by-field-60e8
+    note: >-
+      Auditor-cleared pilot shoreline vendored in PR #7; Bot4 scoring (PR #10) and
+      other consumers must compare against frozen_shoreline_reference.sha256, not
+      hard-coded hashes.
+
   nearshore:
     supplied_by: bot2
-    bot2_pr: "PR #7 @ cc26ab4"
+    bot2_pr: "PR #7 @ 3d49b43"
+    frozen_shoreline_reference_key: frozen_shoreline_reference
     shoreline_source: "Natural Earth ne_10m_land"
     shoreline_version: "5.1.1"
     license: "public domain"
@@ -359,25 +376,37 @@ harmonization_wcofs_glorys:
       lon_max: -116
       includes_channel_islands: true
     shoreline_path: data/reference/shoreline/ne_10m_land_pilot_clip.json
+    shoreline_sha256: *frozen_pilot_shoreline_file_sha256
     shoreline_simplification_note: >-
-      Natural Earth 10 m land layer (ne_10m_land) clipped to the pilot box; not a
-      further simplified geometry for production nearshore flags.
+      Natural Earth 10 m land layer (ne_10m_land) clipped to the pilot box. PR #7
+      (3d49b43) uses an unsimplified clip-only shoreline (no Douglas–Peucker); fidelity
+      work reports 0 GLORYS cells whose nearshore flag differs from the full coastline.
     cutoff_km: 20
     distance: >-
       Geodesic on WGS84 from each GLORYS cell centre to nearest mainland or island
       shoreline; nearshore when distance is cutoff_km or less.
-    shoreline_sha256: 2f677a16aa6c8470846d813eda6d82f2656dea2d697b1511a4c878542d20996c
-    shoreline_sha256_provisional: true
-    shoreline_sha256_provisional_until: PR #7 audit pass
-    shoreline_sha256_source: PR #7 branch (ne_10m_land_pilot_clip.json)
-    shoreline_simplification_check: TO_BE_SET_BEFORE_SCORING
+    shoreline_simplification_check:
+      method: none_bbox_clip_only
+      shoreline_source: Natural Earth ne_10m_land
+      shoreline_version: "5.1.1"
+      note: >-
+        none applied; the full-resolution clip differs from the source by 0 km and
+        changes 0 of the near-coast flags (simplification would have flipped 211 cells,
+        per the #7 check at 3d49b43).
+      max_coastline_displacement_km: 0
+      nearshore_flag_mismatches_vs_full_resolution: 0
+      rejected_trial:
+        description: simplified ~400 vertices
+        nearshore_flag_mismatches: 211
+      file_sha256: *frozen_pilot_shoreline_file_sha256
+      source_commit: 3d49b43
     simplification_check_requirement: >-
-      Records max coastline displacement and the count of GLORYS cells whose
-      nearshore flag differs from full-resolution shoreline; required count is 0.
+      Production shoreline uses none_bbox_clip_only; nearshore flags must match
+      full-resolution coastline (0 mismatches). file_sha256 must match
+      frozen_shoreline_reference.sha256.
     scoring_gate_note: >-
-      Scoring must refuse while shoreline_simplification_check remains
-      TO_BE_SET_BEFORE_SCORING. shoreline_sha256 is provisional until PR #7 passes
-      audit and may be updated if the vendored clip changes.
+      frozen_shoreline_reference and shoreline_simplification_check are locked;
+      path and sha256 are authoritative for PR #10 shoreline checks.
     scoring_nearshore_assignment: >-
       Every NDBC buoy observation and SCCOOS HF radar grid cell inherits the
       nearshore/offshore flag of the GLORYS cell it is matched to for scoring, not
@@ -413,6 +442,22 @@ harmonization_wcofs_glorys:
         degraded_max_inclusive: 1.0
       pearson_r:
         pass_min_vs_glorys_r: within_0.10
+        max_deficit_vs_glorys_r: 0.10
+        degraded_band: none
+      catch_all_fail_rule:
+        applies_when: >-
+          The stratum fails at least one metric PASS test and that metric does not
+          fall inside any defined DEGRADED band for that metric (RMSE ratio, absolute
+          bias, or Pearson r vs GLORYS).
+        verdict: UNKNOWN
+        reason: nowcast_forcing_failed_holdout
+        examples:
+          - >-
+            RMSE ratio point estimate <= 1.2 but bootstrap upper 95% > 1.5 (fails
+            ratio PASS pair; ratio not in (1.2, 1.5] degraded band).
+          - >-
+            Pearson r more than 0.10 below GLORYS r with no pearson_r degraded band.
+      per_stratum_aggregation: worst_verdict_across_metrics
       fail_outcome:
         verdict: UNKNOWN
         reason: nowcast_forcing_failed_holdout
