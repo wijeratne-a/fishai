@@ -3,6 +3,7 @@ fishai_engine_config:
   species:
     code: ANCH
     name: Northern anchovy
+    taxon: anchovy
   domain:
     lat_min: 32.0
     lat_max: 35.0

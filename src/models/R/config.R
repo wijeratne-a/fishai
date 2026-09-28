@@ -20,6 +20,12 @@ load_config_yaml <- function(path) {
   if (!is.null(cfg$data$table_path)) {
     cfg$data$table_path <- .abs(cfg$data$table_path)
   }
+  if (!is.null(cfg$data$events_path)) {
+    cfg$data$events_path <- .abs(cfg$data$events_path)
+  }
+  if (!is.null(cfg$data$counts_path)) {
+    cfg$data$counts_path <- .abs(cfg$data$counts_path)
+  }
   if (!is.null(cfg$prediction$grid_table)) {
     cfg$prediction$grid_table <- .abs(cfg$prediction$grid_table)
   }

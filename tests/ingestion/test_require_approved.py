@@ -18,7 +18,7 @@ from fishai.ingestion.sources import (
 class RequireApprovedTests(unittest.TestCase):
     def test_calcofi_requires_approved_manifest(self) -> None:
         entry = require_approved("calcofi_cufes")
-        self.assertEqual(entry["license"], "CC-BY-4.0")
+        self.assertIn("NOAA ERDDAP free-use", entry["license"])
         self.assertIn("CalCOFI", attribution_for("calcofi_cufes"))
 
     def test_glorys_blocked(self) -> None:

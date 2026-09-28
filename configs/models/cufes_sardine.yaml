@@ -3,6 +3,7 @@ fishai_engine_config:
   species:
     code: SARD
     name: Pacific sardine
+    taxon: sardine
   domain:
     lat_min: 32.0
     lat_max: 35.0

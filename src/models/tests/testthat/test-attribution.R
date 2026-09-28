@@ -11,6 +11,10 @@ test_that("freeze records training source attributions from SOURCES.yaml", {
   ids <- vapply(art$training_sources, function(x) x$source_id, character(1))
   expect_true(all(c("calcofi_cufes", "glorys") %in% ids))
   expect_true(all(nzchar(vapply(art$training_sources, function(x) x$attribution, character(1)))))
+  manifest <- load_sources_manifest()
+  calcofi_attr <- art$training_sources[[which(ids == "calcofi_cufes")]]$attribution
+  expect_equal(calcofi_attr, trimws(manifest$sources$calcofi_cufes$attribution))
+  expect_false(grepl("Creative Commons|CC-BY", calcofi_attr, ignore.case = TRUE))
   glorys_attr <- art$training_sources[[which(ids == "glorys")]]$attribution
   expect_match(glorys_attr, "Generated using E\\.U\\. Copernicus Marine Service Information")
   expect_match(glorys_attr, "10\\.48670/moi-00021")
