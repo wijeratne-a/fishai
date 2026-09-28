@@ -233,14 +233,29 @@ def join_covariates_to_events(
     """
     One covariate row per input ``event_id``.
 
+    Input must be bot1 ``cufes_events`` rows that already passed biology QC (PR #4
+    ``transform_rows`` kept events only), not the raw ERDDAP pull. For the CalCOFI
+    pilot that is the QC-kept subset (e.g. 14,592 events), not all rows read from
+    ERDDAP (~15,969). Downstream pipelines compare ``drop_summary['input_event_count']``
+    to their configured expected kept-event count.
+
     Covariates are means along the great-circle tow segment (start/stop positions
     from bot1), sampled at mid-time. Rows with any drop-table reason get
     ``excluded=True`` and all model covariates set to NaN; downstream training
     and evaluation must filter ``excluded == False``.
 
-    Missing endpoints → drop reason ``missing_endpoint`` and excluded row.
+    Duplicate ``event_id`` values raise ``CufesEventValidationError``. Missing
+    endpoints → drop reason ``missing_endpoint`` and excluded row.
+
+    ``drop_summary`` reports ``input_event_count``, unique events per ``reason``,
+    and ``dropped_unique_total``.
     """
     validate_cufes_events(events)
+    input_event_count = int(events[COL_EVENT_ID].nunique())
+    if input_event_count != len(events):
+        raise CufesEventValidationError(
+            "duplicate event_id values: input row count must equal unique event_id count"
+        )
     endpoint_missing = 0
     rows: list[dict[str, Any]] = []
     drop_rows: list[dict[str, Any]] = []
@@ -301,7 +316,12 @@ def join_covariates_to_events(
         raise CufesEventValidationError("output event_id order must match input")
     if set(out[COL_EVENT_ID]) != set(events[COL_EVENT_ID]):
         raise CufesEventValidationError("output event_id set must equal input")
-    drop_summary, rows_by_reason, dropped_unique_total = _drop_qc_counts(drops)
+    reason_counts, rows_by_reason, dropped_unique_total = _drop_qc_counts(drops)
+    drop_summary: dict[str, Any] = {
+        "input_event_count": input_event_count,
+        "dropped_unique_total": dropped_unique_total,
+        **reason_counts,
+    }
     excluded_ids: set[Any] = set(drops["event_id"].unique()) if not drops.empty else set()
     out["excluded"] = out[COL_EVENT_ID].isin(excluded_ids)
     if excluded_ids:

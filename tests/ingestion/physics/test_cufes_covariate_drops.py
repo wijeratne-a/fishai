@@ -5,12 +5,15 @@ from __future__ import annotations
 import numpy as np
 import pandas as pd
 
+import pytest
+
 from fishai.ingestion.physics.covariates import (
     CUFES_COVARIATE_FIELDS,
     COL_START_LAT,
     COL_START_LON,
     COL_STOP_LAT,
     COL_STOP_LON,
+    CufesEventValidationError,
     DROP_REASON_LAND_MASK,
     DROP_REASON_MISSING_COVARIATE,
     DROP_REASON_MISSING_ENDPOINT,
@@ -32,6 +35,22 @@ def _events() -> pd.DataFrame:
             "stop_longitude": [-119.98, -120.0, -120.0],
         }
     )
+
+
+def test_drop_summary_input_event_count_matches_unique_input_rows() -> None:
+    events = _events()
+    out, qc, _ = join_covariates_to_events(events, field_sampler=lambda *_: {}, source="t")
+    unique_in = events["event_id"].nunique()
+    assert qc["drop_summary"]["input_event_count"] == unique_in
+    assert qc["drop_summary"]["input_event_count"] == len(events)
+    assert len(out) == qc["drop_summary"]["input_event_count"]
+
+
+def test_join_rejects_duplicate_event_id() -> None:
+    events = _events()
+    events = pd.concat([events, events.iloc[[0]]], ignore_index=True)
+    with pytest.raises(CufesEventValidationError, match="duplicate event_id"):
+        join_covariates_to_events(events, field_sampler=lambda *_: {}, source="t")
 
 
 def test_drop_missing_endpoint() -> None:
@@ -81,6 +100,7 @@ def test_drop_summary_counts_unique_events_per_reason() -> None:
     assert len(missing_rows) == len(CUFES_COVARIATE_FIELDS)
     assert qc["drop_summary"][DROP_REASON_MISSING_COVARIATE] == 1
     assert qc["rows_by_reason"][DROP_REASON_MISSING_COVARIATE] == len(missing_rows)
+    assert qc["drop_summary"]["dropped_unique_total"] == 1
     assert qc["dropped_unique_total"] == 1
 
 
@@ -100,7 +120,7 @@ def test_drop_summary_two_reasons_one_unique_event() -> None:
     assert DROP_REASON_LAND_MASK in reasons
     assert qc["drop_summary"][DROP_REASON_TOO_FEW_TRACK_POINTS] == 1
     assert qc["drop_summary"][DROP_REASON_LAND_MASK] == 1
-    assert qc["dropped_unique_total"] == 1
+    assert qc["drop_summary"]["dropped_unique_total"] == 1
 
 
 def test_excluded_flag_and_nan_covariates_for_land_and_short_track() -> None:
