@@ -13,16 +13,93 @@ import pytest
 from fishai.ingestion.physics import http_util
 from fishai.ingestion.physics.sources import wcofs as wcofs_src
 from fishai.ingestion.physics.wcofs_daily import (
+    assemble_merged_dataset,
     build_lead_plan,
+    build_step_provenance_table,
     fetch_and_log_leads,
     plan_daily,
+    requested_cycle_time,
     run_wcofs_daily,
+    valid_time_for_step,
     wait_for_primary_cycle,
 )
 from fishai.ingestion.physics.wcofs_pull_log import DEFAULT_PULL_LOG_DIR, resolve_pull_log_dir, sha256_bytes
-from fishai.ingestion.physics.wcofs_store import DEFAULT_STORE_ROOT
+from fishai.ingestion.physics.wcofs_store import DEFAULT_STORE_ROOT, package_wcofs_cycle
 from fishai.ingestion.sources import REPO_ROOT
 from wcofs_fixtures import write_mini_wcofs_bytes
+
+
+def _one_lead_packaged(
+    target: dt.date,
+    *,
+    primary_available: bool,
+    tmp_path: Path,
+    max_missed_cycles: int = 2,
+) -> tuple[Any, Any]:
+    plan = build_lead_plan(
+        target, primary_available=primary_available, max_missed_cycles=max_missed_cycles
+    )
+    plan.bbox = (32.0, 35.0, -121.0, -117.0)
+    plan.leads = plan.leads[:1]
+    plan.s3_keys = plan.s3_keys[:1]
+    plan.pull_log = tmp_path / "provenance" / "pull.jsonl"
+    payload = write_mini_wcofs_bytes()
+    lp = plan.leads[0]
+
+    def fake_get(url: str, **kwargs: Any) -> bytes:  # noqa: ARG001
+        return payload
+
+    def fake_head(url: str) -> dict[str, Any]:  # noqa: ARG001
+        return {"status": 200, "etag": "abc", "size_bytes": len(payload)}
+
+    fetch_and_log_leads(
+        plan,
+        get_fn=fake_get,
+        head_meta_fn=fake_head,
+        log_path=plan.pull_log,
+        skip_if_etag_matches=False,
+    )
+    ds = wcofs_src.open_dataset_from_bytes(payload)
+    sub = wcofs_src.subset_bbox(ds, plan.bbox)
+    merged = assemble_merged_dataset(plan, [(lp, sub)])
+    packaged = package_wcofs_cycle(merged, target)
+    log_line = json.loads(plan.pull_log.read_text(encoding="utf-8").strip().splitlines()[0])
+    return packaged, log_line
+
+
+def test_normal_cycle_nowcast_age_and_hint(tmp_path: Path) -> None:
+    target = dt.date(2026, 9, 28)
+    packaged, log = _one_lead_packaged(target, primary_available=True, tmp_path=tmp_path)
+    assert float(packaged["forecast_age_hours"].sel(lead_hours=3).values) == 0.0
+    assert packaged["evidence_state_hint"].sel(lead_hours=3).item() == "nowcast"
+    assert packaged.attrs["fallback_used"] == "false"
+    assert log["lead_hours"] == 0.0
+    assert log["evidence_state_hint"] == "nowcast"
+    assert log["requested_cycle_time"] == requested_cycle_time(target).isoformat()
+
+
+def test_single_missed_cycle_records_forecast_age(tmp_path: Path) -> None:
+    target = dt.date(2026, 9, 28)
+    packaged, log = _one_lead_packaged(target, primary_available=False, tmp_path=tmp_path)
+    assert log["source_cycle_time"] == requested_cycle_time(target - dt.timedelta(days=1)).isoformat()
+    assert log["valid_time"] == valid_time_for_step(target, 3).isoformat()
+    assert log["lead_hours"] == 24.0
+    assert log["fallback_used"] is True
+    assert log["evidence_state_hint"] == "forecast"
+    assert log["lead_days"] == 1
+    assert float(packaged["forecast_age_hours"].sel(lead_hours=3).values) == 24.0
+    assert packaged.attrs["fallback_used"] == "true"
+
+
+def test_two_missed_cycles_mark_unknown() -> None:
+    target = dt.date(2026, 9, 28)
+    plan = build_lead_plan(target, primary_available=False, max_missed_cycles=2)
+    table = build_step_provenance_table(plan)
+    unknown = [r for r in table if r.get("state") == "UNKNOWN"]
+    assert unknown
+    assert any(r["operational_lead_hour"] == 51 for r in unknown)
+    assert all(r["evidence_state_hint"] == "UNKNOWN" for r in unknown)
+    assert all(r["reason"] == "missing_operational_cycle" for r in unknown)
 
 
 def test_resolve_pull_log_dir_routes_tmp_path_to_local_provenance(tmp_path: Path) -> None:

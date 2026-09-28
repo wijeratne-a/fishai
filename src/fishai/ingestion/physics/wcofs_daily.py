@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import datetime as dt
 import json
+import math
 import random
 import time
 from dataclasses import dataclass, field
@@ -76,6 +77,84 @@ def cycle_id(date: dt.date) -> str:
 
 def _cycle_init_utc(day: dt.date) -> dt.datetime:
     return dt.datetime.combine(day, dt.time(3, 0), tzinfo=dt.timezone.utc)
+
+
+def requested_cycle_time(target: dt.date) -> dt.datetime:
+    return _cycle_init_utc(target)
+
+
+def valid_time_for_step(target: dt.date, operational_lead_hour: int) -> dt.datetime:
+    """Valid time on the requested-cycle timeline (first slot at requested 03Z)."""
+    req = requested_cycle_time(target)
+    if operational_lead_hour == 3:
+        return req
+    return req + dt.timedelta(hours=operational_lead_hour - 3)
+
+
+def forecast_age_hours(lp: LeadPlan, target: dt.date) -> float:
+    valid = valid_time_for_step(target, lp.lead_hour)
+    source = _cycle_init_utc(lp.cycle_date)
+    return (valid - source).total_seconds() / 3600.0
+
+
+def step_fallback_used(lp: LeadPlan, target: dt.date) -> bool:
+    return lp.fallback is not None or lp.cycle_date != target
+
+
+def evidence_state_for_step(lp: LeadPlan, target: dt.date) -> tuple[str, int | None]:
+    age = forecast_age_hours(lp, target)
+    if step_fallback_used(lp, target):
+        return "forecast", int(math.ceil(age / 24.0))
+    if age <= 0.0:
+        return "nowcast", None
+    return "forecast", int(math.ceil(age / 24.0))
+
+
+def step_provenance_record(lp: LeadPlan, target: dt.date, *, primary_available: bool) -> dict[str, Any]:
+    valid = valid_time_for_step(target, lp.lead_hour)
+    source = _cycle_init_utc(lp.cycle_date)
+    requested = requested_cycle_time(target)
+    age = forecast_age_hours(lp, target)
+    hint, lead_days = evidence_state_for_step(lp, target)
+    rec: dict[str, Any] = {
+        "operational_lead_hour": lp.lead_hour,
+        "requested_cycle_time": requested.isoformat(),
+        "source_cycle_time": source.isoformat(),
+        "valid_time": valid.isoformat(),
+        "lead_hours": age,
+        "fallback_used": step_fallback_used(lp, target),
+        "evidence_state_hint": hint,
+        "primary_cycle_available": primary_available,
+    }
+    if lead_days is not None:
+        rec["lead_days"] = lead_days
+    if lp.fallback:
+        rec["fallback"] = lp.fallback
+        rec["lead_hours_used"] = lp.lead_hours_used
+    return rec
+
+
+def unknown_step_record(target: dt.date, operational_lead_hour: int) -> dict[str, Any]:
+    return {
+        "operational_lead_hour": operational_lead_hour,
+        "requested_cycle_time": requested_cycle_time(target).isoformat(),
+        "valid_time": valid_time_for_step(target, operational_lead_hour).isoformat(),
+        "state": "UNKNOWN",
+        "reason": "missing_operational_cycle",
+        "evidence_state_hint": "UNKNOWN",
+    }
+
+
+def build_step_provenance_table(plan: DailyPlan) -> list[dict[str, Any]]:
+    rows = [
+        step_provenance_record(lp, plan.target_date, primary_available=plan.primary_available)
+        for lp in plan.leads
+    ]
+    for unk in plan.unknown_leads:
+        rows.append(
+            unknown_step_record(plan.target_date, int(unk["lead_hour"])),
+        )
+    return rows
 
 
 def wait_for_primary_cycle(
@@ -219,6 +298,9 @@ def fetch_and_log_leads(
             ds = wcofs_src.open_dataset_from_bytes(data)
             sub = wcofs_src.subset_bbox(ds, bbox)
             merged.append((lp, sub))
+            prov = step_provenance_record(
+                lp, plan.target_date, primary_available=plan.primary_available
+            )
             prior = index.get(s3_key)
             if skip_if_etag_matches and prior and prior.get("etag") == meta.get("etag"):
                 continue
@@ -237,6 +319,21 @@ def fetch_and_log_leads(
                     "fallback": lp.fallback,
                     "lead_hours_used": lp.lead_hours_used,
                 },
+            )
+            rec.update(
+                {
+                    k: prov[k]
+                    for k in (
+                        "requested_cycle_time",
+                        "source_cycle_time",
+                        "valid_time",
+                        "lead_hours",
+                        "fallback_used",
+                        "evidence_state_hint",
+                        "lead_days",
+                    )
+                    if k in prov
+                }
             )
             append_pull_log(rec, log_path=log_path)
         except Exception as exc:  # noqa: BLE001
@@ -285,6 +382,23 @@ def assemble_merged_dataset(
     merged.attrs["attribution"] = attribution_for("wcofs")
     merged.attrs["source"] = "wcofs"
     merged.attrs["cycle"] = cycle_id(plan.target_date)
+    table = build_step_provenance_table(plan)
+    merged.attrs["step_provenance"] = json.dumps(table)
+    merged.attrs["requested_cycle_time"] = requested_cycle_time(plan.target_date).isoformat()
+    merged.attrs["fallback_used"] = str(
+        any(step_fallback_used(lp, plan.target_date) for lp in plan.leads)
+        or not plan.primary_available
+    ).lower()
+    source_times = {
+        step_provenance_record(lp, plan.target_date, primary_available=plan.primary_available)[
+            "source_cycle_time"
+        ]
+        for lp in plan.leads
+    }
+    if len(source_times) == 1:
+        merged.attrs["source_cycle_time"] = next(iter(source_times))
+    else:
+        merged.attrs["source_cycle_time"] = json.dumps(sorted(source_times))
     if plan.unknown_leads:
         merged.attrs["unknown_valid_times"] = json.dumps(plan.unknown_leads)
     if fallback_meta:

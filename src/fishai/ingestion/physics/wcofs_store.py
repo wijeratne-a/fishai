@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import datetime as dt
+import json
 from pathlib import Path
 from typing import Any
 
@@ -41,6 +42,13 @@ def package_wcofs_cycle(merged: xr.Dataset, cycle_date: dt.date) -> xr.Dataset:
     lon = np.where(lon > 180, lon - 360, lon)
 
     lead_values = list(merged.lead_hours.values) if "lead_hours" in merged.dims else [0]
+    step_by_op: dict[int, dict[str, Any]] = {}
+    step_raw = merged.attrs.get("step_provenance")
+    if step_raw:
+        for row in json.loads(step_raw):
+            if row.get("state") == "UNKNOWN":
+                continue
+            step_by_op[int(row["operational_lead_hour"])] = row
     temp_leads = []
     salt_leads = []
     z_leads = []
@@ -87,8 +95,13 @@ def package_wcofs_cycle(merged: xr.Dataset, cycle_date: dt.date) -> xr.Dataset:
         t3m_leads.append(t3m)
         s3m_leads.append(s3m)
         mld_leads.append(mld_m)
-        if "ocean_time" in slab:
-            times.append(np.datetime64(_surface(slab.ocean_time).values))
+        if int(lh) in step_by_op:
+            times.append(np.datetime64(step_by_op[int(lh)]["valid_time"]))
+        elif "ocean_time" in slab:
+            try:
+                times.append(np.datetime64(_surface(slab.ocean_time).values))
+            except (ValueError, TypeError):
+                times.append(np.datetime64("NaT"))
         else:
             times.append(np.datetime64("NaT"))
 
@@ -124,6 +137,35 @@ def package_wcofs_cycle(merged: xr.Dataset, cycle_date: dt.date) -> xr.Dataset:
         depth_convention="z_positive_down_metres",
         schema_version="wcofs_processed_v1",
     )
+    if step_by_op:
+        ages: list[float] = []
+        valids: list[np.datetime64] = []
+        sources: list[np.datetime64] = []
+        hints: list[str] = []
+        ldays: list[int] = []
+        for lh in lead_values:
+            row = step_by_op[int(lh)]
+            ages.append(float(row["lead_hours"]))
+            valids.append(np.datetime64(row["valid_time"]))
+            sources.append(np.datetime64(row["source_cycle_time"]))
+            hints.append(str(row["evidence_state_hint"]))
+            ldays.append(int(row.get("lead_days", -1)))
+        out = out.assign_coords(valid_time=("lead_hours", np.array(valids, dtype="datetime64[ns]")))
+        out["forecast_age_hours"] = ("lead_hours", np.asarray(ages, dtype=float))
+        out["forecast_age_hours"].attrs.update(
+            long_name="lead_hours",
+            description="Hours from source cycle analysis time to valid_time",
+            units="hours",
+        )
+        out["source_cycle_time"] = ("lead_hours", np.array(sources, dtype="datetime64[ns]"))
+        out["evidence_state_hint"] = ("lead_hours", np.asarray(hints, dtype=object))
+        out["lead_days"] = ("lead_hours", np.asarray(ldays, dtype=int))
+        out["time"] = ("lead_hours", np.array(valids, dtype="datetime64[ns]"))
+        for key in ("requested_cycle_time", "fallback_used", "source_cycle_time"):
+            if key in merged.attrs:
+                out.attrs[key] = merged.attrs[key]
+        if merged.attrs.get("unknown_valid_times"):
+            out.attrs["unknown_valid_times"] = merged.attrs["unknown_valid_times"]
     return out
 
 
