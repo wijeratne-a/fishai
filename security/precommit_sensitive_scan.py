@@ -7,6 +7,9 @@ gitignored runtime trees: ``data/raw``, ``data/interim``, ``data/restricted``,
 
 Coordinate rules live in ``security.coordinate_exposure`` (shared with other CI entrypoints).
 
+Instrument sources with ``record_type: instrument`` in ``data/SOURCES.yaml`` may expose
+public instrument coordinates under declared paths; see ``instrument_coordinate_policy``.
+
 Exit 1 on ANY hit in any tracked file.
 """
 
@@ -23,9 +26,11 @@ sys.path.insert(0, str(Path(__file__).resolve().parent))
 from coordinate_exposure import (
     csv_header_fields,
     header_has_coordinates,
+    parquet_schema_field_names,
     scan_json_content,
     scan_parquet_path,
 )
+from instrument_coordinate_policy import apply_instrument_coordinate_exemption
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
 
@@ -105,8 +110,12 @@ def scan_file(rel: str) -> list[str]:
         return []
 
     suffix = path.suffix.lower()
+    field_names: list[str] = []
+
     if suffix == ".parquet":
-        return scan_parquet_path(path)
+        hits = scan_parquet_path(path)
+        field_names = parquet_schema_field_names(path)
+        return apply_instrument_coordinate_exemption(rel, hits, field_names, path=path)
 
     if suffix not in TEXT_SUFFIXES and path.name not in {".env", "Makefile"}:
         return []
@@ -120,16 +129,29 @@ def scan_file(rel: str) -> list[str]:
         if pattern.search(text):
             hits.append(f"credential:{kind}")
 
-    if suffix in {".csv", ".tsv"} and not rel.startswith("tests/fixtures/"):
+    instrument_fixture = rel.startswith("tests/fixtures/instrument_data/")
+    if suffix in {".csv", ".tsv"} and (
+        not rel.startswith("tests/fixtures/") or instrument_fixture
+    ):
         first = text.splitlines()[0] if text else ""
         delim_fields = csv_header_fields(first.replace("\t", ","))
+        field_names = delim_fields
         if header_has_coordinates(delim_fields):
             hits.append("csv_header:latitude_or_longitude")
 
     if suffix in {".json", ".geojson"} or rel.endswith(".schema.json"):
         hits.extend(scan_json_content(text, rel=rel))
+        try:
+            import json
 
-    return hits
+            data = json.loads(text)
+            from coordinate_exposure import walk_json_property_names
+
+            field_names.extend(walk_json_property_names(data))
+        except json.JSONDecodeError:
+            pass
+
+    return apply_instrument_coordinate_exemption(rel, hits, field_names, path=path)
 
 
 def scan_repository() -> list[tuple[str, str]]:

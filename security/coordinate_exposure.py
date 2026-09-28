@@ -117,6 +117,18 @@ def scan_json_content(text: str, *, rel: str = "") -> list[str]:
     return hits
 
 
+def parquet_schema_field_names(path: Path) -> list[str]:
+    """Return Parquet column names, or [] when the schema cannot be read."""
+    try:
+        import pyarrow.parquet as pq
+    except ImportError:
+        return []
+    try:
+        return list(pq.read_schema(path).names)
+    except Exception:
+        return []
+
+
 def scan_parquet_path(path: Path) -> list[str]:
     """
     Scan a Parquet file schema for coordinate column names.

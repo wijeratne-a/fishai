@@ -26,6 +26,24 @@ class SourceNotApprovedError(RuntimeError):
     """Raised when ingestion is attempted for a blocked source."""
 
 
+def _check_purpose(entry: dict[str, Any], source_id: str, purpose: str | None) -> None:
+    if purpose is None:
+        return
+    use = entry.get("use")
+    if not isinstance(use, dict):
+        return
+    forbidden = use.get("forbidden_purposes") or []
+    allowed = use.get("allowed_purposes")
+    if purpose in forbidden:
+        raise SourceNotApprovedError(
+            f"{source_id}: purpose {purpose!r} forbidden by manifest"
+        )
+    if allowed and purpose not in allowed:
+        raise SourceNotApprovedError(
+            f"{source_id}: purpose {purpose!r} not in allowed_purposes={allowed!r}"
+        )
+
+
 def load_sources_manifest(path: Path | None = None) -> dict[str, Any]:
     manifest_path = path or MANIFEST_PATH
     data = yaml.safe_load(manifest_path.read_text(encoding="utf-8"))
@@ -43,7 +61,12 @@ def get_source_entry(source_id: str, *, path: Path | None = None) -> dict[str, A
     return entry
 
 
-def require_approved(source_id: str, *, path: Path | None = None) -> dict[str, Any]:
+def require_approved(
+    source_id: str,
+    *,
+    purpose: str | None = None,
+    path: Path | None = None,
+) -> dict[str, Any]:
     """Return the source entry when ``status`` is approved and ``enabled`` is true."""
     entry = get_source_entry(source_id, path=path)
     status = entry.get("status")
@@ -57,6 +80,7 @@ def require_approved(source_id: str, *, path: Path | None = None) -> dict[str, A
     missing = [field for field in REQUIRED_SOURCE_FIELDS if field not in entry]
     if missing:
         raise SourceNotApprovedError(f"{source_id}: missing manifest fields: {missing}")
+    _check_purpose(entry, source_id, purpose)
     return entry
 
 

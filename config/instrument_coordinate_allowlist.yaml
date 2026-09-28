@@ -1,0 +1,46 @@
+# Column allowlists for instrument coordinate exemption (pre-commit scan).
+# Each source may expose only common identity/position/time/depth columns plus its measurements.
+
+common_columns:
+  - station
+  - station_id
+  - profile_id
+  - time
+  - lat
+  - lon
+  - latitude
+  - longitude
+  - depth
+  - fetched_at
+  - qc_flags
+
+sources:
+  ndbc_met:
+    measurements:
+      - WD
+      - WSPD
+      - GST
+      - WVHT
+      - DPD
+      - APD
+      - MWD
+      - BAR
+      - ATMP
+      - WTMP
+      - DEWP
+
+  sccoos_hfr:
+    measurements:
+      - water_u
+      - water_v
+      - DOPx
+      - DOPy
+      - hdop
+      - number_of_sites
+      - number_of_radials
+
+  ioos_glider_dac:
+    measurements:
+      - temperature
+      - salinity
+      - datasetID
