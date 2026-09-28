@@ -71,6 +71,7 @@ positive_component_sanity_ok <- function(fit) {
 #' @export
 fit_delta_engine <- function(dat, mesh, cfg) {
   .assert_training_covariate_table_from_cfg(cfg)
+  cfg <- apply_model_cfg_patches(cfg, dat)
   prep <- .prepare_dat_for_fit_delta(dat, cfg)
   dat <- prep$data
   model <- cfg$model
@@ -167,6 +168,7 @@ fit_delta_engine <- function(dat, mesh, cfg) {
       fit = fit,
       delta_type = cfg$model$delta_type %||% "poisson-link",
       covariate_exclusion_summary = prep$exclusion_summary,
+      covariate_dropped = prep$covariate_dropped %||% list(),
       source_product_counts = prep$source_product_counts,
       positive_component_fitted = positive_fitted,
       positive_model_fallback_applied = fallback_applied,

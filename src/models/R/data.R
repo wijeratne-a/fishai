@@ -760,8 +760,18 @@ fishai_data_prep_qc <- function(dat) {
   if (nrow(events) == 0L) {
     stop("no events remain after excluding covariate-join failures", call. = FALSE)
   }
-  events <- .map_model_covariates(events, cfg)
-  .assert_required_covariate_values_complete(events, cfg)
+  resolved <- apply_drop_covariates_if_unavailable(events, cfg)
+  events <- resolved$data
+  cfg_fit <- cfg
+  if (length(resolved$dropped)) {
+    attr(events, "fishai_cfg_patches") <- list(
+      covariates = resolved$cfg$covariates,
+      model = resolved$cfg$model
+    )
+    cfg_fit <- resolved$cfg
+  }
+  events <- .map_model_covariates(events, cfg_fit)
+  .assert_required_covariate_values_complete(events, cfg_fit)
   events
 }
 
@@ -895,7 +905,19 @@ cufes_physics_training_covariate_columns <- function() {
 }
 
 .required_covariate_value_columns <- function(cfg) {
-  c(.cufes_physics_covariate_field_names(), "bottom_depth_m")
+  cols <- c(.cufes_physics_covariate_field_names(), "bottom_depth_m")
+  dropped <- cfg$covariates$dropped_if_unavailable %||% list()
+  if (length(dropped)) {
+    upstream_map <- cfg$covariates$upstream_fields %||% .default_upstream_covariate_map()
+    for (rec in dropped) {
+      slug <- rec$covariate
+      col <- upstream_map[[slug]]
+      if (!is.null(col) && nzchar(col)) {
+        cols <- setdiff(cols, unname(col))
+      }
+    }
+  }
+  cols
 }
 
 .assert_required_covariate_values_complete <- function(dat, cfg) {
@@ -1023,14 +1045,26 @@ cufes_physics_training_covariate_columns <- function() {
   if (nrow(dat) == 0L) {
     stop("no rows remain after covariate excluded=FALSE filter", call. = FALSE)
   }
-  .assert_required_covariate_values_complete(dat, cfg)
+  resolved <- apply_drop_covariates_if_unavailable(dat, cfg)
+  dat <- resolved$data
+  cfg_fit <- cfg
+  if (length(resolved$dropped)) {
+    attr(dat, "fishai_cfg_patches") <- list(
+      covariates = resolved$cfg$covariates,
+      model = resolved$cfg$model
+    )
+    cfg_fit <- resolved$cfg
+  }
+  dat <- .map_model_covariates(dat, cfg_fit)
+  .assert_required_covariate_values_complete(dat, cfg_fit)
   if (!"source_product" %in% names(dat)) {
     stop("kept fit rows missing source_product", call. = FALSE)
   }
   list(
     data = dat,
     exclusion_summary = exclusion_summary,
-    source_product_counts = .source_product_glorys_counts(dat$source_product)
+    source_product_counts = .source_product_glorys_counts(dat$source_product),
+    covariate_dropped = resolved$dropped
   )
 }
 

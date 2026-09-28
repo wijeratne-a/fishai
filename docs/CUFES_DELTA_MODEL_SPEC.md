@@ -56,6 +56,8 @@ Optional **`diagnostics.preferential_sampling`** runs covariate-only encounter (
 
 **`positive_model_fallback: encounter_only`**: if the positive component fails convergence or sanity (non-positive-definite Hessian or max gradient > 0.001), FishAI refits with the positive spatial/spatiotemporal field off and reports **encounter-only** (species not dropped).
 
+**`drop_covariates_if_unavailable: [upwelling]`**: at fit time, if every kept row has blank ``upwelling`` and ``excluded_reason == no_consistent_wind_product`` (rows stay ``excluded == FALSE``), FishAI removes ``upwelling`` from the dynamic covariate list and shared formula and logs ``covariate_dropped: upwelling, reason: no_consistent_wind_product`` in fit metadata. Partial blanks or blank with any other reason **stop the fit** (no imputation, no row drops for upwelling).
+
 ### CUFES planned vs adaptive sampling
 
 Processed **`cufes_events`** has no planned-transect flag (`artifacts/sensitivity/cufes_planned_vs_adaptive_field_audit.md`). Optional **`egg_split.test_event_filter.mode: planned_line_only`** requires **`planned_line_reference_path`** for time-forward test sensitivity.
