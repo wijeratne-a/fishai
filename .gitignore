@@ -18,6 +18,10 @@ __pycache__/
 venv/
 *.egg-info/
 
+# Generated WCOFS pull logs (runtime only; not committed test/dry-run rows)
+data/provenance/wcofs_pull_log.jsonl
+data/provenance/wcofs_pull_*.jsonl
+
 # Data trees (never commit raw/processed survey or grid files)
 data/raw/
 data/processed/
