@@ -22,7 +22,7 @@ from fishai.ingestion.physics.harmonize import glorys_target_grid
 from fishai.ingestion.physics.glorys_catalog import (
     append_glorys_pull_log_record,
 )
-from fishai.ingestion.physics.sources.glorys import glorys_column_features
+from fishai.ingestion.physics.sources.glorys import glorys_column_features, resolve_glorys_product_id
 from fishai.ingestion.physics.wcofs_glorys_coverage import (
     CoverageAccumulator,
     build_coverage_report,
