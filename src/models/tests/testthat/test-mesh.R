@@ -1,6 +1,6 @@
 test_that("mesh cutoff enforces 9 km minimum", {
-  path <- file.path(FISHAI_ROOT, "src", "models", "tests", "fixtures", "synthetic_cufes.csv")
-  dat <- load_model_data(path, list(response = list(column = "egg_count", effort_column = "volume_m3")))
+  cfg <- load_config_yaml(file.path(FISHAI_ROOT, "configs", "models", "cufes_sardine.yaml"))
+  dat <- load_model_data(cfg = cfg)
   expect_error(build_fishai_mesh(dat, list(cutoff_km = 5)), "cutoff")
   mesh <- build_fishai_mesh(dat, list(cutoff_km = 9))
   expect_true(mesh$mesh$n > 0)

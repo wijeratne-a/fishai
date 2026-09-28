@@ -31,9 +31,10 @@ assert_shared_delta_formula <- function(formula_list) {
 
 #' Fit delta GLMM with FishAI defaults.
 #'
-#' In sdmTMB delta families the `offset` argument applies to the **positive**
-#' component only; effort enters the encounter component via `log_effort` in
-#' the shared formula unless using Poisson-link delta.
+#' Effort is ``log(volume_m3)`` on column ``log_effort``. In sdmTMB delta
+#' families the ``offset`` argument applies to the **positive** component only;
+#' the encounter component uses ``log_effort`` in the shared formula unless
+#' using Poisson-link delta. See ``src/models/README.md``.
 #'
 #' @export
 fit_delta_engine <- function(dat, mesh, cfg) {

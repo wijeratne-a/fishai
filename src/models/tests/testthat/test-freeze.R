@@ -2,7 +2,7 @@ test_that("frozen model scores once", {
   td <- tempfile()
   dir.create(td)
   cfg <- load_config_yaml(file.path(FISHAI_ROOT, "configs", "models", "cufes_sardine.yaml"))
-  dat <- load_model_data(cfg$data$table_path, cfg)
+  dat <- load_model_data(cfg = cfg)
   mesh <- build_fishai_mesh(dat, cfg$mesh)
   fit <- fit_delta_engine(dat, mesh, cfg)
   path <- file.path(td, "artifact.rds")

@@ -8,7 +8,7 @@ test_that("shared delta formula smoothers match", {
 
 test_that("offset applies to positive component only", {
   cfg <- load_config_yaml(file.path(FISHAI_ROOT, "configs", "models", "cufes_sardine.yaml"))
-  dat <- load_model_data(cfg$data$table_path, cfg)
+  dat <- load_model_data(cfg = cfg)
   mesh <- build_fishai_mesh(dat, cfg$mesh)
   fit <- fit_delta_engine(dat, mesh, cfg)
   expect_true(offset_applies_to_positive_only(fit))

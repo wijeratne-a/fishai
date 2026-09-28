@@ -1,4 +1,5 @@
 export(load_model_data)
+export(fishai_data_prep_qc)
 export(build_fishai_mesh)
 export(add_barrier_land)
 export(check_barrier)

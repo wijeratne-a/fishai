@@ -7,7 +7,7 @@ load_fishaisdm(root)
 args <- commandArgs(trailingOnly = TRUE)
 if (length(args) < 1) stop("usage: train.R <config.yaml>", call. = FALSE)
 cfg <- load_config_yaml(args[[1]])
-dat <- load_model_data(cfg$data$table_path, cfg)
+dat <- load_model_data(cfg = cfg)
 mesh <- build_fishai_mesh(dat, cfg$mesh)
 if (isTRUE(cfg$mesh$barrier$enabled)) {
   land_sf <- readRDS(cfg$mesh$barrier$land_sf_rds)

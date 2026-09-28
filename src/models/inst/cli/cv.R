@@ -7,7 +7,7 @@ load_fishaisdm(root)
 args <- commandArgs(trailingOnly = TRUE)
 if (length(args) < 1) stop("usage: cv.R <config.yaml>", call. = FALSE)
 cfg <- load_config_yaml(args[[1]])
-dat <- load_model_data(cfg$data$table_path, cfg)
+dat <- load_model_data(cfg = cfg)
 mesh <- build_fishai_mesh(dat, cfg$mesh)
 fold_ids <- dat$fold_id
 if (is.null(fold_ids)) stop("config data must include fold_id for spatial CV", call. = FALSE)

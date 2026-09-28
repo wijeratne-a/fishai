@@ -2,7 +2,7 @@ test_that("freeze records training source attributions from SOURCES.yaml", {
   td <- tempfile()
   dir.create(td)
   cfg <- load_config_yaml(file.path(FISHAI_ROOT, "configs", "models", "cufes_sardine.yaml"))
-  dat <- load_model_data(cfg$data$table_path, cfg)
+  dat <- load_model_data(cfg = cfg)
   mesh <- build_fishai_mesh(dat, cfg$mesh)
   fit <- fit_delta_engine(dat, mesh, cfg)
   path <- file.path(td, "artifact.rds")
@@ -22,7 +22,7 @@ test_that("freeze records training source attributions from SOURCES.yaml", {
 
 test_that("predict propagates training and inference attributions", {
   cfg <- load_config_yaml(file.path(FISHAI_ROOT, "configs", "models", "cufes_sardine.yaml"))
-  dat <- load_model_data(cfg$data$table_path, cfg)
+  dat <- load_model_data(cfg = cfg)
   ref_cols <- c(
     "temp_3m_z", "sal_3m_z", "mld_z", "sst_grad_z",
     "dist_front_z", "upwelling_z", "log_depth_z"
@@ -42,7 +42,7 @@ test_that("predict propagates training and inference attributions", {
 
 test_that("predict refuses output when attributions are incomplete", {
   cfg <- load_config_yaml(file.path(FISHAI_ROOT, "configs", "models", "cufes_sardine.yaml"))
-  dat <- load_model_data(cfg$data$table_path, cfg)
+  dat <- load_model_data(cfg = cfg)
   mesh <- build_fishai_mesh(dat, cfg$mesh)
   fit <- fit_delta_engine(dat, mesh, cfg)
   bad_art <- list(
