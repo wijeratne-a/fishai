@@ -1,0 +1,34 @@
+# Species and class sensitivity rules for public / tracked outputs.
+# No site coordinates are stored in this file.
+
+version: 1
+updated_utc: "2026-09-25T06:35:00Z"
+
+default_point_policy: ALLOW_IF_RIGHTS_AND_NOT_RESTRICTED
+
+withhold_point_outputs:
+  taxa:
+    - scientific_name: Epinephelus itajara
+      common_name: goliath grouper
+      reason: sensitive_species_point_withhold
+      policy: WITHHOLD_POINT_OUTPUTS
+  classes:
+    - class_id: TELEMETRY_TRACKS
+      reason: telemetry_exposure
+      policy: WITHHOLD_POINT_OUTPUTS
+    - class_id: AGGREGATION_SITES
+      reason: aggregation_site_exposure
+      policy: WITHHOLD_POINT_OUTPUTS
+    - class_id: SPAWNING_SITES
+      reason: spawning_site_exposure
+      policy: WITHHOLD_POINT_OUTPUTS
+    - class_id: NURSERY_SITES
+      reason: nursery_site_exposure
+      policy: WITHHOLD_POINT_OUTPUTS
+    - class_id: RECEIVER_LOCATIONS
+      reason: receiver_location_exposure
+      policy: WITHHOLD_POINT_OUTPUTS
+
+notes:
+  - Rules name taxa and sensitivity classes only; they do not list coordinates.
+  - Internal analysis may use protected storage; public globe and git-tracked layers must honor WITHHOLD_POINT_OUTPUTS.

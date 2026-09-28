@@ -1,0 +1,29 @@
+# Model experiment configuration template (declarative only).
+# Do NOT run a real experiment from this file.
+#
+# LOCKED EXAMPLE HOLDOUT (not a refit target):
+#   Puerto Rico 2023 remains the locked example holdout year for the
+#   accepted internal baselines (*Stegastes partitus*, *Sparisoma aurofrenatum*).
+#   Do not tune on 2023. Do not refit including 2023. Score 2023 once.
+#
+# Presence-only sources must keep treat_presence_only_as_absence: false.
+# A baseline block is required. allow_tune_on_holdout must stay false.
+
+experiment_id: syn_pr_example_holdout_template
+taxon_id: "urn:lsid:marinespecies.org:taxname:SYNTHETIC"
+region_id: puerto_rico_rvc
+protocol_id: RVC_STATIONARY_PLOT
+additional_protocol_ids: []
+mix_protocols: false
+require_run_manifest: true
+label_semantics: SURVEY_DETECTION_WITH_NONDETECTION
+treat_presence_only_as_absence: false
+baseline:
+  baseline_id: prevalence_train_years
+  baseline_kind: PREVALENCE
+train_years: [2016, 2019, 2021]
+tuning_years: [2016, 2019]   # must not include holdout_year
+holdout_year: 2023           # locked Puerto Rico example holdout — not a refit
+allow_tune_on_holdout: false
+publish_status: NOT_PUBLISHED
+notes: "Template only. Puerto Rico 2023 is a locked example holdout, not a refit."

@@ -1,0 +1,23 @@
+source_id,region_or_dataset,year,frame_status,abundance_field,zeros_observed,notes
+CRCP_Reef_Fish_Surveys_Florida,Florida Keys,2014,CONSTRUCTIBLE_NONDETECTION,NUM,yes,species-level; NUM real-valued; length bins exist
+CRCP_Reef_Fish_Surveys_Florida,Florida Keys,2016,CONSTRUCTIBLE_NONDETECTION,NUM,yes,species-level; NUM real-valued; length bins exist
+CRCP_Reef_Fish_Surveys_Florida,Florida Keys,2018,CONSTRUCTIBLE_NONDETECTION,NUM,yes,species-level; NUM real-valued; length bins exist
+CRCP_Reef_Fish_Surveys_Florida,Florida Keys,2022,CONSTRUCTIBLE_NONDETECTION,NUM,yes,species-level; NUM real-valued; length bins exist
+CRCP_Reef_Fish_Surveys_Florida,Florida Keys,2024,CONSTRUCTIBLE_NONDETECTION,NUM,yes,species-level; NUM real-valued; length bins exist
+CRCP_Reef_Fish_Surveys_Puerto_Rico,Puerto Rico,2016,CONSTRUCTIBLE_NONDETECTION,NUM,yes,species-level; NUM real-valued; length bins exist
+CRCP_Reef_Fish_Surveys_Puerto_Rico,Puerto Rico,2019,CONSTRUCTIBLE_NONDETECTION,NUM,yes,species-level; NUM real-valued; length bins exist
+CRCP_Reef_Fish_Surveys_Puerto_Rico,Puerto Rico,2021,CONSTRUCTIBLE_NONDETECTION,NUM,yes,species-level; NUM real-valued; length bins exist
+CRCP_Reef_Fish_Surveys_Puerto_Rico,Puerto Rico,2023,CONSTRUCTIBLE_NONDETECTION,NUM,yes,species-level; NUM real-valued; length bins exist
+CRCP_Reef_Fish_Surveys_USVI,USVI,2017,CONSTRUCTIBLE_NONDETECTION,NUM,yes,species-level; NUM real-valued; length bins exist
+CRCP_Reef_Fish_Surveys_USVI,USVI,2019,CONSTRUCTIBLE_NONDETECTION,NUM,yes,species-level; NUM real-valued; length bins exist
+CRCP_Reef_Fish_Surveys_USVI,USVI,2021,CONSTRUCTIBLE_NONDETECTION,NUM,yes,species-level; NUM real-valued; length bins exist
+CRCP_Reef_Fish_Surveys_USVI,USVI,2023,CONSTRUCTIBLE_NONDETECTION,NUM,yes,species-level; NUM real-valued; length bins exist
+CRCP_Reef_Fish_Surveys_Flower_Gardens,Flower Garden Banks,2018,CONSTRUCTIBLE_NONDETECTION,NUM,yes,species-level; NUM real-valued; length bins exist
+CRCP_Reef_Fish_Surveys_Flower_Gardens,Flower Garden Banks,2022,CONSTRUCTIBLE_NONDETECTION,NUM,yes,species-level; NUM real-valued; length bins exist
+CRCP_Reef_Fish_Surveys_Flower_Gardens,Flower Garden Banks,2023,CONSTRUCTIBLE_NONDETECTION,NUM,yes,species-level; NUM real-valued; length bins exist
+CRCP_Reef_Fish_Surveys_Flower_Gardens,Flower Garden Banks,2024,CONSTRUCTIBLE_NONDETECTION,NUM,yes,species-level; NUM real-valued; length bins exist
+CRCP_Reef_Fish_Surveys_Hawaii,Hawaii,2024,PRESENCE_ONLY / COUNT_MODEL_ONLY,COUNT,no,COUNT had no zeros; no published search universe
+CRCP_Reef_Fish_Surveys_American_Samoa,American Samoa,2023,PRESENCE_ONLY / COUNT_MODEL_ONLY,COUNT,no,COUNT had no zeros; no published search universe
+CRCP_Reef_Fish_Surveys_CNMI_Guam,CNMI_Guam,2022,PRESENCE_ONLY / COUNT_MODEL_ONLY,COUNT,no,COUNT had no zeros; no published search universe
+CRCP_Reef_Fish_Surveys_PRIAs,PRIAs,2023,PRESENCE_ONLY / COUNT_MODEL_ONLY,COUNT,no,COUNT had no zeros; no published search universe
+OBIS_Keys_extract,Florida Keys OBIS box,2026,PRESENCE_ONLY,presence,no,compiler occurrences; not survey non-detections

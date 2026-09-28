@@ -1,0 +1,5 @@
+window_start,window_end,reported_total,returned,method
+2026-06-26,2026-07-02,161,161,startdate-enddate because skip and offset were ignored
+2026-07-03,2026-07-09,167,167,startdate-enddate because skip and offset were ignored
+2026-07-10,2026-07-16,254,254,startdate-enddate because skip and offset were ignored
+2026-07-17,2026-07-23,90,90,startdate-enddate because skip and offset were ignored

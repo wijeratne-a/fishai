@@ -1,0 +1,10 @@
+defect_id,check,finding,evidence,severity
+ENV-001,dataset,MUR and OISST are surface analyses,jplMURSST41 / ncdcOisst21Agg_LonPM180,INFO
+ENV-002,depth,No bottom temperature joined,hycom_gom310D domain is GOM 2009-2014 not PR 2016-2023,MEDIUM_SCIENTIFIC_WEAKNESS
+ENV-003,spatial,Regional box mean not event location,PR_LAT/PR_LON stride extract,HIGH_MISLEADS_USERS_OR_MODELS
+ENV-004,temporal,day+1/+2 used,join_survey_date_sst offsets,CRITICAL_INVALIDATES_RESULTS
+ENV-005,issue vs valid,No issue time stored on MUR/OISST cache,by-date files keyed by valid date only,HIGH_MISLEADS_USERS_OR_MODELS
+ENV-006,forecast,No archived forecast cycle,nowcast closed correctly,INFO
+ENV-007,land,Box mean can mix coastal/land-adjacent cells,no land mask in join,MEDIUM_SCIENTIFIC_WEAKNESS
+ENV-008,units,MUR Kelvin vs OISST Celsius handled,scale_sst / dataset attributes,INFO if conversions stay tested
+ENV-009,fallback,MUR failed → OISST scored on same holdout,ENVIRONMENTAL_DECISION.md,CRITICAL_INVALIDATES_RESULTS

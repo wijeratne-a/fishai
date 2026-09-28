@@ -1,0 +1,5 @@
+defect_id,file_or_function,bad_assumption,evidence,downstream_consequence,required_fix,previous_outputs_invalidated,severity
+MEAS-001,design() both fit scripts,15 is a valid default depth and visibility,`(rec['depth'] or 15)` / `(rec['vis'] or 15)`,Silent unit-like fabrication,Fail closed on missing,Rows with missing vis,HIGH_MISLEADS_USERS_OR_MODELS
+MEAS-002,SST feature scale,28 C and 3 C are known centering,`(sst - 28.0) / 3.0` hardcoded,Arbitrary scale; not leakage,Declare as fixed transform not estimated,SST model coefficients uninterpretable,LOW_ENGINEERING_DEBT
+MEAS-003,NUM > 0 collapse,NUM magnitude unused after sign test,load_* only tests float(NUM)>0,Correct for detection; dangerous if reused as count,Keep detection-only; forbid summing NUM,None if detection-only claim holds,INFO
+MEAS-004,OISST/MUR as reef-fish covariate,Surface temperature is the process temperature,No depth coordinate; hycom_gom310D not joinable,SST reject ≠ environment reject,Do not relabel SST as bottom,SST_ADDS_NO_VALUE wording,MEDIUM_SCIENTIFIC_WEAKNESS

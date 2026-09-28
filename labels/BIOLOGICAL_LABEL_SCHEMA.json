@@ -1,0 +1,259 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://fishai.local/labels/BIOLOGICAL_LABEL_SCHEMA.json",
+  "title": "BiologicalLabel",
+  "description": "WS41 biological observation label. Survey non-detection is not ecological absence. Presence-only gaps are not zeros. SST, habitat, telemetry, citizen science, acoustic classifiers, and eDNA read absence are not validated non-detections.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "label_id",
+    "source_id",
+    "observation_outcome",
+    "observation_method",
+    "target_taxonomic_group",
+    "life_stage",
+    "count_type",
+    "effort_type",
+    "taxonomic_confidence",
+    "identification_method",
+    "observer_or_instrument_type",
+    "spatial_precision",
+    "temporal_precision",
+    "protocol_version",
+    "quality_control_status",
+    "zero_provenance",
+    "source_freshness",
+    "evidence_tier",
+    "event_completed",
+    "event_frame_complete",
+    "zero_semantics_documented",
+    "is_ecological_absence_claim"
+  ],
+  "properties": {
+    "label_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "source_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "event_id": {
+      "type": ["string", "null"]
+    },
+    "taxon_id": {
+      "type": ["string", "null"]
+    },
+    "observation_outcome": {
+      "type": "string",
+      "enum": [
+        "DETECTED",
+        "EXPLICIT_SURVEY_NONDETECTION",
+        "CONSTRUCTED_SURVEY_NONDETECTION",
+        "REPORTED_ABSENT",
+        "PRESENCE_ONLY",
+        "NOT_EVALUATED",
+        "UNKNOWN",
+        "INVALID_EVENT"
+      ],
+      "description": "Primary biological outcome. NOT_EVALUATED covers missing rows without a published search universe. PRESENCE_ONLY forbids treating gaps as zeros."
+    },
+    "observation_method": {
+      "type": "string",
+      "enum": [
+        "REEF_VISUAL_CENSUS",
+        "UNDERWATER_VISUAL_SURVEY",
+        "PLANKTON_OR_EGG_SAMPLER",
+        "TRAWL_OR_NET",
+        "OCCURRENCE_COMPILER",
+        "TELEMETRY",
+        "ACOUSTIC_CLASSIFIER",
+        "EDNA_ASSAY",
+        "CITIZEN_SCIENCE",
+        "HABITAT_OR_ENVIRONMENTAL_ONLY",
+        "OTHER",
+        "UNKNOWN"
+      ]
+    },
+    "target_taxonomic_group": {
+      "type": "string",
+      "minLength": 1,
+      "description": "Declared search or reporting group for the protocol (species code, taxon, or guild). Required for any non-detection."
+    },
+    "life_stage": {
+      "type": "string",
+      "enum": [
+        "egg",
+        "larva",
+        "juvenile",
+        "subadult",
+        "adult",
+        "spawning_adult",
+        "unknown",
+        "mixed",
+        "source_specific"
+      ]
+    },
+    "life_stage_source_label": {
+      "type": ["string", "null"],
+      "description": "Original stage string from the source; preserved even when normalized life_stage differs."
+    },
+    "count_type": {
+      "type": "string",
+      "enum": [
+        "NONE",
+        "BINARY_DETECTION",
+        "INTEGER_COUNT",
+        "REAL_VALUED_AVERAGE",
+        "DENSITY_OR_CPUE",
+        "BIOMASS",
+        "EGG_COUNT",
+        "READ_COUNT",
+        "UNKNOWN"
+      ]
+    },
+    "effort_type": {
+      "type": "string",
+      "enum": [
+        "VISUAL_PLOT",
+        "TRANSECT",
+        "TOW_DURATION",
+        "TOW_DISTANCE",
+        "SAMPLER_VOLUME",
+        "HOOK_HOURS",
+        "RECORDER_DUTY_CYCLE",
+        "EDNA_VOLUME",
+        "NONE",
+        "OTHER",
+        "UNKNOWN"
+      ]
+    },
+    "taxonomic_confidence": {
+      "type": "string",
+      "enum": [
+        "CONFIRMED",
+        "PROBABLE",
+        "UNRESOLVED",
+        "MIXED_OR_AGGREGATE",
+        "UNKNOWN"
+      ]
+    },
+    "identification_method": {
+      "type": "string",
+      "enum": [
+        "VISUAL_FIELD",
+        "LABORATORY",
+        "GENETIC",
+        "ACOUSTIC_CLASSIFIER",
+        "COMPILER_AS_PUBLISHED",
+        "LENGTH_INFERRED",
+        "UNKNOWN"
+      ]
+    },
+    "observer_or_instrument_type": {
+      "type": "string",
+      "enum": [
+        "TRAINED_DIVER",
+        "SCIENTIFIC_CREW",
+        "AUTOMATED_SAMPLER",
+        "HYDROPHONE",
+        "TAG_RECEIVER",
+        "CITIZEN_OBSERVER",
+        "COMPILER",
+        "OTHER",
+        "UNKNOWN"
+      ]
+    },
+    "spatial_precision": {
+      "type": "string",
+      "enum": [
+        "POINT",
+        "TRANSECT",
+        "SAMPLE_UNIT",
+        "CELL",
+        "REGION",
+        "UNKNOWN"
+      ]
+    },
+    "temporal_precision": {
+      "type": "string",
+      "enum": [
+        "SECOND",
+        "MINUTE",
+        "HOUR",
+        "DAY",
+        "MONTH",
+        "YEAR",
+        "UNKNOWN"
+      ]
+    },
+    "protocol_version": {
+      "type": "string",
+      "minLength": 1,
+      "description": "Named protocol or program version. Required for non-detection minting."
+    },
+    "quality_control_status": {
+      "type": "string",
+      "enum": [
+        "PASSED",
+        "FLAGGED",
+        "FAILED",
+        "NOT_ASSESSED"
+      ]
+    },
+    "zero_provenance": {
+      "type": "string",
+      "enum": [
+        "NOT_APPLICABLE",
+        "EXPLICIT_PUBLISHER_ZERO",
+        "CONSTRUCTED_FROM_COMPLETE_FRAME",
+        "LENGTH_BIN_ROW_ONLY",
+        "MISSING_ROW",
+        "PRESENCE_ONLY_GAP",
+        "UNDOCUMENTED",
+        "FORBIDDEN"
+      ],
+      "description": "LENGTH_BIN_ROW_ONLY and MISSING_ROW must never become species-level non-detections by themselves."
+    },
+    "source_freshness": {
+      "type": "string",
+      "enum": [
+        "HISTORICAL",
+        "RECENT",
+        "OPERATIONAL",
+        "UNKNOWN"
+      ]
+    },
+    "evidence_tier": {
+      "type": "string",
+      "enum": [
+        "STRUCTURED_SURVEY",
+        "PRESENCE_COMPILER",
+        "TRACK_OR_TELEMETRY",
+        "ENVIRONMENTAL_COVARIATE",
+        "INTERNAL_MODEL",
+        "OTHER"
+      ]
+    },
+    "event_completed": {
+      "type": "boolean",
+      "description": "True only when the protocol finished the search or sample unit."
+    },
+    "event_frame_complete": {
+      "type": "boolean",
+      "description": "True only when the published target list or frame for that event/year is known and complete."
+    },
+    "zero_semantics_documented": {
+      "type": "boolean",
+      "description": "True only when written zero-construction rules exist for this source."
+    },
+    "is_ecological_absence_claim": {
+      "type": "boolean",
+      "const": false,
+      "description": "Must remain false. FishAI does not treat survey misses, missing rows, or presence-only gaps as ecological absence."
+    },
+    "notes": {
+      "type": ["string", "null"]
+    }
+  }
+}

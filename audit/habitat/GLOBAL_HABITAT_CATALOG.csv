@@ -1,0 +1,3 @@
+source_id,habitat_class,evidence_type,acquired,joined_to_models,notes
+RVC_HABITAT_CD,survey_habitat_code,OBSERVED,yes_on_survey_tables,survey_fields_only,Observer-coded habitat on the dive; not a remote reef map
+GEBCO,bathymetry,BATHYMETRIC_DERIVATIVE,no,no,Not downloaded; depth/slope derivatives are not reef-presence evidence

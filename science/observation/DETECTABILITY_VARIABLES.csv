@@ -1,0 +1,12 @@
+variable_id,applies_to_method_family,role,description,required_for_rvc_detectability,notes
+visibility,REEF_VISUAL_CENSUS;STATIONARY_POINT_COUNT,detection_covariate,Underwater horizontal visibility affecting observer detection,yes,RVC detectability includes visibility.
+depth,REEF_VISUAL_CENSUS;STATIONARY_POINT_COUNT;TRANSECT_VISUAL,detection_or_availability_covariate,Sample depth of the survey unit; affects who can be seen and which habitat is sampled,yes,RVC detectability includes depth.
+protocol,REEF_VISUAL_CENSUS;STATIONARY_POINT_COUNT;TRANSECT_VISUAL;TRAWL_OR_TOW;HOOK_AND_LINE;EGG_OR_LARVAL_SURVEY,process_identifier,Named protocol including plot size timing and observer rules,yes,RVC detectability includes protocol. Different protocols are different observation processes.
+habitat_code,REEF_VISUAL_CENSUS;STATIONARY_POINT_COUNT,availability_or_nuisance,Observer-coded habitat on the dive (e.g. HABITAT_CD); describes sampled station not a continuous map,no,Observed field; not a remote reef layer.
+species_list_membership,REEF_VISUAL_CENSUS;STATIONARY_POINT_COUNT,nondetection_eligibility,Taxon must be on the year-specific published list before a zero can be a survey non-detection,no,Missing taxon from a year list is not a non-detection for that year.
+effort_completed,REEF_VISUAL_CENSUS;STATIONARY_POINT_COUNT;TRANSECT_VISUAL;TRAWL_OR_TOW,nondetection_gate,Completed protocol search required before minting SURVEY_NONDETECTION,no,Incomplete effort cannot create zeros.
+replicate_structure,REEF_VISUAL_CENSUS;STATIONARY_POINT_COUNT,occupancy_design,Primary and secondary sample units or repeats if occupancy-style detection is claimed,no,Do not invent replicates.
+observer_or_team,REEF_VISUAL_CENSUS;TRANSECT_VISUAL,detection_covariate,Observer identity or team when recorded and rights-cleared,no,Optional; not a substitute for protocol.
+gear_selectivity,TRAWL_OR_TOW;HOOK_AND_LINE,detection_covariate,Gear-specific catchability distinct from visual census,no,Do not pool with RVC via source dummy alone.
+compiler_bias_layer,PRESENCE_COMPILER,sampling_bias,Spatial or taxonomic reporting intensity for presence-only compilers (e.g. OBIS),no,Presence compilers have no RVC-style detectability.
+time_of_day_or_season,REEF_VISUAL_CENSUS;STATIONARY_POINT_COUNT;TRANSECT_VISUAL,detection_or_availability_covariate,Temporal factors that change detection or fish availability when recorded,no,Use only when the source provides them.

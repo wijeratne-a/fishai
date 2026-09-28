@@ -1,0 +1,180 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://fishai.local/schemas/globe-model-output.schema.json",
+  "title": "GlobeModelOutput",
+  "description": "Globe-facing model product. Internal models are not published nowcasts. No raw coordinates. No fishing guidance.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "output_id",
+    "taxon_id",
+    "prediction_target",
+    "scientific_status",
+    "publish_status",
+    "output_class",
+    "spatial_cell_id",
+    "time_precision",
+    "model_version",
+    "privacy_tier"
+  ],
+  "properties": {
+    "output_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "taxon_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "prediction_target": {
+      "type": "string",
+      "enum": [
+        "observed_presence",
+        "occurrence_probability",
+        "relative_abundance",
+        "movement",
+        "habitat_suitability",
+        "unknown"
+      ]
+    },
+    "scientific_status": {
+      "type": "string",
+      "enum": [
+        "confirmed_observation",
+        "current_estimate",
+        "forecast",
+        "historical_pattern",
+        "favorable_habitat",
+        "unknown"
+      ]
+    },
+    "publish_status": {
+      "type": "string",
+      "enum": [
+        "NOT_PUBLISHED",
+        "INTERNAL_ONLY",
+        "PUBLISHED"
+      ],
+      "description": "INTERNAL_ONLY / NOT_PUBLISHED outputs must not be labeled as published nowcasts."
+    },
+    "output_class": {
+      "type": "string",
+      "enum": [
+        "INTERNAL_MODEL_OUTPUT",
+        "PUBLISHED_NOWCAST",
+        "PUBLISHED_FORECAST",
+        "UNKNOWN"
+      ],
+      "description": "INTERNAL_MODEL_OUTPUT is never PUBLISHED_NOWCAST or PUBLISHED_FORECAST."
+    },
+    "spatial_cell_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "h3_res": {
+      "type": ["integer", "null"],
+      "minimum": 0,
+      "maximum": 15
+    },
+    "issued_at_utc": {
+      "type": ["string", "null"],
+      "format": "date-time"
+    },
+    "valid_from_utc": {
+      "type": ["string", "null"],
+      "format": "date-time"
+    },
+    "valid_to_utc": {
+      "type": ["string", "null"],
+      "format": "date-time"
+    },
+    "time_precision": {
+      "type": "string",
+      "enum": [
+        "SECOND",
+        "MINUTE",
+        "HOUR",
+        "DAY",
+        "MONTH",
+        "YEAR",
+        "UNKNOWN"
+      ]
+    },
+    "value_display": {
+      "type": ["string", "null"]
+    },
+    "confidence_category": {
+      "type": "string",
+      "enum": ["high", "medium", "low", "none"]
+    },
+    "model_version": {
+      "type": "string",
+      "minLength": 1
+    },
+    "feature_snapshot_id": {
+      "type": ["string", "null"]
+    },
+    "source_data_cutoff_utc": {
+      "type": ["string", "null"],
+      "format": "date-time"
+    },
+    "privacy_tier": {
+      "type": "string",
+      "enum": ["PUBLIC", "COARSENED", "RESTRICTED"]
+    },
+    "user_visible_limitations": {
+      "type": "string",
+      "minLength": 1
+    },
+    "fishing_guidance": {
+      "type": "boolean",
+      "const": false
+    },
+    "minimum_sample_size": {
+      "type": "string",
+      "const": "THRESHOLD_REQUIRES_POWER_ANALYSIS",
+      "description": "Do not invent numeric n minima; power analysis is required before any threshold."
+    },
+    "latitude": {
+      "not": {}
+    },
+    "longitude": {
+      "not": {}
+    },
+    "notes": {
+      "type": ["string", "null"]
+    }
+  },
+  "allOf": [
+    {
+      "if": {
+        "properties": {
+          "publish_status": { "const": "PUBLISHED" }
+        }
+      },
+      "then": {
+        "properties": {
+          "output_class": {
+            "enum": ["PUBLISHED_NOWCAST", "PUBLISHED_FORECAST"]
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "publish_status": {
+            "enum": ["NOT_PUBLISHED", "INTERNAL_ONLY"]
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "output_class": {
+            "enum": ["INTERNAL_MODEL_OUTPUT", "UNKNOWN"]
+          }
+        }
+      }
+    }
+  ]
+}

@@ -1,0 +1,7 @@
+variable,provider,dataset_id,survey_year,survey_dates,dates_ok,dates_missing,past_day_fallbacks,future_days_used,storage,joined_to_events,notes
+water_temp_all_depths,HYCOM consortium (ncss.hycom.org),GLBv0.08/expt_53.X/data/2014,2014,54,54,0,0,0,data/restricted/environmental/hycom/florida-keys/by-date,no,GOFS 3.1 reanalysis; regional box grid; one experiment per year
+water_temp_all_depths,HYCOM consortium (ncss.hycom.org),GLBv0.08/expt_57.2,2016,48,48,0,0,0,data/restricted/environmental/hycom/florida-keys/by-date,no,GOFS 3.1 analysis; regional box grid; one experiment per year
+water_temp_all_depths,HYCOM consortium (ncss.hycom.org),GLBv0.08/expt_93.0,2018,55,55,0,0,0,data/restricted/environmental/hycom/florida-keys/by-date,no,GOFS 3.1 analysis; regional box grid; one experiment per year
+water_temp_all_depths,HYCOM consortium (ncss.hycom.org),GLBy0.08/expt_93.0/ts3z,2022,65,65,0,0,0,data/restricted/environmental/hycom/florida-keys/by-date,no,GOFS 3.1 analysis; regional box grid; one experiment per year
+water_temp_all_depths,HYCOM consortium (ncss.hycom.org),GLBy0.08/expt_93.0/ts3z,2024,57,38,19,2,0,data/restricted/environmental/hycom/florida-keys/by-date,no,GOFS 3.1 analysis; regional box grid; one experiment per year
+chlorophyll_a_weekly,NOAA CoastWatch (VIIRS SNPP science quality),noaacwNPPVIIRSSQchlaWeekly,all,279,136,0,n/a,0,data/restricted/environmental/viirs-chla-weekly/florida-keys/by-week,no,weekly composites counted in dates_ok; masked over shallow reef and land (fill -999)

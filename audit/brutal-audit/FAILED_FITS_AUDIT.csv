@@ -1,0 +1,6 @@
+region,species,status,evidence,safe_behavior
+USVI,multiple,NaN coefficients / NaN scores,audit/multi-species/MODEL_RESULTS.csv USVI rows; habitat dummy cap later,Rejected — correct
+PR,16 species,numeric scores from unregularized 60-step fit,MODEL_RESULTS.csv,Numbers exist; not the finalize estimator
+FGB,2 species,numeric scores n_holdout=38,MODEL_RESULTS.csv,Too small; treat as failed-for-decision
+PR finalize,STE PART / SPA AURO,numeric L2 scores,PUERTO_RICO_FINAL_REPORT.md,Inspected holdout; SST leak in join
+PR OISST,STE PART / SPA AURO,numeric scores different habitat encoding,ENVIRONMENTAL_DECISION.md,Not comparable to locked table

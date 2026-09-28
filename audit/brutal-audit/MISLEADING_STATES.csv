@@ -1,0 +1,7 @@
+state,risk,action
+Where now,implies live fish,rename
+Unknown current location,implies we searched now,rewrite
+SST_ADDS_NO_VALUE,read as environment useless,keep label; add regional-box + future-day caveat
+BACKUP_VERIFIED,true only for off-repo snapshot,do not imply Git backup
+model-ready,eligibility gate not in fit path,wire or stop using the phrase on fits
+PUBLISHED,none published — good,keep

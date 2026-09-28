@@ -1,0 +1,8 @@
+defect_id,file_or_function,bad_assumption,evidence,downstream_consequence,required_fix,previous_outputs_invalidated,severity
+ML-001,fit() in fit_regional_detection_models.py,60 gradient steps always converge to a usable model,No NaN check; no convergence flag; USVI later produced NaN,Failed fits can become published-looking numbers if NaNs slip,Reject NaN coefficients and NaN scores,USVI already rejected; others unproven,HIGH_MISLEADS_USERS_OR_MODELS
+ML-002,fit vs fit_l2_logistic,One 'regional detection model',Different step count and L2; scores disagree,Cannot cite a single Brier,Single trainer; quarantine extras,Yes — score tables,CRITICAL_INVALIDATES_RESULTS
+ML-003,design() year dummies,Year effects transfer to unseen years,Holdout year dummy omitted → 2016 intercept,Holdout looks like 2016,Drop year dummies from temporal holdout design,Holdout interpretation,HIGH_MISLEADS_USERS_OR_MODELS
+ML-004,seed argument unused,Reproducible RNG,seed accepted never consumed,False reproducibility,Use or remove,Repro claims,MEDIUM_SCIENTIFIC_WEAKNESS
+ML-005,clip(1e-6) then log_loss,Clipping is calibration,No Platt/isotonic; only clip,Overconfident tails hidden,Keep clip; do not call it calibration,Calibration language,MEDIUM_SCIENTIFIC_WEAKNESS
+ML-006,training_mask year < holdout,All earlier years are TRAIN_YEARS,Not equal to explicit TRAIN_YEARS list,Silent extra year if data appears,Mask = year in TRAIN_YEARS,If extra years exist,HIGH_MISLEADS_USERS_OR_MODELS
+ML-007,FGB holdout n=38,38 is enough,MODEL_RESULTS FGB rows,Unstable Brier,Do not cite FGB as skill,FGB scores,HIGH_MISLEADS_USERS_OR_MODELS

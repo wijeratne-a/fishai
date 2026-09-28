@@ -1,0 +1,15 @@
+requirement_id,category,field_or_rule,requirement,threshold_policy,notes
+MIR-001,label,observation_state,Training labels must use CONFIRMED_PRESENCE or SURVEY_NONDETECTION only when frame rules hold,THRESHOLD_REQUIRES_POWER_ANALYSIS,Missing rows are not absences
+MIR-002,label,presence_only,Presence-only sources must not supply absence labels,THRESHOLD_REQUIRES_POWER_ANALYSIS,Presence-only is not absence
+MIR-003,label,effort_completed,SURVEY_NONDETECTION requires completed effort and taxon-in-frame,THRESHOLD_REQUIRES_POWER_ANALYSIS,No effort means UNKNOWN not zero
+MIR-004,protocol,protocol_id,Do not pool incompatible protocols without an explicit bridge,THRESHOLD_REQUIRES_POWER_ANALYSIS,Protocols stay separate
+MIR-005,environment,subject_kind,SST and other env fields are covariates ENVIRONMENTAL_CONDITION not fish observations,THRESHOLD_REQUIRES_POWER_ANALYSIS,SST is not a fish observation
+MIR-006,time,time_precision,Every training row must set explicit time_precision SECOND through UNKNOWN,THRESHOLD_REQUIRES_POWER_ANALYSIS,Do not imply finer precision
+MIR-007,time,published_at_utc,Covariates must respect as-of published_at_utc cutoff,THRESHOLD_REQUIRES_POWER_ANALYSIS,No future leakage
+MIR-008,space,spatial_support,Likelihood unit is protocol sample support not arbitrary query radius,THRESHOLD_REQUIRES_POWER_ANALYSIS,50-mile windows are display unless design says otherwise
+MIR-009,space,coordinate_policy,Native coordinates stay out of public globe outputs,THRESHOLD_REQUIRES_POWER_ANALYSIS,No raw lat/lon on globe products
+MIR-010,publication,output_class,INTERNAL_MODEL_OUTPUT must not be labeled PUBLISHED_NOWCAST or PUBLISHED_FORECAST,THRESHOLD_REQUIRES_POWER_ANALYSIS,Internal models are not published nowcasts
+MIR-011,publication,fishing_guidance,Model and globe products must set fishing_guidance false,THRESHOLD_REQUIRES_POWER_ANALYSIS,No fishing guidance
+MIR-012,sample_size,minimum_sample_size,Do not invent numeric minimum n for training or publication,THRESHOLD_REQUIRES_POWER_ANALYSIS,Power analysis required before any n threshold
+MIR-013,rights,rights_status,Training requires APPROVED_* rights for intended use,THRESHOLD_REQUIRES_POWER_ANALYSIS,Public landing pages are not training permission
+MIR-014,target,prediction_target,Each model names exactly one prediction target,THRESHOLD_REQUIRES_POWER_ANALYSIS,Do not collapse targets into where-the-fish-are

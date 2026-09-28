@@ -1,0 +1,15 @@
+region,year_a,year_b,species_list_size_a,species_list_size_b,list_size_delta,year_pair_class,pooling_allowed,notes
+Florida Keys,2014,2016,249,255,6,COMPARABLE_WITH_COVARIATES,with_list_membership_covariate,List size change only; not evidence of a biological trend. Same ERDDAP column structure.
+Florida Keys,2016,2018,255,475,220,COMPARABLE_WITH_COVARIATES,with_list_membership_covariate,Large list expansion; non-detection only for codes listed that year.
+Florida Keys,2018,2022,475,250,-225,COMPARABLE_WITH_COVARIATES,with_list_membership_covariate,List contraction; do not interpret as abundance change.
+Florida Keys,2022,2024,250,481,231,INSUFFICIENT_DOCUMENTATION,with_list_membership_covariate,2024 accession narrative previously described single-stage design; column structure still matches but design docs are insufficient to treat as a protocol-equivalence proof.
+Puerto Rico,2014,2016,,,,ABSENT_YEAR,no,Puerto Rico 2014 is absent from the ERDDAP year list; not downloaded; no year pair.
+Puerto Rico,2016,2019,216,475,259,COMPARABLE_WITH_COVARIATES,with_list_membership_covariate,List size change; COMPARABLE_WITH_COVARIATES not a trend claim.
+Puerto Rico,2019,2021,475,214,-261,COMPARABLE_WITH_COVARIATES,with_list_membership_covariate,List contraction between years.
+Puerto Rico,2021,2023,214,481,267,COMPARABLE_WITH_COVARIATES,with_list_membership_covariate,Holdout year 2023; list membership must be modeled as covariate / frame rule.
+USVI,2017,2019,232,475,243,COMPARABLE_WITH_COVARIATES,with_list_membership_covariate,List size change only.
+USVI,2019,2021,475,235,-240,COMPARABLE_WITH_COVARIATES,with_list_membership_covariate,List contraction.
+USVI,2021,2023,235,481,246,COMPARABLE_WITH_COVARIATES,with_list_membership_covariate,Holdout year 2023.
+Flower Garden Banks,2018,2022,475,478,3,COMPARABLE_WITH_COVARIATES,with_list_membership_covariate,Nearly stable list sizes.
+Flower Garden Banks,2022,2023,478,479,1,COMPARABLE_WITH_COVARIATES,with_list_membership_covariate,Nearly stable list sizes.
+Flower Garden Banks,2023,2024,479,103,-376,INSUFFICIENT_DOCUMENTATION,with_list_membership_covariate,Sharp list-size drop in holdout year; treat as documentation/frame issue not a biological trend; 2024 single-stage narrative uncertainty applies by analogy to Atlantic accession notes.

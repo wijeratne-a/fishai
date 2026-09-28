@@ -1,0 +1,6 @@
+experiment,train_rows_known,holdout_rows_known,spatial_blocks,holdout_independent,baseline,calibration,provenance,trust
+multi-species 16 fits,only counts in CSV,only counts in CSV,SUB_REGION_* leave-one-block,NO — 2023 also used later,prevalence Brier,mean not required to pass,INCOMPLETE no git/seed/lock/hash,UNTRUSTED_RESULT
+PR finalize survey vs MUR,event loader in script,2023 once per model then reused,same blocks,NO after SST product shopping,prevalence + spatial,gap<=0.15 only for SST accept,partial manifest,INSPECTED_HOLDOUT
+OISST robustness,same events,2023 again,habitat set changed,NO,survey-only from different design,gap reported,manifest exists,UNTRUSTED_AS_LOCKED_SCORE
+FGB 2 species,164 train / 38 holdout,38,2 folds,weak support,prevalence,AUC 0.396 on one pass,INCOMPLETE,UNTRUSTED_RESULT
+USVI 4 species,NaN model scores,NaN,10 folds listed,failed fits rejected,prevalence only,none,INCOMPLETE,CORRECTLY_REJECTED

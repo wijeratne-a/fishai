@@ -1,0 +1,111 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://fishai.local/models/config/MODEL_EXPERIMENT_SCHEMA.json",
+  "title": "ModelExperimentConfig",
+  "description": "Declarative experiment config only. Does not authorize training or publication. Presence-only must not be treated as absence. Protocols must not be mixed. A baseline is required. Final holdout year must not be used for tuning. Every accepted run must emit a manifest.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "experiment_id",
+    "taxon_id",
+    "region_id",
+    "protocol_id",
+    "label_semantics",
+    "baseline",
+    "train_years",
+    "holdout_year",
+    "tuning_years",
+    "publish_status",
+    "require_run_manifest"
+  ],
+  "properties": {
+    "experiment_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "taxon_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "region_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "protocol_id": {
+      "type": "string",
+      "minLength": 1,
+      "description": "Single observation protocol. Mixing protocols in one experiment is forbidden."
+    },
+    "additional_protocol_ids": {
+      "type": "array",
+      "maxItems": 0,
+      "items": { "type": "string" },
+      "description": "Must be empty. A second protocol in the same experiment is a reject."
+    },
+    "mix_protocols": {
+      "type": "boolean",
+      "const": false,
+      "description": "Must remain false. Visual census, trawl, and ichthyoplankton are not pooled."
+    },
+    "require_run_manifest": {
+      "type": "boolean",
+      "const": true,
+      "description": "Every run must write checksums, seed, train years, holdout year, code version, NOT_PUBLISHED."
+    },
+    "label_semantics": {
+      "type": "string",
+      "enum": [
+        "SURVEY_DETECTION_WITH_NONDETECTION",
+        "PRESENCE_ONLY_NO_ABSENCE",
+        "ENVIRONMENTAL_COVARIATE_ONLY"
+      ],
+      "description": "PRESENCE_ONLY_NO_ABSENCE forbids treating gaps as absence zeros."
+    },
+    "treat_presence_only_as_absence": {
+      "type": "boolean",
+      "const": false,
+      "description": "Must remain false when label_semantics is PRESENCE_ONLY_NO_ABSENCE."
+    },
+    "baseline": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["baseline_id", "baseline_kind"],
+      "properties": {
+        "baseline_id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "baseline_kind": {
+          "type": "string",
+          "enum": ["PREVALENCE", "SPATIAL_BLOCK_PREVALENCE", "OTHER_DECLARED"]
+        }
+      }
+    },
+    "train_years": {
+      "type": "array",
+      "items": { "type": "integer" },
+      "minItems": 1
+    },
+    "tuning_years": {
+      "type": "array",
+      "items": { "type": "integer" },
+      "description": "Must not include holdout_year."
+    },
+    "holdout_year": {
+      "type": "integer",
+      "description": "Locked final evaluation year; scored once; never used for tuning or refit."
+    },
+    "allow_tune_on_holdout": {
+      "type": "boolean",
+      "const": false
+    },
+    "publish_status": {
+      "type": "string",
+      "enum": ["NOT_PUBLISHED", "INTERNAL_ONLY", "PUBLISHED"],
+      "description": "Template experiments stay NOT_PUBLISHED."
+    },
+    "notes": {
+      "type": ["string", "null"]
+    }
+  }
+}

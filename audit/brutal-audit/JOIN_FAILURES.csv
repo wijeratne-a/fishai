@@ -1,0 +1,7 @@
+join,failure,handling,safe
+MUR first matcher 404,URL missing zlev,killed; URL fixed for OISST,after-the-fact
+USVI NCRMP HTTP 400,SAMPLE_DEPTH vs DEPTH,index.csv query,after-the-fact
+CalCOFI cruise 2204,wrong cruise key,time-encoded window,after-the-fact
+DATRAS/DFO Python SSL,verify fail,curl -sk then parse,works; security tradeoff
+Unmatched SST dates,offsets ±2 including future,filled silently,UNSAFE
+Missing vis/depth,imputed 15,silent,UNSAFE

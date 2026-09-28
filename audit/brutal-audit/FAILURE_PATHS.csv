@@ -1,0 +1,11 @@
+scenario,current_behavior,safe,fix
+missing vis/depth,impute 15,NO,refuse
+SST miss on date,use t+1/t+2,NO,refuse future; leave missing
+NaN coefficients,USVI NaN in table,partial,hard fail
+corrupt model file,no load path in globe,YES if unpublished,keep unpublished
+eligibility gate skipped,fit runs anyway,NO,document; later wire
+truncated zero rows,false non-detections,NO,year-list checksum
+stale CURRENT_STATUS,operators follow it,NO,STALE banner
+failed restore,RESTORE_TEST exists,YES if re-run,keep
+Python SSL skip for DATRAS,curl -sk,MEDIUM,document risk
+map tile fail,prototype only,INFO,keep unpublished

@@ -1,0 +1,11 @@
+source_id,evidence_type,quality,years_or_window,zero_note
+noaa-rvc-florida-keys,STRUCTURED_VISUAL_SURVEY,EFFORT_AWARE_VALID_ZEROS,"2018,2022,2024",CONSTRUCTIBLE_SURVEY_NONDETECTION
+CRCP_Reef_Fish_Surveys_Puerto_Rico,STRUCTURED_VISUAL_SURVEY,EFFORT_AWARE_VALID_ZEROS,"2023,2021",fixed species list with NUM=0
+CRCP_Reef_Fish_Surveys_USVI,STRUCTURED_VISUAL_SURVEY,EFFORT_AWARE_VALID_ZEROS,"2023,2021",fixed species list with NUM=0
+CRCP_Reef_Fish_Surveys_Flower_Gardens,STRUCTURED_VISUAL_SURVEY,EFFORT_AWARE_VALID_ZEROS,"2024,2022",fixed species list with NUM=0
+CRCP_Reef_Fish_Surveys_Hawaii,STRUCTURED_VISUAL_SURVEY,EFFORT_AWARE_DETECTIONS_ONLY,"2024,2019",COUNT had no zero rows in the download
+CRCP_Reef_Fish_Surveys_American_Samoa,STRUCTURED_VISUAL_SURVEY,EFFORT_AWARE_DETECTIONS_ONLY,"2023,2018",COUNT had no zero rows in the download
+CRCP_Reef_Fish_Surveys_CNMI_Guam,STRUCTURED_VISUAL_SURVEY,EFFORT_AWARE_DETECTIONS_ONLY,"2022,2017",COUNT had no zero rows in the download
+CRCP_Reef_Fish_Surveys_PRIAs,STRUCTURED_VISUAL_SURVEY,EFFORT_AWARE_DETECTIONS_ONLY,"2023,2018",COUNT had no zero rows in the download
+obis-florida-keys-90d,OTHER_PRESENCE_ONLY,UNVERIFIED_PRESENCE,2026-06-26 to 2026-07-20 in the saved page,not a survey non-detection
+jplMURSST41,ENVIRONMENTAL_OBSERVATION,NOT_A_SPECIES_RECORD,snippet time 2026-09-23,not joined to dives

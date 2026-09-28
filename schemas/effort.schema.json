@@ -1,0 +1,66 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://fishai.local/schemas/effort.schema.json",
+  "title": "Effort",
+  "description": "Protocol search or sampling effort for an event. Protocols stay separate; effort currencies are not interchangeable.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "effort_id",
+    "event_id",
+    "source_id",
+    "protocol_id",
+    "effort_type",
+    "effort_completed"
+  ],
+  "properties": {
+    "effort_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "event_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "source_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "protocol_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "effort_type": {
+      "type": "string",
+      "enum": [
+        "VISUAL_PLOT",
+        "TRANSECT",
+        "TOW_DURATION",
+        "TOW_DISTANCE",
+        "SAMPLER_VOLUME",
+        "HOOK_HOURS",
+        "RECORDER_DUTY_CYCLE",
+        "EDNA_VOLUME",
+        "OTHER",
+        "UNKNOWN"
+      ]
+    },
+    "effort_value": {
+      "type": ["number", "null"],
+      "minimum": 0
+    },
+    "effort_unit": {
+      "type": ["string", "null"]
+    },
+    "effort_completed": {
+      "type": "boolean",
+      "description": "False means no verified search completed; cannot mint SURVEY_NONDETECTION."
+    },
+    "gear_or_method": {
+      "type": ["string", "null"]
+    },
+    "notes": {
+      "type": ["string", "null"]
+    }
+  }
+}

@@ -1,0 +1,376 @@
+{
+  "label": "INTERNAL \u2014 NOT A LIVE LOCATION \u2014 NOT A FORECAST \u2014 NOT PUBLISHED",
+  "species": "kelp_bass",
+  "species_code": "PCLA",
+  "scientific_name": "Paralabrax clathratus",
+  "substitution": null,
+  "train_years": [
+    2001,
+    2002,
+    2003,
+    2004,
+    2005,
+    2006,
+    2007,
+    2008,
+    2009,
+    2010,
+    2011,
+    2012,
+    2013,
+    2014,
+    2015,
+    2016,
+    2017,
+    2018
+  ],
+  "test_year": 2022,
+  "numeric_features": [
+    "vis",
+    "kelp",
+    "temp"
+  ],
+  "train_events": 708,
+  "train_detected": 380,
+  "train_prevalence": 0.536723,
+  "test_events": 43,
+  "test_detected": 26,
+  "test_detected_meets_minimum": true,
+  "test_prevalence": 0.604651,
+  "test_brier_model": 0.296044,
+  "test_brier_prevalence": 0.243662,
+  "test_logloss_model": 0.794908,
+  "test_logloss_prevalence": 0.680451,
+  "test_auc": 0.5204,
+  "brier_bootstrap": {
+    "brier_improvement": -0.052381,
+    "ci95_low": -0.128768,
+    "ci95_high": 0.026872,
+    "reps": 2000,
+    "resampling_unit": "site",
+    "clusters": 11
+  },
+  "mean_predicted": 0.378906,
+  "calibration_gap": 0.225745,
+  "calibration_fit": {
+    "intercept": 0.5484,
+    "slope": 0.2366
+  },
+  "reliability": [
+    {
+      "bin": "0.1-0.2",
+      "n": 1,
+      "mean_p": 0.1919,
+      "observed": 0.0
+    },
+    {
+      "bin": "0.2-0.3",
+      "n": 9,
+      "mean_p": 0.2639,
+      "observed": 0.6667
+    },
+    {
+      "bin": "0.3-0.4",
+      "n": 19,
+      "mean_p": 0.3459,
+      "observed": 0.5263
+    },
+    {
+      "bin": "0.4-0.5",
+      "n": 8,
+      "mean_p": 0.4403,
+      "observed": 0.75
+    },
+    {
+      "bin": "0.5-0.6",
+      "n": 3,
+      "mean_p": 0.5573,
+      "observed": 0.6667
+    },
+    {
+      "bin": "0.6-0.7",
+      "n": 3,
+      "mean_p": 0.6531,
+      "observed": 0.6667
+    }
+  ],
+  "preregistered_checks": {
+    "beats_prevalence_brier_ci": false,
+    "beats_prevalence_logloss": false,
+    "calibrated_mean": false
+  },
+  "passed_preregistered_rule": false,
+  "decision": "DID_NOT_BEAT_BASELINE_ON_TEST_YEAR",
+  "coefficients_standardized": {
+    "intercept": 0.1714,
+    "vis": 0.3476,
+    "kelp": 0.3461,
+    "temp": 0.3978
+  },
+  "train_audit": {
+    "transects_loaded": 729,
+    "not_evaluated": 10,
+    "missing_visibility": 12,
+    "kelp_join": {
+      "OK": 724,
+      "KELP_NOT_SAME_DAY": 4,
+      "KELP_COUNT_MISSING": 1
+    },
+    "dropped_missing_temperature": 0,
+    "rows_used": 708,
+    "detected_used": 380,
+    "sites": [
+      "ABUR",
+      "AHND",
+      "AQUE",
+      "BULL",
+      "CARP",
+      "GOLB",
+      "IVEE",
+      "MOHK",
+      "NAPL",
+      "SCDI",
+      "SCTW"
+    ],
+    "temperature_join": {
+      "events": 729,
+      "matched": 729,
+      "missing_no_hycom_file": 0,
+      "missing_no_column_within_km": 0,
+      "max_cell_km": 10.0,
+      "depth_rule": "site typical depth = midpoint of the EML depth range (no per-transect depth in the data)",
+      "cell_distance_km_median": 3.8,
+      "cell_distance_km_p95": 8.34
+    },
+    "per_year": {
+      "2001": {
+        "transects": 34,
+        "detected": 26,
+        "zero": 8,
+        "not_evaluated": 0,
+        "rows_used": 29,
+        "prevalence_used": 0.7586,
+        "temp_min": 14.5,
+        "temp_max": 17.02
+      },
+      "2002": {
+        "transects": 35,
+        "detected": 18,
+        "zero": 17,
+        "not_evaluated": 0,
+        "rows_used": 35,
+        "prevalence_used": 0.5143,
+        "temp_min": 14.85,
+        "temp_max": 17.05
+      },
+      "2003": {
+        "transects": 35,
+        "detected": 9,
+        "zero": 26,
+        "not_evaluated": 0,
+        "rows_used": 34,
+        "prevalence_used": 0.2647,
+        "temp_min": 15.05,
+        "temp_max": 18.12
+      },
+      "2004": {
+        "transects": 39,
+        "detected": 14,
+        "zero": 19,
+        "not_evaluated": 6,
+        "rows_used": 32,
+        "prevalence_used": 0.4062,
+        "temp_min": 14.93,
+        "temp_max": 19.21
+      },
+      "2005": {
+        "transects": 39,
+        "detected": 16,
+        "zero": 19,
+        "not_evaluated": 4,
+        "rows_used": 34,
+        "prevalence_used": 0.4412,
+        "temp_min": 15.26,
+        "temp_max": 18.6
+      },
+      "2006": {
+        "transects": 39,
+        "detected": 17,
+        "zero": 22,
+        "not_evaluated": 0,
+        "rows_used": 39,
+        "prevalence_used": 0.4359,
+        "temp_min": 16.69,
+        "temp_max": 19.75
+      },
+      "2007": {
+        "transects": 39,
+        "detected": 17,
+        "zero": 22,
+        "not_evaluated": 0,
+        "rows_used": 39,
+        "prevalence_used": 0.4359,
+        "temp_min": 15.03,
+        "temp_max": 19.22
+      },
+      "2008": {
+        "transects": 39,
+        "detected": 23,
+        "zero": 16,
+        "not_evaluated": 0,
+        "rows_used": 37,
+        "prevalence_used": 0.5946,
+        "temp_min": 17.27,
+        "temp_max": 19.24
+      },
+      "2009": {
+        "transects": 39,
+        "detected": 15,
+        "zero": 24,
+        "not_evaluated": 0,
+        "rows_used": 39,
+        "prevalence_used": 0.3846,
+        "temp_min": 16.38,
+        "temp_max": 18.5
+      },
+      "2010": {
+        "transects": 39,
+        "detected": 19,
+        "zero": 20,
+        "not_evaluated": 0,
+        "rows_used": 39,
+        "prevalence_used": 0.4872,
+        "temp_min": 14.29,
+        "temp_max": 16.25
+      },
+      "2011": {
+        "transects": 44,
+        "detected": 18,
+        "zero": 26,
+        "not_evaluated": 0,
+        "rows_used": 43,
+        "prevalence_used": 0.4186,
+        "temp_min": 15.52,
+        "temp_max": 17.7
+      },
+      "2012": {
+        "transects": 44,
+        "detected": 12,
+        "zero": 32,
+        "not_evaluated": 0,
+        "rows_used": 44,
+        "prevalence_used": 0.2727,
+        "temp_min": 15.24,
+        "temp_max": 17.25
+      },
+      "2013": {
+        "transects": 44,
+        "detected": 14,
+        "zero": 30,
+        "not_evaluated": 0,
+        "rows_used": 44,
+        "prevalence_used": 0.3182,
+        "temp_min": 16.42,
+        "temp_max": 17.66
+      },
+      "2014": {
+        "transects": 44,
+        "detected": 27,
+        "zero": 17,
+        "not_evaluated": 0,
+        "rows_used": 44,
+        "prevalence_used": 0.6136,
+        "temp_min": 18.03,
+        "temp_max": 20.42
+      },
+      "2015": {
+        "transects": 44,
+        "detected": 36,
+        "zero": 8,
+        "not_evaluated": 0,
+        "rows_used": 44,
+        "prevalence_used": 0.8182,
+        "temp_min": 17.35,
+        "temp_max": 19.36
+      },
+      "2016": {
+        "transects": 44,
+        "detected": 39,
+        "zero": 5,
+        "not_evaluated": 0,
+        "rows_used": 44,
+        "prevalence_used": 0.8864,
+        "temp_min": 16.54,
+        "temp_max": 20.41
+      },
+      "2017": {
+        "transects": 44,
+        "detected": 34,
+        "zero": 10,
+        "not_evaluated": 0,
+        "rows_used": 44,
+        "prevalence_used": 0.7727,
+        "temp_min": 16.18,
+        "temp_max": 20.86
+      },
+      "2018": {
+        "transects": 44,
+        "detected": 33,
+        "zero": 11,
+        "not_evaluated": 0,
+        "rows_used": 44,
+        "prevalence_used": 0.75,
+        "temp_min": 15.37,
+        "temp_max": 22.14
+      }
+    }
+  },
+  "test_audit": {
+    "transects_loaded": 44,
+    "not_evaluated": 0,
+    "missing_visibility": 1,
+    "kelp_join": {
+      "OK": 44
+    },
+    "dropped_missing_temperature": 0,
+    "rows_used": 43,
+    "detected_used": 26,
+    "sites": [
+      "ABUR",
+      "AHND",
+      "AQUE",
+      "BULL",
+      "CARP",
+      "GOLB",
+      "IVEE",
+      "MOHK",
+      "NAPL",
+      "SCDI",
+      "SCTW"
+    ],
+    "temperature_join": {
+      "events": 44,
+      "matched": 44,
+      "missing_no_hycom_file": 0,
+      "missing_no_column_within_km": 0,
+      "max_cell_km": 10.0,
+      "depth_rule": "site typical depth = midpoint of the EML depth range (no per-transect depth in the data)",
+      "cell_distance_km_median": 2.4,
+      "cell_distance_km_p95": 4.73
+    },
+    "per_year": {
+      "2022": {
+        "transects": 44,
+        "detected": 26,
+        "zero": 18,
+        "not_evaluated": 0,
+        "rows_used": 43,
+        "prevalence_used": 0.6047,
+        "temp_min": 13.89,
+        "temp_max": 19.64
+      }
+    }
+  },
+  "publication_status": "NOT_PUBLISHED",
+  "on_the_globe": false
+}

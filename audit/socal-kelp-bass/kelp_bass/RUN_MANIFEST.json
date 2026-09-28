@@ -1,0 +1,55 @@
+{
+  "label": "INTERNAL \u2014 NOT A LIVE LOCATION \u2014 NOT A FORECAST \u2014 NOT PUBLISHED",
+  "species": "kelp_bass",
+  "inputs": {
+    "data/raw/biological/sbc-lter/Annual_fish_comb_20250903.csv": "67820b4c1224326daa587627d3b41f126cbb4ada640a6cb658952dc1d8b4419c",
+    "data/raw/biological/sbc-lter/knb-lter-sbc.17.41.eml.xml": "1d9a2a05d4dd5506e3f4da5d9b5644da49597addadd21876edb6da9dea619a5a",
+    "data/raw/biological/sbc-lter/Annual_Kelp_All_Years_20250903.csv": "78a4557a41a293dde0a41a296ea3658d46748966fd9963685794177e72366852",
+    "data/raw/biological/sbc-lter/knb-lter-sbc.18.30.eml.xml": "c972234266ba5c7d10bb78e6214a16587fbe0e685fb184da02fe3adc873e0912"
+  },
+  "source_packages": {
+    "fish": "knb-lter-sbc.17.41",
+    "kelp": "knb-lter-sbc.18.30"
+  },
+  "hycom_dir": "data/restricted/environmental/hycom/socal-sbc/by-date",
+  "train_years": [
+    2001,
+    2002,
+    2003,
+    2004,
+    2005,
+    2006,
+    2007,
+    2008,
+    2009,
+    2010,
+    2011,
+    2012,
+    2013,
+    2014,
+    2015,
+    2016,
+    2017,
+    2018
+  ],
+  "test_year": 2022,
+  "estimator": {
+    "type": "l2_logistic_newton",
+    "l2": 1.0,
+    "intercept_penalized": false
+  },
+  "features": [
+    "vis",
+    "kelp",
+    "temp"
+  ],
+  "missing_data_policy": "rows missing label, visibility, kelp or temperature are dropped and counted; never imputed",
+  "preregistration_sha256": "3cc7b7022afea34d6b5f05b9fdf264fe3d5bab322fe845dbb6f850eb2b2bd159",
+  "artifact": "models/socal/kelp_bass_v1.json",
+  "holdout_inspected_before": false,
+  "holdout_exposure_note": "Before freezing, aggregate per-year counts (transects, transects with missing visibility, detected and zero transects for PCLA and PNEB) were printed for every year including 2022, during data exploration and the striped-bass feasibility check the task required. No model was fit to, evaluated on, or tuned against 2022, and no 2022 covariate values were examined.",
+  "rehearsal": false,
+  "scored_utc": "2026-09-27T23:35:42Z",
+  "git_commit": "0bf64b52efdebf4d02fd1b483947edd5ca15f6e9",
+  "tree": "DIRTY"
+}

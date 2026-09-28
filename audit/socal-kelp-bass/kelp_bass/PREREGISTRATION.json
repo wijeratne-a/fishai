@@ -1,0 +1,519 @@
+{
+  "label": "INTERNAL \u2014 NOT A LIVE LOCATION \u2014 NOT A FORECAST \u2014 NOT PUBLISHED",
+  "frozen_utc": "2026-09-27T23:35:06Z",
+  "species": "kelp_bass",
+  "species_code": "PCLA",
+  "scientific_name": "Paralabrax clathratus",
+  "common_name": "kelp bass (calico bass)",
+  "substitution": null,
+  "source": {
+    "fish": "knb-lter-sbc.17.41",
+    "kelp": "knb-lter-sbc.18.30",
+    "protocol": "FISH"
+  },
+  "survey_unit": "one completed standard fish transect: site x transect x date (40 m x 2 m, 80 m2)",
+  "label_rule": "detected if any size-row COUNT > 0; zero only if explicit rows all COUNT == 0; no rows or -99999 without a positive row = NOT_EVALUATED (excluded, never zero)",
+  "eml_units_verified": {
+    "COUNT": "number",
+    "SIZE": "centimeter",
+    "VIS": "meter",
+    "AREA": "meterSquared"
+  },
+  "train_years": [
+    2001,
+    2002,
+    2003,
+    2004,
+    2005,
+    2006,
+    2007,
+    2008,
+    2009,
+    2010,
+    2011,
+    2012,
+    2013,
+    2014,
+    2015,
+    2016,
+    2017,
+    2018
+  ],
+  "train_years_justification": "2001-2018: every year with the full mainland site set and a late July/August survey window before the gap. 2000 excluded (3 sites only, surveyed in October). The two Santa Cruz Island sites start in 2004 and IVEE transects 3,5,6,7,8 in 2011; both enter training when they start.",
+  "test_year": 2022,
+  "test_year_justification": "2022: inside HYCOM GLBy0.08 expt_93.0 coverage (ends 2024-09-05); all 11 sites and 44 transects surveyed; separated from the last training year by three unused years (2019-2021) so fixed, resurveyed transects are not scored in the year right after training; matches the Florida Keys test year. 2021 met the same criteria and had similar aggregate detection counts.",
+  "test_year_read_before_freeze": false,
+  "test_year_exposure": "Before freezing, aggregate per-year counts (transects, transects with missing visibility, detected and zero transects for PCLA and PNEB) were printed for every year including 2022, during data exploration and the striped-bass feasibility check the task required. No model was fit to, evaluated on, or tuned against 2022, and no 2022 covariate values were examined.",
+  "estimator": {
+    "type": "l2_logistic_newton",
+    "l2": 1.0,
+    "intercept_penalized": false
+  },
+  "numeric_features_chosen": [
+    "vis",
+    "kelp",
+    "temp"
+  ],
+  "features": {
+    "vis": "horizontal visibility (m) recorded at the start of the transect",
+    "kelp": "log(1 + giant kelp fronds per m2) counted on the same transect on the same day (knb-lter-sbc.18.30); transects without a same-day complete kelp survey are refused",
+    "temp": "HYCOM water_temp at the site's typical depth (EML depth-range midpoint)"
+  },
+  "habitat_rule": "single habitat (rocky-reef kelp forest); no habitat dummies",
+  "site_effects": "none; site identity and site depth are not features (11 fixed sites would be memorized)",
+  "year_dummies": false,
+  "scaler_fit_on": "training rows only",
+  "missing_data_policy": "rows missing label, visibility, kelp or temperature are dropped and counted; never imputed",
+  "temperature": {
+    "source": "HYCOM GOFS 3.1 water_temp (one experiment per year; see data/manifests/socal-environment-manifest.csv)",
+    "join": "nearest column within 10.0 km of the site reference point reaching the site's typical depth; linear in depth; no extrapolation",
+    "time_rule": "same-day 12:00 UTC field or past day only",
+    "site_depths_m": {
+      "ABUR": {
+        "depth_min_m": 5.4,
+        "depth_max_m": 7.0,
+        "depth_m": 6.2
+      },
+      "AHND": {
+        "depth_min_m": 4.3,
+        "depth_max_m": 6.6,
+        "depth_m": 5.45
+      },
+      "AQUE": {
+        "depth_min_m": 5.4,
+        "depth_max_m": 10.7,
+        "depth_m": 8.05
+      },
+      "BULL": {
+        "depth_min_m": 5.5,
+        "depth_max_m": 7.3,
+        "depth_m": 6.4
+      },
+      "CARP": {
+        "depth_min_m": 2.2,
+        "depth_max_m": 8.8,
+        "depth_m": 5.5
+      },
+      "GOLB": {
+        "depth_min_m": 4.2,
+        "depth_max_m": 5.0,
+        "depth_m": 4.6
+      },
+      "IVEE": {
+        "depth_min_m": 8.2,
+        "depth_max_m": 8.8,
+        "depth_m": 8.5
+      },
+      "MOHK": {
+        "depth_min_m": 4.5,
+        "depth_max_m": 6.0,
+        "depth_m": 5.25
+      },
+      "NAPL": {
+        "depth_min_m": 5.9,
+        "depth_max_m": 13.4,
+        "depth_m": 9.65
+      },
+      "SCDI": {
+        "depth_min_m": 5.2,
+        "depth_max_m": 11.9,
+        "depth_m": 8.55
+      },
+      "SCTW": {
+        "depth_min_m": 2.7,
+        "depth_max_m": 7.8,
+        "depth_m": 5.25
+      }
+    }
+  },
+  "selection_rule": "temperature kept only if pooled leave-one-site-out Brier AND log loss beat survey-only on training years",
+  "cv_grouping": "leave one site out (11 folds max); sites are fixed and resurveyed every year",
+  "cv_survey_only": {
+    "numeric": [
+      "vis",
+      "kelp"
+    ],
+    "folds": [
+      {
+        "block": "ABUR",
+        "n": 35,
+        "brier_model": 0.23246,
+        "brier_prevalence": 0.26371
+      },
+      {
+        "block": "AHND",
+        "n": 35,
+        "brier_model": 0.21735,
+        "brier_prevalence": 0.26371
+      },
+      {
+        "block": "AQUE",
+        "n": 105,
+        "brier_model": 0.2405,
+        "brier_prevalence": 0.2489
+      },
+      {
+        "block": "BULL",
+        "n": 53,
+        "brier_model": 0.24488,
+        "brier_prevalence": 0.26229
+      },
+      {
+        "block": "CARP",
+        "n": 139,
+        "brier_model": 0.2346,
+        "brier_prevalence": 0.24755
+      },
+      {
+        "block": "GOLB",
+        "n": 32,
+        "brier_model": 0.26322,
+        "brier_prevalence": 0.24478
+      },
+      {
+        "block": "IVEE",
+        "n": 74,
+        "brier_model": 0.23105,
+        "brier_prevalence": 0.24939
+      },
+      {
+        "block": "MOHK",
+        "n": 36,
+        "brier_model": 0.29055,
+        "brier_prevalence": 0.26191
+      },
+      {
+        "block": "NAPL",
+        "n": 140,
+        "brier_model": 0.23157,
+        "brier_prevalence": 0.24638
+      },
+      {
+        "block": "SCDI",
+        "n": 29,
+        "brier_model": 0.25651,
+        "brier_prevalence": 0.24523
+      },
+      {
+        "block": "SCTW",
+        "n": 30,
+        "brier_model": 0.21533,
+        "brier_prevalence": 0.23379
+      }
+    ],
+    "pooled_brier_model": 0.238536,
+    "pooled_brier_prevalence": 0.25034,
+    "pooled_logloss_model": 0.669986,
+    "pooled_logloss_prevalence": 0.693841
+  },
+  "cv_with_temperature": {
+    "numeric": [
+      "vis",
+      "kelp",
+      "temp"
+    ],
+    "folds": [
+      {
+        "block": "ABUR",
+        "n": 35,
+        "brier_model": 0.19917,
+        "brier_prevalence": 0.26371
+      },
+      {
+        "block": "AHND",
+        "n": 35,
+        "brier_model": 0.22196,
+        "brier_prevalence": 0.26371
+      },
+      {
+        "block": "AQUE",
+        "n": 105,
+        "brier_model": 0.23603,
+        "brier_prevalence": 0.2489
+      },
+      {
+        "block": "BULL",
+        "n": 53,
+        "brier_model": 0.23298,
+        "brier_prevalence": 0.26229
+      },
+      {
+        "block": "CARP",
+        "n": 139,
+        "brier_model": 0.23238,
+        "brier_prevalence": 0.24755
+      },
+      {
+        "block": "GOLB",
+        "n": 32,
+        "brier_model": 0.25377,
+        "brier_prevalence": 0.24478
+      },
+      {
+        "block": "IVEE",
+        "n": 74,
+        "brier_model": 0.22503,
+        "brier_prevalence": 0.24939
+      },
+      {
+        "block": "MOHK",
+        "n": 36,
+        "brier_model": 0.29499,
+        "brier_prevalence": 0.26191
+      },
+      {
+        "block": "NAPL",
+        "n": 140,
+        "brier_model": 0.22769,
+        "brier_prevalence": 0.24638
+      },
+      {
+        "block": "SCDI",
+        "n": 29,
+        "brier_model": 0.24946,
+        "brier_prevalence": 0.24523
+      },
+      {
+        "block": "SCTW",
+        "n": 30,
+        "brier_model": 0.15734,
+        "brier_prevalence": 0.23379
+      }
+    ],
+    "pooled_brier_model": 0.230786,
+    "pooled_brier_prevalence": 0.25034,
+    "pooled_logloss_model": 0.651991,
+    "pooled_logloss_prevalence": 0.693841
+  },
+  "acceptance_rule_on_test": {
+    "brier_improvement_ci95_low_gt": 0.0,
+    "logloss_below_prevalence": true,
+    "calibration_gap_max": 0.05
+  },
+  "training_audit": {
+    "transects_loaded": 729,
+    "not_evaluated": 10,
+    "missing_visibility": 12,
+    "kelp_join": {
+      "OK": 724,
+      "KELP_NOT_SAME_DAY": 4,
+      "KELP_COUNT_MISSING": 1
+    },
+    "dropped_missing_temperature": 0,
+    "rows_used": 708,
+    "detected_used": 380,
+    "sites": [
+      "ABUR",
+      "AHND",
+      "AQUE",
+      "BULL",
+      "CARP",
+      "GOLB",
+      "IVEE",
+      "MOHK",
+      "NAPL",
+      "SCDI",
+      "SCTW"
+    ],
+    "temperature_join": {
+      "events": 729,
+      "matched": 729,
+      "missing_no_hycom_file": 0,
+      "missing_no_column_within_km": 0,
+      "max_cell_km": 10.0,
+      "depth_rule": "site typical depth = midpoint of the EML depth range (no per-transect depth in the data)",
+      "cell_distance_km_median": 3.8,
+      "cell_distance_km_p95": 8.34
+    },
+    "per_year": {
+      "2001": {
+        "transects": 34,
+        "detected": 26,
+        "zero": 8,
+        "not_evaluated": 0,
+        "rows_used": 29,
+        "prevalence_used": 0.7586,
+        "temp_min": 14.5,
+        "temp_max": 17.02
+      },
+      "2002": {
+        "transects": 35,
+        "detected": 18,
+        "zero": 17,
+        "not_evaluated": 0,
+        "rows_used": 35,
+        "prevalence_used": 0.5143,
+        "temp_min": 14.85,
+        "temp_max": 17.05
+      },
+      "2003": {
+        "transects": 35,
+        "detected": 9,
+        "zero": 26,
+        "not_evaluated": 0,
+        "rows_used": 34,
+        "prevalence_used": 0.2647,
+        "temp_min": 15.05,
+        "temp_max": 18.12
+      },
+      "2004": {
+        "transects": 39,
+        "detected": 14,
+        "zero": 19,
+        "not_evaluated": 6,
+        "rows_used": 32,
+        "prevalence_used": 0.4062,
+        "temp_min": 14.93,
+        "temp_max": 19.21
+      },
+      "2005": {
+        "transects": 39,
+        "detected": 16,
+        "zero": 19,
+        "not_evaluated": 4,
+        "rows_used": 34,
+        "prevalence_used": 0.4412,
+        "temp_min": 15.26,
+        "temp_max": 18.6
+      },
+      "2006": {
+        "transects": 39,
+        "detected": 17,
+        "zero": 22,
+        "not_evaluated": 0,
+        "rows_used": 39,
+        "prevalence_used": 0.4359,
+        "temp_min": 16.69,
+        "temp_max": 19.75
+      },
+      "2007": {
+        "transects": 39,
+        "detected": 17,
+        "zero": 22,
+        "not_evaluated": 0,
+        "rows_used": 39,
+        "prevalence_used": 0.4359,
+        "temp_min": 15.03,
+        "temp_max": 19.22
+      },
+      "2008": {
+        "transects": 39,
+        "detected": 23,
+        "zero": 16,
+        "not_evaluated": 0,
+        "rows_used": 37,
+        "prevalence_used": 0.5946,
+        "temp_min": 17.27,
+        "temp_max": 19.24
+      },
+      "2009": {
+        "transects": 39,
+        "detected": 15,
+        "zero": 24,
+        "not_evaluated": 0,
+        "rows_used": 39,
+        "prevalence_used": 0.3846,
+        "temp_min": 16.38,
+        "temp_max": 18.5
+      },
+      "2010": {
+        "transects": 39,
+        "detected": 19,
+        "zero": 20,
+        "not_evaluated": 0,
+        "rows_used": 39,
+        "prevalence_used": 0.4872,
+        "temp_min": 14.29,
+        "temp_max": 16.25
+      },
+      "2011": {
+        "transects": 44,
+        "detected": 18,
+        "zero": 26,
+        "not_evaluated": 0,
+        "rows_used": 43,
+        "prevalence_used": 0.4186,
+        "temp_min": 15.52,
+        "temp_max": 17.7
+      },
+      "2012": {
+        "transects": 44,
+        "detected": 12,
+        "zero": 32,
+        "not_evaluated": 0,
+        "rows_used": 44,
+        "prevalence_used": 0.2727,
+        "temp_min": 15.24,
+        "temp_max": 17.25
+      },
+      "2013": {
+        "transects": 44,
+        "detected": 14,
+        "zero": 30,
+        "not_evaluated": 0,
+        "rows_used": 44,
+        "prevalence_used": 0.3182,
+        "temp_min": 16.42,
+        "temp_max": 17.66
+      },
+      "2014": {
+        "transects": 44,
+        "detected": 27,
+        "zero": 17,
+        "not_evaluated": 0,
+        "rows_used": 44,
+        "prevalence_used": 0.6136,
+        "temp_min": 18.03,
+        "temp_max": 20.42
+      },
+      "2015": {
+        "transects": 44,
+        "detected": 36,
+        "zero": 8,
+        "not_evaluated": 0,
+        "rows_used": 44,
+        "prevalence_used": 0.8182,
+        "temp_min": 17.35,
+        "temp_max": 19.36
+      },
+      "2016": {
+        "transects": 44,
+        "detected": 39,
+        "zero": 5,
+        "not_evaluated": 0,
+        "rows_used": 44,
+        "prevalence_used": 0.8864,
+        "temp_min": 16.54,
+        "temp_max": 20.41
+      },
+      "2017": {
+        "transects": 44,
+        "detected": 34,
+        "zero": 10,
+        "not_evaluated": 0,
+        "rows_used": 44,
+        "prevalence_used": 0.7727,
+        "temp_min": 16.18,
+        "temp_max": 20.86
+      },
+      "2018": {
+        "transects": 44,
+        "detected": 33,
+        "zero": 11,
+        "not_evaluated": 0,
+        "rows_used": 44,
+        "prevalence_used": 0.75,
+        "temp_min": 15.37,
+        "temp_max": 22.14
+      }
+    }
+  },
+  "bootstrap": {
+    "reps": 2000,
+    "seed": 20260927,
+    "unit": "site"
+  },
+  "publication_status": "NOT_PUBLISHED",
+  "git_commit": "0bf64b52efdebf4d02fd1b483947edd5ca15f6e9",
+  "tree": "DIRTY"
+}

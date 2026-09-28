@@ -1,0 +1,7 @@
+biological_source,environmental_source,match_status,join_method,notes
+Atlantic_RVC_Florida_Keys,jplMURSST41,NOT_MATCHED,none,Survey events exist; SST not joined at event time or location
+Atlantic_RVC_Puerto_Rico,jplMURSST41,NOT_MATCHED,none,Survey events exist; SST not joined
+Atlantic_RVC_USVI,jplMURSST41,NOT_MATCHED,none,Survey events exist; SST not joined
+Atlantic_RVC_Flower_Garden_Banks,jplMURSST41,NOT_MATCHED,none,Survey events exist; SST not joined
+Pacific_RVC_four_datasets,jplMURSST41,NOT_MATCHED,none,Positive-only COUNT frames; SST not joined
+OBIS_Keys_extract,jplMURSST41,NOT_MATCHED,none,Presence layer only; SST not joined

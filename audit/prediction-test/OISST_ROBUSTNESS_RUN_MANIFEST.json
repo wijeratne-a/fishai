@@ -1,0 +1,22 @@
+{
+  "manifest_version": "1.1",
+  "experiment_id": "pr_oisst_robustness_once",
+  "random_seed": 20260926,
+  "train_years": [
+    2016,
+    2019,
+    2021
+  ],
+  "holdout_year": 2023,
+  "code_version": "0bf64b52efdebf4d02fd1b483947edd5ca15f6e9",
+  "git_commit_of_fit": "0bf64b52efdebf4d02fd1b483947edd5ca15f6e9",
+  "input_checksums": {
+    "2016.csv.gz": "708d6280b22ce1113647cf04bb992d6e44bfb21b386e24efe7ec2a471e245150",
+    "2019.csv.gz": "c1151f0e1d59fad32faf7fba4b6753fd09efae8c0dcb5cdc88435ad6f9ed32ed",
+    "2021.csv.gz": "6efa48e770a21e2e5a60979a58e191416821f2179dfe5225948a7d8ed4d1bfd3",
+    "2023.csv.gz": "b00492fabd8b40ea75534e64a585460928e46d433ead3e56fc1c835ac7e158b0"
+  },
+  "publish_status": "NOT_PUBLISHED",
+  "utc_timestamp": "2026-09-26T23:23:49Z",
+  "notes": "OISST robustness score after freeze on 2016-2021. Not a MUR rescore. NOT_PUBLISHED."
+}

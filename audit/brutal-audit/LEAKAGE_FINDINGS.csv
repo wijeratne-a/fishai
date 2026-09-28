@@ -1,0 +1,7 @@
+defect_id,leak_class,file_or_function,evidence,metrics_invalid,severity
+LEAK-001,temporal_future_feature,join_survey_date_sst / match_oisst,Offsets include day+1 and day+2 after survey date,SST comparison scores cannot be called operationally valid; retrospective only if declared,CRITICAL_INVALIDATES_RESULTS
+LEAK-002,holdout_reuse,PUERTO_RICO_FINAL_REPORT + ENVIRONMENTAL_DECISION + MODEL_RESULTS,2023 used for species selection then MUR then OISST,All 'locked 2023 skill' claims downgraded to inspected-holdout,CRITICAL_INVALIDATES_RESULTS
+LEAK-003,identity_year_dummy,design() year dummies,Holdout year not in train years list so all year dummies 0; scored as 2016 reference,Temporal holdout is not a year-effect transfer,HIGH_MISLEADS_USERS_OR_MODELS
+LEAK-004,preprocessing_habitat_choice,score_new_environmental_variable vs evaluate_species,Different habitat dummy sets on same holdout,OISST table survey Brier is not the locked survey Brier,HIGH_MISLEADS_USERS_OR_MODELS
+LEAK-005,spatial_weak_blocks,block = SUB_REGION_NAME,3 PR folds; adjacent PSUs in different names split; same name can be huge,Spatial CV may be optimistic or noisy,MEDIUM_SCIENTIFIC_WEAKNESS
+LEAK-006,protocol,None in PR fit,PR fit is single protocol RVC; 50% path acquired trawl/eggs but did not pool — OK,none,INFO

@@ -1,0 +1,6 @@
+defect_id,surface,bad_claim,actual,fix,severity
+UI-001,globe/prototype/src/answer.ts,Where now,historical atlas / unknown,What is known,HIGH_MISLEADS_USERS_OR_MODELS
+UI-002,emptyAnswer,Unknown current location,no observation,What is known — no observation in this atlas,HIGH_MISLEADS_USERS_OR_MODELS
+UI-003,species cards if they inherit now,implied live,internal unpublished,keep PUBLISHED gate,HIGH_MISLEADS_USERS_OR_MODELS
+UI-004,CURRENT_STATUS.md,backup not run SST not joined,false as of 2026-09-26,STALE banner,HIGH_MISLEADS_USERS_OR_MODELS
+UI-005,FIFTY_PERCENT_REVIEW,OISST join works,join works as regional box + future-day fallback,narrow the sentence,MEDIUM_SCIENTIFIC_WEAKNESS

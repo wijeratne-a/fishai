@@ -1,0 +1,6 @@
+variable,used_as,actual,ok
+MUR analysed_sst,reef-fish environment,skin/foundation SST,NO if claimed as habitat temperature
+OISST sst,same,surface,NO if claimed as bottom
+hycom_gom310D,depth search hit,GOM 2009-2014,NO for PR years
+survey SAMPLE_DEPTH,depth feature,diver sample depth,YES if not imputed
+vis,detectability,horizontal vis,YES if not imputed

@@ -1,0 +1,16 @@
+source_id,source_stage_label,normalized_life_stage,mapping_confidence,notes
+erdCalCOFIcufes,egg|CUFES egg count,egg,high,Egg sampler product; not adult occurrence
+CRCP_Reef_Fish_Surveys_Florida,,unknown,low,Length bins present; do not assign definitive stage from length alone
+CRCP_Reef_Fish_Surveys_Puerto_Rico,,unknown,low,Length bins present; do not assign definitive stage from length alone
+CRCP_Reef_Fish_Surveys_USVI,,unknown,low,Length bins present; do not assign definitive stage from length alone
+CRCP_Reef_Fish_Surveys_Flower_Gardens,,unknown,low,Length bins present; do not assign definitive stage from length alone
+CRCP_Reef_Fish_Surveys_Hawaii,,unknown,low,Pacific COUNT extract; stage usually unstated
+CRCP_Reef_Fish_Surveys_American_Samoa,,unknown,low,Pacific COUNT extract; stage usually unstated
+CRCP_Reef_Fish_Surveys_CNMI_Guam,,unknown,low,Pacific COUNT extract; stage usually unstated
+CRCP_Reef_Fish_Surveys_PRIAs,,unknown,low,Pacific COUNT extract; stage usually unstated
+OBIS_Keys_extract,larva|larvae|larval,larva,medium,Only when source lifeStage field states larva
+OBIS_Keys_extract,juvenile|juv,juvenile,medium,Only when source lifeStage field states juvenile
+OBIS_Keys_extract,adult,adult,medium,Only when source lifeStage field states adult
+OBIS_Keys_extract,egg|eggs,egg,medium,Only when source lifeStage field states egg
+OBIS_Keys_extract,,unknown,low,Default when lifeStage absent; do not infer from length
+generic_length_bin,length_only,unknown,forbidden_as_definitive,Probabilistic class allowed only under LIFE_STAGE_MODEL_RULES; never definitive from length alone

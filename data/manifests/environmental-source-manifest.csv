@@ -1,0 +1,5 @@
+source_id,provider,variable,coverage_check,file,sha256,bytes,joined_to_events,decision
+jplMURSST41,NOAA CoastWatch ERDDAP,analysed_sst,HTTP 200 metadata; one 0.1-degree box on 2022-06-15 downloaded,data/raw/environmental/mur-sst-keys-box-2022-06-15.csv,2a756464a59df45fed508433e6b89accbde8ba03d22d152913779ae0e890f385,5186,no,NOT_JOINED
+WCOFS,NOAA NOS,temperature salinity currents ssh,not subset in this run,,,no,CANDIDATE
+Copernicus Marine,Copernicus,sst salinity chlorophyll,no credentials in this run,,,no,ACCOUNT_ACTION_REQUIRED
+RVC survey fields,NOAA NCRMP table,depth visibility habitat code,present on every retained event,data/raw/biological/noaa-rvc-florida-keys-YYYY.csv.gz,see acquisition-manifest.csv,,yes,USED_IN_INTERNAL_BASELINE

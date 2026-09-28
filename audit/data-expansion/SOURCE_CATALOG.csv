@@ -1,0 +1,18 @@
+source_id,family,regions,latest_published_observation,zero_rows_in_download,access_class,model_use
+CRCP_Reef_Fish_Surveys_Florida,atlantic NUM table,Florida Keys subset already local,2024-11-26,yes,AUTO_ACQUIRE_INTERNAL_ONLY,READY_FOR_BASELINE
+CRCP_Reef_Fish_Surveys_Puerto_Rico,atlantic NUM table,Puerto Rico,2023-11-16,yes,AUTO_ACQUIRE_INTERNAL_ONLY,READY_FOR_REGIONAL_MODEL
+CRCP_Reef_Fish_Surveys_USVI,atlantic NUM table,U.S. Virgin Islands,2023-08-18,yes,AUTO_ACQUIRE_INTERNAL_ONLY,READY_FOR_REGIONAL_MODEL
+CRCP_Reef_Fish_Surveys_Flower_Gardens,atlantic NUM table,Flower Garden Banks,2024-08-01,yes,AUTO_ACQUIRE_INTERNAL_ONLY,READY_FOR_REGIONAL_MODEL
+CRCP_Reef_Fish_Surveys_Hawaii,pacific COUNT table,Hawaii,2024-08-27,no,AUTO_ACQUIRE_INTERNAL_ONLY,PRESENCE_LAYER_ONLY
+CRCP_Reef_Fish_Surveys_American_Samoa,pacific COUNT table,American Samoa,2023-08-09,no,AUTO_ACQUIRE_INTERNAL_ONLY,PRESENCE_LAYER_ONLY
+CRCP_Reef_Fish_Surveys_CNMI_Guam,pacific COUNT table,CNMI and Guam,2022-08-10,no,AUTO_ACQUIRE_INTERNAL_ONLY,PRESENCE_LAYER_ONLY
+CRCP_Reef_Fish_Surveys_PRIAs,pacific COUNT table,Pacific Remote Island Areas,2023-05-07,no,AUTO_ACQUIRE_INTERNAL_ONLY,PRESENCE_LAYER_ONLY
+OBIS occurrence API,presence records,Florida Keys box last 90 days,2026-07-20 in the saved page,not equivalent to RVC zeros,public API,PRESENCE_LAYER_ONLY
+GBIF occurrence search,presence records,unbounded probe only,not stored,not reviewed,public search works; bulk download needs an account,ACCOUNT_ACTION_REQUIRED
+jplMURSST41,environmental analysis,0.01-degree snippet,2026-09-23T09:00:00Z,not a species table,public ERDDAP,not joined
+RTOFS forecast search,forecast,CoastWatch ERDDAP,none,none,HTTP 404,not acquired
+CRCP_Reef_Fish_Surveys_Florida_2021,atlantic NUM table,Florida Keys,2021,yes,AUTO_ACQUIRE_INTERNAL_ONLY,READY_FOR_BASELINE
+Reef_Life_Survey_NRMN_ep_m1,reef visual transect sample,global NRMN sample,sample of 400 Method 1 rows,not in this sample,IMOS_AODN_OPEN,EVENT_FRAME_ONLY_SAMPLE
+ICES_DATRAS_NS-IBTS_2019Q1,bottom trawl HH+HL,North Sea,2019 Q1,HL zeros not in first pass; haul events present,ICES_PUBLIC_DATRAS,EVENT_AND_EFFORT_TESTED
+DFO_Maritimes_Summer_2023,bottom trawl GSINF+GSCAT+GSSPECIES,Scotian Shelf / Bay of Fundy,2023 sample,yes in GSCAT TOTNO,OPEN_GOVERNMENT_LICENCE_CANADA,VALID_ZEROS_AND_EVENTS
+erdCalCOFI_stns_tows_egg_larva_202204,ichthyoplankton station/tow/egg/larva,California Current,2022-04 cruise window,egg/larva tables are counts not adult zeros,AUTO_ACQUIRE_INTERNAL_ONLY,EGGS_STAY_EGGS

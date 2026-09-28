@@ -21,7 +21,7 @@ export function renderAnswerStrip(container: HTMLElement, strip: AnswerStrip): v
   container.innerHTML = `
     <div class="answer-grid">
       <div><span class="k">Species</span><strong>${escapeHtml(strip.species)}</strong></div>
-      <div><span class="k">Where now</span><p>${escapeHtml(strip.whereNow)}</p></div>
+      <div><span class="k">What is known</span><p>${escapeHtml(strip.whereNow)}</p></div>
       <div><span class="k">Soon</span><p>${escapeHtml(strip.soon)}</p></div>
       <div><span class="k">How sure</span><p>${escapeHtml(strip.howSure)}</p></div>
       <div><span class="k">Depth</span><p>${escapeHtml(strip.depth)}</p></div>
@@ -54,5 +54,5 @@ export function renderAnswerStrip(container: HTMLElement, strip: AnswerStrip): v
 }
 
 export function composeLiveSentence(strip: AnswerStrip): string {
-  return `${strip.species}. Where now: ${strip.whereNow} Soon: ${strip.soon} How sure: ${strip.howSure}. Depth: ${strip.depth}. Why: ${strip.why}`;
+  return `${strip.species}. What is known: ${strip.whereNow} Soon: ${strip.soon} How sure: ${strip.howSure}. Depth: ${strip.depth}. Why: ${strip.why}`;
 }

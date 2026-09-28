@@ -1,0 +1,6 @@
+species_code,scientific_name,worms_aphia_id,detection_events,prevalence,detections_2018,detections_2022,detections_2024,in_all_three_universes,decision
+CHA CAPI,Chaetodon capistratus,159661,1026,0.486,438,237,351,yes,SELECTED
+SPA VIRI,Sparisoma viride,273780,1116,0.528,495,173,448,yes,FALLBACK_1
+HAE FLAV,Haemulon flavolineatum,275727,906,0.429,319,223,364,yes,FALLBACK_2
+THA BIFA,Thalassoma bifasciatum,159786,1965,0.930,777,593,595,yes,NOT_SELECTED_HIGH_PREVALENCE
+EPI ITAJ,Epinephelus itajara,,8,,1,1,6,yes,NOT_SELECTED_TOO_FEW_POSITIVES

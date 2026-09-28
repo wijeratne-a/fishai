@@ -1,0 +1,19 @@
+predictor,temporal_class,priority,status,why_missing,candidate_family_if_named,verified_dataset_id,action_when_phase_allows
+bottom_temperature,historical,critical_for_demersal,MISSING,No depth-resolved temperature archive acquired or endpoint-verified this run,none_verified,,Locate public depth-resolved product with one metadata probe later; do not invent ID
+bottom_temperature,current,high,MISSING,No current bottom-temperature feed verified,none_verified,,Unverified
+bottom_temperature,forecast,high,MISSING,WCOFS/Copernicus not acquired; RTOFS search failed,WCOFS_or_Copernicus_candidate_only,,Do not issue forecast without verified ID
+dissolved_oxygen,historical,critical_for_demersal,MISSING,No oxygen product in manifests,none_verified,,MISSING until verified
+dissolved_oxygen,current,medium,MISSING,No oxygen endpoint verified,none_verified,,Unverified
+dissolved_oxygen,forecast,medium,MISSING,No oxygen forecast acquired,none_verified,,Unverified
+chlorophyll_a,historical,medium_for_pelagic,MISSING,Copernicus needs account; no chlorophyll dataset ID acquired,Copernicus_Marine,,Account action; then metadata before download
+chlorophyll_a,current,medium,MISSING,No chlorophyll feed verified,Copernicus_Marine,,Unverified
+chlorophyll_a,forecast,low,MISSING,No chlorophyll forecast acquired,none_verified,,Unverified
+surface_currents,historical,high_for_pelagic_and_larval,MISSING,WCOFS not subset; no currents file on disk,WCOFS,,Candidate after biological join plan; no bulk grid this phase
+surface_currents,current,high,MISSING,WCOFS not acquired,WCOFS,,Unverified as live feed
+surface_currents,forecast,high,MISSING,CoastWatch RTOFS search HTTP 404; no forecast grid saved,RTOFS_search_failed,,Find current forecast dataset id before retry; do not invent ID
+substrate_class_gridded,historical,high_for_demersal_and_reef,MISSING,Only RVC HABITAT_CD on survey; continuous maps absent,none_verified,,Do not treat GEBCO as substrate or reef evidence
+substrate_class_gridded,current,medium,MISSING,No live substrate product,none_verified,,Unverified
+sea_surface_salinity,historical,medium_estuarine,MISSING,WCOFS and Copernicus not acquired,WCOFS_Copernicus,,Unverified product ID
+analysed_sst_historical_join,historical,critical_next_science_step,PARTIAL_SNIPPET_ONLY,jplMURSST41 exists but not joined to dive dates/locations,NOAA_CoastWatch_MUR,jplMURSST41,Match historical SST to Puerto Rico survey dates in protected storage after acquisition phase; do not refit in GLOBAL_DATA_ACQUISITION
+forecast_sst_or_3d_temp,forecast,blocked,MISSING,No forecast grid; RTOFS 404; Copernicus no credentials; WCOFS not subset,WCOFS_RTOFS_Copernicus,,Blocked until ID verified
+gebco_bathymetry,historical,do_not_use_as_reef,CATALOGUED_UNWIRED,Not downloaded; not reef evidence,GEBCO,GEBCO,Keep unwired unless explicit bathymetry envelope need is declared

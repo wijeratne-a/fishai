@@ -1,0 +1,17 @@
+{
+  "manifest_version": "1.1",
+  "experiment_id": "syn_frozen_protocol_1",
+  "random_seed": 20260926,
+  "train_years": [
+    2016,
+    2019,
+    2021
+  ],
+  "holdout_year": 2023,
+  "code_version": "0bf64b52efdebf4d02fd1b483947edd5ca15f6e9",
+  "git_commit_of_fit": "0bf64b52efdebf4d02fd1b483947edd5ca15f6e9",
+  "input_checksums": {},
+  "publish_status": "NOT_PUBLISHED",
+  "utc_timestamp": "2026-09-26T23:16:08Z",
+  "notes": "Synthetic protocol test. No real-species fit."
+}

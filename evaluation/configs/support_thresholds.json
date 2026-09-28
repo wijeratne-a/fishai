@@ -1,0 +1,6 @@
+{
+  "support_max_distance": 1.0,
+  "weak_max_distance": 2.5,
+  "range_margin": 0.0,
+  "notes": "Synthetic-fixture defaults for domain-mask unit tests. Not fit on survey files."
+}

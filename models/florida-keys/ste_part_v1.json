@@ -1,0 +1,89 @@
+{
+  "label": "INTERNAL \u2014 NOT A LIVE LOCATION \u2014 NOT A FORECAST \u2014 NOT PUBLISHED",
+  "model_version": "fk_ste_part_v1",
+  "output_meaning": "Probability that a completed Reef Visual Census point count with this habitat, depth, visibility records at least one bicolor damselfish. Not abundance. Not ecological absence. Not a current location.",
+  "species_code": "STE PART",
+  "scientific_name": "Stegastes partitus",
+  "common_name": "bicolor damselfish",
+  "region": "Florida Keys (NCRMP/RVC sampling frame)",
+  "train_years": [
+    2014,
+    2016,
+    2018
+  ],
+  "test_year": 2022,
+  "test_decision": "BEATS_BASELINE_BUT_MISCALIBRATED_ON_TEST_YEAR",
+  "coefficients": [
+    2.6919519861109116,
+    1.553298103190623,
+    0.948968652356546,
+    0.46999250137476595,
+    2.211960923420511,
+    -0.8251855446499078,
+    1.9330058318309615,
+    1.7069757042467892,
+    0.5879400961999731,
+    0.1734423505434631,
+    0.9453131578282798
+  ],
+  "spec": {
+    "numeric": [
+      "depth",
+      "vis"
+    ],
+    "scaler": {
+      "depth": {
+        "mean": 8.6518,
+        "sd": 5.750308579545971
+      },
+      "vis": {
+        "mean": 9.95832,
+        "sd": 4.084562984898139
+      }
+    },
+    "habitats": [
+      "ISOL_MR",
+      "CONT_LR",
+      "SPGR_LR",
+      "ISOL_LR",
+      "SPGR_HR",
+      "CONT_MR",
+      "RUBB_LR",
+      "ISOL_HR",
+      "CONT_HR"
+    ],
+    "has_other": false
+  },
+  "support": {
+    "depth": {
+      "min": 1.2,
+      "max": 31.0
+    },
+    "vis": {
+      "min": 3.0,
+      "max": 46.0
+    }
+  },
+  "support_habitats": [
+    "CONT_HR",
+    "CONT_LR",
+    "CONT_MR",
+    "ISOL_HR",
+    "ISOL_LR",
+    "ISOL_MR",
+    "RUBB_LR",
+    "SPGR_HR",
+    "SPGR_LR"
+  ],
+  "survey_months": [
+    6,
+    7,
+    8,
+    9,
+    10,
+    11,
+    12
+  ],
+  "preregistration_sha256": "9e8f61fb29685ceef232aced094e58e4f68bcffb7b48e149e9d33749ef8837ba",
+  "publication_status": "NOT_PUBLISHED"
+}

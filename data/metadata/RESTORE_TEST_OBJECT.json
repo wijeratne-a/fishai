@@ -1,0 +1,17 @@
+{
+  "object_id": "fishai-restore-test-object-v1",
+  "object_class": "NON_COORDINATE_TEST_OBJECT",
+  "purpose": "Checksum restore proof for Milestone 1. Contains no survey coordinates.",
+  "created_utc": "2026-09-26T00:00:00Z",
+  "contains_survey_coordinates": false,
+  "contains_raw_survey_bytes": false,
+  "policy": [
+    "NUM is a real-valued average, not an integer fish count.",
+    "A species is a non-detection only when it is on that year's list and every length-bin row is zero.",
+    "A backup is not claimed until a restore checksum matches."
+  ],
+  "linked_metadata": [
+    "data/manifests/source-licenses.csv",
+    "data/manifests/structured-survey-manifest.csv"
+  ]
+}

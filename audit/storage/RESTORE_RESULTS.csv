@@ -1,0 +1,7 @@
+check_id,check_name,result,detail,sha256_original,sha256_restored
+RV-001,separate_backup_location_documented,PASS,/Users/wijeratne/dev/fishai-offrepo-snapshots/20260926T230633Z,,
+RV-010,restore_metadata_file_sha256,PASS,sha256_match,90ddbefd15b604c35f70b322d809d25233a9e82390409b3ea19943d01a258fbd,90ddbefd15b604c35f70b322d809d25233a9e82390409b3ea19943d01a258fbd
+RV-011,restore_non_coordinate_test_object_sha256,PASS,sha256_match,c45bbb418465c25b8fc862c2322f194dd7a75a11e644ac8ae82f9b4c0787ac68,c45bbb418465c25b8fc862c2322f194dd7a75a11e644ac8ae82f9b4c0787ac68
+RV-004,raw_survey_copy_this_run,NOT_PERFORMED,Raw survey files were not copied,,
+RV-003,backup_verified_claim,BACKUP_VERIFIED,Claimed only after SHA-256 restore match,,
+RV-005,overall_status,PASS,Restore checksum match,,

@@ -1,0 +1,99 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://fishai.local/science/uncertainty/UNCERTAINTY_OUTPUT_SCHEMA.json",
+  "title": "UncertaintyOutput",
+  "description": "Multi-component uncertainty record. Components stay separate; no single collapsed score is required or preferred.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "output_id",
+    "components",
+    "support_label"
+  ],
+  "properties": {
+    "output_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "support_label": {
+      "type": "string",
+      "enum": [
+        "SUPPORTED",
+        "WEAK_SUPPORT",
+        "SPATIAL_EXTRAPOLATION",
+        "ENVIRONMENTAL_EXTRAPOLATION",
+        "TEMPORAL_EXTRAPOLATION",
+        "UNSUPPORTED",
+        "UNKNOWN"
+      ]
+    },
+    "components": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "aleatoric",
+        "epistemic_parameter",
+        "epistemic_structural",
+        "spatial_support",
+        "environmental_support",
+        "temporal_support",
+        "observation_process",
+        "data_coverage"
+      ],
+      "properties": {
+        "aleatoric": { "$ref": "#/definitions/component" },
+        "epistemic_parameter": { "$ref": "#/definitions/component" },
+        "epistemic_structural": { "$ref": "#/definitions/component" },
+        "spatial_support": { "$ref": "#/definitions/component" },
+        "environmental_support": { "$ref": "#/definitions/component" },
+        "temporal_support": { "$ref": "#/definitions/component" },
+        "observation_process": { "$ref": "#/definitions/component" },
+        "data_coverage": { "$ref": "#/definitions/component" }
+      }
+    },
+    "prediction_interval": {
+      "description": "Optional interval for the predictive probability. Not a substitute for components.",
+      "type": ["object", "null"],
+      "additionalProperties": false,
+      "required": ["lower", "upper", "level"],
+      "properties": {
+        "lower": { "type": "number", "minimum": 0, "maximum": 1 },
+        "upper": { "type": "number", "minimum": 0, "maximum": 1 },
+        "level": { "type": "number", "exclusiveMinimum": 0, "maximum": 1 }
+      }
+    },
+    "collapsed_score": {
+      "description": "Must remain null. Collapsing components into one score is disallowed by taxonomy.",
+      "type": "null"
+    },
+    "notes": {
+      "type": ["string", "null"]
+    }
+  },
+  "definitions": {
+    "component": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["status"],
+      "properties": {
+        "status": {
+          "type": "string",
+          "enum": ["KNOWN", "UNKNOWN", "NOT_APPLICABLE"]
+        },
+        "qualitative": {
+          "type": ["string", "null"],
+          "enum": ["low", "medium", "high", "extreme", null]
+        },
+        "value": {
+          "type": ["number", "null"]
+        },
+        "unit": {
+          "type": ["string", "null"]
+        },
+        "method": {
+          "type": ["string", "null"]
+        }
+      }
+    }
+  }
+}

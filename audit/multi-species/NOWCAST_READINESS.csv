@@ -1,0 +1,7 @@
+region,species_code,readiness,reason
+Puerto Rico,STE PART,CURRENT_COVARIATE_MISSING,temporal baseline beat prevalence; historical covariates were not joined to events
+Puerto Rico,SPA AURO,CURRENT_COVARIATE_MISSING,temporal baseline beat prevalence; historical covariates were not joined to events
+Florida Keys,HAL GARN,TEMPORAL_VALIDATION_FAILED,2024 holdout Brier did not beat prevalence
+Florida Keys,STE PART,FAILED_SPATIAL_VALIDATION,spatial-block Brier did not beat prevalence
+USVI,CHA CAPI,TEMPORAL_VALIDATION_FAILED,logistic fit diverged to non-numeric scores
+Flower Garden Banks,PAR FURC,TEMPORAL_VALIDATION_FAILED,2024 holdout did not beat prevalence

@@ -1,0 +1,8 @@
+conflict_id,pattern,forbidden_action,required_instead,severity,notes
+UC-LENGTH-FT-AS-M,length_in_feet_labeled_as_meters,Treat foot values as meters without conversion,Convert with factor 0.3048 then set unit=meter,high,Synthetic depth examples in tests/measurements
+UC-TEMP-K-AS-C,kelvin_labeled_as_celsius,Treat Kelvin values as Celsius without conversion,Convert with offset K-273.15 then set unit=degree_celsius,high,Ocean products in this repo default to Celsius
+UC-NUM-AS-INTEGER-COUNT,atlantic_rvc_num_as_integer_count,Treat Atlantic RVC NUM real-valued average as integer fish count,Keep unit=real_valued_average; do not cast to int fish count,critical,Documented in ATLANTIC_ZERO_SEMANTICS.md; NUM is not an integer count of fish
+UC-COUNT-AS-DENSITY,raw_count_as_density,Treat a raw count as areal density,Require documented area denominator and density unit,high,Count alone has no area
+UC-CPUE-AS-ABUNDANCE,cpue_as_abundance,Treat CPUE as absolute abundance,Keep quantity=cpue unless effort expansion is documented,high,CPUE is a rate not a stock size
+UC-SST-AS-BOTTOM-TEMP,sst_labeled_as_bottom_temperature,Label analysed SST as bottom_temperature,Use measurement_type=sea_surface_temperature or a depth-resolved bottom product,critical,MUR SST is surface-only; bottom temperature not acquired as substitute
+UC-DATE-ONLY-INVENTED-HOUR,date_only_with_fabricated_hour,Invent hour or finer timestamp for date-only records,Keep time_precision=DAY and omit invented clock time,high,Aligns with temporal integrity date-only rule

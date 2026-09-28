@@ -1,0 +1,18 @@
+schema_file,sample_id,result,error_count,notes
+source.schema.json,syn-source-rvc-atlantic,PASS,0,Zero-bearing survey source with supports_survey_nondetection=true
+source.schema.json,syn-source-obis-presence,PASS,0,presence_only=true; supports_survey_nondetection=false
+source.schema.json,syn-source-mur-sst,PASS,0,REMOTE_ENVIRONMENTAL / ENVIRONMENTAL_CONDITION
+event.schema.json,syn-event-sample-unit,PASS,0,Public row uses spatial_cell_id; native lat/lon null
+effort.schema.json,syn-effort-visual-plot,PASS,0,effort_completed=true for nondetection eligibility
+observation.schema.json,syn-obs-survey-detection,PASS,0,STRUCTURED_SURVEY_DETECTION
+observation.schema.json,syn-obs-survey-nondetection,PASS,0,SURVEY_NONDETECTION with effort_id; is_absence_claim=false
+observation.schema.json,syn-obs-presence-only,PASS,0,PRESENCE_ONLY_NO_ABSENCE
+observation.schema.json,syn-obs-absence-claim-forbidden,FAIL,1,is_absence_claim=true rejected by schema const
+measurement.schema.json,syn-meas-num-average,PASS,0,num_index as real-valued average unit
+measurement.schema.json,syn-meas-sst-environmental,PASS,0,subject_kind=ENVIRONMENTAL; not a fish observation
+taxon.schema.json,syn-taxon-worms,PASS,0,WoRMS-backed synthetic taxon
+provenance.schema.json,syn-prov-ingest,PASS,0,Immutable raw reference and rights snapshot
+globe-evidence.schema.json,syn-globe-hist-occ,PASS,0,HISTORICAL_OCCURRENCE; no lat/lon fields
+globe-evidence.schema.json,syn-globe-with-lat-forbidden,FAIL,1,latitude property forbidden on globe evidence
+globe-model-output.schema.json,syn-model-internal,PASS,0,NOT_PUBLISHED + INTERNAL_MODEL_OUTPUT
+globe-model-output.schema.json,syn-model-not-published-as-nowcast,FAIL,1,NOT_PUBLISHED cannot use PUBLISHED_NOWCAST output_class

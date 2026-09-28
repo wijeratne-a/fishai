@@ -1,0 +1,5 @@
+defect_id,claim,actual,severity
+FT-001,current ocean,daily analysis keyed by valid date; no issue time,HIGH_MISLEADS_USERS_OR_MODELS
+FT-002,nowcast,closed — correct; do not reopen,INFO
+FT-003,SST as operational feature,t+1/t+2 allowed,CRITICAL_INVALIDATED if used operationally
+FT-004,historical join,retrospective analysis fields; revision status unknown,MEDIUM_SCIENTIFIC_WEAKNESS

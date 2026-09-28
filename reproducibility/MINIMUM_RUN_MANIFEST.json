@@ -1,0 +1,43 @@
+{
+  "manifest_version": "1.0",
+  "purpose": "Minimum provenance required to claim a modeling run is reproducible. Existing multi-species results do not meet this bar.",
+  "existing_results_status": "INCOMPLETE",
+  "sources_audited": [
+    "audit/multi-species/MODEL_RESULTS.csv",
+    "audit/multi-species/EXECUTION_REPORT.md"
+  ],
+  "required_fields": {
+    "git_commit_of_fit": {
+      "required": true,
+      "present_for_existing_results": false,
+      "description": "Full git commit SHA of the repository state used to fit and score."
+    },
+    "random_seed": {
+      "required": true,
+      "present_for_existing_results": false,
+      "description": "Explicit integer seed(s) for any stochastic procedure; document if deterministic with seed N/A."
+    },
+    "environment_lock": {
+      "required": true,
+      "present_for_existing_results": false,
+      "description": "Pinned environment artifact path (lockfile) plus Python version."
+    },
+    "artifact_hash": {
+      "required": true,
+      "present_for_existing_results": false,
+      "description": "Content hash of primary outputs (e.g. MODEL_RESULTS.csv and any model weights)."
+    }
+  },
+  "recommended_additional_fields": [
+    "train_years",
+    "holdout_year",
+    "command_line",
+    "input_manifest_hashes",
+    "utc_timestamp"
+  ],
+  "policy": {
+    "do_not_rerun_to_backfill": true,
+    "do_not_change_scores": true,
+    "scores_source_of_truth": "audit/multi-species/MODEL_RESULTS.csv"
+  }
+}

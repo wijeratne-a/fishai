@@ -1,0 +1,134 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://fishai.local/schemas/globe-evidence.schema.json",
+  "title": "GlobeEvidence",
+  "description": "Public globe evidence object. No raw coordinates. No fishing guidance. Labels stay distinct.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "evidence_id",
+    "evidence_label",
+    "spatial_cell_id",
+    "time_precision",
+    "privacy_tier",
+    "taxon_id"
+  ],
+  "properties": {
+    "evidence_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "evidence_label": {
+      "type": "string",
+      "enum": [
+        "DIRECT_OBSERVATION",
+        "STRUCTURED_SURVEY_DETECTION",
+        "SURVEY_NONDETECTION",
+        "HISTORICAL_OCCURRENCE",
+        "RECENT_PRESENCE_EVIDENCE",
+        "ENVIRONMENTAL_CONDITION",
+        "INTERNAL_MODEL_OUTPUT",
+        "PUBLISHED_NOWCAST",
+        "PUBLISHED_FORECAST",
+        "UNKNOWN"
+      ],
+      "description": "Exactly one label. ENVIRONMENTAL_CONDITION is not a fish observation. INTERNAL_MODEL_OUTPUT is not PUBLISHED_NOWCAST."
+    },
+    "taxon_id": {
+      "type": ["string", "null"],
+      "description": "Null allowed only for ENVIRONMENTAL_CONDITION or UNKNOWN non-taxon chrome."
+    },
+    "spatial_cell_id": {
+      "type": "string",
+      "minLength": 1,
+      "description": "Public/coarsened cell or official unit id. Raw lat/lon are forbidden on this object."
+    },
+    "h3_res": {
+      "type": ["integer", "null"],
+      "minimum": 0,
+      "maximum": 15
+    },
+    "observed_or_valid_at_utc": {
+      "type": ["string", "null"],
+      "format": "date-time"
+    },
+    "time_precision": {
+      "type": "string",
+      "enum": [
+        "SECOND",
+        "MINUTE",
+        "HOUR",
+        "DAY",
+        "MONTH",
+        "YEAR",
+        "UNKNOWN"
+      ]
+    },
+    "depth_band": {
+      "type": ["string", "null"]
+    },
+    "value_display": {
+      "type": ["string", "null"]
+    },
+    "units": {
+      "type": ["string", "null"]
+    },
+    "source_attribution": {
+      "type": ["string", "null"]
+    },
+    "privacy_tier": {
+      "type": "string",
+      "enum": ["PUBLIC", "COARSENED", "RESTRICTED"]
+    },
+    "user_visible_limitations": {
+      "type": "string",
+      "minLength": 1,
+      "description": "Must state what the cell is not (e.g. not absence, not fishing guidance)."
+    },
+    "fishing_guidance": {
+      "type": "boolean",
+      "const": false,
+      "description": "Must be false. Globe evidence never issues fishing guidance."
+    },
+    "latitude": {
+      "not": {},
+      "description": "Forbidden. Do not include raw latitude."
+    },
+    "longitude": {
+      "not": {},
+      "description": "Forbidden. Do not include raw longitude."
+    },
+    "notes": {
+      "type": ["string", "null"]
+    }
+  },
+  "allOf": [
+    {
+      "if": {
+        "properties": {
+          "evidence_label": {
+            "enum": [
+              "DIRECT_OBSERVATION",
+              "STRUCTURED_SURVEY_DETECTION",
+              "SURVEY_NONDETECTION",
+              "HISTORICAL_OCCURRENCE",
+              "RECENT_PRESENCE_EVIDENCE",
+              "INTERNAL_MODEL_OUTPUT",
+              "PUBLISHED_NOWCAST",
+              "PUBLISHED_FORECAST"
+            ]
+          }
+        }
+      },
+      "then": {
+        "required": ["taxon_id"],
+        "properties": {
+          "taxon_id": {
+            "type": "string",
+            "minLength": 1
+          }
+        }
+      }
+    }
+  ]
+}

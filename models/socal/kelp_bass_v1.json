@@ -1,0 +1,90 @@
+{
+  "label": "INTERNAL \u2014 NOT A LIVE LOCATION \u2014 NOT A FORECAST \u2014 NOT PUBLISHED",
+  "model_version": "socal_kelp_bass_v1",
+  "output_meaning": "Probability that a completed SBC LTER annual fish transect (40 m x 2 m, late July/August, Santa Barbara Channel) with this visibility, giant kelp frond density on the transect, water temperature at the site's typical depth records at least one kelp bass (calico bass). Not abundance. Not ecological absence. Not a current location.",
+  "species": "kelp_bass",
+  "species_code": "PCLA",
+  "scientific_name": "Paralabrax clathratus",
+  "common_name": "kelp bass (calico bass)",
+  "substitution": null,
+  "region": "Santa Barbara Channel, SBC LTER 11 kelp-forest reef sites (annual fish survey frame)",
+  "train_years": [
+    2001,
+    2002,
+    2003,
+    2004,
+    2005,
+    2006,
+    2007,
+    2008,
+    2009,
+    2010,
+    2011,
+    2012,
+    2013,
+    2014,
+    2015,
+    2016,
+    2017,
+    2018
+  ],
+  "test_year": 2022,
+  "test_decision": "DID_NOT_BEAT_BASELINE_ON_TEST_YEAR",
+  "coefficients": [
+    0.17140535941764917,
+    0.3476173164386584,
+    0.34609224521725,
+    0.3978035876743973
+  ],
+  "spec": {
+    "numeric": [
+      "vis",
+      "kelp",
+      "temp"
+    ],
+    "scaler": {
+      "vis": {
+        "mean": 3.7538135593220336,
+        "sd": 1.8459681609159946
+      },
+      "kelp": {
+        "mean": 1.170176497098991,
+        "sd": 0.938335540239457
+      },
+      "temp": {
+        "mean": 17.255562722753574,
+        "sd": 1.342438739511496
+      }
+    },
+    "habitats": [
+      "KELP_REEF"
+    ],
+    "has_other": false
+  },
+  "support": {
+    "vis": {
+      "min": 1.0,
+      "max": 11.0
+    },
+    "kelp": {
+      "min": 0.0,
+      "max": 3.5521285988624407
+    },
+    "temp": {
+      "min": 14.28699972864706,
+      "max": 22.13762510153174
+    }
+  },
+  "support_habitats": [
+    "KELP_REEF"
+  ],
+  "survey_months": [
+    7,
+    8,
+    9,
+    10
+  ],
+  "kelp_transform": "kelp = log(1 + fronds per m2)",
+  "preregistration_sha256": "3cc7b7022afea34d6b5f05b9fdf264fe3d5bab322fe845dbb6f850eb2b2bd159",
+  "publication_status": "NOT_PUBLISHED"
+}

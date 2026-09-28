@@ -1,0 +1,6 @@
+variable,provider,dataset_id,joined_to_events,reason
+analysed_sst,NOAA CoastWatch,jplMURSST41,yes,Matched to Puerto Rico survey dates; rejected on locked 2023; not rescored
+sst,NOAA NCEI OISST v2.1,ncdcOisst21Agg_LonPM180,yes,Matched to 174 Puerto Rico dates; missing_fraction=0; units=degree_celsius; time=12:00Z; scored once after freeze; SST_ADDS_NO_VALUE
+bottom_or_depth_temperature,NRL HYCOM,hycom_gom310D,no,Dataset ID verified; Gulf of Mexico 2009-2014; cannot join to Puerto Rico 2016-2023; no global grid downloaded
+water_temp_all_depths,HYCOM consortium (ncss.hycom.org),GOFS 3.1 (one experiment per survey year),no,Florida Keys box grids for 260 of 279 survey dates 2014/2016/2018/2022/2024; 2024 after 2024-09-05 missing (experiment ends); same-day or past-day only; see florida-keys-environment-manifest.csv
+chlorophyll_a_weekly,NOAA CoastWatch VIIRS SNPP science quality,noaacwNPPVIIRSSQchlaWeekly,no,136 weekly Florida Keys box composites; centered weekly time; usable only if center+4d before survey; masked over shallow reef/land; offshore context only

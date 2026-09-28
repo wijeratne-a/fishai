@@ -1,0 +1,29 @@
+path,bytes,kind,dataset_id,notes
+data/raw/biological/new-sources/erdCalCOFIcufes/sample-cruise-202204.csv,39321,NEW_ACQUISITION,erdCalCOFIcufes,CalCOFI CUFES cruise 202204 sample; companion LICENSE_FROM_METADATA.txt also present
+data/raw/biological/new-sources/erdCalCOFIcufes/LICENSE_FROM_METADATA.txt,453,NEW_ACQUISITION_LICENSE,erdCalCOFIcufes,License text copied from ERDDAP NC_GLOBAL.license
+data/raw/biological/noaa-ncrmp/,,PRIOR_EXISTING,CRCP_Reef_Fish_Surveys_*,Prior NCRMP gzip files already on disk; paths/sizes listed below; checksums NOT rewritten
+data/raw/biological/noaa-ncrmp/CRCP_Reef_Fish_Surveys_American_Samoa/2018.csv.gz,349902,PRIOR_NCRMP,CRCP_Reef_Fish_Surveys_American_Samoa,existing; byte-unchanged this workstream
+data/raw/biological/noaa-ncrmp/CRCP_Reef_Fish_Surveys_American_Samoa/2023.csv.gz,319998,PRIOR_NCRMP,CRCP_Reef_Fish_Surveys_American_Samoa,existing; byte-unchanged this workstream
+data/raw/biological/noaa-ncrmp/CRCP_Reef_Fish_Surveys_CNMI_Guam/2017.csv.gz,461332,PRIOR_NCRMP,CRCP_Reef_Fish_Surveys_CNMI_Guam,existing; byte-unchanged this workstream
+data/raw/biological/noaa-ncrmp/CRCP_Reef_Fish_Surveys_CNMI_Guam/2022.csv.gz,480370,PRIOR_NCRMP,CRCP_Reef_Fish_Surveys_CNMI_Guam,existing; byte-unchanged this workstream
+data/raw/biological/noaa-ncrmp/CRCP_Reef_Fish_Surveys_Flower_Gardens/2018.csv.gz,110906,PRIOR_NCRMP,CRCP_Reef_Fish_Surveys_Flower_Gardens,existing; byte-unchanged this workstream
+data/raw/biological/noaa-ncrmp/CRCP_Reef_Fish_Surveys_Flower_Gardens/2022.csv.gz,567749,PRIOR_NCRMP,CRCP_Reef_Fish_Surveys_Flower_Gardens,existing; byte-unchanged this workstream
+data/raw/biological/noaa-ncrmp/CRCP_Reef_Fish_Surveys_Flower_Gardens/2023.csv.gz,808737,PRIOR_NCRMP,CRCP_Reef_Fish_Surveys_Flower_Gardens,existing; byte-unchanged this workstream
+data/raw/biological/noaa-ncrmp/CRCP_Reef_Fish_Surveys_Flower_Gardens/2024.csv.gz,91474,PRIOR_NCRMP,CRCP_Reef_Fish_Surveys_Flower_Gardens,existing; byte-unchanged this workstream
+data/raw/biological/noaa-ncrmp/CRCP_Reef_Fish_Surveys_Hawaii/2019.csv.gz,335027,PRIOR_NCRMP,CRCP_Reef_Fish_Surveys_Hawaii,existing; byte-unchanged this workstream
+data/raw/biological/noaa-ncrmp/CRCP_Reef_Fish_Surveys_Hawaii/2024.csv.gz,406951,PRIOR_NCRMP,CRCP_Reef_Fish_Surveys_Hawaii,existing; byte-unchanged this workstream
+data/raw/biological/noaa-ncrmp/CRCP_Reef_Fish_Surveys_PRIAs/2018.csv.gz,334803,PRIOR_NCRMP,CRCP_Reef_Fish_Surveys_PRIAs,existing; byte-unchanged this workstream
+data/raw/biological/noaa-ncrmp/CRCP_Reef_Fish_Surveys_PRIAs/2023.csv.gz,131532,PRIOR_NCRMP,CRCP_Reef_Fish_Surveys_PRIAs,existing; byte-unchanged this workstream
+data/raw/biological/noaa-ncrmp/CRCP_Reef_Fish_Surveys_Puerto_Rico/2016.csv.gz,1027728,PRIOR_NCRMP,CRCP_Reef_Fish_Surveys_Puerto_Rico,existing; byte-unchanged this workstream
+data/raw/biological/noaa-ncrmp/CRCP_Reef_Fish_Surveys_Puerto_Rico/2019.csv.gz,1664116,PRIOR_NCRMP,CRCP_Reef_Fish_Surveys_Puerto_Rico,existing; byte-unchanged this workstream
+data/raw/biological/noaa-ncrmp/CRCP_Reef_Fish_Surveys_Puerto_Rico/2021.csv.gz,1154798,PRIOR_NCRMP,CRCP_Reef_Fish_Surveys_Puerto_Rico,existing; byte-unchanged this workstream
+data/raw/biological/noaa-ncrmp/CRCP_Reef_Fish_Surveys_Puerto_Rico/2023.csv.gz,2321832,PRIOR_NCRMP,CRCP_Reef_Fish_Surveys_Puerto_Rico,existing; byte-unchanged this workstream
+data/raw/biological/noaa-ncrmp/CRCP_Reef_Fish_Surveys_USVI/2017.csv.gz,2283289,PRIOR_NCRMP,CRCP_Reef_Fish_Surveys_USVI,existing; byte-unchanged this workstream
+data/raw/biological/noaa-ncrmp/CRCP_Reef_Fish_Surveys_USVI/2019.csv.gz,5902601,PRIOR_NCRMP,CRCP_Reef_Fish_Surveys_USVI,existing; byte-unchanged this workstream
+data/raw/biological/noaa-ncrmp/CRCP_Reef_Fish_Surveys_USVI/2021.csv.gz,1663353,PRIOR_NCRMP,CRCP_Reef_Fish_Surveys_USVI,existing; byte-unchanged this workstream
+data/raw/biological/noaa-ncrmp/CRCP_Reef_Fish_Surveys_USVI/2023.csv.gz,5324141,PRIOR_NCRMP,CRCP_Reef_Fish_Surveys_USVI,existing; byte-unchanged this workstream
+data/raw/biological/noaa-rvc-florida-keys-2014.csv.gz,5179988,PRIOR_RVC,CRCP_Reef_Fish_Surveys_Florida,existing; byte-unchanged this workstream
+data/raw/biological/noaa-rvc-florida-keys-2016.csv.gz,4934047,PRIOR_RVC,CRCP_Reef_Fish_Surveys_Florida,existing; byte-unchanged this workstream
+data/raw/biological/noaa-rvc-florida-keys-2018.csv.gz,9268221,PRIOR_RVC,CRCP_Reef_Fish_Surveys_Florida,existing; byte-unchanged this workstream
+data/raw/biological/noaa-rvc-florida-keys-2022.csv.gz,4669159,PRIOR_RVC,CRCP_Reef_Fish_Surveys_Florida,existing; byte-unchanged this workstream
+data/raw/biological/noaa-rvc-florida-keys-2024.csv.gz,7795903,PRIOR_RVC,CRCP_Reef_Fish_Surveys_Florida,existing; byte-unchanged this workstream

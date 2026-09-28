@@ -1,0 +1,5 @@
+variable,product,historical,current_endpoint,forecast_endpoint,notes
+analysed_sst,jplMURSST41,MATCHED_TO_PR_EVENTS,https://coastwatch.pfeg.noaa.gov/erddap/griddap/jplMURSST41,MISSING,Already rejected for PR holdout. Not rescored.
+sst,ncdcOisst21Agg_LonPM180,MATCHED_TO_PR_EVENTS,https://coastwatch.pfeg.noaa.gov/erddap/griddap/ncdcOisst21Agg_LonPM180,MISSING,missing_fraction=0.0; units=degree_celsius; time=12:00Z daily
+bottom_or_depth_temperature,hycom_gom310D,DATASET_ID_VERIFIED_NOT_JOINED,https://coastwatch.pfeg.noaa.gov/erddap/info/hycom_gom310D/index.json,MISSING,Global grids not downloaded.
+survey_depth,RVC SAMPLE_DEPTH,ON_SURVEY,N/A_SURVEY_FIELD,N/A_SURVEY_FIELD,Same config can point at another Atlantic RVC region.

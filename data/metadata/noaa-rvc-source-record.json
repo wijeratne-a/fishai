@@ -1,0 +1,44 @@
+{
+  "dataset_id": "CRCP_Reef_Fish_Surveys_Florida",
+  "dataset_title": "CRCP_Reef_Fish_Surveys_Florida",
+  "summary": "Assessment of coral reef fish communities in the Florida Reef Tract",
+  "institution": "Coral Reef Conservation Program",
+  "official_metadata_url": "https://www.ncei.noaa.gov/erddap/info/CRCP_Reef_Fish_Surveys_Florida/index.csv",
+  "data_endpoint": "https://www.ncei.noaa.gov/erddap/tabledap/CRCP_Reef_Fish_Surveys_Florida.csv",
+  "info_url": "https://www.coris.noaa.gov/monitoring/biological.html",
+  "access_constraints": "No access constraints are applicable.",
+  "use_constraints": "No use constraints are applicable.",
+  "license": "No access constraints are applicable.",
+  "required_citation": "Not stated as a separate citation string on the ERDDAP global attributes read for this dataset. Publisher is NOAA National Centers for Environmental Information (NCEI). Creator is Coral Reef Conservation Program (coralreef@noaa.gov).",
+  "classification": "AUTO_ACQUIRE_INTERNAL_ONLY",
+  "classification_reason": "ERDDAP license and acknowledgment state that no access constraints and no use constraints apply. They do not explicitly authorize publishing a derived species nowcast. Acquisition and internal feasibility analysis are allowed. Public model publication is not.",
+  "retrieval_timestamp_utc": "2026-09-24T23:51:00Z",
+  "metadata_sha256": "90ddbefd15b604c35f70b322d809d25233a9e82390409b3ea19943d01a258fbd",
+  "geographic_coverage": {
+    "lat_min": 24.4306,
+    "lat_max": 27.18972,
+    "lon_min": -83.10363,
+    "lon_max": -79.9938,
+    "note": "Full Florida Reef Tract table, not the Florida Keys subset."
+  },
+  "temporal_coverage": {
+    "start": "2014-05-06T00:00:00Z",
+    "end": "2024-11-26T00:00:00Z"
+  },
+  "variable_names": [
+    "COMMON_NAME", "DAY", "DEPTH", "Date_UTC", "Description", "HABITAT_CD", "HABITAT_TYPE",
+    "MAPGRID_NR", "MONTH", "MPA_NAME", "MPA_NR", "NUM", "PRIMARY_SAMPLE_UNIT", "PROT",
+    "REGION", "REGION_DESCRIPTION", "RUGOSITY_CD", "SCIENTIFIC_NAME", "SPECIES_CD",
+    "SPECIES_NR", "STATION_NR", "STRAT", "SUB_REGION_NAME", "SUB_REGION_NR", "TIME_SEEN",
+    "TIME_SEEN_DESCR", "UNDERWATER_VISIBILITY", "YEAR", "ZONE_NAME", "ZONE_NR",
+    "accession_url", "latitude", "length_fish", "longitude", "sample_year", "time"
+  ],
+  "missing_value_conventions": "ERDDAP tabledap emits an empty field for missing values in CSV. A units row follows the header.",
+  "source_accession_relationships": {
+    "2018": "https://www.ncei.noaa.gov/archive/accession/0208321",
+    "2022": "https://www.ncei.noaa.gov/archive/accession/0282183",
+    "2024": "https://www.ncei.noaa.gov/archive/accession/0306184"
+  },
+  "keys_years_present_in_distinct_probe": [2014, 2016, 2018, 2022, 2024],
+  "public_model_publication": false
+}

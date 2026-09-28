@@ -1,0 +1,5 @@
+dataset,latest_year_downloaded,zero_count_rows,replicate_fields_in_metadata,status
+CRCP_Reef_Fish_Surveys_Hawaii,2024,0,SITEVISITID REPLICATEID REP METHOD,POSITIVE_ONLY
+CRCP_Reef_Fish_Surveys_American_Samoa,2023,0,same Pacific schema,POSITIVE_ONLY
+CRCP_Reef_Fish_Surveys_CNMI_Guam,2022,0,same Pacific schema,POSITIVE_ONLY
+CRCP_Reef_Fish_Surveys_PRIAs,2023,0,same Pacific schema,POSITIVE_ONLY

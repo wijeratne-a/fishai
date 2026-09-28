@@ -1,0 +1,6 @@
+taxon_code,scientific_name,region_focus,detection_events_known,readiness,blocking_reason,notes
+EPI ITAJ,Epinephelus itajara,Florida Keys,8,NOT_MODEL_READY,INSUFFICIENT_DETECTION_EVENTS,Events 1 (2018) + 1 (2022) + 6 (2024) = 8; code is EPI ITAJ not EPIITAJ; no refit in this audit
+STE PART,Stegastes partitus,Puerto Rico / multi,see MODEL_RESULTS,BASELINE_VALIDATED_INTERNAL_ONLY,ENV_JOIN_MISSING,Accepted on PR 2023 holdout in existing results; not nowcast-ready; do not rank by score here
+SPA AURO,Sparisoma aurofrenatum,Puerto Rico / multi,see MODEL_RESULTS,BASELINE_VALIDATED_INTERNAL_ONLY,ENV_JOIN_MISSING,Accepted on PR 2023 holdout in existing results; not nowcast-ready; do not rank by score here
+OTHER_ATLANTIC_CANDIDATES,various Atlantic RVC codes,Florida Keys / USVI / FGB,see MODEL_RESULTS,NOT_ACCEPTED_FOR_NOWCAST,FAILED_VALIDATION_OR_NONNUMERIC,Existing suite statuses apply; readiness not ordered by holdout score
+PACIFIC_COUNT_TAXA,various Pacific COUNT taxa,Hawaii / Am Samoa / CNMI_Guam / PRIAs,n/a,NOT_MODEL_READY_FOR_DETECTION,PRESENCE_ONLY / ZERO_SEMANTICS_REQUIRED,Positive counts only; missing taxa are not absences

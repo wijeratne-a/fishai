@@ -1,0 +1,10 @@
+{
+  "updated_utc": "2026-09-25T00:25:00Z",
+  "ncrmp_datasets_in_erddap_search": 8,
+  "florida_keys_redownloaded": false,
+  "obis_keys_90d_saved": 500,
+  "obis_keys_90d_reported": 672,
+  "sst_snippet_valid_time": "2026-09-23T09:00:00Z",
+  "forecast_saved": false,
+  "public_nowcast_issued": false
+}

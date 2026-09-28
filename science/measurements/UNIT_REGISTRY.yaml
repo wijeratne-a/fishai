@@ -1,0 +1,110 @@
+# Canonical unit and quantity registry for FishAI measurements.
+# Status: contract for validation. Does not authorize joins or model fits.
+
+version: 1
+status: BINDING_FOR_VALIDATION
+
+canonical_units:
+  meter:
+    symbol: m
+    quantity: length
+    si_base: true
+  foot:
+    symbol: ft
+    quantity: length
+    si_base: false
+    converts_to: meter
+    factor_to_si: 0.3048
+  degree_celsius:
+    symbol: degC
+    quantity: temperature
+    notes: Ocean and survey temperatures in this repo use Celsius unless stated.
+  kelvin:
+    symbol: K
+    quantity: temperature
+    converts_to: degree_celsius
+    offset_to_celsius: -273.15
+  count:
+    symbol: "1"
+    quantity: count
+    notes: Discrete non-negative integer individuals when the source says so.
+  real_valued_average:
+    symbol: "1"
+    quantity: index
+    notes: >
+      Atlantic RVC/NCRMP NUM is a published real-valued average, not an integer
+      fish count. See MEASUREMENT_SEMANTICS.md and audit/multi-species/ATLANTIC_ZERO_SEMANTICS.md.
+  density:
+    symbol: "1/m2"
+    quantity: areal_density
+    notes: Requires an explicit area denominator; raw count is not density.
+  cpue:
+    symbol: "1/effort"
+    quantity: catch_per_unit_effort
+    notes: Rate relative to documented effort; not absolute abundance.
+  abundance:
+    symbol: "1"
+    quantity: abundance
+    notes: Absolute or survey-frame abundance only when the source defines it as such.
+  degree_celsius_sst:
+    symbol: degC
+    quantity: sea_surface_temperature
+    measurement_type: sea_surface_temperature
+  degree_celsius_bottom:
+    symbol: degC
+    quantity: bottom_temperature
+    measurement_type: bottom_temperature
+
+forbidden_equivalences:
+  - from: foot
+    to: meter
+    without: explicit_unit_conversion
+    conflict_id: UC-LENGTH-FT-AS-M
+  - from: kelvin
+    to: degree_celsius
+    without: explicit_temperature_conversion
+    conflict_id: UC-TEMP-K-AS-C
+  - from: real_valued_average
+    to: count
+    without: documented_rounding_policy
+    conflict_id: UC-NUM-AS-INTEGER-COUNT
+  - from: count
+    to: density
+    without: documented_area_denominator
+    conflict_id: UC-COUNT-AS-DENSITY
+  - from: cpue
+    to: abundance
+    without: documented_effort_expansion
+    conflict_id: UC-CPUE-AS-ABUNDANCE
+  - from: sea_surface_temperature
+    to: bottom_temperature
+    without: depth_resolved_product
+    conflict_id: UC-SST-AS-BOTTOM-TEMP
+
+measurement_types:
+  depth:
+    allowed_units: [meter, foot]
+    default_canonical: meter
+  sea_surface_temperature:
+    allowed_units: [degree_celsius, kelvin]
+    default_canonical: degree_celsius
+    depth_band: surface
+  bottom_temperature:
+    allowed_units: [degree_celsius, kelvin]
+    default_canonical: degree_celsius
+    depth_band: near_bottom_or_bottom
+  atlantic_rvc_num:
+    allowed_units: [real_valued_average]
+    forbidden_treatments: [integer_fish_count, density, abundance]
+  survey_count:
+    allowed_units: [count]
+    forbidden_treatments: [density_without_area]
+  cpue_index:
+    allowed_units: [cpue]
+    forbidden_treatments: [abundance_without_effort_expansion]
+
+time_precision_rules:
+  date_only:
+    precision: DAY
+    forbid: invent_hour_or_finer_timestamp
+    conflict_id: UC-DATE-ONLY-INVENTED-HOUR

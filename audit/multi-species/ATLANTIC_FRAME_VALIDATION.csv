@@ -1,0 +1,18 @@
+region,year,source_dataset_id,events,frame_status,species_list_size,universes,metadata_collisions,accession
+Florida Keys,2014,CRCP_Reef_Fish_Surveys_Florida,860,MODEL_READY_WITH_RESTRICTIONS,249,1,0,https://www.ncei.noaa.gov/archive/accession/0156445
+Florida Keys,2016,CRCP_Reef_Fish_Surveys_Florida,797,MODEL_READY_WITH_RESTRICTIONS,255,1,0,https://www.ncei.noaa.gov/archive/accession/0169400
+Florida Keys,2018,CRCP_Reef_Fish_Surveys_Florida,843,MODEL_READY_WITH_RESTRICTIONS,475,1,0,https://www.ncei.noaa.gov/archive/accession/0208321
+Florida Keys,2022,CRCP_Reef_Fish_Surveys_Florida,648,MODEL_READY_WITH_RESTRICTIONS,250,1,0,https://www.ncei.noaa.gov/archive/accession/0282183
+Florida Keys,2024,CRCP_Reef_Fish_Surveys_Florida,622,MODEL_READY_WITH_RESTRICTIONS,481,1,0,https://www.ncei.noaa.gov/archive/accession/0306184
+Puerto Rico,2016,CRCP_Reef_Fish_Surveys_Puerto_Rico,240,MODEL_READY_WITH_RESTRICTIONS,216,1,0,https://accession.nodc.noaa.gov/0224477
+Puerto Rico,2019,CRCP_Reef_Fish_Surveys_Puerto_Rico,203,MODEL_READY_WITH_RESTRICTIONS,475,1,0,https://accession.nodc.noaa.gov/0218548
+Puerto Rico,2021,CRCP_Reef_Fish_Surveys_Puerto_Rico,234,MODEL_READY_WITH_RESTRICTIONS,214,1,0,https://accession.nodc.noaa.gov/0276281
+Puerto Rico,2023,CRCP_Reef_Fish_Surveys_Puerto_Rico,248,MODEL_READY_WITH_RESTRICTIONS,481,1,0,https://www.ncei.noaa.gov/access/metadata/landing-page/bin/iso?id=gov.noaa.nodc:0294846
+USVI,2017,CRCP_Reef_Fish_Surveys_USVI,418,MODEL_READY_WITH_RESTRICTIONS,232,1,0,https://accession.nodc.noaa.gov/0176080
+USVI,2019,CRCP_Reef_Fish_Surveys_USVI,636,MODEL_READY_WITH_RESTRICTIONS,475,1,0,https://accession.nodc.noaa.gov/0216069
+USVI,2021,CRCP_Reef_Fish_Surveys_USVI,313,MODEL_READY_WITH_RESTRICTIONS,235,1,0,https://accession.nodc.noaa.gov/0270582
+USVI,2023,CRCP_Reef_Fish_Surveys_USVI,562,MODEL_READY_WITH_RESTRICTIONS,481,1,0,https://www.ncei.noaa.gov/access/metadata/landing-page/bin/iso?id=gov.noaa.nodc:0294866
+Flower Garden Banks,2018,CRCP_Reef_Fish_Surveys_Flower_Gardens,37,MODEL_READY_WITH_RESTRICTIONS,475,1,0,https://www.ncei.noaa.gov/archive/accession/0208240
+Flower Garden Banks,2022,CRCP_Reef_Fish_Surveys_Flower_Gardens,53,MODEL_READY_WITH_RESTRICTIONS,478,1,0,https://www.ncei.noaa.gov/archive/accession/0277994
+Flower Garden Banks,2023,CRCP_Reef_Fish_Surveys_Flower_Gardens,74,MODEL_READY_WITH_RESTRICTIONS,479,1,0,https://www.ncei.noaa.gov/access/metadata/landing-page/bin/iso?id=gov.noaa.nodc:0292107
+Flower Garden Banks,2024,CRCP_Reef_Fish_Surveys_Flower_Gardens,38,MODEL_READY_WITH_RESTRICTIONS,103,1,0,https://www.ncei.noaa.gov/archive/accession/0302939

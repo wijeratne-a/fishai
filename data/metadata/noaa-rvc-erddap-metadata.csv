@@ -1,0 +1,214 @@
+Row Type,Variable Name,Attribute Name,Data Type,Value
+attribute,NC_GLOBAL,acknowledgment,String,No use constraints are applicable.
+attribute,NC_GLOBAL,cdm_data_type,String,Point
+attribute,NC_GLOBAL,contributor_name,String,Coral Reef Conservation Program
+attribute,NC_GLOBAL,conventions,String,"CF-1.6,ACDD-1.3"
+attribute,NC_GLOBAL,creator_email,String,coralreef@noaa.gov
+attribute,NC_GLOBAL,creator_name,String,Coral Reef Conservation Program
+attribute,NC_GLOBAL,creator_url,String,https://coralreef.noaa.gov
+attribute,NC_GLOBAL,date_created,String,2026-02-13
+attribute,NC_GLOBAL,defaultDataQuery,String,&time<=max(time)&time>=min(time)
+attribute,NC_GLOBAL,Easternmost_Easting,double,-79.9938
+attribute,NC_GLOBAL,featureType,String,Point
+attribute,NC_GLOBAL,featuretype,String,point
+attribute,NC_GLOBAL,geospatial_lat_max,double,27.18972
+attribute,NC_GLOBAL,geospatial_lat_min,double,24.4306
+attribute,NC_GLOBAL,geospatial_lat_resolution,String,point
+attribute,NC_GLOBAL,geospatial_lat_units,String,degrees_north
+attribute,NC_GLOBAL,geospatial_lon_max,double,-79.9938
+attribute,NC_GLOBAL,geospatial_lon_min,double,-83.10363
+attribute,NC_GLOBAL,geospatial_lon_resolution,String,point
+attribute,NC_GLOBAL,geospatial_lon_units,String,degrees_east
+attribute,NC_GLOBAL,infoUrl,String,https://www.coris.noaa.gov/monitoring/biological.html
+attribute,NC_GLOBAL,institution,String,Coral Reef Conservation Program
+attribute,NC_GLOBAL,keywords,String,"coral reef, corals, CoRIS, CRCP"
+attribute,NC_GLOBAL,keywords_vocabulary,String,None
+attribute,NC_GLOBAL,license,String,No access constraints are applicable.
+attribute,NC_GLOBAL,metadata_conventions,String,Unidata Dataset Discovery v1.0
+attribute,NC_GLOBAL,naming_authority,String,gov.noaa.fisheries.www
+attribute,NC_GLOBAL,ncei_template_version,String,NCEI_NetCDF_Point_Template_v2.0
+attribute,NC_GLOBAL,Northernmost_Northing,double,27.18972
+attribute,NC_GLOBAL,processing_level,String,4
+attribute,NC_GLOBAL,program,String,Coral Reef Conservation Program
+attribute,NC_GLOBAL,publisher_email,String,ncei_info@noaa.gov
+attribute,NC_GLOBAL,publisher_name,String,NOAA National Centers for Environmental Information (NCEI)
+attribute,NC_GLOBAL,publisher_url,String,https://ncei.noaa.gov
+attribute,NC_GLOBAL,references,String,https://www.fisheries.noaa.gov/national/habitat-conservation/deep-sea-coral-habitat
+attribute,NC_GLOBAL,sourceUrl,String,(local files)
+attribute,NC_GLOBAL,Southernmost_Northing,double,24.4306
+attribute,NC_GLOBAL,standard_name_vocabulary,String,CF Standard Name Table v70
+attribute,NC_GLOBAL,summary,String,Assessment of coral reef fish communities in the Florida Reef Tract
+attribute,NC_GLOBAL,time_coverage_end,String,2024-11-26T00:00:00Z
+attribute,NC_GLOBAL,time_coverage_start,String,2014-05-06T00:00:00Z
+attribute,NC_GLOBAL,title,String,CRCP_Reef_Fish_Surveys_Florida
+attribute,NC_GLOBAL,Westernmost_Easting,double,-83.10363
+variable,time,,double,
+attribute,time,_CoordinateAxisType,String,Time
+attribute,time,actual_range,double,"1.3993344E9, 1.7325792E9"
+attribute,time,axis,String,T
+attribute,time,calendar,String,Julian
+attribute,time,ioos_category,String,Time
+attribute,time,long_name,String,Time
+attribute,time,standard_name,String,time
+attribute,time,time_origin,String,01-JAN-1970 00:00:00
+attribute,time,units,String,seconds since 1970-01-01T00:00:00Z
+variable,latitude,,double,
+attribute,latitude,_CoordinateAxisType,String,Lat
+attribute,latitude,_FillValue,double,-9999.0
+attribute,latitude,actual_range,double,"24.4306, 27.18972"
+attribute,latitude,axis,String,Y
+attribute,latitude,comment,String,Latitudinal location where station was surveyed. Precise to 6 decimal places.
+attribute,latitude,ioos_category,String,Location
+attribute,latitude,long_name,String,Latitude
+attribute,latitude,standard_name,String,latitude
+attribute,latitude,units,String,degrees_north
+attribute,latitude,valid_max,double,27.12346
+attribute,latitude,valid_min,double,25.79325
+variable,longitude,,double,
+attribute,longitude,_CoordinateAxisType,String,Lon
+attribute,longitude,_FillValue,double,-9999.0
+attribute,longitude,actual_range,double,"-83.10363, -79.9938"
+attribute,longitude,axis,String,X
+attribute,longitude,comment,String,Longitudinal location where station was surveyed. Precise to 6 decimal places.
+attribute,longitude,ioos_category,String,Location
+attribute,longitude,long_name,String,Longitude
+attribute,longitude,standard_name,String,longitude
+attribute,longitude,units,String,degrees_east
+attribute,longitude,valid_max,double,-80.01751
+attribute,longitude,valid_min,double,-80.12357
+variable,PRIMARY_SAMPLE_UNIT,,String,
+attribute,PRIMARY_SAMPLE_UNIT,comment,String,A code indicating the primary sample unit in which a sample was collected.
+attribute,PRIMARY_SAMPLE_UNIT,ioos_category,String,Identifier
+variable,YEAR,,int,
+attribute,YEAR,_FillValue,int,-9999
+attribute,YEAR,actual_range,int,"2014, 2024"
+attribute,YEAR,comment,String,The year the survey was done.
+attribute,YEAR,ioos_category,String,Time
+variable,MONTH,,int,
+attribute,MONTH,_FillValue,int,-9999
+attribute,MONTH,actual_range,int,"1, 12"
+attribute,MONTH,comment,String,A number indicating the month of the year.
+attribute,MONTH,ioos_category,String,Time
+variable,DAY,,int,
+attribute,DAY,_FillValue,int,-9999
+attribute,DAY,actual_range,int,"1, 31"
+attribute,DAY,comment,String,"Numeric day for the temperature observation, 1-31 (TIMESTAMP)."
+attribute,DAY,ioos_category,String,Time
+variable,Date_UTC,,double,
+attribute,Date_UTC,actual_range,double,"1.3993344E9, 1.7325792E9"
+attribute,Date_UTC,comment,String,Date the observation was made or sample was collected.
+attribute,Date_UTC,ioos_category,String,Time
+attribute,Date_UTC,long_name,String,Date UTC
+attribute,Date_UTC,time_origin,String,01-JAN-1970 00:00:00
+attribute,Date_UTC,units,String,seconds since 1970-01-01T00:00:00Z
+variable,STATION_NR,,int,
+attribute,STATION_NR,_FillValue,int,-9999
+attribute,STATION_NR,actual_range,int,"1, 2"
+attribute,STATION_NR,comment,String,A number indicating the secondary sampling unit within a given primary sample unit.
+attribute,STATION_NR,ioos_category,String,Identifier
+variable,DEPTH,,double,
+attribute,DEPTH,_FillValue,double,-9999.0
+attribute,DEPTH,actual_range,double,"0.762, 31.9"
+attribute,DEPTH,comment,String,Depth in meters of the instrument when the temperature was recorded from the water column.
+attribute,DEPTH,ioos_category,String,Other
+attribute,DEPTH,long_name,String,depth
+attribute,DEPTH,standard_name,String,depth
+attribute,DEPTH,units,String,m
+variable,UNDERWATER_VISIBILITY,,float,
+attribute,UNDERWATER_VISIBILITY,_FillValue,float,-9999.0
+attribute,UNDERWATER_VISIBILITY,actual_range,float,"3.0, 50.5"
+attribute,UNDERWATER_VISIBILITY,comment,String,"Visibility, in meters, at secondary sampling unit."
+attribute,UNDERWATER_VISIBILITY,ioos_category,String,Optical Properties
+attribute,UNDERWATER_VISIBILITY,units,String,m
+variable,MAPGRID_NR,,int,
+attribute,MAPGRID_NR,_FillValue,int,-9999
+attribute,MAPGRID_NR,actual_range,int,"2865, 4155843"
+attribute,MAPGRID_NR,comment,String,A number indicating gridded shapefile number
+attribute,MAPGRID_NR,ioos_category,String,Identifier
+variable,HABITAT_CD,,String,
+attribute,HABITAT_CD,comment,String,A code indicating the habitat type.
+attribute,HABITAT_CD,ioos_category,String,Bottom Character
+variable,HABITAT_TYPE,,String,
+attribute,HABITAT_TYPE,comment,String,Full description of the HABITAT_CD code describing the habitat type
+attribute,HABITAT_TYPE,ioos_category,String,Bottom Character
+variable,ZONE_NR,,int,
+attribute,ZONE_NR,_FillValue,int,-9999
+attribute,ZONE_NR,actual_range,int,"0, 7"
+attribute,ZONE_NR,comment,String,A code indicating the distance offshore
+attribute,ZONE_NR,ioos_category,String,Location
+variable,ZONE_NAME,,String,
+attribute,ZONE_NAME,comment,String,Long description for the ZONE_NR field.
+attribute,ZONE_NAME,ioos_category,String,Location
+variable,RUGOSITY_CD,,String,
+attribute,RUGOSITY_CD,comment,String,A code classifying a sample as rugose(1) or not rugose(0).  This field applies to SEFCRI region only for better stratification and is populated with not applicable in all other survey locations
+attribute,RUGOSITY_CD,ioos_category,String,Bottom Character
+variable,SUB_REGION_NR,,int,
+attribute,SUB_REGION_NR,_FillValue,int,-9999
+attribute,SUB_REGION_NR,actual_range,int,"3, 17"
+attribute,SUB_REGION_NR,comment,String,A number indicating the subregion in which a sample was taken.
+attribute,SUB_REGION_NR,ioos_category,String,Location
+variable,SUB_REGION_NAME,,String,
+attribute,SUB_REGION_NAME,comment,String,The name of the subregion in which a sample was taken.
+attribute,SUB_REGION_NAME,ioos_category,String,Location
+variable,SPECIES_NR,,int,
+attribute,SPECIES_NR,_FillValue,int,-9999
+attribute,SPECIES_NR,actual_range,int,"1, 852"
+attribute,SPECIES_NR,comment,String,A number indicating the species for a sample.
+attribute,SPECIES_NR,ioos_category,String,Biology
+variable,SPECIES_CD,,String,
+attribute,SPECIES_CD,comment,String,A code indicating the species for a sample. Consists of the first three letters of the genus and the first four of the species name.
+attribute,SPECIES_CD,ioos_category,String,Taxonomy
+variable,SCIENTIFIC_NAME,,String,
+attribute,SCIENTIFIC_NAME,comment,String,"Scientific name of species for a sample. Collected to the lowest taxonomic identification, Genus and Family at minimum."
+attribute,SCIENTIFIC_NAME,ioos_category,String,Taxonomy
+variable,COMMON_NAME,,String,
+attribute,COMMON_NAME,comment,String,Common name of the species in the sample
+attribute,COMMON_NAME,ioos_category,String,Taxonomy
+variable,length_fish,,float,
+attribute,length_fish,_FillValue,float,-9999.0
+attribute,length_fish,actual_range,float,"-9.0, 400.0"
+attribute,length_fish,comment,String,"The length, in cm, of a sample."
+attribute,length_fish,ioos_category,String,Other
+attribute,length_fish,units,String,cm
+variable,NUM,,float,
+attribute,NUM,_FillValue,float,-9999.0
+attribute,NUM,actual_range,float,"0.0, 4000.0"
+attribute,NUM,comment,String,The number of individuals of a given species and length observed in a secondary sampling unit.
+attribute,NUM,ioos_category,String,Biology
+variable,TIME_SEEN,,float,
+attribute,TIME_SEEN,_FillValue,float,-9999.0
+attribute,TIME_SEEN,actual_range,float,"1.0, 3.0"
+attribute,TIME_SEEN,comment,String,"A number indicating when, during sampling, an individual was observed."
+attribute,TIME_SEEN,ioos_category,String,Biology
+variable,TIME_SEEN_DESCR,,String,
+attribute,TIME_SEEN_DESCR,comment,String,Description of the time frame of an observation
+attribute,TIME_SEEN_DESCR,ioos_category,String,Biology
+variable,MPA_NR,,String,
+attribute,MPA_NR,comment,String,A number identifying the marine protected area in which the sample was collected. Zero indicates unprotected status.
+attribute,MPA_NR,ioos_category,String,Location
+variable,MPA_NAME,,String,
+attribute,MPA_NAME,comment,String,The name of the marine protected area in which the sample was collected.
+attribute,MPA_NAME,ioos_category,String,Location
+variable,PROT,,String,
+attribute,PROT,comment,String,"A boolean value indicating whether a sample was in a protected area (1), or not (0)."
+attribute,PROT,ioos_category,String,Location
+variable,STRAT,,String,
+attribute,STRAT,comment,String,A code indicating the stratum in which a sample was taken. Differs by region.
+attribute,STRAT,ioos_category,String,Bottom Character
+variable,Description,,String,
+attribute,Description,comment,String,Description of the sampling area
+attribute,Description,ioos_category,String,Other
+variable,REGION,,String,
+attribute,REGION,comment,String,A code indicating the region in which a sample was taken.
+attribute,REGION,ioos_category,String,Location
+variable,REGION_DESCRIPTION,,String,
+attribute,REGION_DESCRIPTION,comment,String,The long description for the region code in which a sample was taken
+attribute,REGION_DESCRIPTION,ioos_category,String,Location
+variable,sample_year,,int,
+attribute,sample_year,_FillValue,int,-9999
+attribute,sample_year,actual_range,int,"0, 2021"
+attribute,sample_year,comment,String,Year the observation was collected
+attribute,sample_year,ioos_category,String,Time
+variable,accession_url,,String,
+attribute,accession_url,comment,String,url of the landing page of the accession pertaining to the data set
+attribute,accession_url,ioos_category,String,Other

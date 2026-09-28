@@ -1,0 +1,101 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://fishai.local/schemas/provenance.schema.json",
+  "title": "Provenance",
+  "description": "Lineage for a normalized record: immutable raw reference, transform identity, and rights snapshot.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "provenance_id",
+    "source_id",
+    "ingestion_run_id",
+    "raw_payload_reference",
+    "transformation_version",
+    "transform_hash",
+    "source_checksum",
+    "ingested_at_utc",
+    "rights_status"
+  ],
+  "properties": {
+    "provenance_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "source_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "source_record_id": {
+      "type": ["string", "null"]
+    },
+    "source_dataset_version": {
+      "type": ["string", "null"]
+    },
+    "ingestion_run_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "raw_payload_reference": {
+      "type": "string",
+      "minLength": 1,
+      "description": "URI or object-store key of immutable raw bytes."
+    },
+    "transformation_version": {
+      "type": "string",
+      "minLength": 1
+    },
+    "transform_hash": {
+      "type": "string",
+      "minLength": 1
+    },
+    "source_checksum": {
+      "type": "string",
+      "minLength": 1
+    },
+    "record_hash": {
+      "type": ["string", "null"]
+    },
+    "published_at_utc": {
+      "type": ["string", "null"],
+      "format": "date-time",
+      "description": "As-of join key: when the source made this version available."
+    },
+    "ingested_at_utc": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "revised_at_utc": {
+      "type": ["string", "null"],
+      "format": "date-time"
+    },
+    "rights_status": {
+      "type": "string",
+      "enum": [
+        "APPROVED_OPEN_COMMERCIAL",
+        "APPROVED_WITH_ATTRIBUTION",
+        "APPROVED_INTERNAL_ONLY",
+        "APPROVED_PARTNER_CONSENT",
+        "CONDITIONAL_REVIEW_REQUIRED",
+        "PAID_LICENSE_REQUIRED",
+        "RESEARCH_ONLY",
+        "NONCOMMERCIAL_ONLY",
+        "RESTRICTED",
+        "REJECTED",
+        "UNKNOWN"
+      ]
+    },
+    "license": {
+      "type": ["string", "null"]
+    },
+    "attribution_text": {
+      "type": ["string", "null"]
+    },
+    "is_retrospective_revision": {
+      "type": "boolean",
+      "default": false
+    },
+    "notes": {
+      "type": ["string", "null"]
+    }
+  }
+}

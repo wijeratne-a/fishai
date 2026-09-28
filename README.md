@@ -1,5 +1,8 @@
 # FishAI
 
+> **Current scientific/product context (2026-09-27):** [`PROJECT_CONTEXT.md`](PROJECT_CONTEXT.md).  
+> This README is the **2026-09-18 paused commercial-wedge track**. It is not the operator runbook for the survey-detection program.
+
 Working name for an Ocean Intelligence Builder research project. Long-term vision: a **trusted intelligence layer** for biological, environmental, operational, regulatory, and commercial ocean conditions.
 
 This is **not** a world map, generic dashboard, generic AI agent, or a dump of public ocean datasets.

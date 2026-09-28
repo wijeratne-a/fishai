@@ -1,0 +1,3 @@
+dataset_id,provider,variable,latest_time_retrieved,spatial_resolution,joined_to_surveys,forecast,notes
+jplMURSST41,NOAA CoastWatch ERDDAP,analysed_sst,2026-09-23T09:00:00Z,about 0.01 degree,no,no,Small snippet only. Latency about one day relative to 2026-09-24. Not a fish observation.
+RTOFS forecast search,NOAA CoastWatch ERDDAP,not identified,,unknown,no,not acquired,Search URL returned HTTP 404. No forecast grid saved.

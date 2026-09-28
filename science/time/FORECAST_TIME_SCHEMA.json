@@ -1,0 +1,75 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://fishai.local/science/time/FORECAST_TIME_SCHEMA.json",
+  "title": "ForecastTimeRecord",
+  "description": "Issue time, valid time, and lead for forecast or analysis products. Does not authorize publishing a nowcast.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "record_id",
+    "product_kind",
+    "issue_time_utc",
+    "valid_time_utc",
+    "time_precision"
+  ],
+  "properties": {
+    "record_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "product_kind": {
+      "type": "string",
+      "enum": [
+        "forecast",
+        "analysis",
+        "reanalysis",
+        "observation",
+        "unknown"
+      ]
+    },
+    "issue_time_utc": {
+      "type": "string",
+      "description": "When the product was issued or published (ISO-8601 UTC)."
+    },
+    "valid_time_utc": {
+      "type": "string",
+      "description": "Instant the product claims to describe (ISO-8601 UTC)."
+    },
+    "lead_time": {
+      "type": ["string", "number", "null"],
+      "description": "Explicit lead. Required non-null for forecast when valid_time equals issue_time (zero-lead nowcast lane) or when documenting non-zero lead."
+    },
+    "lead_time_hours": {
+      "type": ["number", "null"],
+      "description": "Optional numeric lead in hours."
+    },
+    "time_precision": {
+      "type": "string",
+      "enum": [
+        "SECOND",
+        "MINUTE",
+        "HOUR",
+        "DAY",
+        "MONTH",
+        "YEAR",
+        "UNKNOWN"
+      ]
+    },
+    "lane": {
+      "type": "string",
+      "enum": [
+        "operational",
+        "retrospective",
+        "unknown"
+      ],
+      "default": "unknown"
+    },
+    "fabricated_clock": {
+      "type": "boolean",
+      "description": "True if clock components were invented for a date-only source. Must be false or absent for valid records."
+    },
+    "notes": {
+      "type": ["string", "null"]
+    }
+  }
+}

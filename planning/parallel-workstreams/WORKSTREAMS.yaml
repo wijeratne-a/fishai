@@ -1,0 +1,498 @@
+# FishAI parallel workstream registry (WS01–WS20)
+# Owned by orchestration / WS13+WS14. Statuses reflect repo state at last update.
+
+updated_utc: "2026-09-25T06:38:15Z"
+phase: GLOBAL_DATA_ACQUISITION
+
+workstreams:
+  - id: WS01_GLOBAL_ACQUISITION
+    objective: Acquire and preserve original global marine survey and companion files with checksums and provenance.
+    owner_agent: acquisition_agent
+    allowed_input_paths:
+      - data/manifests/
+      - audit/data-acquisition/
+      - scripts/acquisition/
+    allowed_output_paths:
+      - data/raw/
+      - data/manifests/acquisition-queue.csv
+      - data/manifests/acquisition-manifest.csv
+      - data/manifests/structured-survey-manifest.csv
+      - data/manifests/global-file-inventory.csv
+      - data/manifests/source-licenses.csv
+      - audit/data-acquisition/
+    prohibited_actions:
+      - train_models
+      - rewrite_raw_bytes_in_place
+      - commit_raw_coordinates
+      - claim_nowcast_or_forecast
+    dependencies: []
+    status: PARTIAL
+    acceptance_criteria:
+      - Regional NCRMP/RVC years retained under data/raw with manifest checksums
+      - Global archive and full acquisition-queue coverage still incomplete
+    last_successful_execution: null
+    next_action: Continue discovery and acquire next non-overlapping official source year or region
+
+  - id: WS02_SOURCE_DISCOVERY
+    objective: Continuously discover public marine dataset leads without bulk-downloading large archives.
+    owner_agent: discovery_agent
+    allowed_input_paths:
+      - data/manifests/
+      - research/
+      - scripts/acquisition/
+    allowed_output_paths:
+      - data/manifests/discovery-candidates.csv
+      - scripts/acquisition/discover_public_marine_sources.py
+      - audit/data-acquisition/
+    prohibited_actions:
+      - bulk_download_large_archives
+      - modify_data_raw_owned_by_ws01_without_handoff
+      - train_models
+    dependencies: []
+    status: PARTIAL
+    acceptance_criteria:
+      - discovery-candidates.csv populated with actionable leads
+      - No large downloads performed in this workstream
+    last_successful_execution: null
+    next_action: Expand catalog searches beyond NCRMP families already known
+
+  - id: WS03_FILE_VALIDATION
+    objective: Validate acquired files for integrity, schema readability, and content-type without altering originals.
+    owner_agent: validation_agent
+    allowed_input_paths:
+      - data/raw/
+      - data/manifests/
+      - scripts/validation/
+    allowed_output_paths:
+      - data/manifests/file-validation-results.csv
+      - data/quarantine/
+      - audit/data-quality/
+      - scripts/validation/
+    prohibited_actions:
+      - modify_original_downloads
+      - train_models
+    dependencies:
+      - WS01_GLOBAL_ACQUISITION
+    status: PARTIAL
+    acceptance_criteria:
+      - Reusable validators exist for primary CSV/GZ survey products
+      - Per-file validation results registered for all acquired files
+    last_successful_execution: null
+    next_action: Write file-validation-results.csv for every manifest path
+
+  - id: WS04_SCHEMA_AND_CATALOG
+    objective: Define a canonical evidence schema and field contracts without forcing every source into one flat table.
+    owner_agent: schema_agent
+    allowed_input_paths:
+      - data/manifests/
+      - data/metadata/
+      - schemas/
+      - docs/
+    allowed_output_paths:
+      - schemas/
+      - docs/CANONICAL_DATA_MODEL.md
+      - docs/SOURCE_ADAPTER_CONTRACT.md
+      - docs/FIELD_DICTIONARY.md
+      - staging/manifests/WS04_SCHEMA_AND_CATALOG/
+    prohibited_actions:
+      - discard_source_specific_fields
+      - train_models
+      - publish_nowcast
+    dependencies: []
+    status: PARTIAL
+    acceptance_criteria:
+      - Core JSON schemas and canonical docs exist
+      - Source adapters preserve original fields alongside normalized fields
+    last_successful_execution: null
+    next_action: Wire first source adapter to schemas without dropping native columns
+
+  - id: WS05_TAXONOMY
+    objective: Build a global fish-taxon concordance from legitimate resolvers without blocking raw preservation.
+    owner_agent: taxonomy_agent
+    allowed_input_paths:
+      - data/raw/
+      - data/manifests/
+      - data/processed/
+    allowed_output_paths:
+      - data/taxonomy/
+      - audit/taxonomy/
+    prohibited_actions:
+      - label_unresolved_taxa_model_ready
+      - train_models
+    dependencies:
+      - WS03_FILE_VALIDATION
+    status: NOT_STARTED
+    acceptance_criteria:
+      - fish-taxon-concordance artifact exists with match method and confidence
+      - unresolved names tracked separately
+    last_successful_execution: null
+    next_action: Resolve scientific names from validated Atlantic frames via WoRMS/GBIF services
+
+  - id: WS06_EVENT_AND_ZERO_AUDIT
+    objective: Determine which structured surveys support detection or abundance models via proven event frames and zero semantics.
+    owner_agent: event_frame_agent
+    allowed_input_paths:
+      - data/raw/
+      - data/manifests/
+      - audit/multi-species/
+      - audit/event-frames/
+      - scripts/validation/
+    allowed_output_paths:
+      - audit/event-frames/
+      - data/manifests/
+      - scripts/validation/
+    prohibited_actions:
+      - invent_absences_without_event_frame
+      - mix_incompatible_protocols_silently
+      - train_models
+    dependencies:
+      - WS03_FILE_VALIDATION
+    status: PARTIAL
+    acceptance_criteria:
+      - Atlantic frames validated with NUM=0 support where applicable
+      - Pacific sources explicitly marked POSITIVE_ONLY until zeros are recovered
+    last_successful_execution: null
+    next_action: Extend event-frame registry and keep Pacific POSITIVE_ONLY until zero rows exist
+
+  - id: WS07_GEOGRAPHIC_STANDARDIZATION
+    objective: Standardize coordinate reference, precision, and spatial units inside protected storage only.
+    owner_agent: geographic_agent
+    allowed_input_paths:
+      - data/raw/
+      - data/interim/
+      - data/restricted/
+      - docs/GEOGRAPHIC_STANDARDIZATION.md
+    allowed_output_paths:
+      - data/interim/
+      - data/restricted/
+      - docs/GEOGRAPHIC_STANDARDIZATION.md
+      - staging/manifests/WS07_GEOGRAPHIC_STANDARDIZATION/
+    prohibited_actions:
+      - commit_raw_coordinates_to_git
+      - publish_point_maps_of_sensitive_sites
+      - train_models
+    dependencies:
+      - WS03_FILE_VALIDATION
+      - WS13_SECURITY_AND_SENSITIVITY
+    status: READY
+    acceptance_criteria:
+      - Geographic standardization contract documented
+      - No precise coordinates written to tracked trees
+    last_successful_execution: null
+    next_action: Apply CRS/precision rules to interim extracts under data/interim only
+
+  - id: WS08_TEMPORAL_STANDARDIZATION
+    objective: Normalize timestamps to UTC with explicit precision classes without inventing missing times.
+    owner_agent: temporal_agent
+    allowed_input_paths:
+      - data/raw/
+      - data/interim/
+      - docs/TEMPORAL_STANDARDIZATION.md
+    allowed_output_paths:
+      - data/interim/
+      - docs/TEMPORAL_STANDARDIZATION.md
+      - staging/manifests/WS08_TEMPORAL_STANDARDIZATION/
+    prohibited_actions:
+      - invent_timestamps
+      - train_models
+      - claim_nowcast
+    dependencies:
+      - WS03_FILE_VALIDATION
+    status: READY
+    acceptance_criteria:
+      - Temporal precision vocabulary documented (SECOND through UNKNOWN)
+      - Survey dates normalized in interim tables with provenance
+    last_successful_execution: null
+    next_action: Normalize survey date fields for Puerto Rico frames in interim storage
+
+  - id: WS09_ENVIRONMENTAL_DATA_INVENTORY
+    objective: Inventory environmental sources and access paths without bulk-downloading or treating SST as fish.
+    owner_agent: environmental_inventory_agent
+    allowed_input_paths:
+      - data/manifests/
+      - data/raw/environmental/
+      - audit/
+      - planning/nowcast-infrastructure/
+    allowed_output_paths:
+      - data/manifests/environmental-source-manifest.csv
+      - data/manifests/historical-environment-manifest.csv
+      - data/manifests/current-ocean-source-manifest.csv
+      - audit/
+    prohibited_actions:
+      - treat_environment_as_biological_observation
+      - bulk_download_without_ws01_coordination
+      - train_models
+      - claim_nowcast
+    dependencies: []
+    status: PARTIAL
+    acceptance_criteria:
+      - Environmental source manifests exist
+      - Historical SST still not matched to survey events for nowcast tests
+    last_successful_execution: null
+    next_action: Catalog analysed SST products that can join Puerto Rico survey dates in protected storage
+
+  - id: WS10_HABITAT_DATA_INVENTORY
+    objective: Inventory habitat layers and rights without bulk download or fishing guidance.
+    owner_agent: habitat_inventory_agent
+    allowed_input_paths:
+      - data/manifests/
+      - data/raw/habitat/
+      - research/
+    allowed_output_paths:
+      - data/manifests/
+      - audit/
+      - data/raw/habitat/
+    prohibited_actions:
+      - fishing_guidance
+      - bulk_download_without_coordination
+      - train_models
+    dependencies: []
+    status: READY
+    acceptance_criteria:
+      - Habitat source leads recorded with license and spatial grain
+      - No harvest advice derived from habitat layers
+    last_successful_execution: null
+    next_action: List official benthic/habitat products for Atlantic regions already acquired
+
+  - id: WS11_DEDUPLICATION
+    objective: Detect duplicate files and observation-level collisions after registration and again after normalization.
+    owner_agent: deduplication_agent
+    allowed_input_paths:
+      - data/manifests/
+      - data/raw/
+      - data/processed/
+    allowed_output_paths:
+      - data/manifests/
+      - audit/
+      - staging/manifests/WS11_DEDUPLICATION/
+    prohibited_actions:
+      - delete_raw_files
+      - train_models
+    dependencies:
+      - WS01_GLOBAL_ACQUISITION
+      - WS03_FILE_VALIDATION
+    status: NOT_STARTED
+    acceptance_criteria:
+      - Duplicate relationships recorded with evidence
+      - Raw files preserved even when duplicates found
+    last_successful_execution: null
+    next_action: Compare checksums and event keys across overlapping Florida/NCRMP manifests
+
+  - id: WS12_DATA_QUALITY_AND_BIAS
+    objective: Track quality dimensions and geographic/taxonomic bias gaps as source knowledge grows.
+    owner_agent: quality_bias_agent
+    allowed_input_paths:
+      - data/manifests/
+      - audit/
+      - audit/data-quality/
+    allowed_output_paths:
+      - audit/data-quality/
+      - staging/manifests/WS12_DATA_QUALITY_AND_BIAS/
+    prohibited_actions:
+      - hide_data_gaps
+      - train_models
+      - claim_global_completeness
+    dependencies:
+      - WS03_FILE_VALIDATION
+      - WS06_EVENT_AND_ZERO_AUDIT
+    status: PARTIAL
+    acceptance_criteria:
+      - Quality dimension notes and bias gap summaries exist
+      - Gaps remain visible in status reporting
+    last_successful_execution: null
+    next_action: Quantify regional and taxonomic coverage holes relative to discovery candidates
+
+  - id: WS13_SECURITY_AND_SENSITIVITY
+    objective: Automate protections against credentials, raw coordinates, and sensitive-species point exposure in git-tracked trees.
+    owner_agent: security_agent
+    allowed_input_paths:
+      - security/
+      - audit/
+      - scripts/
+      - docs/
+      - data/manifests/
+      - data/processed/
+      - data/metadata/
+    allowed_output_paths:
+      - security/
+      - docs/DATA_STORAGE_ARCHITECTURE.md
+    prohibited_actions:
+      - print_coordinate_values_in_scan_output
+      - store_site_coordinates_in_sensitivity_rules
+      - train_models
+    dependencies: []
+    status: COMPLETE_FOR_CURRENT_CYCLE
+    acceptance_criteria:
+      - SENSITIVE_DATA_POLICY.md and SPECIES_SENSITIVITY_RULES.yaml exist
+      - precommit_sensitive_scan.py and coordinate_exposure_test.py exist and have been run
+    last_successful_execution: "2026-09-25T06:38:15Z"
+    next_action: Gate commits with the scanner; extend rules only by class/taxon names
+
+  - id: WS14_STORAGE_AND_BACKUP
+    objective: Define immutable raw storage and backup/restore policy without claiming a backup before a restore test passes.
+    owner_agent: storage_agent
+    allowed_input_paths:
+      - data/
+      - docs/
+      - scripts/storage/
+      - .gitignore
+    allowed_output_paths:
+      - docs/DATA_STORAGE_ARCHITECTURE.md
+      - docs/BACKUP_AND_RECOVERY.md
+      - scripts/storage/
+    prohibited_actions:
+      - claim_backup_without_restore_test
+      - force_raw_into_git
+      - train_models
+    dependencies: []
+    status: PARTIAL
+    acceptance_criteria:
+      - data/raw gitignored and documented as immutable
+      - Last restore result remains NOT_RUN until a restore test passes
+    last_successful_execution: null
+    next_action: Implement and pass scripts/storage/restore_test.py before any backup success claim
+
+  - id: WS15_UPDATE_AUTOMATION
+    objective: Watch source catalogs for new years, versions, and checksum changes without overwriting prior downloads.
+    owner_agent: update_watcher_agent
+    allowed_input_paths:
+      - data/manifests/
+      - scripts/acquisition/
+      - scripts/watchers/
+    allowed_output_paths:
+      - scripts/watchers/
+      - data/manifests/source-update-state.json
+      - audit/updates/
+    prohibited_actions:
+      - overwrite_previous_raw_versions
+      - train_models
+    dependencies:
+      - WS01_GLOBAL_ACQUISITION
+    status: READY
+    acceptance_criteria:
+      - Watchers detect new years/versions without silent overwrite
+      - Update events appended to audit/updates/
+    last_successful_execution: null
+    next_action: Formalize scripts/watchers/ around existing NCRMP release watcher
+
+  - id: WS16_RESEARCH_DOCUMENTATION
+    objective: Continuously document sources, rights, limitations, and scientific honesty constraints.
+    owner_agent: documentation_agent
+    allowed_input_paths:
+      - research/
+      - audit/
+      - species/
+      - docs/
+    allowed_output_paths:
+      - research/
+      - docs/
+      - audit/
+      - species/
+    prohibited_actions:
+      - invent_permissions_or_data
+      - fishing_guidance
+      - train_models
+    dependencies: []
+    status: PARTIAL
+    acceptance_criteria:
+      - Research and audit notes remain current with acquisition limits
+      - Documentation alone is not treated as an acquisition success
+    last_successful_execution: null
+    next_action: Record license and access notes for each new discovery candidate
+
+  - id: WS17_FUTURE_MODEL_FRAMEWORK
+    objective: Document future model input contracts without training models in this phase.
+    owner_agent: model_framework_agent
+    allowed_input_paths:
+      - docs/
+      - schemas/
+      - audit/model-readiness/
+      - species/
+    allowed_output_paths:
+      - docs/FUTURE_MODEL_REQUIREMENTS.md
+      - audit/model-readiness/
+      - schemas/
+    prohibited_actions:
+      - train_models
+      - publish_nowcast_or_forecast
+      - claim_model_ready_without_event_frame
+    dependencies: []
+    status: READY
+    acceptance_criteria:
+      - Future model requirements documented
+      - No new species models trained during acquisition phase
+    last_successful_execution: null
+    next_action: Keep contracts aligned with event-frame and environmental join readiness only
+
+  - id: WS18_API_AND_DATA_ACCESS_LAYER
+    objective: Design an internal data-access layer over canonical catalog fields after schemas stabilize.
+    owner_agent: api_access_agent
+    allowed_input_paths:
+      - schemas/
+      - docs/
+      - data/manifests/
+      - data/processed/
+    allowed_output_paths:
+      - scripts/
+      - docs/
+      - staging/manifests/WS18_API_AND_DATA_ACCESS_LAYER/
+    prohibited_actions:
+      - expose_raw_coordinates_via_api
+      - public_telemetry_endpoints
+      - train_models
+    dependencies:
+      - WS04_SCHEMA_AND_CATALOG
+    status: NOT_STARTED
+    acceptance_criteria:
+      - Internal read APIs respect sensitivity rules
+      - No public nowcast endpoints in this phase
+    last_successful_execution: null
+    next_action: Draft internal query interfaces once catalog fields are stable
+
+  - id: WS19_GLOBE_DATA_CONTRACTS
+    objective: Define globe evidence and model-output contracts without publishing live likelihood products.
+    owner_agent: globe_contract_agent
+    allowed_input_paths:
+      - schemas/
+      - docs/
+      - globe/
+    allowed_output_paths:
+      - schemas/globe-evidence.schema.json
+      - schemas/globe-model-output.schema.json
+      - docs/GLOBE_DATA_CONTRACT.md
+    prohibited_actions:
+      - publish_ungrounded_likelihood_layers
+      - train_models
+      - fishing_guidance
+    dependencies: []
+    status: READY
+    acceptance_criteria:
+      - Globe evidence labels and schemas documented
+      - No new published nowcast layers shipped in acquisition phase
+    last_successful_execution: null
+    next_action: Keep globe prototype aligned to contract labels without new data publishes
+
+  - id: WS20_TESTING_AND_OBSERVABILITY
+    objective: Provide local tests and a project-status command without third-party telemetry.
+    owner_agent: testing_observability_agent
+    allowed_input_paths:
+      - tests/
+      - security/
+      - scripts/
+      - planning/parallel-workstreams/
+    allowed_output_paths:
+      - tests/
+      - scripts/project_status.py
+      - Makefile
+      - audit/project-status/
+    prohibited_actions:
+      - send_telemetry_to_third_parties
+      - invent_backup_success
+      - train_models
+    dependencies: []
+    status: READY
+    acceptance_criteria:
+      - make project-status prints honest metrics with UNKNOWN when unknown
+      - Security and storage verification scripts runnable locally
+    last_successful_execution: null
+    next_action: Expand unit tests under tests/ as validators and scanners stabilize

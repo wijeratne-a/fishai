@@ -1,0 +1,16 @@
+{
+  "label": "INTERNAL \u2014 NOT A LIVE LOCATION \u2014 NOT A FORECAST \u2014 NOT PUBLISHED",
+  "inputs": {
+    "data/raw/biological/noaa-rvc-florida-keys-2014.csv.gz": "f17d92c40d7453087e8e90bcf0b93f15defbbb43248eb72bb0e40ad5b245db90",
+    "data/raw/biological/noaa-rvc-florida-keys-2016.csv.gz": "6106ad78d42dd8be539b3c69703d20b5e89246836b768c80c2e1c4074f55837b",
+    "data/raw/biological/noaa-rvc-florida-keys-2018.csv.gz": "18761a19f00ee9becea2973b07ad957728ff98e2299d537da153308917ba819a",
+    "data/raw/biological/noaa-rvc-florida-keys-2022.csv.gz": "80483d603630453ccd2b7adf4ff7e82f2398bdbc112ac96a9161185c0739a204"
+  },
+  "hycom_dir": "data/restricted/environmental/hycom/florida-keys/by-date",
+  "preregistration_sha256": "9e8f61fb29685ceef232aced094e58e4f68bcffb7b48e149e9d33749ef8837ba",
+  "artifact": "models/florida-keys/ste_part_v1.json",
+  "holdout_inspected_before": false,
+  "scored_utc": "2026-09-27T22:28:06Z",
+  "git_commit": "0bf64b52efdebf4d02fd1b483947edd5ca15f6e9",
+  "tree": "DIRTY"
+}

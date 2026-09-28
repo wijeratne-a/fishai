@@ -1,0 +1,8 @@
+source,classification,acquired,public_model,notes
+CRCP_Reef_Fish_Surveys_Florida ERDDAP,AUTO_ACQUIRE_INTERNAL_ONLY,yes,no,License text says no access constraints and no use constraints. Derivative nowcast publication is not explicit. Files are local and gitignored.
+NCEI 0208321 2018 Keys,AUTO_ACQUIRE_INTERNAL_ONLY,yes,no,476377 rows; 843 events; accession URL matched
+NCEI 0282183 2022 Keys,AUTO_ACQUIRE_INTERNAL_ONLY,yes,no,221842 rows; 648 events; accession URL matched
+NCEI 0306184 2024 Keys,AUTO_ACQUIRE_INTERNAL_ONLY,yes,no,356254 rows; 622 events; accession URL matched; protocol match to earlier years not confirmed
+jplMURSST41,AUTO_ACQUIRE_INTERNAL_ONLY,partial,no,Small box only; not joined to surveys
+WCOFS,HUMAN_REVIEW_REQUIRED,no,no,Not downloaded
+Copernicus,ACCOUNT_ACTION_REQUIRED,no,no,No credentials

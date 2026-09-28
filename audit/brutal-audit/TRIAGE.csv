@@ -1,0 +1,17 @@
+defect_id,severity,affected_outputs,safe_to_fix_now,requires_rerun,requires_scientific_review,requires_ui_review,requires_safety_review
+LEAK-001,CRITICAL_INVALIDATES_RESULTS,SST scores / nowcast talk,YES block future offsets,YES to rescore,YES,NO,NO
+LEAK-002,CRITICAL_INVALIDATES_RESULTS,all 2023 skill sentences,YES downgrade,YES new year,YES,NO,NO
+SEM-002 / ML-002,CRITICAL_INVALIDATES_RESULTS,three Brier tables,YES quarantine,YES one estimator,YES,NO,NO
+SEM-001 / MEAS-001,HIGH_MISLEADS_USERS_OR_MODELS,any row with missing vis/depth,YES refuse,YES,YES,NO,NO
+LEAK-003 / ML-003,HIGH_MISLEADS_USERS_OR_MODELS,temporal holdout interpretation,YES drop year dummies later,YES,YES,NO,NO
+SEM-005 / UI-001,HIGH_MISLEADS_USERS_OR_MODELS,globe sentence,YES rename,NO,NO,YES,NO
+SEM-004 / UI-004,HIGH_MISLEADS_USERS_OR_MODELS,CURRENT_STATUS,YES STALE,NO,NO,YES,NO
+ENV-003,HIGH_MISLEADS_USERS_OR_MODELS,SST_ADDS_NO_VALUE overread,YES caveat,YES event-level,YES,NO,NO
+ENV-005,HIGH_MISLEADS_USERS_OR_MODELS,current ocean language,YES labels,NO,YES,YES,NO
+SEM-008,HIGH_MISLEADS_USERS_OR_MODELS,zeros,NO checksum later,YES,YES,NO,YES
+ML-001,HIGH_MISLEADS_USERS_OR_MODELS,failed fits,YES NaN reject,if NaNs appear,NO,NO,NO
+ML-007,HIGH_MISLEADS_USERS_OR_MODELS,FGB,YES quarantine,YES more n,YES,NO,NO
+LEAK-005,MEDIUM_SCIENTIFIC_WEAKNESS,spatial CV,NO,YES,YES,NO,NO
+ENV-002,MEDIUM_SCIENTIFIC_WEAKNESS,depth,NO,YES,YES,NO,NO
+ML-004,MEDIUM_SCIENTIFIC_WEAKNESS,repro,YES use seed,NO,NO,NO,NO
+MEAS-002,LOW_ENGINEERING_DEBT,SST scale,later,NO,NO,NO,NO

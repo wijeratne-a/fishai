@@ -1,0 +1,13 @@
+event_id,region,year,event_type,evidence,interpretation
+PCE-001,Puerto Rico,2014,YEAR_ABSENT_FROM_ERDDAP,Not in ERDDAP year list per ATLANTIC_PROTOCOL_MATRIX / EXECUTION_REPORT,No 2014 frame; cannot form 2014–2016 protocol pair.
+PCE-002,Florida Keys,2018,SPECIES_LIST_SIZE_JUMP,List size 255 (2016) → 475 (2018),COMPARABLE_WITH_COVARIATES; not a biological trend proof.
+PCE-003,Florida Keys,2022,SPECIES_LIST_SIZE_JUMP,List size 475 (2018) → 250 (2022),COMPARABLE_WITH_COVARIATES; list contraction.
+PCE-004,Florida Keys,2024,ACCESSION_NARRATIVE_SINGLE_STAGE,Matrix note: 2024 Florida accession narrative previously described a single-stage design; column structure still matches,INSUFFICIENT_DOCUMENTATION for claiming protocol identity; still usable with list-membership covariates.
+PCE-005,Puerto Rico,2019,SPECIES_LIST_SIZE_JUMP,List size 216 (2016) → 475 (2019),COMPARABLE_WITH_COVARIATES.
+PCE-006,Puerto Rico,2021,SPECIES_LIST_SIZE_JUMP,List size 475 (2019) → 214 (2021),COMPARABLE_WITH_COVARIATES.
+PCE-007,Puerto Rico,2023,SPECIES_LIST_SIZE_JUMP,List size 214 (2021) → 481 (2023),COMPARABLE_WITH_COVARIATES; holdout year.
+PCE-008,USVI,2019,SPECIES_LIST_SIZE_JUMP,List size 232 (2017) → 475 (2019),COMPARABLE_WITH_COVARIATES.
+PCE-009,USVI,2021,SPECIES_LIST_SIZE_JUMP,List size 475 (2019) → 235 (2021),COMPARABLE_WITH_COVARIATES.
+PCE-010,USVI,2023,SPECIES_LIST_SIZE_JUMP,List size 235 (2021) → 481 (2023),COMPARABLE_WITH_COVARIATES; holdout year.
+PCE-011,Flower Garden Banks,2024,SPECIES_LIST_SIZE_JUMP,List size 479 (2023) → 103 (2024),INSUFFICIENT_DOCUMENTATION; not proof of a new biological trend.
+PCE-012,multi-region,multi,INCOMPATIBLE_YEARS_NOT_DOWNLOADED,"Florida 2020; PR 2014; USVI 2013/2015; FGB 2013/2015 absent from ERDDAP lists",Excluded; not protocol-change events inside downloaded frames.

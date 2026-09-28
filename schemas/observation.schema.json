@@ -1,0 +1,120 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://fishai.local/schemas/observation.schema.json",
+  "title": "Observation",
+  "description": "Biological observation tied to an event. Missing rows are not absences; presence-only is not absence; SST is not a fish observation.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "observation_id",
+    "event_id",
+    "source_id",
+    "taxon_id",
+    "observation_state",
+    "evidence_class",
+    "time_precision",
+    "privacy_tier"
+  ],
+  "properties": {
+    "observation_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "event_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "source_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "taxon_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "scientific_name_at_source": {
+      "type": ["string", "null"]
+    },
+    "observation_state": {
+      "type": "string",
+      "enum": [
+        "CONFIRMED_PRESENCE",
+        "SURVEY_NONDETECTION",
+        "PRESENCE_ONLY_NO_ABSENCE",
+        "NO_SURVEY",
+        "RESTRICTED",
+        "UNKNOWN"
+      ],
+      "description": "NO_SURVEY and missing rows are UNKNOWN, not absence. PRESENCE_ONLY_NO_ABSENCE forbids treating non-matches as zeros."
+    },
+    "evidence_class": {
+      "type": "string",
+      "enum": [
+        "DIRECT_OBSERVATION",
+        "STRUCTURED_SURVEY_DETECTION",
+        "SURVEY_NONDETECTION",
+        "HISTORICAL_OCCURRENCE",
+        "RECENT_PRESENCE_EVIDENCE",
+        "ENVIRONMENTAL_CONDITION",
+        "INTERNAL_MODEL_OUTPUT",
+        "PUBLISHED_NOWCAST",
+        "PUBLISHED_FORECAST",
+        "UNKNOWN"
+      ],
+      "description": "ENVIRONMENTAL_CONDITION is never a fish observation. INTERNAL_MODEL_OUTPUT is never a published nowcast."
+    },
+    "observed_at_utc": {
+      "type": ["string", "null"],
+      "format": "date-time"
+    },
+    "time_precision": {
+      "type": "string",
+      "enum": [
+        "SECOND",
+        "MINUTE",
+        "HOUR",
+        "DAY",
+        "MONTH",
+        "YEAR",
+        "UNKNOWN"
+      ]
+    },
+    "life_stage": {
+      "type": ["string", "null"]
+    },
+    "measurement_id": {
+      "type": ["string", "null"]
+    },
+    "effort_id": {
+      "type": ["string", "null"],
+      "description": "Required conceptually for SURVEY_NONDETECTION; a miss without effort is not a non-detection."
+    },
+    "count_or_index_value": {
+      "type": ["number", "null"]
+    },
+    "count_or_index_unit": {
+      "type": ["string", "null"]
+    },
+    "is_absence_claim": {
+      "type": "boolean",
+      "const": false,
+      "description": "Must remain false. FishAI does not treat missing rows or presence-only gaps as ecological absence."
+    },
+    "privacy_tier": {
+      "type": "string",
+      "enum": [
+        "PUBLIC",
+        "COARSENED",
+        "RESTRICTED",
+        "PRIVATE",
+        "NEVER_PUBLISH"
+      ]
+    },
+    "provenance_id": {
+      "type": ["string", "null"]
+    },
+    "notes": {
+      "type": ["string", "null"]
+    }
+  }
+}

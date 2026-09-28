@@ -1,0 +1,145 @@
+{
+  "label": "INTERNAL \u2014 NOT A LIVE LOCATION \u2014 NOT A FORECAST \u2014 NOT PUBLISHED",
+  "frozen_utc": "2026-09-27T22:27:35Z",
+  "species_code": "STE PART",
+  "scientific_name": "Stegastes partitus",
+  "train_years": [
+    2014,
+    2016,
+    2018
+  ],
+  "test_year": 2022,
+  "test_year_read_before_freeze": false,
+  "test_year_history": "2022 was a training year in audit/multi-species (untrusted run); never scored as a holdout",
+  "estimator": {
+    "type": "l2_logistic_newton",
+    "l2": 1.0,
+    "intercept_penalized": false
+  },
+  "numeric_features_chosen": [
+    "depth",
+    "vis"
+  ],
+  "habitat_rule": "dummies for training habitats with >= 30 events; others pooled as OTHER",
+  "year_dummies": false,
+  "scaler_fit_on": "training rows only",
+  "temperature": {
+    "source": "HYCOM GOFS 3.1 water_temp",
+    "join": "nearest column within 10.0 km reaching dive depth; linear in depth; no extrapolation",
+    "time_rule": "same-day field or past day only"
+  },
+  "selection_rule": "temperature kept only if pooled leave-one-subregion-out Brier AND log loss beat survey-only on training years",
+  "cv_survey_only": {
+    "numeric": [
+      "depth",
+      "vis"
+    ],
+    "folds": [
+      {
+        "block": "Biscayne",
+        "n": 657,
+        "brier_model": 0.0973,
+        "brier_prevalence": 0.12499
+      },
+      {
+        "block": "Lower Keys",
+        "n": 683,
+        "brier_model": 0.09586,
+        "brier_prevalence": 0.12531
+      },
+      {
+        "block": "Mid-Upper Keys Transition",
+        "n": 285,
+        "brier_model": 0.07892,
+        "brier_prevalence": 0.10507
+      },
+      {
+        "block": "Middle Keys",
+        "n": 322,
+        "brier_model": 0.04747,
+        "brier_prevalence": 0.05786
+      },
+      {
+        "block": "Upper Keys",
+        "n": 553,
+        "brier_model": 0.06456,
+        "brier_prevalence": 0.08218
+      }
+    ],
+    "pooled_brier_model": 0.081149,
+    "pooled_brier_prevalence": 0.104691,
+    "pooled_logloss_model": 0.264256,
+    "pooled_logloss_prevalence": 0.365898
+  },
+  "cv_with_temperature": {
+    "numeric": [
+      "depth",
+      "vis",
+      "temp"
+    ],
+    "folds": [
+      {
+        "block": "Biscayne",
+        "n": 657,
+        "brier_model": 0.09824,
+        "brier_prevalence": 0.12499
+      },
+      {
+        "block": "Lower Keys",
+        "n": 683,
+        "brier_model": 0.09559,
+        "brier_prevalence": 0.12531
+      },
+      {
+        "block": "Mid-Upper Keys Transition",
+        "n": 285,
+        "brier_model": 0.07892,
+        "brier_prevalence": 0.10507
+      },
+      {
+        "block": "Middle Keys",
+        "n": 322,
+        "brier_model": 0.04772,
+        "brier_prevalence": 0.05786
+      },
+      {
+        "block": "Upper Keys",
+        "n": 553,
+        "brier_model": 0.06498,
+        "brier_prevalence": 0.08218
+      }
+    ],
+    "pooled_brier_model": 0.081447,
+    "pooled_brier_prevalence": 0.104691,
+    "pooled_logloss_model": 0.265244,
+    "pooled_logloss_prevalence": 0.365898
+  },
+  "acceptance_rule_on_test": {
+    "brier_improvement_ci95_low_gt": 0.0,
+    "logloss_below_prevalence": true,
+    "calibration_gap_max": 0.05
+  },
+  "training_audit": {
+    "events_loaded": 2500,
+    "not_evaluated": 0,
+    "dropped_missing_temperature": 0,
+    "rows_used": 2500,
+    "temperature_join": {
+      "events": 2500,
+      "matched": 2500,
+      "missing_no_hycom_file": 0,
+      "missing_no_column_within_km": 0,
+      "max_cell_km": 10.0,
+      "cell_distance_km_median": 3.52,
+      "cell_distance_km_p95": 5.89
+    }
+  },
+  "bootstrap": {
+    "reps": 2000,
+    "seed": 20260927,
+    "unit": "primary_sample_unit"
+  },
+  "publication_status": "NOT_PUBLISHED",
+  "git_commit": "0bf64b52efdebf4d02fd1b483947edd5ca15f6e9",
+  "tree": "DIRTY"
+}

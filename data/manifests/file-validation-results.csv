@@ -1,0 +1,2 @@
+path,opens,has_header,is_html,data_rows,n_columns,has_latitude_header,has_longitude_header,status,warnings,validated_utc
+data/raw/biological/noaa-rvc-florida-keys-2024.csv.gz,true,true,false,356254,34,true,true,VALID_WITH_WARNINGS,units_row_skipped,2026-09-25T06:35:00Z

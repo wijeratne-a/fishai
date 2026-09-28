@@ -1,0 +1,9 @@
+region,years_on_disk,holdout_year,frame_readiness,detection_modeling,restrictions,notes
+Florida Keys,"2014,2016,2018,2022,2024",2024,DETECTION_CAPABLE_WITH_RESTRICTIONS,ALLOWED_WITH_RESTRICTIONS,Year-specific species lists; NUM averages; 2024 single-stage narrative insufficiently documented; no env covariates joined,Zero-bearing
+Puerto Rico,"2016,2019,2021,2023",2023,DETECTION_CAPABLE_WITH_RESTRICTIONS,ALLOWED_WITH_RESTRICTIONS,PR 2014 absent; year-specific lists; env join still required for nowcast research,Zero-bearing
+USVI,"2017,2019,2021,2023",2023,DETECTION_CAPABLE_WITH_RESTRICTIONS,ALLOWED_WITH_RESTRICTIONS,Prior logistic fits non-numeric; frame remains detection-capable with restrictions,Zero-bearing
+Flower Garden Banks,"2018,2022,2023,2024",2024,DETECTION_CAPABLE_WITH_RESTRICTIONS,ALLOWED_WITH_RESTRICTIONS,38 holdout events in 2024; list-size drop; small-n caution without inventing numeric thresholds,Zero-bearing
+Hawaii,2024,n/a,PRESENCE_ONLY,BLOCKED_FOR_DETECTION,ZERO_SEMANTICS_REQUIRED,Pacific COUNT
+American Samoa,2023,n/a,PRESENCE_ONLY,BLOCKED_FOR_DETECTION,ZERO_SEMANTICS_REQUIRED,Pacific COUNT
+CNMI_Guam,2022,n/a,PRESENCE_ONLY,BLOCKED_FOR_DETECTION,ZERO_SEMANTICS_REQUIRED,Pacific COUNT
+Pacific Remote Islands,2023,n/a,PRESENCE_ONLY,BLOCKED_FOR_DETECTION,ZERO_SEMANTICS_REQUIRED,Pacific COUNT

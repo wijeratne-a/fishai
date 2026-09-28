@@ -1,0 +1,4 @@
+source_id,provider,variable,units,spatial_resolution,temporal_coverage_start,latest_time_probed,acquisition_status,joined_to_biological,notes
+jplMURSST41,NOAA CoastWatch ERDDAP / JPL MUR,analysed_sst,degree_C,0.01 degrees,2002-06-01T09:00:00Z,2026-09-23T09:00:00Z,PROBED_SNIPPET_ONLY,no,GHRSST L4 foundation SST; metadata fetched; not joined to survey events; no bulk grid download in this run
+WCOFS,NOAA NOS,temperature_salinity_currents_ssh,not acquired,not acquired,not acquired,not acquired,NOT_ACQUIRED,no,Candidate after a biological join plan exists; not subset in this run
+Copernicus_Marine,Copernicus Marine Service,sst_salinity_chlorophyll,not acquired,not acquired,not acquired,not acquired,NOT_ACQUIRED,no,Credentials unavailable in this run; ACCOUNT_ACTION_REQUIRED

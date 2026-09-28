@@ -1,0 +1,2 @@
+region,window,endpoint,reported_total,records_saved,latest_event_date_in_saved_page,evidence_class,absence_used_as_rvc_zero
+Florida Keys bounding box,2026-06-26 onward,https://api.obis.org/v3/occurrence,672,500,2026-07-20,PRESENCE_ONLY,no

@@ -1,0 +1,138 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://fishai.local/science/observation/OBSERVATION_PROCESS_SCHEMA.json",
+  "title": "ObservationProcess",
+  "description": "Declares how a biological evidence row was generated. A missing row is not a non-detection. Processes that differ must not be pooled with only a source dummy.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "process_id",
+    "source_id",
+    "protocol_id",
+    "evidence_role",
+    "observation_state_allowed",
+    "nondetection_policy",
+    "detectability_model_ref"
+  ],
+  "properties": {
+    "process_id": {
+      "type": "string",
+      "minLength": 1,
+      "description": "Stable id for this observation process definition."
+    },
+    "source_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "protocol_id": {
+      "type": "string",
+      "minLength": 1,
+      "description": "Named survey or compiler protocol. Protocols stay separate when detectability differs."
+    },
+    "method_family": {
+      "type": "string",
+      "enum": [
+        "REEF_VISUAL_CENSUS",
+        "STATIONARY_POINT_COUNT",
+        "TRANSECT_VISUAL",
+        "TRAWL_OR_TOW",
+        "HOOK_AND_LINE",
+        "TELEMETRY",
+        "EGG_OR_LARVAL_SURVEY",
+        "PRESENCE_COMPILER",
+        "OTHER",
+        "UNKNOWN"
+      ]
+    },
+    "evidence_role": {
+      "type": "string",
+      "enum": [
+        "STRUCTURED_SURVEY_DETECTION",
+        "SURVEY_NONDETECTION",
+        "PRESENCE_ONLY",
+        "TRACK_FIX",
+        "ENVIRONMENTAL_ONLY",
+        "UNKNOWN"
+      ],
+      "description": "PRESENCE_ONLY never implies survey non-detection for unlisted taxa or unsurveyed cells."
+    },
+    "observation_state_allowed": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "string",
+        "enum": [
+          "CONFIRMED_PRESENCE",
+          "SURVEY_NONDETECTION",
+          "PRESENCE_ONLY_NO_ABSENCE",
+          "NO_SURVEY",
+          "RESTRICTED",
+          "UNKNOWN"
+        ]
+      }
+    },
+    "nondetection_policy": {
+      "type": "string",
+      "enum": [
+        "CONSTRUCTIBLE_WHEN_TAXON_ON_YEAR_LIST_AND_EFFORT_COMPLETE",
+        "ROWS_WITH_EXPLICIT_ZERO_ONLY",
+        "PRESENCE_ONLY_NO_NONDETECTION",
+        "NOT_APPLICABLE",
+        "UNKNOWN"
+      ],
+      "description": "A missing row is not a non-detection unless this policy and supporting effort fields explicitly allow construction."
+    },
+    "effort_required_for_nondetection": {
+      "type": "boolean",
+      "description": "If true, SURVEY_NONDETECTION requires linked completed effort."
+    },
+    "spatial_support": {
+      "type": "string",
+      "enum": [
+        "STATION_OR_SAMPLE_UNIT",
+        "TRANSECT_SEGMENT",
+        "TOW_OR_HAUL",
+        "GRID_CELL",
+        "BOUNDING_BOX",
+        "INDIVIDUAL_TRACK",
+        "UNKNOWN"
+      ]
+    },
+    "temporal_support": {
+      "type": "string",
+      "enum": [
+        "EVENT_DATETIME",
+        "SURVEY_DAY",
+        "SURVEY_YEAR",
+        "COMPILED_RANGE",
+        "UNKNOWN"
+      ]
+    },
+    "detectability_model_ref": {
+      "type": "string",
+      "minLength": 1,
+      "description": "Pointer to method-specific detectability guidance (e.g. METHOD_SPECIFIC_MODELS.md#rvc)."
+    },
+    "detectability_variables": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "Names matching DETECTABILITY_VARIABLES.csv variable_id values used by this process."
+    },
+    "may_pool_with_process_ids": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "Explicit allow-list. Empty means do not pool. A source dummy alone is never sufficient when processes differ."
+    },
+    "pooling_forbidden_reason": {
+      "type": ["string", "null"],
+      "description": "Required conceptually when may_pool_with_process_ids is empty and multi-source fits are requested."
+    },
+    "notes": {
+      "type": ["string", "null"]
+    }
+  }
+}

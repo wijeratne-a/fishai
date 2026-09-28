@@ -1,0 +1,11 @@
+region,method,taxon_or_frame,readiness,evidence
+Florida Keys,RVC NUM table,Chaetodon capistratus,READY_FOR_BASELINE,1026 detections of 2113 events; internal logistic Brier 0.2446 vs prevalence 0.2621
+Florida Keys,RVC NUM table,Epinephelus itajara,INSUFFICIENT_DATA,detection events 1 in 2018 1 in 2022 6 in 2024; code is EPI ITAJ
+Puerto Rico,RVC NUM table,2023 survey frame,READY_FOR_REGIONAL_MODEL,248 events; 481 species codes on every event; 130575 zero rows
+USVI,RVC NUM table,2023 survey frame,READY_FOR_REGIONAL_MODEL,562 events; 481 species codes on every event; 264278 zero rows
+Flower Garden Banks,RVC NUM table,2024 survey frame,READY_FOR_REGIONAL_MODEL,38 events; 103 species codes on every event; 5937 zero rows
+Hawaii,Pacific COUNT table,2024 download,PRESENCE_LAYER_ONLY,39764 positive rows; 0 zero rows
+American Samoa,Pacific COUNT table,2023 download,PRESENCE_LAYER_ONLY,22011 positive rows; 0 zero rows
+CNMI and Guam,Pacific COUNT table,2022 download,PRESENCE_LAYER_ONLY,37042 positive rows; 0 zero rows
+Pacific Remote Islands,Pacific COUNT table,2023 download,PRESENCE_LAYER_ONLY,8916 positive rows; 0 zero rows
+Florida Keys,OBIS occurrence API,90-day box,PRESENCE_LAYER_ONLY,672 records reported; 500 saved; latest event date 2026-07-20; not absence and not a live map

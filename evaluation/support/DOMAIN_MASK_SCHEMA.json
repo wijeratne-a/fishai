@@ -1,0 +1,58 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://fishai.local/evaluation/support/DOMAIN_MASK_SCHEMA.json",
+  "title": "DomainMaskPoint",
+  "description": "Support label for one prediction point from numeric features. No raw coordinates.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "point_id",
+    "support_label",
+    "nearest_train_distance",
+    "feature_dim"
+  ],
+  "properties": {
+    "point_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "support_label": {
+      "type": "string",
+      "enum": [
+        "SUPPORTED",
+        "WEAK_SUPPORT",
+        "SPATIAL_EXTRAPOLATION",
+        "ENVIRONMENTAL_EXTRAPOLATION",
+        "TEMPORAL_EXTRAPOLATION",
+        "UNSUPPORTED"
+      ]
+    },
+    "nearest_train_distance": {
+      "type": ["number", "null"],
+      "minimum": 0
+    },
+    "feature_dim": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "out_of_range_kinds": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "enum": ["spatial", "environmental", "temporal", "other"]
+      },
+      "uniqueItems": true
+    },
+    "support_max_distance": {
+      "type": "number",
+      "minimum": 0
+    },
+    "weak_max_distance": {
+      "type": "number",
+      "minimum": 0
+    },
+    "notes": {
+      "type": ["string", "null"]
+    }
+  }
+}

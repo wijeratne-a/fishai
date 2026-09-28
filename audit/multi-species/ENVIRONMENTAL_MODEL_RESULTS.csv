@@ -1,0 +1,3 @@
+region,species_code,survey_only_holdout_brier,with_environment_holdout_brier,decision
+Puerto Rico,STE PART,0.1953,,NOT_TESTED_NO_EVENT_LEVEL_JOIN
+Puerto Rico,SPA AURO,0.2324,,NOT_TESTED_NO_EVENT_LEVEL_JOIN

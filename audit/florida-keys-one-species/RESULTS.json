@@ -1,0 +1,121 @@
+{
+  "label": "INTERNAL \u2014 NOT A LIVE LOCATION \u2014 NOT A FORECAST \u2014 NOT PUBLISHED",
+  "species_code": "STE PART",
+  "scientific_name": "Stegastes partitus",
+  "train_years": [
+    2014,
+    2016,
+    2018
+  ],
+  "test_year": 2022,
+  "numeric_features": [
+    "depth",
+    "vis"
+  ],
+  "train_events": 2500,
+  "train_prevalence": 0.882,
+  "test_events": 648,
+  "test_prevalence": 0.854938,
+  "test_brier_model": 0.095373,
+  "test_brier_prevalence": 0.124751,
+  "test_logloss_model": 0.318802,
+  "test_logloss_prevalence": 0.417356,
+  "test_auc": 0.8574,
+  "brier_bootstrap": {
+    "brier_improvement": 0.029378,
+    "ci95_low": 0.021042,
+    "ci95_high": 0.038856,
+    "reps": 2000,
+    "resampling_unit": "primary_sample_unit"
+  },
+  "mean_predicted": 0.907493,
+  "calibration_gap": 0.052554,
+  "calibration_fit": {
+    "intercept": -0.5897,
+    "slope": 0.9655
+  },
+  "reliability": [
+    {
+      "bin": "0.3-0.4",
+      "n": 3,
+      "mean_p": 0.3545,
+      "observed": 0.0
+    },
+    {
+      "bin": "0.4-0.5",
+      "n": 9,
+      "mean_p": 0.4776,
+      "observed": 0.2222
+    },
+    {
+      "bin": "0.5-0.6",
+      "n": 20,
+      "mean_p": 0.5606,
+      "observed": 0.25
+    },
+    {
+      "bin": "0.6-0.7",
+      "n": 18,
+      "mean_p": 0.6552,
+      "observed": 0.6111
+    },
+    {
+      "bin": "0.7-0.8",
+      "n": 49,
+      "mean_p": 0.7571,
+      "observed": 0.6531
+    },
+    {
+      "bin": "0.8-0.9",
+      "n": 110,
+      "mean_p": 0.8549,
+      "observed": 0.7545
+    },
+    {
+      "bin": "0.9-1.0",
+      "n": 439,
+      "mean_p": 0.9762,
+      "observed": 0.959
+    }
+  ],
+  "passed_preregistered_rule": false,
+  "decision": "BEATS_BASELINE_BUT_MISCALIBRATED_ON_TEST_YEAR",
+  "train_audit": {
+    "events_loaded": 2500,
+    "not_evaluated": 0,
+    "dropped_missing_temperature": 0,
+    "rows_used": 2500,
+    "temperature_join": {
+      "events": 2500,
+      "matched": 2500,
+      "missing_no_hycom_file": 0,
+      "missing_no_column_within_km": 0,
+      "max_cell_km": 10.0,
+      "cell_distance_km_median": 3.52,
+      "cell_distance_km_p95": 5.89
+    }
+  },
+  "test_audit": {
+    "events_loaded": 648,
+    "not_evaluated": 0,
+    "dropped_missing_temperature": 0,
+    "rows_used": 648,
+    "temperature_join": {
+      "events": 648,
+      "matched": 648,
+      "missing_no_hycom_file": 0,
+      "missing_no_column_within_km": 0,
+      "max_cell_km": 10.0,
+      "cell_distance_km_median": 2.69,
+      "cell_distance_km_p95": 4.58
+    }
+  },
+  "publication_status": "NOT_PUBLISHED",
+  "on_the_globe": false,
+  "preregistered_checks": {
+    "beats_prevalence_brier_ci": true,
+    "beats_prevalence_logloss": true,
+    "calibrated_mean": false
+  },
+  "relabel_note": "decision label recomputed from stored metrics after scoring; no model refit and no rescoring"
+}

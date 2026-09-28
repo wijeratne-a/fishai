@@ -1,0 +1,52 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://fishai.local/schemas/taxon.schema.json",
+  "title": "Taxon",
+  "description": "Canonical taxon identity. Taxonomy authorities are not distribution observations.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "taxon_id",
+    "aphia_id",
+    "scientific_name",
+    "taxonomic_authority"
+  ],
+  "properties": {
+    "taxon_id": {
+      "type": "string",
+      "minLength": 1,
+      "description": "Stable internal id, typically urn:lsid:marinespecies.org:taxname:{AphiaID}."
+    },
+    "aphia_id": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "scientific_name": {
+      "type": "string",
+      "minLength": 1,
+      "description": "Accepted scientific name from the authority."
+    },
+    "scientific_name_at_source": {
+      "type": ["string", "null"]
+    },
+    "taxonomic_authority": {
+      "type": "string",
+      "enum": ["WoRMS", "OTHER"],
+      "default": "WoRMS"
+    },
+    "rank": {
+      "type": ["string", "null"]
+    },
+    "common_name": {
+      "type": ["string", "null"]
+    },
+    "is_sensitive": {
+      "type": "boolean",
+      "default": false,
+      "description": "When true, native coordinates must be coarsened or withheld."
+    },
+    "notes": {
+      "type": ["string", "null"]
+    }
+  }
+}

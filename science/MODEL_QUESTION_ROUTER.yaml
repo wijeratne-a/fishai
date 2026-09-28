@@ -1,0 +1,118 @@
+# FishAI model-question router
+# Route modeling questions by evidence type. Do not send all data into a generic classifier.
+version: "2026-09-25"
+
+routes:
+  - id: survey_with_valid_nondetections
+    when: Standardized survey events with valid non-detections (completed event, target group, protocol, complete frame, documented zero semantics)
+    allow_models:
+      - detection
+      - occupancy
+      - abundance
+      - spatiotemporal_distribution
+    forbid:
+      - treat_missing_rows_as_zeros
+      - equate_survey_miss_with_ecological_absence
+    example_sources:
+      - CRCP_Reef_Fish_Surveys_Florida
+      - CRCP_Reef_Fish_Surveys_Puerto_Rico
+      - CRCP_Reef_Fish_Surveys_USVI
+      - CRCP_Reef_Fish_Surveys_Flower_Gardens
+
+  - id: positive_counts_with_effort
+    when: Positive counts with documented effort
+    allow_models:
+      - count
+      - relative_abundance
+      - biomass
+      - hurdle
+      - delta
+    forbid:
+      - invent_nondetections_from_absent_taxa
+    notes: Pacific NCRMP COUNT extracts currently lack zeros; treat as presence/count without constructed zeros unless a frame is published.
+
+  - id: presence_only
+    when: Presence-only occurrences without a non-detection frame
+    allow_models:
+      - point_process
+      - presence_background_with_sampling_bias_treatment
+    forbid:
+      - bernoulli_absence_from_gaps
+      - rvc_style_zero_construction
+    example_sources:
+      - OBIS_Keys_extract
+      - CRCP_Reef_Fish_Surveys_Hawaii
+      - CRCP_Reef_Fish_Surveys_American_Samoa
+      - CRCP_Reef_Fish_Surveys_CNMI_Guam
+      - CRCP_Reef_Fish_Surveys_PRIAs
+
+  - id: individual_ordered_tracks
+    when: Individual ordered tracks (telemetry trajectories)
+    allow_models:
+      - state_space
+      - continuous_time_movement
+      - hidden_markov
+      - step_selection
+    forbid:
+      - ordinary_occurrence_sdm_as_track_model
+      - abundance_from_number_of_tagged_animals
+
+  - id: receiver_detections
+    when: Acoustic or other receiver detections without full continuous tracks
+    allow_models:
+      - detection_corrected_telemetry
+      - multistate_movement
+    forbid:
+      - publish_receiver_locations_without_review
+      - treat_as_survey_nondetection_frame
+
+  - id: eggs_or_larvae_plus_currents
+    when: Eggs or larvae plus ocean current fields
+    allow_models:
+      - connectivity
+      - particle_tracking
+    forbid:
+      - present_passive_particles_as_fish_behavior
+      - use_as_adult_reef_detection_labels
+    example_sources:
+      - erdCalCOFIcufes
+
+  - id: repeated_communities
+    when: Repeated community samples across taxa
+    allow_models:
+      - joint_species_distribution
+      - community_model
+
+  - id: nowcast_present_conditions
+    when: Target is present conditions (research nowcast)
+    require:
+      - validated_distribution_model
+      - current_environmental_analysis
+    allow_models:
+      - dynamic_distribution_with_analysis_fields
+    forbid:
+      - label_internal_fit_as_PUBLISHED_NOWCAST
+      - claim_exact_animal_locations
+
+  - id: forecast_future_days
+    when: Target is future days (short-term forecast)
+    require:
+      - validated_distribution_model
+      - archived_ocean_forecasts_at_issue_time
+    allow_models:
+      - distribution_plus_ocean_forecast
+    forbid:
+      - evaluate_with_analysis_unavailable_at_issue_time
+      - label_as_PUBLISHED_FORECAST_without_card
+
+  - id: climate_future_periods
+    when: Target is future climate periods
+    allow_models:
+      - climate_projection
+      - mechanistic_redistribution
+    require:
+      - scenario_uncertainty
+    forbid:
+      - treat_climate_projection_as_dated_location_forecast
+
+hard_rule: Do not route all data into a generic classifier.

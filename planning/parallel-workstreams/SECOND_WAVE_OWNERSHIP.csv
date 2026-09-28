@@ -1,0 +1,39 @@
+agent_id,classification,exclusive_dir,status,notes
+observation_labeling,ALREADY_COVERED,labels/,do_not_relaunch,BIOLOGICAL_LABEL_SCHEMA and related label artifacts exist
+life_stage_rules,ALREADY_COVERED,labels/;science/life-stage/,do_not_relaunch,LIFE_STAGE_MAPPING/ONTOLOGY and LIFE_STAGE_MODEL_RULES exist
+model_question_router,ALREADY_COVERED,science/,do_not_relaunch,MODEL_QUESTION_ROUTER.yaml exists
+method_matrices_distribution_movement_climate,ALREADY_COVERED,research/methods/,do_not_relaunch,DISTRIBUTION/MOVEMENT/CLIMATE_MODEL_MATRIX.csv exist
+observation_process_schema,ALREADY_COVERED,science/observation/,do_not_relaunch,OBSERVATION_PROCESS_SCHEMA.json exists
+rvc_zero_semantics,ALREADY_COVERED,audit/multi-species/,do_not_relaunch,ATLANTIC_ZERO_SEMANTICS.md and CURRENT_STATUS document NUM=0
+atlantic_protocol_matrix,ALREADY_COVERED,audit/multi-species/,do_not_relaunch,ATLANTIC_PROTOCOL_MATRIX.csv exists
+file_validation_keys_2024,ALREADY_COVERED,data/manifests/;audit/data-quality/,do_not_relaunch,Keys 2024 validated at 356254 rows per CURRENT_STATUS
+sensitivity_scan,ALREADY_COVERED,security/,do_not_relaunch,WS13 COMPLETE_FOR_CURRENT_CYCLE; precommit_sensitive_scan.py exists
+checksum_verification,ALREADY_COVERED,scripts/storage/,do_not_relaunch,25/25 manifest checksums matched; verify_checksums.py exists
+globe_publish_gates,ALREADY_COVERED,docs/;schemas/,do_not_relaunch,GLOBE_DATA_CONTRACT and globe schemas; no PUBLISHED species cards
+science_measurements,START_NOW,science/measurements,launched,Exclusive dir assigned this wave; do not duplicate files from planner
+science_time,START_NOW,science/time,launched,Exclusive dir assigned this wave; no invented timestamps
+audit_contracts,START_NOW,audit/contracts,launched,Exclusive dir assigned this wave
+models_config,START_NOW,models/config,launched,Config skeletons only; no training
+audit_predictors,START_NOW,audit/predictors,launched,Exclusive dir assigned this wave
+research_hypotheses,START_NOW,research/hypotheses,launched,Hypothesis register only; no fits
+planning_end_goal,START_NOW,planning/end-goal,launched,Phase-exit / end-goal criteria
+audit_bias,START_NOW,audit/bias,launched,Bias gap quantification under exclusive dir
+audit_repository_integrity,START_NOW,audit/repository-integrity,launched,Tracked-tree integrity audit
+audit_reproducibility,START_NOW,audit/reproducibility,launched,Reproducibility checklist / pins
+audit_protocols,START_NOW,audit/protocols,launched,Protocol audit notes; matrix rewrite owned elsewhere
+audit_model_readiness,START_NOW,audit/model-readiness,launched,New CSVs only; MODEL_INPUT_REQUIREMENTS.csv already present
+audit_ui_scientific,START_NOW,audit/ui-scientific,launched,Scientific honesty of UI labels/copy
+audit_map_performance,START_NOW,audit/map-performance,launched,Performance audit notes; avoid camera code changes
+tests_failure_recovery,START_NOW,tests/failure-recovery,launched,Failure-path tests
+tests_end_to_end_second_wave,START_NOW,tests/end-to-end-second-wave,launched,Second-wave e2e harness
+audit_storage,START_NOW,audit/storage,launched,Storage policy audit; must not claim backup success
+internal_tools_coverage_dashboard,START_NOW,internal-tools/coverage-dashboard,launched,Internal coverage dashboard only
+protocol_change_detection,REDUCED_SCOPE,audit/protocols;audit/multi-species/,reduced,Year-pair classes only; ATLANTIC_PROTOCOL_MATRIX.csv already exists
+spatial_support_domain,REDUCED_SCOPE,evaluation/domain,reduced,New code only under evaluation/domain; evaluation/support already exists
+ui_interaction_tests,REDUCED_SCOPE,tests/;ui-functional/,reduced,Must not edit globe/ or prototype sources
+backup_verify_restore_claim,WAIT_FOR_DEPENDENCY,scripts/storage/;docs/,blocked,Last restore NOT_RUN; no separate backup directory documented; not verified
+refit_puerto_rico_2023,NOT_APPROPRIATE_IN_ACQUISITION_PHASE,,rejected,No additional fits during GLOBAL_DATA_ACQUISITION
+new_species_models,NOT_APPROPRIATE_IN_ACQUISITION_PHASE,,rejected,Training new species models prohibited in this phase
+nowcasts,NOT_APPROPRIATE_IN_ACQUISITION_PHASE,,rejected,No nowcast issued; env join incomplete
+forecasts,NOT_APPROPRIATE_IN_ACQUISITION_PHASE,,rejected,Forecasts out of scope
+live_globe_layers,NOT_APPROPRIATE_IN_ACQUISITION_PHASE,,rejected,No live likelihood / current-location layers

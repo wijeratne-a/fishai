@@ -1,0 +1,2 @@
+variable,dataset_id,latest_valid_time,retrieval_note,latency,forecast_or_analysis,joined_to_biology
+analysed_sst,jplMURSST41,2026-09-23T09:00:00Z,small Keys snippet,about one day behind 2026-09-24,analysis,no

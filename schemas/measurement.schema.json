@@ -1,0 +1,77 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://fishai.local/schemas/measurement.schema.json",
+  "title": "Measurement",
+  "description": "Typed measured value. Environmental measurements (e.g. SST) are not fish observations.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "measurement_id",
+    "subject_kind",
+    "measurement_type",
+    "measurement_unit",
+    "time_precision"
+  ],
+  "properties": {
+    "measurement_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "event_id": {
+      "type": ["string", "null"]
+    },
+    "observation_id": {
+      "type": ["string", "null"]
+    },
+    "subject_kind": {
+      "type": "string",
+      "enum": [
+        "BIOLOGICAL",
+        "ENVIRONMENTAL",
+        "EFFORT",
+        "OTHER"
+      ],
+      "description": "SST, chlorophyll, currents, and similar are ENVIRONMENTAL — never BIOLOGICAL fish observations."
+    },
+    "measurement_type": {
+      "type": "string",
+      "minLength": 1,
+      "description": "Controlled name such as sea_surface_temperature, num_index, tow_duration."
+    },
+    "measurement_value": {
+      "type": ["number", "null"]
+    },
+    "measurement_unit": {
+      "type": "string",
+      "minLength": 1
+    },
+    "measurement_value_native": {
+      "type": ["string", "number", "null"]
+    },
+    "measurement_unit_native": {
+      "type": ["string", "null"]
+    },
+    "observed_at_utc": {
+      "type": ["string", "null"],
+      "format": "date-time"
+    },
+    "time_precision": {
+      "type": "string",
+      "enum": [
+        "SECOND",
+        "MINUTE",
+        "HOUR",
+        "DAY",
+        "MONTH",
+        "YEAR",
+        "UNKNOWN"
+      ]
+    },
+    "method": {
+      "type": ["string", "null"]
+    },
+    "notes": {
+      "type": ["string", "null"]
+    }
+  }
+}

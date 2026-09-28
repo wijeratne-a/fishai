@@ -1,0 +1,5 @@
+defect_id,file_or_function,bad_assumption,evidence,downstream_consequence,required_fix,previous_outputs_invalidated,severity
+TAX-001,load_puerto_rico_events / load_region,SPECIES_CD is a stable biological identity,No accepted-name / WoRMS / ITIS map; codes used raw,Synonym splits would split one species into two targets,Do not invent a map; require publisher code table,Unknown; not proven,MEDIUM_SCIENTIFIC_WEAKNESS
+TAX-002,rank_and_fit shared = intersection of year universes,Intersection is the species list,Inferred from arriving rows not a published list,False zeros if extract truncated,Year-list checksum,Conditionally,HIGH_MISLEADS_USERS_OR_MODELS
+TAX-003,CalCOFI egg/larva in 50% inventory,Could be treated as adult detection,FIFTY_PERCENT says eggs stay eggs — code paths are separate,If someone later pools them,Keep separate catalogs,None if left separate,INFO
+TAX-004,Goliath EPI ITAJ vs EPIITAJ,Code aliasing,CURRENT_STATUS notes both forms,Missed detections if wrong code,Document both; do not merge without source,Goliath already dropped,INFO

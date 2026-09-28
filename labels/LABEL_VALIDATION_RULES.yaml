@@ -1,0 +1,70 @@
+# WS41 label validation rules
+# Source of truth for tests/labels/test_label_rules.py
+
+version: "2026-09-25"
+schema_ref: labels/BIOLOGICAL_LABEL_SCHEMA.json
+
+non_detection_outcomes:
+  - EXPLICIT_SURVEY_NONDETECTION
+  - CONSTRUCTED_SURVEY_NONDETECTION
+
+presence_only_outcomes:
+  - PRESENCE_ONLY
+
+forbidden_absence_equivalences:
+  - missing_row
+  - zero_count_without_frame
+  - habitat_suitability
+  - sst_or_environmental_field
+  - telemetry_position
+  - citizen_science_observation
+  - acoustic_classifier_output
+  - edna_read_absence
+
+# Required for minting any non-detection outcome
+non_detection_requirements:
+  event_completed: true
+  event_frame_complete: true
+  zero_semantics_documented: true
+  is_ecological_absence_claim: false
+  required_non_empty_fields:
+    - target_taxonomic_group
+    - protocol_version
+    - observation_method
+  forbidden_zero_provenance:
+    - LENGTH_BIN_ROW_ONLY
+    - MISSING_ROW
+    - PRESENCE_ONLY_GAP
+    - UNDOCUMENTED
+    - FORBIDDEN
+  allowed_zero_provenance:
+    - EXPLICIT_PUBLISHER_ZERO
+    - CONSTRUCTED_FROM_COMPLETE_FRAME
+
+atlantic_rvc_species_collapse:
+  description: >
+    NUM==0 length-bin rows collapse to CONSTRUCTED_SURVEY_NONDETECTION
+    only after all bins for a listed species are zero on a completed event.
+  single_zero_row_is_species_result: false
+  detection_rule: any_length_bin_num_gt_zero
+  nondetection_rule: all_length_bins_num_eq_zero_and_taxon_in_year_list
+
+life_stage_rules:
+  definitive_from_length_alone: false
+  length_probabilistic_allowed_when:
+    - species_resolved
+    - population_or_region_known
+    - length_metric_known
+    - source_relationship_documented
+    - uncertainty_preserved
+
+invalid_if:
+  - observation_outcome in non_detection_outcomes and event_completed is false
+  - observation_outcome in non_detection_outcomes and event_frame_complete is false
+  - observation_outcome in non_detection_outcomes and zero_semantics_documented is false
+  - observation_outcome in non_detection_outcomes and target_taxonomic_group is empty
+  - observation_outcome in non_detection_outcomes and protocol_version is empty
+  - observation_outcome in non_detection_outcomes and zero_provenance in forbidden_zero_provenance
+  - is_ecological_absence_claim is true
+  - evidence_tier is ENVIRONMENTAL_COVARIATE and observation_outcome in non_detection_outcomes
+  - observation_method is HABITAT_OR_ENVIRONMENTAL_ONLY and observation_outcome in non_detection_outcomes

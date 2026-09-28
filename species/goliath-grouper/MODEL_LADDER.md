@@ -14,7 +14,7 @@ Advanced names (VAST, ISDM, state-space) are **rungs**, not trophies. Do not cla
 | **1. Seasonal frequency** | Jul–Sep spawning window vs rest of year, from fetched ecology pages | **IMPLEMENTED** as text only. Not a calendar heatmap. |
 | **2. Habitat-only suitability** | Mangrove vs 0–50 m structure as covariates | **NOT STARTED.** Must stay labeled **not presence** if ever drawn. |
 | **3. Historical occurrence density** | Coarse compiled OBIS counts | **IMPLEMENTED (summary only).** See below. Globe may show a **1° past-report grid** at runtime, labeled historical. |
-| **4. Occupancy / SDM with effort** | Detection vs non-detection given survey effort | **BLOCKED** — no effort-aware non-detections ingested. |
+| **4. Occupancy / SDM with effort** | Detection vs non-detection given survey effort. This is the next milestone: **Prediction MVP — Florida Keys Goliath Grouper Detection Nowcast**. | **BLOCKED** — no rights-cleared extract and no effort-aware non-detections ingested. |
 | **5. Dynamic SDM / ISDM** | Time-varying occupancy; integrated sources | **NOT STARTED.** |
 | **6. VAST-like spatiotemporal index** | Relative abundance index with spatial correlation | **NOT STARTED.** Do not claim a fitted VAST model. |
 | **7. Movement / aggregation state-space** | Home range + seasonal aggregation state | **BLOCKED** on telemetry rights and sensitive-site policy. |

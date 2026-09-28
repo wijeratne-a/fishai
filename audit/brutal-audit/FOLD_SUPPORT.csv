@@ -1,0 +1,5 @@
+region,folds_used,train_events,holdout_events,holdout_detections_example,support_verdict
+Puerto Rico,3,677,248,178 STE PART / 150 SPA AURO,WEAK_BLOCKS — 3 named subregions; sites repeat across years
+Florida Keys,5,3148,622,514 STE PART,USABLE_N — failed spatial or temporal anyway
+USVI,10,1367,562,480,FAILED_FIT — NaN scores; folds irrelevant
+Flower Garden Banks,2,164,38,30 / 36,INSUFFICIENT — n=38 holdout; 2 folds

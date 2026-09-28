@@ -1,0 +1,8 @@
+result,inputs_known,source_versions,filters,split,features,code_version,config,metrics_code,semantics,holdout_reused,trust
+PR finalize STE PART / SPA AURO,partial events loader,ERDDAP extract not hashed in report,NUM>0 + year universe,2023,habitat+depth+vis[+sst]+year,git dirty at audit,inline script,inline,detection not absence,YES,UNTRUSTED_AS_GENERALIZATION
+multi-species 16,counts only,no,same,2023,same minus L2,no,no,inline,same,YES,UNTRUSTED_RESULT
+OISST robustness,manifest json,OISST cache by-date,same,2023,habitats[:6] different,partial,partial,inline,same,YES,UNTRUSTED_AS_LOCKED_SCORE
+FGB 2,counts,no,same,year holdout,same,no,no,inline,same,unknown,UNTRUSTED_RESULT
+USVI NaN,counts,no,same,n/a,failed,no,no,inline,n/a,n/a,CORRECTLY_REJECTED
+50% structured frames,manifests,yes enough for inventory,program-specific,n/a,n/a,yes,yes,validators,zeros only where complete,n/a,FRAMES_OK_NOT_A_MODEL
+restore test,off-repo snapshot,yes,n/a,n/a,n/a,yes,yes,restore_test.py,n/a,n/a,BACKUP_VERIFIED

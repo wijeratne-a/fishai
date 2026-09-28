@@ -1,0 +1,15 @@
+predictor,historical_status,current_status,forecast_status,verified_dataset_id,blocking_gap,phase_action
+survey_depth,AVAILABLE_ON_ATLANTIC_RVC,N/A_SURVEY_FIELD,N/A_SURVEY_FIELD,depth_field_on_RVC,none_for_survey_baselines,Keep using on zero-bearing Atlantic tables; do not treat as globe nowcast
+underwater_visibility,AVAILABLE_ON_ATLANTIC_RVC,N/A_SURVEY_FIELD,N/A_SURVEY_FIELD,visibility_field_on_RVC,none_for_detectability_covariate,Detection-process covariate only
+habitat_code_HABITAT_CD,AVAILABLE_ON_ATLANTIC_RVC,N/A_SURVEY_FIELD,N/A_SURVEY_FIELD,HABITAT_CD,not_a_remote_reef_map,Hard-bottom/habitat structure at dive scale only
+analysed_sst,MATCHED_PR_EVENTS_REJECTED,SNIPPET_2026-09-23_NOT_JOINED,MISSING,jplMURSST41,sst_adds_no_value_on_locked_2023,MUR already rejected; not rescored
+oisst_sst,MATCHED_PR_EVENTS_REJECTED,MISSING,MISSING,ncdcOisst21Agg_LonPM180,sst_adds_no_value_on_locked_2023,Second SST product matched to 174 PR dates; missing_fraction=0; scored once after freeze; rejected
+bottom_temperature,DATASET_ID_WRONG_DOMAIN,MISSING,MISSING,hycom_gom310D,hycom_gom310D_is_GOM_2009_2014,ID verified; not joined; does not cover Puerto Rico 2016-2023
+dissolved_oxygen,MISSING,MISSING,MISSING,,no_verified_oxygen_endpoint,MISSING until endpoint verified
+chlorophyll_a,MISSING,MISSING,MISSING,,copernicus_account_required_no_acquired_id,ACCOUNT_ACTION_REQUIRED for Copernicus; no ID invented
+surface_currents,MISSING,MISSING,MISSING,,wcofs_not_acquired_rtofs_search_404,WCOFS candidate unnamed product subset; RTOFS CoastWatch search HTTP 404
+sea_surface_salinity,MISSING,MISSING,MISSING,,wcofs_copernicus_not_acquired,Named as candidate family only
+substrate_gridded,MISSING,MISSING,MISSING,,only_HABITAT_CD_on_survey,Continuous substrate maps not acquired
+gebco_bathymetry,CATALOGUED_NOT_DOWNLOADED,N/A,N/A,GEBCO,unwired_and_not_reef_evidence,Do not download as reef presence proxy
+rugosity_or_hard_bottom_grid,MISSING,MISSING,MISSING,,no_gridded_rugosity,Reef structure hypothesis relies on HABITAT_CD until a rights-cleared map exists
+forecast_3d_ocean,MISSING,MISSING,MISSING,,wcofs_not_subset_rtofs_404_copernicus_no_creds,No forecast grid in repo; do not publish forecast layers; nowcast milestone closed after SST_ADDS_NO_VALUE

@@ -1,0 +1,458 @@
+{
+  "label": "INTERNAL \u2014 NOT A LIVE LOCATION \u2014 NOT A FORECAST \u2014 NOT PUBLISHED",
+  "source": "knb-lter-sbc.17.41",
+  "protocol": "SURVEY == FISH (40 m x 2 m, 0-2 m off the bottom); CRYPTIC FISH excluded",
+  "train_years": [
+    2001,
+    2002,
+    2003,
+    2004,
+    2005,
+    2006,
+    2007,
+    2008,
+    2009,
+    2010,
+    2011,
+    2012,
+    2013,
+    2014,
+    2015,
+    2016,
+    2017,
+    2018
+  ],
+  "test_year": 2022,
+  "test_year_exposure": "Before freezing, aggregate per-year counts (transects, transects with missing visibility, detected and zero transects for PCLA and PNEB) were printed for every year including 2022, during data exploration and the striped-bass feasibility check the task required. No model was fit to, evaluated on, or tuned against 2022, and no 2022 covariate values were examined.",
+  "species": {
+    "Morone saxatilis": {
+      "common_name": "striped bass (true)",
+      "on_species_list_any_year": false,
+      "train_detected_transects": 0,
+      "test_year_detected_transects": 0,
+      "thresholds": {
+        "train_min": 50,
+        "test_min": 10
+      },
+      "verdict": "INSUFFICIENT_DETECTIONS",
+      "per_year": {
+        "2000": {
+          "transects": 19,
+          "on_species_list": false,
+          "detected": 0
+        },
+        "2001": {
+          "transects": 34,
+          "on_species_list": false,
+          "detected": 0
+        },
+        "2002": {
+          "transects": 35,
+          "on_species_list": false,
+          "detected": 0
+        },
+        "2003": {
+          "transects": 35,
+          "on_species_list": false,
+          "detected": 0
+        },
+        "2004": {
+          "transects": 39,
+          "on_species_list": false,
+          "detected": 0
+        },
+        "2005": {
+          "transects": 39,
+          "on_species_list": false,
+          "detected": 0
+        },
+        "2006": {
+          "transects": 39,
+          "on_species_list": false,
+          "detected": 0
+        },
+        "2007": {
+          "transects": 39,
+          "on_species_list": false,
+          "detected": 0
+        },
+        "2008": {
+          "transects": 39,
+          "on_species_list": false,
+          "detected": 0
+        },
+        "2009": {
+          "transects": 39,
+          "on_species_list": false,
+          "detected": 0
+        },
+        "2010": {
+          "transects": 39,
+          "on_species_list": false,
+          "detected": 0
+        },
+        "2011": {
+          "transects": 44,
+          "on_species_list": false,
+          "detected": 0
+        },
+        "2012": {
+          "transects": 44,
+          "on_species_list": false,
+          "detected": 0
+        },
+        "2013": {
+          "transects": 44,
+          "on_species_list": false,
+          "detected": 0
+        },
+        "2014": {
+          "transects": 44,
+          "on_species_list": false,
+          "detected": 0
+        },
+        "2015": {
+          "transects": 44,
+          "on_species_list": false,
+          "detected": 0
+        },
+        "2016": {
+          "transects": 44,
+          "on_species_list": false,
+          "detected": 0
+        },
+        "2017": {
+          "transects": 44,
+          "on_species_list": false,
+          "detected": 0
+        },
+        "2018": {
+          "transects": 44,
+          "on_species_list": false,
+          "detected": 0
+        },
+        "2019": {
+          "transects": 44,
+          "on_species_list": false,
+          "detected": 0
+        },
+        "2020": {
+          "transects": 44,
+          "on_species_list": false,
+          "detected": 0
+        },
+        "2021": {
+          "transects": 44,
+          "on_species_list": false,
+          "detected": 0
+        },
+        "2022": {
+          "transects": 44,
+          "on_species_list": false,
+          "detected": 0
+        },
+        "2023": {
+          "transects": 44,
+          "on_species_list": false,
+          "detected": 0
+        },
+        "2024": {
+          "transects": 44,
+          "on_species_list": false,
+          "detected": 0
+        },
+        "2025": {
+          "transects": 44,
+          "on_species_list": false,
+          "detected": 0
+        }
+      }
+    },
+    "Paralabrax clathratus": {
+      "common_name": "kelp bass (calico bass)",
+      "on_species_list_any_year": true,
+      "train_detected_transects": 387,
+      "test_year_detected_transects": 26,
+      "thresholds": {
+        "train_min": 50,
+        "test_min": 10
+      },
+      "verdict": "FEASIBLE",
+      "per_year": {
+        "2000": {
+          "transects": 19,
+          "on_species_list": true,
+          "detected": 13
+        },
+        "2001": {
+          "transects": 34,
+          "on_species_list": true,
+          "detected": 26
+        },
+        "2002": {
+          "transects": 35,
+          "on_species_list": true,
+          "detected": 18
+        },
+        "2003": {
+          "transects": 35,
+          "on_species_list": true,
+          "detected": 9
+        },
+        "2004": {
+          "transects": 39,
+          "on_species_list": true,
+          "detected": 14
+        },
+        "2005": {
+          "transects": 39,
+          "on_species_list": true,
+          "detected": 16
+        },
+        "2006": {
+          "transects": 39,
+          "on_species_list": true,
+          "detected": 17
+        },
+        "2007": {
+          "transects": 39,
+          "on_species_list": true,
+          "detected": 17
+        },
+        "2008": {
+          "transects": 39,
+          "on_species_list": true,
+          "detected": 23
+        },
+        "2009": {
+          "transects": 39,
+          "on_species_list": true,
+          "detected": 15
+        },
+        "2010": {
+          "transects": 39,
+          "on_species_list": true,
+          "detected": 19
+        },
+        "2011": {
+          "transects": 44,
+          "on_species_list": true,
+          "detected": 18
+        },
+        "2012": {
+          "transects": 44,
+          "on_species_list": true,
+          "detected": 12
+        },
+        "2013": {
+          "transects": 44,
+          "on_species_list": true,
+          "detected": 14
+        },
+        "2014": {
+          "transects": 44,
+          "on_species_list": true,
+          "detected": 27
+        },
+        "2015": {
+          "transects": 44,
+          "on_species_list": true,
+          "detected": 36
+        },
+        "2016": {
+          "transects": 44,
+          "on_species_list": true,
+          "detected": 39
+        },
+        "2017": {
+          "transects": 44,
+          "on_species_list": true,
+          "detected": 34
+        },
+        "2018": {
+          "transects": 44,
+          "on_species_list": true,
+          "detected": 33
+        },
+        "2019": {
+          "transects": 44,
+          "on_species_list": true,
+          "detected": 33
+        },
+        "2020": {
+          "transects": 44,
+          "on_species_list": true,
+          "detected": 34
+        },
+        "2021": {
+          "transects": 44,
+          "on_species_list": true,
+          "detected": 25
+        },
+        "2022": {
+          "transects": 44,
+          "on_species_list": true,
+          "detected": 26
+        },
+        "2023": {
+          "transects": 44,
+          "on_species_list": true,
+          "detected": 38
+        },
+        "2024": {
+          "transects": 44,
+          "on_species_list": true,
+          "detected": 29
+        },
+        "2025": {
+          "transects": 44,
+          "on_species_list": true,
+          "detected": 25
+        }
+      }
+    },
+    "Paralabrax nebulifer": {
+      "common_name": "barred sand bass",
+      "on_species_list_any_year": true,
+      "train_detected_transects": 71,
+      "test_year_detected_transects": 10,
+      "thresholds": {
+        "train_min": 50,
+        "test_min": 10
+      },
+      "verdict": "FEASIBLE",
+      "per_year": {
+        "2000": {
+          "transects": 19,
+          "on_species_list": true,
+          "detected": 3
+        },
+        "2001": {
+          "transects": 34,
+          "on_species_list": true,
+          "detected": 7
+        },
+        "2002": {
+          "transects": 35,
+          "on_species_list": true,
+          "detected": 11
+        },
+        "2003": {
+          "transects": 35,
+          "on_species_list": true,
+          "detected": 2
+        },
+        "2004": {
+          "transects": 39,
+          "on_species_list": true,
+          "detected": 1
+        },
+        "2005": {
+          "transects": 39,
+          "on_species_list": true,
+          "detected": 4
+        },
+        "2006": {
+          "transects": 39,
+          "on_species_list": true,
+          "detected": 5
+        },
+        "2007": {
+          "transects": 39,
+          "on_species_list": true,
+          "detected": 3
+        },
+        "2008": {
+          "transects": 39,
+          "on_species_list": true,
+          "detected": 2
+        },
+        "2009": {
+          "transects": 39,
+          "on_species_list": true,
+          "detected": 2
+        },
+        "2010": {
+          "transects": 39,
+          "on_species_list": true,
+          "detected": 3
+        },
+        "2011": {
+          "transects": 44,
+          "on_species_list": true,
+          "detected": 1
+        },
+        "2012": {
+          "transects": 44,
+          "on_species_list": true,
+          "detected": 0
+        },
+        "2013": {
+          "transects": 44,
+          "on_species_list": true,
+          "detected": 0
+        },
+        "2014": {
+          "transects": 44,
+          "on_species_list": true,
+          "detected": 4
+        },
+        "2015": {
+          "transects": 44,
+          "on_species_list": true,
+          "detected": 8
+        },
+        "2016": {
+          "transects": 44,
+          "on_species_list": true,
+          "detected": 2
+        },
+        "2017": {
+          "transects": 44,
+          "on_species_list": true,
+          "detected": 7
+        },
+        "2018": {
+          "transects": 44,
+          "on_species_list": true,
+          "detected": 9
+        },
+        "2019": {
+          "transects": 44,
+          "on_species_list": true,
+          "detected": 4
+        },
+        "2020": {
+          "transects": 44,
+          "on_species_list": true,
+          "detected": 9
+        },
+        "2021": {
+          "transects": 44,
+          "on_species_list": true,
+          "detected": 9
+        },
+        "2022": {
+          "transects": 44,
+          "on_species_list": true,
+          "detected": 10
+        },
+        "2023": {
+          "transects": 44,
+          "on_species_list": true,
+          "detected": 3
+        },
+        "2024": {
+          "transects": 44,
+          "on_species_list": true,
+          "detected": 2
+        },
+        "2025": {
+          "transects": 44,
+          "on_species_list": true,
+          "detected": 3
+        }
+      }
+    }
+  }
+}

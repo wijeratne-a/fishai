@@ -1,0 +1,38 @@
+# WS42 normalized life-stage ontology
+version: "2026-09-25"
+
+stages:
+  - id: egg
+    description: Fertilized or unfertilized egg; includes CUFES egg counts
+  - id: larva
+    description: Free-swimming larval stage before juvenile morphology
+  - id: juvenile
+    description: Post-larval young; not yet adult size or maturity
+  - id: subadult
+    description: Immature or near-mature individuals between juvenile and adult
+  - id: adult
+    description: Mature individuals outside an explicit spawning-context label
+  - id: spawning_adult
+    description: Adults labeled or observed in a spawning context by the source
+  - id: unknown
+    description: Stage not stated and not inferable under model rules
+  - id: mixed
+    description: Sample aggregates more than one stage without separation
+  - id: source_specific
+    description: Retain only via life_stage_source_label when no normalized map applies
+
+rules:
+  preserve_source_label: true
+  definitive_assignment_from_length_alone: false
+  length_may_support_probabilistic_classification_when:
+    - species_resolved
+    - population_or_region_known
+    - length_metric_known
+    - source_relationship_documented
+    - uncertainty_preserved
+  do_not_pool_without_test:
+    - egg
+    - larva
+    - juvenile
+    - adult
+    - spawning_adult

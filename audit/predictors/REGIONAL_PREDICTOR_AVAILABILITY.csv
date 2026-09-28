@@ -1,0 +1,95 @@
+region,predictor,temporal_class,status,dataset_id_or_field,source_family,joined_to_dives,notes
+Florida_Keys,survey_depth,historical,AVAILABLE_ON_SURVEY,depth,RVC_NCRMP,yes,On retained Atlantic RVC event tables; used in survey-only baselines
+Florida_Keys,underwater_visibility,historical,AVAILABLE_ON_SURVEY,visibility,RVC_NCRMP,yes,Observer-recorded detectability field; not a remote product
+Florida_Keys,habitat_code,historical,AVAILABLE_ON_SURVEY,HABITAT_CD,RVC_NCRMP,yes,Dive-observed habitat; not a remote reef map
+Florida_Keys,analysed_sst,historical,SNIPPET_ONLY_NOT_JOINED,jplMURSST41,NOAA_CoastWatch_ERDDAP_MUR,no,One 2022-06-15 Keys box saved; survey-date SST not matched to dives
+Florida_Keys,analysed_sst,current,SNIPPET_ONLY_NOT_JOINED,jplMURSST41,NOAA_CoastWatch_ERDDAP_MUR,no,Valid-time snippet 2026-09-23 exists; not joined to surveys; not a nowcast fish layer
+Florida_Keys,analysed_sst,forecast,MISSING,,none,no,No forecast SST grid acquired; RTOFS CoastWatch search HTTP 404
+Florida_Keys,bottom_temperature,historical,MISSING,,none,no,No depth-resolved temperature product verified or acquired
+Florida_Keys,bottom_temperature,current,MISSING,,none,no,No endpoint verified this run
+Florida_Keys,bottom_temperature,forecast,MISSING,,none,no,WCOFS/Copernicus not acquired; no forecast ID invented
+Florida_Keys,dissolved_oxygen,historical,MISSING,,none,no,No oxygen product verified
+Florida_Keys,dissolved_oxygen,current,MISSING,,none,no,No oxygen product verified
+Florida_Keys,dissolved_oxygen,forecast,MISSING,,none,no,No oxygen product verified
+Florida_Keys,chlorophyll_a,historical,MISSING,,none,no,Copernicus chlorophyll class needs account; no dataset ID verified as acquired
+Florida_Keys,chlorophyll_a,current,MISSING,,none,no,No chlorophyll endpoint verified this run
+Florida_Keys,chlorophyll_a,forecast,MISSING,,none,no,No chlorophyll forecast acquired
+Florida_Keys,surface_currents,historical,MISSING,,none,no,WCOFS named candidate only; not subset; no currents dataset ID verified downloaded
+Florida_Keys,surface_currents,current,MISSING,,none,no,WCOFS not acquired
+Florida_Keys,surface_currents,forecast,MISSING,,none,no,RTOFS search HTTP 404; no forecast currents saved
+Florida_Keys,substrate_class,historical,PARTIAL_VIA_SURVEY_ONLY,HABITAT_CD,RVC_NCRMP,yes,Survey habitat codes only; continuous substrate maps not acquired
+Florida_Keys,substrate_class,current,MISSING,,none,no,No gridded substrate product verified
+Florida_Keys,substrate_class,forecast,MISSING,,none,no,Not applicable as forecast grid; no map acquired
+Florida_Keys,gebco_bathymetry,historical,CATALOGUED_UNWIRED,GEBCO,GEBCO,no,Catalogued; not downloaded; bathymetry is not reef-presence evidence
+Puerto_Rico,survey_depth,historical,AVAILABLE_ON_SURVEY,depth,RVC_NCRMP,yes,Zero-bearing Atlantic table; years 2016 2019 2021 2023 on disk
+Puerto_Rico,underwater_visibility,historical,AVAILABLE_ON_SURVEY,visibility,RVC_NCRMP,yes,On survey
+Puerto_Rico,habitat_code,historical,AVAILABLE_ON_SURVEY,HABITAT_CD,RVC_NCRMP,yes,On survey
+Puerto_Rico,analysed_sst,historical,MATCHED_REJECTED,jplMURSST41,NOAA_CoastWatch_ERDDAP_MUR,yes,MUR matched then rejected on locked 2023; not rescored in this path
+Puerto_Rico,oisst_sst,historical,MATCHED_REJECTED,ncdcOisst21Agg_LonPM180,NOAA_NCEI_OISST_v2.1,yes,Matched to 174 survey dates; freeze on 2016-2021; scored once; SST_ADDS_NO_VALUE
+Puerto_Rico,analysed_sst,current,SNIPPET_EXISTS_ELSEWHERE,jplMURSST41,NOAA_CoastWatch_ERDDAP_MUR,no,Global MUR snippet time 2026-09-23; not a PR dive join
+Puerto_Rico,analysed_sst,forecast,MISSING,,none,no,No forecast grid
+Puerto_Rico,bottom_temperature,historical,MISSING,,none,no,Required next scientific dependency for demersal guilds; not acquired
+Puerto_Rico,bottom_temperature,current,MISSING,,none,no,Unverified endpoint
+Puerto_Rico,bottom_temperature,forecast,MISSING,,none,no,Unverified
+Puerto_Rico,dissolved_oxygen,historical,MISSING,,none,no,Unverified
+Puerto_Rico,dissolved_oxygen,current,MISSING,,none,no,Unverified
+Puerto_Rico,dissolved_oxygen,forecast,MISSING,,none,no,Unverified
+Puerto_Rico,chlorophyll_a,historical,MISSING,,none,no,Copernicus account required; no ID invented
+Puerto_Rico,chlorophyll_a,current,MISSING,,none,no,Unverified
+Puerto_Rico,chlorophyll_a,forecast,MISSING,,none,no,Unverified
+Puerto_Rico,surface_currents,historical,MISSING,,none,no,WCOFS candidate not acquired
+Puerto_Rico,surface_currents,current,MISSING,,none,no,WCOFS not acquired
+Puerto_Rico,surface_currents,forecast,MISSING,,none,no,RTOFS search HTTP 404
+Puerto_Rico,substrate_class,historical,PARTIAL_VIA_SURVEY_ONLY,HABITAT_CD,RVC_NCRMP,yes,Survey habitat only
+Puerto_Rico,substrate_class,current,MISSING,,none,no,No gridded substrate
+Puerto_Rico,substrate_class,forecast,MISSING,,none,no,No gridded substrate
+US_Virgin_Islands,survey_depth,historical,AVAILABLE_ON_SURVEY,depth,RVC_NCRMP,yes,Years 2017 2019 2021 2023 on disk
+US_Virgin_Islands,underwater_visibility,historical,AVAILABLE_ON_SURVEY,visibility,RVC_NCRMP,yes,On survey
+US_Virgin_Islands,habitat_code,historical,AVAILABLE_ON_SURVEY,HABITAT_CD,RVC_NCRMP,yes,On survey
+US_Virgin_Islands,analysed_sst,historical,NOT_JOINED,jplMURSST41,NOAA_CoastWatch_ERDDAP_MUR,no,Not joined to USVI dives
+US_Virgin_Islands,analysed_sst,current,SNIPPET_EXISTS_ELSEWHERE,jplMURSST41,NOAA_CoastWatch_ERDDAP_MUR,no,Snippet not region-joined
+US_Virgin_Islands,analysed_sst,forecast,MISSING,,none,no,No forecast grid
+US_Virgin_Islands,bottom_temperature,historical,MISSING,,none,no,Unverified
+US_Virgin_Islands,bottom_temperature,current,MISSING,,none,no,Unverified
+US_Virgin_Islands,bottom_temperature,forecast,MISSING,,none,no,Unverified
+US_Virgin_Islands,dissolved_oxygen,historical,MISSING,,none,no,Unverified
+US_Virgin_Islands,dissolved_oxygen,current,MISSING,,none,no,Unverified
+US_Virgin_Islands,dissolved_oxygen,forecast,MISSING,,none,no,Unverified
+US_Virgin_Islands,chlorophyll_a,historical,MISSING,,none,no,Unverified
+US_Virgin_Islands,chlorophyll_a,current,MISSING,,none,no,Unverified
+US_Virgin_Islands,chlorophyll_a,forecast,MISSING,,none,no,Unverified
+US_Virgin_Islands,surface_currents,historical,MISSING,,none,no,Unverified
+US_Virgin_Islands,surface_currents,current,MISSING,,none,no,Unverified
+US_Virgin_Islands,surface_currents,forecast,MISSING,,none,no,RTOFS search HTTP 404
+US_Virgin_Islands,substrate_class,historical,PARTIAL_VIA_SURVEY_ONLY,HABITAT_CD,RVC_NCRMP,yes,Survey habitat only
+US_Virgin_Islands,substrate_class,current,MISSING,,none,no,No gridded substrate
+US_Virgin_Islands,substrate_class,forecast,MISSING,,none,no,No gridded substrate
+Flower_Garden_Banks,survey_depth,historical,AVAILABLE_ON_SURVEY,depth,RVC_NCRMP,yes,Years 2018 2022 2023 2024 on disk
+Flower_Garden_Banks,underwater_visibility,historical,AVAILABLE_ON_SURVEY,visibility,RVC_NCRMP,yes,On survey
+Flower_Garden_Banks,habitat_code,historical,AVAILABLE_ON_SURVEY,HABITAT_CD,RVC_NCRMP,yes,On survey
+Flower_Garden_Banks,analysed_sst,historical,NOT_JOINED,jplMURSST41,NOAA_CoastWatch_ERDDAP_MUR,no,Not joined to FGB dives
+Flower_Garden_Banks,analysed_sst,current,SNIPPET_EXISTS_ELSEWHERE,jplMURSST41,NOAA_CoastWatch_ERDDAP_MUR,no,Snippet not region-joined
+Flower_Garden_Banks,analysed_sst,forecast,MISSING,,none,no,No forecast grid
+Flower_Garden_Banks,bottom_temperature,historical,MISSING,,none,no,Unverified
+Flower_Garden_Banks,bottom_temperature,current,MISSING,,none,no,Unverified
+Flower_Garden_Banks,bottom_temperature,forecast,MISSING,,none,no,Unverified
+Flower_Garden_Banks,dissolved_oxygen,historical,MISSING,,none,no,Unverified
+Flower_Garden_Banks,dissolved_oxygen,current,MISSING,,none,no,Unverified
+Flower_Garden_Banks,dissolved_oxygen,forecast,MISSING,,none,no,Unverified
+Flower_Garden_Banks,chlorophyll_a,historical,MISSING,,none,no,Unverified
+Flower_Garden_Banks,chlorophyll_a,current,MISSING,,none,no,Unverified
+Flower_Garden_Banks,chlorophyll_a,forecast,MISSING,,none,no,Unverified
+Flower_Garden_Banks,surface_currents,historical,MISSING,,none,no,Unverified
+Flower_Garden_Banks,surface_currents,current,MISSING,,none,no,Unverified
+Flower_Garden_Banks,surface_currents,forecast,MISSING,,none,no,RTOFS search HTTP 404
+Flower_Garden_Banks,substrate_class,historical,PARTIAL_VIA_SURVEY_ONLY,HABITAT_CD,RVC_NCRMP,yes,Survey habitat only
+Flower_Garden_Banks,substrate_class,current,MISSING,,none,no,No gridded substrate
+Flower_Garden_Banks,substrate_class,forecast,MISSING,,none,no,No gridded substrate
+Pacific_Hawaii_AmericanSamoa_CNMI_Guam_PRIAs,survey_depth,historical,AVAILABLE_ON_SURVEY_POSITIVE_ONLY,depth,Pacific_RVC_positive_count,partial,Pacific tables are positive-count only; non-detections not constructible
+Pacific_Hawaii_AmericanSamoa_CNMI_Guam_PRIAs,habitat_code,historical,UNVERIFIED,,Pacific_RVC_positive_count,unverified,Do not invent Pacific habitat field coverage beyond positive-count status
+Pacific_Hawaii_AmericanSamoa_CNMI_Guam_PRIAs,analysed_sst,historical,NOT_JOINED,jplMURSST41,NOAA_CoastWatch_ERDDAP_MUR,no,MUR ID known; not joined to Pacific events
+Pacific_Hawaii_AmericanSamoa_CNMI_Guam_PRIAs,bottom_temperature,historical,MISSING,,none,no,Unverified
+Pacific_Hawaii_AmericanSamoa_CNMI_Guam_PRIAs,dissolved_oxygen,historical,MISSING,,none,no,Unverified
+Pacific_Hawaii_AmericanSamoa_CNMI_Guam_PRIAs,chlorophyll_a,historical,MISSING,,none,no,Unverified
+Pacific_Hawaii_AmericanSamoa_CNMI_Guam_PRIAs,surface_currents,historical,MISSING,,none,no,Unverified
+Pacific_Hawaii_AmericanSamoa_CNMI_Guam_PRIAs,substrate_class,historical,MISSING,,none,no,No gridded substrate; positive-only frame blocks absence modeling

@@ -1,0 +1,16 @@
+ref_id,category,source_path,referenced_path,expected_or_actual,severity,notes
+BR-001,manifest_path,scripts/project_status.py,data/manifests/source-update-state.json,data/manifests/update-state.json,medium,Status script looks for source-update-state.json; tracked file is update-state.json. RECENT SOURCE UPDATES prints UNKNOWN.
+BR-002,schema_path,artifacts/geospatial_data_engineer/agent_handoff.md,schemas/CatchEffortObservation.schema.json,artifacts/geospatial_data_engineer/schemas/CatchEffortObservation.schema.json,low,Relative schemas/ path from artifact docs; file exists under artifacts subtree only.
+BR-003,schema_path,artifacts/geospatial_data_engineer/agent_handoff.md,schemas/FarmOperationalOutcome.schema.json,artifacts/geospatial_data_engineer/schemas/FarmOperationalOutcome.schema.json,low,Same relative-path mismatch.
+BR-004,schema_path,artifacts/geospatial_data_engineer/agent_handoff.md,schemas/ModelPrediction.schema.json,artifacts/geospatial_data_engineer/schemas/ModelPrediction.schema.json,low,Same relative-path mismatch.
+BR-005,schema_path,artifacts/geospatial_data_engineer/agent_handoff.md,schemas/_ObservationKernel.schema.json,artifacts/geospatial_data_engineer/schemas/_ObservationKernel.schema.json,low,Same relative-path mismatch.
+BR-006,schema_path,artifacts/geospatial_data_engineer/canonical_data_model.md,schemas/CatchEffortObservation.schema.json,artifacts/geospatial_data_engineer/schemas/CatchEffortObservation.schema.json,low,Same relative-path mismatch.
+BR-007,schema_path,artifacts/geospatial_data_engineer/canonical_data_model.md,schemas/FarmOperationalOutcome.schema.json,artifacts/geospatial_data_engineer/schemas/FarmOperationalOutcome.schema.json,low,Same relative-path mismatch.
+BR-008,schema_path,artifacts/geospatial_data_engineer/canonical_data_model.md,schemas/ModelPrediction.schema.json,artifacts/geospatial_data_engineer/schemas/ModelPrediction.schema.json,low,Same relative-path mismatch.
+BR-009,script_path,observatory/artifacts/data_catalog/agent_handoff.md,scripts/build_global_catalogs.py,observatory/scripts/build_global_catalogs.py,medium,Handoff path omits observatory/ prefix.
+BR-010,optional_report,scripts/project_status.py,security/SCAN_RESULT.md,(none; scanner present),low,Optional leak report absent; script falls back to scanner-present message (not a hard failure).
+BR-011,planned_path,science/measurements/MEASUREMENT_SEMANTICS.md,audit/measurements/UNIT_CONFLICTS.csv,(absent),low,Forward reference; measurements audit not required for this integrity pass.
+BR-012,planned_path,science/measurements/MEASUREMENT_SEMANTICS.md,tests/measurements/test_units.py,(absent),low,Forward reference to tests not yet present.
+BR-013,makefile_target,(none),(none),(none),info,All nine Makefile python3 targets resolve to existing scripts. No broken Makefile refs.
+BR-014,light_import,(scripts|models|evaluation|labels),*.py,importable,info,29 modules compiled and light-imported with zero import failures among candidates scanned.
+BR-015,root_schema,(docs|schemas consumers),schemas/*.schema.json,schemas/*.schema.json present,info,Root schemas/ globe and canonical JSON files exist; no broken refs among root schema consumers in this scan.

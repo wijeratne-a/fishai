@@ -1,0 +1,17 @@
+region,species_code,scientific_name,train_detections,holdout_detections,train_prevalence
+Florida Keys,STE PART,Stegastes partitus,2759,514,0.876
+Florida Keys,SPA AURO,Sparisoma aurofrenatum,2666,572,0.847
+Florida Keys,SCA ISER,Scarus iseri,2547,552,0.809
+Florida Keys,ACA BAHI,Acanthurus bahianus,2276,499,0.723
+Florida Keys,HAL BIVI,Halichoeres bivittatus,2173,491,0.690
+Florida Keys,HAL GARN,Halichoeres garnoti,2122,505,0.674
+Puerto Rico,ACA BAHI,Acanthurus bahianus,571,212,0.843
+Puerto Rico,THA BIFA,Thalassoma bifasciatum,569,199,0.840
+Puerto Rico,STE PART,Stegastes partitus,516,178,0.762
+Puerto Rico,SPA AURO,Sparisoma aurofrenatum,475,150,0.702
+USVI,HAL GARN,Halichoeres garnoti,1221,480,0.893
+USVI,STE PART,Stegastes partitus,1209,480,0.884
+USVI,ACA COER,Acanthurus coeruleus,1157,484,0.846
+USVI,CHA CAPI,Chaetodon capistratus,894,328,0.654
+Flower Garden Banks,STE PLAN,Stegastes planifrons,143,30,0.872
+Flower Garden Banks,PAR FURC,Paranthias furcifer,142,36,0.866
