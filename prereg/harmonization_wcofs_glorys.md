@@ -61,7 +61,7 @@ Scores use `config/assimilated_sources.yaml` (versioned, cited). Unknown assimil
 
 ## Metrics
 
-Per variable: **bias**, **RMSE**, **Pearson r**, by season (DJF/MAM/JJA/SON), nearshore/offshore, and pooled, each with **n** and a **7-day block bootstrap 95% CI**. **Common-support scoring:** all four harmonization model rows use only buoy/HF matches where **every row has a value**; drops because any row is blanked are reported as **`insufficient_model_coverage`** (nearshore/offshore). **auditbot1 pass/degraded numeric cutoffs** are locked in YAML **`pass_fail_thresholds.cutoffs`**; holdout scoring stays blocked until **`combination_rule`** is auditor-confirmed (no longer `PENDING_AUDITOR_CONFIRMATION`). **Map labels:** **`egg encounter likelihood`** only — not spawning habitat, spawning locations, or adult distribution.
+Per variable: **bias**, **RMSE**, **Pearson r**, by season (DJF/MAM/JJA/SON), nearshore/offshore, and pooled, each with **n** and a **7-day block bootstrap 95% CI**. **Common-support scoring:** all four harmonization model rows use only buoy/HF matches where **every row has a value**; drops because any row is blanked are reported as **`insufficient_model_coverage`** (nearshore/offshore). **auditbot1 pass/degraded numeric cutoffs** and **`combination_rule: worst_of`** (buoy plus seven input verdicts per stratum) are locked in YAML **`pass_fail_thresholds.cutoffs`**. **Map labels:** **`egg encounter likelihood`** only — not spawning habitat, spawning locations, or adult distribution.
 
 ## Shoreline (bot2 PR #7)
 

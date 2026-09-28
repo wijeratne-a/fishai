@@ -14,7 +14,6 @@ from fishai.evaluation.harmonization_prereg import (
     assert_harmonization_prereg_ready_for_scoring,
     assert_pass_fail_thresholds_ready_for_scoring,
     assert_shoreline_simplification_check_valid,
-    combination_rule_blocks_scoring,
     frozen_shoreline_reference,
     frozen_shoreline_reference_sha256,
     is_valid_frozen_shoreline_sha256,
@@ -168,26 +167,11 @@ def test_native_wcofs_diagnostic_never_through_harmonization_map() -> None:
     assert native.get("role") == "diagnostic_only"
 
 
-def test_scoring_entry_point_blocked_until_combination_rule_confirmed() -> None:
+def test_scoring_entry_point_passes_prereg_gate_on_committed_doc() -> None:
     doc = load_harmonization_prereg(PREREG)
-    cutoffs = pass_fail_thresholds_cutoffs(doc)
-    assert combination_rule_blocks_scoring(cutoffs)
-    with pytest.raises(HarmonizationPreregNotReadyError, match="combination_rule"):
-        assert_harmonization_prereg_ready_for_scoring(doc)
-    with pytest.raises(HarmonizationPreregNotReadyError, match="combination_rule"):
-        run_harmonization_scoring(PREREG, dry_run=True)
-
-
-def test_scoring_entry_point_ready_when_combination_rule_confirmed(tmp_path: Path) -> None:
-    doc = yaml.safe_load(yaml.dump(load_harmonization_prereg(PREREG)))
-    doc["harmonization_wcofs_glorys"]["pass_fail_thresholds"]["cutoffs"][
-        "combination_rule"
-    ] = "worst_of_buoy_and_input_verdicts_per_stratum"
-    path = tmp_path / "prereg.yaml"
-    path.write_text(yaml.dump(doc), encoding="utf-8")
-    assert_harmonization_prereg_ready_for_scoring(load_harmonization_prereg(path))
+    assert_harmonization_prereg_ready_for_scoring(doc)
     with pytest.raises(NotImplementedError):
-        run_harmonization_scoring(path)
+        run_harmonization_scoring(PREREG)
 
 
 def test_nearshore_bot2_pr7_fields_and_pending_placeholders() -> None:
@@ -304,8 +288,9 @@ def test_pass_fail_thresholds_cutoffs_auditbot1_numeric_values() -> None:
         "block_bootstrap_block_days"
     ]
     assert cutoffs["block_bootstrap_block_days"] == metrics_days
-    with pytest.raises(HarmonizationPreregNotReadyError, match="combination_rule"):
-        assert_pass_fail_thresholds_ready_for_scoring(doc)
+    assert cutoffs["combination_rule"] == "worst_of"
+    assert len(cutoffs["input_verdict_variables"]) == 7
+    assert_pass_fail_thresholds_ready_for_scoring(doc) is None
 
 
 def test_pass_fail_thresholds_cutoffs_align_with_nowcast_forcing_grading() -> None:

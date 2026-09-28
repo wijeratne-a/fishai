@@ -474,10 +474,28 @@ harmonization_wcofs_glorys:
           degraded_max_multiple: 1.0
           fail_above_multiple: 1.0
         any_variable_fail_stratum_verdict: UNKNOWN
-      combination_rule: >-
-        PENDING_AUDITOR_CONFIRMATION: proposed stratum verdict = worst of buoy
-        verdict and all input verdicts (so any degraded input makes the stratum
-        degraded)
+      combination_rule: worst_of
+      verdict_rank_worst_first:
+        - UNKNOWN
+        - FAIL
+        - DEGRADED
+        - PASS
+      input_verdict_variables:
+        - T3m
+        - S3m
+        - MLD_m
+        - sst_grad
+        - front_distance_km
+        - u_surf
+        - v_surf
+      failed_input_stratum_verdict: UNKNOWN
+      not_gradable_cap:
+        verdict: DEGRADED
+        reason: no_independent_obs_check
+      no_independent_validation:
+        all_strata_verdict: UNKNOWN
+        reason: no_independent_validation
+        unknown_assimilation_status: not_independent
       block_bootstrap_block_days: 7
 
   nowcast_forcing_grading:

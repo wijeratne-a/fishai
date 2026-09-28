@@ -98,6 +98,22 @@ def assert_pass_fail_thresholds_ready_for_scoring(doc: dict[str, Any]) -> None:
             "harmonization scoring blocked: pass_fail_thresholds.cutoffs.combination_rule "
             "pending auditor confirmation"
         )
+    rule = cutoffs.get("combination_rule")
+    if rule != "worst_of":
+        raise HarmonizationPreregNotReadyError(
+            f"harmonization scoring blocked: unsupported combination_rule {rule!r}"
+        )
+    for key in (
+        "verdict_rank_worst_first",
+        "input_verdict_variables",
+        "failed_input_stratum_verdict",
+        "not_gradable_cap",
+        "no_independent_validation",
+    ):
+        if key not in cutoffs:
+            raise HarmonizationPreregNotReadyError(
+                f"harmonization scoring blocked: pass_fail_thresholds.cutoffs missing {key}"
+            )
 
 
 def iter_placeholder_fields(node: object, prefix: str = "") -> list[str]:
