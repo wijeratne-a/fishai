@@ -51,14 +51,16 @@ def normalize_combination_rule(value: str) -> str:
     raise ValueError(f"unsupported combination_rule: {value}")
 
 
-def _ratio_verdict(
+def rmse_ratio_verdict(
     ratio: float,
     ratio_ci_upper: float,
     cutoffs: dict[str, float],
+    *,
+    prefix: str = "",
 ) -> str:
-    pass_lim = float(cutoffs["rmse_ratio_pass"])
-    deg_upper = float(cutoffs["rmse_ratio_degraded_upper"])
-    ci_pass = float(cutoffs["rmse_ratio_ci_upper_pass"])
+    pass_lim = float(cutoffs[f"{prefix}rmse_ratio_pass"])
+    deg_upper = float(cutoffs[f"{prefix}rmse_ratio_degraded_upper"])
+    ci_pass = float(cutoffs[f"{prefix}rmse_ratio_ci_upper_pass"])
     if ratio <= pass_lim and ratio_ci_upper <= ci_pass:
         return VERDICT_PASS
     if ratio <= deg_upper:
@@ -83,7 +85,7 @@ def grade_buoy_stratum(inp: BuoyGradeInput, cutoffs: dict[str, float]) -> tuple[
         return VERDICT_NOT_GRADABLE, "missing_rmse"
 
     ratio = inp.rmse_mapped / inp.rmse_glorys
-    ratio_verdict = _ratio_verdict(ratio, inp.rmse_ratio_ci_upper, cutoffs)
+    ratio_verdict = rmse_ratio_verdict(ratio, inp.rmse_ratio_ci_upper, cutoffs)
 
     bias_lim_pass = float(cutoffs["bias_abs_pass_c"])
     bias_lim_deg = float(cutoffs["bias_abs_degraded_c"])

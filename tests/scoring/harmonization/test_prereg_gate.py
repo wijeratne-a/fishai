@@ -38,10 +38,12 @@ def _ready_block() -> dict:
         "input_rmse_pass_fraction_glorys_sd": 0.5,
         "input_rmse_degraded_fraction_glorys_sd": 1.0,
         "bootstrap_seed": 42,
-        "glider_bias_abs_pass_c": 0.5,
-        "glider_rmse_pass_c": 0.6,
-        "glider_rmse_degraded_c": 1.0,
-        "glider_pearson_r_min": 0.5,
+        "glider_rmse_ratio_pass": 1.2,
+        "glider_rmse_ratio_ci_upper_pass": 1.5,
+        "glider_rmse_ratio_degraded_upper": 1.5,
+        "glider_bias_abs_pass_c_T3m_10m": 0.5,
+        "glider_bias_abs_pass_c_S3m_10m": 0.1,
+        "glider_bias_abs_pass_c_MLD_m": 10.0,
     }
     block["pass_fail_thresholds"]["combination_rule"] = "worst-of"
     if "variable_grading_status" not in block.get("input_check_grading", {}):

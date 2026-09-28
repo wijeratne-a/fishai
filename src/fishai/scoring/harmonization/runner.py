@@ -35,7 +35,10 @@ from fishai.scoring.harmonization.grading import (
     cutoffs_from_prereg,
     grade_buoy_stratum,
 )
-from fishai.scoring.harmonization.glider_grading import grade_glider_stratum
+from fishai.scoring.harmonization.glider_grading import (
+    GLIDER_RMSE_RATIO_KNOWN_LIMITATION,
+    grade_glider_stratum,
+)
 from fishai.scoring.harmonization.preflight import run_registry_preflight
 from fishai.scoring.harmonization.io import write_holdout_outputs
 from fishai.scoring.harmonization.manifest import verify_mapping_manifest
@@ -348,6 +351,7 @@ def run_holdout_scoring(
         "metrics": summary_metrics,
         "input_cell_check": input_cell_check_summary,
         "glider_holdout_grading": glider_grading_summary,
+        "glider_holdout_known_limitations": [GLIDER_RMSE_RATIO_KNOWN_LIMITATION],
         "indirect_glorys_product_check": indirect_summary,
         "buoy_depth_function": f"{BUOY_DEPTH_FUNCTION.__module__}.{BUOY_DEPTH_FUNCTION.__name__}",
     }

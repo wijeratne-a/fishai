@@ -211,6 +211,10 @@ harmonization_wcofs_glorys:
         S3m: proxy_for_3m
         doxy: reported_only
       glorys_comparison_label: not_independent_reported_only
+      grading_cutoffs_note: >-
+        Glider pass/degraded uses glider_rmse_ratio_* (same thresholds as buoys),
+        per-variable glider_bias_abs_pass_c_T3m_10m (0.5 C), S3m_10m (0.1), MLD_m (10 m),
+        and pearson_r_margin_below_glorys; recorded in pass_fail_thresholds.cutoffs.
     ioos_glider_dac:
       status: excluded
       reason: >-
