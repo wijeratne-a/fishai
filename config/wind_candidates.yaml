@@ -1,0 +1,103 @@
+# Wind product candidates for CUFES SCB pilot (research survey only).
+# Field values cite live HTTP metadata checked 2026-09-28 (UTC) unless noted.
+# See docs/wind_product_survey.md for methodology and recommendation.
+
+candidates:
+  - id: ccmp_v31_remss_https
+    name: RSS CCMP ocean vector wind analysis v3.1 (L4)
+    access_url: https://data.remss.com/ccmp/v03.1/
+    erddap_dataset_id: null
+    erddap_info_url: https://coastwatch.pifsc.noaa.gov/erddap/info/ccmp-daily-v2-1-NRT/index.json
+    notes: >-
+      PIFSC ERDDAP host did not resolve in the 2026-09-28 verification environment;
+      FishAI SOURCES.yaml references ccmp-daily-v2-1-NRT on that host (v2.1 NRT mirror, not v3.1).
+    spatial_resolution: "0.25° × 0.25°; 4 maps/day (00/06/12/18 Z) per RSS product page"
+    start: "1996-01-01"
+    end: "2026-08-31"
+    latency: "~17 days behind calendar (latest file CCMP_Wind_Analysis_20260831 on 2026-09-17 directory mtime)"
+    licence: "Creative Commons Attribution 4.0 International (CC-BY-4.0)"
+    uniform_processing: true
+
+  - id: ccmp_v21_nrt_remss
+    name: RSS CCMP near-real-time v2.1 (L3.0 RT)
+    access_url: https://data.remss.com/ccmp/v02.1.NRT/
+    erddap_dataset_id: ccmp-daily-v2-1-NRT
+    erddap_info_url: https://coastwatch.pifsc.noaa.gov/erddap/info/ccmp-daily-v2-1-NRT/index.json
+    spatial_resolution: "0.25° × 0.25° (same grid as CCMP family; v2.1 algorithm per filename)"
+    start: "2015-01-01"
+    end: "2026-09-27"
+    latency: "~1 day (20260927 file posted 2026-09-28 13:03 UTC on data.remss.com listing)"
+    licence: "Creative Commons Attribution 4.0 International (CC-BY-4.0)"
+    uniform_processing: false
+
+  - id: ncei_blended_sea_winds_v2_daily
+    name: NOAA NCEI Blended Sea Winds v2.0 daily wind stress (science quality)
+    access_url: https://coastwatch.noaa.gov/erddap/griddap/noaacwBlendedWindStressDaily
+    erddap_dataset_id: noaacwBlendedWindStressDaily
+    erddap_info_url: https://coastwatch.noaa.gov/erddap/info/noaacwBlendedWindStressDaily/index.json
+    spatial_resolution: "0.25° × 0.25° daily mean wind stress (not u/v speed components)"
+    start: "1987-07-09T18:00:00Z"
+    end: "2026-08-31T00:00:00Z"
+    latency: "~28 days behind calendar on 2026-09-28 (ERDDAP time_coverage_end 2026-08-31)"
+    licence: "Publicly available with citation (ERDDAP NC_GLOBAL license attribute)"
+    uniform_processing: true
+
+  - id: ncei_blended_sea_winds_v2_nrt_daily
+    name: NOAA NCEI Blended Sea Winds v2.0 daily wind stress (advertised NRT companion)
+    access_url: https://coastwatch.noaa.gov/erddap/griddap/noaacwBlendednrtWindStressDaily
+    erddap_dataset_id: noaacwBlendednrtWindStressDaily
+    erddap_info_url: https://coastwatch.noaa.gov/erddap/info/noaacwBlendednrtWindStressDaily/index.json
+    spatial_resolution: "0.25° × 0.25° daily mean wind stress"
+    start: "2023-01-01T18:00:00Z"
+    end: "2023-03-05T18:00:00Z"
+    latency: "stale; ERDDAP metadata not updating in 2026 (end 2023-03-05)"
+    licence: "Publicly available with citation (ERDDAP NC_GLOBAL license attribute)"
+    uniform_processing: false
+
+  - id: era5_single_levels_cds
+    name: Copernicus ERA5 hourly single levels (10 m u/v wind components)
+    access_url: https://cds.climate.copernicus.eu/datasets/reanalysis-era5-single-levels
+    erddap_dataset_id: null
+    erddap_info_url: https://cds.climate.copernicus.eu/api/catalogue/v1/collections/reanalysis-era5-single-levels
+    spatial_resolution: "0.25° regular lat-lon (CDS catalogue description)"
+    start: "1940-01-01T00:00:00+00:00"
+    end: "2026-09-22T00:00:00+00:00"
+    latency: "~5 days (ERA5T early release; CDS catalogue text, updated daily)"
+    licence: "CC-BY-4.0"
+    uniform_processing: true
+
+  - id: ncep_gfs_ncep_global_erddap
+    name: NOAA NCEP GFS 0.5° analysis/forecast (PacIOOS ERDDAP ncep_global)
+    access_url: https://pae-paha.pacioos.hawaii.edu/erddap/griddap/ncep_global
+    erddap_dataset_id: ncep_global
+    erddap_info_url: https://pae-paha.pacioos.hawaii.edu/erddap/info/ncep_global/index.json
+    spatial_resolution: "0.5° × 0.5°; 3-hourly FMRC (10 m u/v: ugrd10m, vgrd10m)"
+    start: "2022-12-01T12:00:00Z"
+    end: "2026-10-05T15:00:00Z"
+    latency: "≤2 days for analyses; ERDDAP testOutOfDate=now+136hours (forecast horizon)"
+    licence: "PacIOOS/ERDDAP disclaimer; free redistribution with caveats (NC_GLOBAL license)"
+    uniform_processing: true
+
+  - id: ascat_erdqcwindproducts1day_pfeg
+    name: CoastWatch PFEG Metop-C ASCAT merged wind (QC 1-day composite)
+    access_url: https://coastwatch.pfeg.noaa.gov/erddap/griddap/erdQCwindproducts1day
+    erddap_dataset_id: erdQCwindproducts1day
+    erddap_info_url: https://coastwatch.pfeg.noaa.gov/erddap/info/erdQCwindproducts1day/index.json
+    spatial_resolution: "0.3333° (~0.25° product grid per ERDDAP geospatial_lat_resolution)"
+    start: "2021-09-03T12:00:00Z"
+    end: "2026-09-08T12:00:00Z"
+    latency: "~20 days behind calendar on 2026-09-28 (time_coverage_end 2026-09-08)"
+    licence: "ERDDAP NC_GLOBAL license (free use with caveats, not for legal use)"
+    uniform_processing: true
+
+  - id: ascat_erdqmwind1day_pfeg
+    name: CoastWatch PFEG all Metop ASCAT wind (QM 1-day; legacy ERDDAP feed)
+    access_url: https://coastwatch.pfeg.noaa.gov/erddap/griddap/erdQMwind1day
+    erddap_dataset_id: erdQMwind1day
+    erddap_info_url: https://coastwatch.pfeg.noaa.gov/erddap/info/erdQMwind1day/index.json
+    spatial_resolution: "0.25° × 0.25°"
+    start: "2013-08-27T12:00:00Z"
+    end: "2022-12-31T12:00:00Z"
+    latency: "stale; not updating beyond 2022-12-31 in ERDDAP metadata"
+    licence: "ERDDAP NC_GLOBAL license (free use with caveats, not for legal use)"
+    uniform_processing: true
