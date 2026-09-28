@@ -111,11 +111,52 @@ def test_surface_definition_and_glorys_reference_dataset() -> None:
     assert surf["sst"]["target_depth_below_surface_m"] == 0.494
     glorys = block["glorys_reference_dataset"]
     assert glorys["selection_rule"] == "copernicus_marine_catalog_time_coverage"
-    candidates = glorys["candidate_copernicus_product_ids"]
-    assert candidates[0] == "cmems_mod_glo_phy_my_0.083deg_P1D-m"
-    assert "cmems_mod_glo_phy_myint_0.083deg_P1D-m" in candidates
+    assert glorys["copernicus_product_id"] == "cmems_mod_glo_phy_my_0.083deg_P1D-m"
+    assert glorys["pinned_catalog_version"] == "202311"
     assert glorys["pilot_harmonization_window_uses"] == "cmems_mod_glo_phy_my_0.083deg_P1D-m"
     assert "scoring_nearshore_assignment" in block["nearshore"]
+
+
+def test_glorys_training_window_maps_to_my_product_only() -> None:
+    import datetime as dt
+
+    from fishai.ingestion.physics.glorys_catalog import resolve_glorys_dataset_for_date
+    from fishai.ingestion.physics.sources.glorys import PRODUCT_ID_MY, glorys_product_for_date
+
+    doc = load_harmonization_prereg(PREREG)
+    split = doc["harmonization_wcofs_glorys"]["temporal_split"]
+    start = dt.date.fromisoformat(split["fit_start"])
+    end = dt.date.fromisoformat(split["test_end"])
+    day = start
+    while day <= end:
+        assert glorys_product_for_date(day) == PRODUCT_ID_MY
+        day += dt.timedelta(days=1)
+
+
+def test_glorys_pinned_version_matches_catalog_resolution() -> None:
+    import datetime as dt
+
+    from fishai.ingestion.physics.glorys_catalog import resolve_glorys_dataset_for_date
+
+    doc = load_harmonization_prereg(PREREG)
+    glorys = doc["harmonization_wcofs_glorys"]["glorys_reference_dataset"]
+    pinned = glorys["pinned_catalog_version"]
+    fit_start = dt.date.fromisoformat(doc["harmonization_wcofs_glorys"]["temporal_split"]["fit_start"])
+    resolution = resolve_glorys_dataset_for_date(fit_start)
+    assert resolution.dataset_version == pinned
+
+
+def test_glorys_date_past_my_coverage_raises_not_covered() -> None:
+    import datetime as dt
+
+    import pytest
+
+    from fishai.ingestion.physics.glorys_catalog import GlorysCatalogError
+    from fishai.ingestion.physics.sources.glorys import glorys_product_for_date
+
+    with pytest.raises(GlorysCatalogError) as exc:
+        glorys_product_for_date(dt.date(2027, 1, 1))
+    assert exc.value.reason_code == "glorys_date_not_covered"
 
 
 def test_prereg_temporal_split_dates_resolution_and_shared_functions() -> None:
