@@ -64,9 +64,11 @@ from fishai.ingestion.physics.glorys_cufes_subset import (
 )
 from fishai.ingestion.physics.glorys_training_build import (
     GlorysTrainingBuildError,
+    REASON_WCOFS_BATHYMETRY_ARTIFACT_MISSING,
     assert_copernicus_env_credentials,
     assert_may_write_glorys_training_parquet,
     assert_store_ready_for_copernicus_export,
+    assert_wcofs_bathymetry_hmin_source,
     classify_copernicus_subset_error,
 )
 from fishai.ingestion.physics.sources.glorys import (
@@ -92,6 +94,7 @@ from fishai.ingestion.physics.wcofs_h_glorys_store import (
     MODEL_FLOOR_TOLERANCE_M,
     WcofsHGlorysGrid,
     depth_at_model_floor,
+    load_wcofs_h_glorys_grid,
     load_wcofs_h_manifest,
 )
 from fishai.ingestion.sources import REPO_ROOT, attribution_for, require_approved
@@ -584,24 +587,31 @@ def load_events_parquet(path: Path | None = None) -> pd.DataFrame:
     return normalize_cufes_events_for_physics(pd.read_parquet(path))
 
 
-def new_glorys_field_store_for_live_build(config: dict[str, Any] | None = None) -> GlorysFieldStore:
-    """Empty GLORYS day cache; covariate source set only after Copernicus subsets load."""
+def new_glorys_field_store_for_live_build(
+    config: dict[str, Any] | None = None,
+    *,
+    manifest_path: Path | None = None,
+    artifact_path: Path | None = None,
+) -> GlorysFieldStore:
+    """
+    GLORYS day cache empty until Copernicus subsets load; bathymetry from WCOFS ``h`` artifact.
+    """
     cfg = config or load_overlap_config()
-    min_wet = coarsen_min_wet_fraction(cfg)
-    lat, lon = glorys_pilot_depth_grid(cfg["pilot_bbox"])
-    nj, ni = lat.size, lon.size
-    return GlorysFieldStore(
-        wcofs_h_m=np.full((nj, ni), 500.0),
-        has_source=np.ones((nj, ni), dtype=bool),
-        wet_fraction=np.ones((nj, ni), dtype=float),
-        min_wet_fraction=min_wet,
-        roms_hmin_m=500.0,
-        hmin_source="placeholder_until_wcofs_h_artifact",
-        lat=lat,
-        lon=lon,
-        covariate_data_source="",
-        days={},
-    )
+    try:
+        grid = load_wcofs_h_glorys_grid(
+            manifest_path=manifest_path,
+            artifact_path=artifact_path,
+        )
+    except FileNotFoundError as exc:
+        raise GlorysTrainingBuildError(
+            REASON_WCOFS_BATHYMETRY_ARTIFACT_MISSING,
+            str(exc),
+        ) from exc
+    assert_wcofs_bathymetry_hmin_source(grid.hmin_source)
+    store = GlorysFieldStore.from_wcofs_h_grid(grid)
+    store.covariate_data_source = ""
+    store.days = {}
+    return store
 
 
 def run_build_cufes_training_covariates(

@@ -213,43 +213,52 @@ def test_pull_log_includes_version_and_sha256(tmp_path: Path) -> None:
     assert loaded["file_sha256"] == "abc123"
 
 
-def test_training_parquet_metadata_has_credit_and_doi(tmp_path: Path) -> None:
-    from fishai.ingestion.physics.cufes_training_covariates import GlorysSubsetBatch, new_glorys_field_store_for_live_build
-    from fishai.ingestion.physics.glorys_cufes_subset import populate_store_days_from_cache, subset_nc_path
-    from test_glorys_cufes_subset import _write_toy_subset
+def test_training_parquet_write_read_round_trip(tmp_path: Path) -> None:
+    from cufes_training_test_helpers import live_store_with_wcofs_h_and_glorys_days
 
-    events = _synthetic_events().iloc[[0]]
-    day = unique_event_days(events)[0]
-    batch = GlorysSubsetBatch(
-        dataset_id=glorys_product_for_date(day),
-        date_start=day,
-        date_end=day,
-        variables=("thetao", "so", "mlotst"),
-        bbox=(32.0, 35.0, -121.0, -117.0),
+    events = pd.DataFrame(
+        {
+            "event_id": ["e_pilot"],
+            "start_time": pd.to_datetime(["2021-06-30T12:00:00Z"], utc=True),
+            "stop_time": pd.to_datetime(["2021-06-30T12:10:00Z"], utc=True),
+            "start_latitude": [33.15],
+            "start_longitude": [-120.2],
+            "stop_latitude": [33.16],
+            "stop_longitude": [-120.19],
+        }
     )
-    nc = subset_nc_path(tmp_path, batch)
-    _write_toy_subset(nc, day)
-    store = new_glorys_field_store_for_live_build()
-    store.lat, store.lon = _small_glorys_axes()
-    populate_store_days_from_cache(store, [day], [batch], tmp_path)
+    days = unique_event_days(events)
+    store = live_store_with_wcofs_h_and_glorys_days(tmp_path, days)
     assert store.covariate_data_source == GLORYS_COVARIATE_SOURCE_COPERNICUS
+    assert store.hmin_source == "netcdf_global_attr_hmin"
     out, _qc, _drops, _floor = build_cufes_training_covariates_table(events, store)
-    path = tmp_path / "out.parquet"
+    path = tmp_path / "cufes_training_covariates.parquet"
     write_training_covariates_parquet(
         out,
         path,
         entry=require_approved("glorys", purpose="training"),
         store=store,
     )
+    assert path.is_file()
+    round_trip = pd.read_parquet(path)
+    assert len(round_trip) == len(events)
+    assert list(round_trip.columns) == list(TRAINING_OUTPUT_COLUMNS)
+    assert round_trip["event_id"].tolist() == events["event_id"].tolist()
+    row = round_trip.iloc[0]
+    assert not bool(row["excluded"])
+    assert np.isfinite(row["T3m"])
+    assert np.isfinite(row["bottom_depth_m"])
     meta = pq.read_metadata(path).metadata
     raw = meta.get(b"glorys")
     assert raw is not None
     doc = json.loads(raw.decode())
     assert GLORYS_CREDIT_TEXT in doc["attribution"]
     assert GLORYS_DOI in doc["attribution"]
+    assert doc["covariate_data_source"] == GLORYS_COVARIATE_SOURCE_COPERNICUS
     bottom = doc["bottom_depth_m"]
     assert bottom["source"] == WCOFS_BOTTOM_DEPTH_SOURCE
     assert bottom["variable"] == WCOFS_BOTTOM_DEPTH_VARIABLE
+    assert bottom["hmin_source"] == "netcdf_global_attr_hmin"
 
 
 def test_dry_run_prints_batch_count(tmp_path: Path) -> None:

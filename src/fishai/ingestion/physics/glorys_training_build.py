@@ -14,6 +14,17 @@ REASON_DATASET_NOT_IN_CATALOG = "glorys_dataset_not_in_catalog"
 REASON_DOWNLOAD_FAILED = "glorys_download_failed"
 REASON_DATE_NOT_COVERED = "glorys_date_not_covered"
 REASON_SYNTHETIC_PROVENANCE_FORBIDDEN = "glorys_synthetic_provenance_forbidden"
+REASON_WCOFS_BATHYMETRY_ARTIFACT_MISSING = "wcofs_bathymetry_artifact_missing"
+REASON_WCOFS_BATHYMETRY_PLACEHOLDER = "wcofs_bathymetry_placeholder_forbidden"
+
+COPERNICUS_ENV_VAR_NAMES: tuple[str, ...] = (
+    "COPERNICUSMARINE_SERVICE_USERNAME",
+    "COPERNICUSMARINE_SERVICE_PASSWORD",
+    "COPERNICUSMARINE_USERNAME",
+    "COPERNICUSMARINE_PASSWORD",
+    "CMEMS_USERNAME",
+    "CMEMS_PASSWORD",
+)
 
 
 class GlorysTrainingBuildError(RuntimeError):
@@ -63,6 +74,32 @@ def assert_store_ready_for_copernicus_export(store: Any, days: list[dt.date]) ->
         )
 
 
+def is_allowed_wcofs_hmin_source(hmin_source: str) -> bool:
+    """True when ``hmin_source`` came from a real WCOFS ROMS export (not a placeholder)."""
+    if not hmin_source or not str(hmin_source).strip():
+        return False
+    lowered = hmin_source.lower()
+    if "placeholder" in lowered or "synthetic" in lowered or "fixture" in lowered:
+        return False
+    return (
+        hmin_source.startswith("netcdf_global_attr_")
+        or hmin_source.startswith("netcdf_variable_")
+        or hmin_source == "wet_cell_minimum_h"
+    )
+
+
+def assert_wcofs_bathymetry_hmin_source(hmin_source: str) -> None:
+    if not is_allowed_wcofs_hmin_source(hmin_source):
+        raise GlorysTrainingBuildError(
+            REASON_WCOFS_BATHYMETRY_PLACEHOLDER,
+            f"refusing WCOFS bathymetry with hmin_source={hmin_source!r}",
+        )
+
+
+def assert_wcofs_bathymetry_store(store: Any) -> None:
+    assert_wcofs_bathymetry_hmin_source(str(getattr(store, "hmin_source", "")))
+
+
 def assert_may_write_glorys_training_parquet(store: Any | None) -> None:
     if store is None:
         raise GlorysTrainingBuildError(
@@ -80,3 +117,4 @@ def assert_may_write_glorys_training_parquet(store: Any | None) -> None:
             REASON_SYNTHETIC_PROVENANCE_FORBIDDEN,
             f"refusing GLORYS attribution for covariate_data_source={source!r}",
         )
+    assert_wcofs_bathymetry_store(store)
