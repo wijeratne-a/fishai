@@ -1,11 +1,14 @@
 {
   "schema_version": 1,
   "evidence_status": "EVIDENCE-ONLY until auditbot1 passes; not #5-ready while upwelling is null on all rows",
-  "code_sha": "PLACEHOLDER_UPDATE_AFTER_COMMIT",
+  "code_sha": "796252319bfdd96c1c28f50e0e793daf301fac39",
   "branch": "cursor/real-training-table-evidence",
   "review_scope_commits": [
     "379aad25b0d1b5842b4f61d143ab148d05a23435",
-    "b394309733bfc4022b0c729f17d97cc3ab3b2788"
+    "b394309733bfc4022b0c729f17d97cc3ab3b2788",
+    "5f188c21a897de45f8f28a4e790cf6dd151a4cef",
+    "31b8f2d79eab9edb317e39b1adb562877d17d790",
+    "3c94387a87b6259acaaec0cc14e46b7864e08664"
   ],
   "note_pr15_pr24": "Until PR #15 and PR #24 merge to main, this branch diff includes their commits via merge ancestry; review only the scoped commits above plus later evidence commits.",
   "cufes_input": {
