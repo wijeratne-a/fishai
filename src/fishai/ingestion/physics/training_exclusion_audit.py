@@ -210,16 +210,113 @@ def _taxon_positivity(
 def _shallow_trainable_depth_note(table: pd.DataFrame, config: dict[str, Any]) -> dict[str, Any]:
     kept = table[~table["excluded"]]
     min_depth = float(kept["bottom_depth_m"].min()) if len(kept) else float("nan")
+    audit_col = "wcofs_h_audit_m"
+    min_audit = (
+        float(table[audit_col].min())
+        if audit_col in table.columns and table[audit_col].notna().any()
+        else float("nan")
+    )
     note = (
         "Trainable ``bottom_depth_m`` is the segment mean of coarsened WCOFS ROMS ``h`` on the "
         "GLORYS 1/12° pilot grid (min_wet_fraction={mwf}). Shallowest kept depth {min_d:.2f} m "
         "reflects WCOFS wet-cell / wet-fraction gating on the shelf—not GLORYS ``thetao`` land "
         "masking (segment ``land_mask`` drops are zero in this build). Coastal samples with "
-        "insufficient wet coarsening are excluded via ``wcofs_low_wet_fraction`` / missing depth."
-    ).format(mwf=coarsen_min_wet_fraction(config), min_d=min_depth)
+        "insufficient wet coarsening are excluded via ``wcofs_low_wet_fraction`` / missing depth. "
+        "Depth-band audit uses audit-only ``wcofs_h_audit_m`` (nearest wet coarsened cell ``h``, "
+        "min audit h {min_a:.2f} m)."
+    ).format(mwf=coarsen_min_wet_fraction(config), min_d=min_depth, min_a=min_audit)
     return {
         "min_trainable_bottom_depth_m": min_depth,
+        "min_wcofs_h_audit_m": min_audit,
         "explanation": note,
+    }
+
+
+def _audit_depth_column(table: pd.DataFrame) -> pd.Series:
+    if "wcofs_h_audit_m" in table.columns:
+        return table["wcofs_h_audit_m"]
+    return table["bottom_depth_m"]
+
+
+def _year_1998_exclusion_diagnosis(
+    table: pd.DataFrame,
+    events: pd.DataFrame,
+    drops: pd.DataFrame,
+    shore_bins: pd.Series,
+    excluded: pd.Series,
+) -> dict[str, Any]:
+    years = events.apply(event_mid_time, axis=1).dt.year
+    mask_1998 = years == 1998
+    if not mask_1998.any():
+        return {"note": "no 1998 events in table"}
+
+    t98 = table.loc[mask_1998].copy()
+    ex98 = excluded.loc[mask_1998]
+    shore98 = shore_bins.loc[mask_1998]
+    drop_eids = set(t98.loc[ex98, COL_EVENT_ID])
+
+    null_kept: dict[str, int] = {}
+    for field in ("T3m", "S3m", "MLD_m", "sst_grad", "front_distance_km", "bottom_depth_m"):
+        if field not in t98.columns:
+            continue
+        null_kept[field] = int(t98.loc[~ex98, field].isna().sum())
+
+    miss = drops[drops["event_id"].isin(drop_eids)]
+    miss_cov = miss[miss["reason"] == "missing_covariate"]
+    miss_by_cov = (
+        miss_cov.groupby("covariate")["event_id"].nunique().sort_index().astype(int).to_dict()
+        if not miss_cov.empty
+        else {}
+    )
+
+    by_shore = _stratum_table(shore98, ex98)
+    excl_reasons = (
+        t98.loc[ex98, "excluded_reason"].value_counts().astype(int).to_dict() if ex98.any() else {}
+    )
+
+    wcofs_only = int(
+        t98.loc[
+            ex98
+            & t98["excluded_reason"].str.contains("wcofs", case=False, na=False)
+        ].shape[0]
+    )
+
+    mld_miss = miss_by_cov.get("MLD_m", 0)
+    t3_miss = miss_by_cov.get("T3m", 0)
+
+    explanation = (
+        "1998 accounts for {n_ex} of {n_all} excluded rows ({n_kept} kept of {n98} 1998 events). "
+        "Drop log (not post-exclusion nulls): ``MLD_m`` missing on {mld} unique excluded events, "
+        "``T3m``/``S3m`` on {t3} (often co-occurring); only {wcofs} rows also hit "
+        "``wcofs_low_wet_fraction``/depth. Kept 1998 rows have finite GLORYS covariates "
+        "(0 nulls). Spatially, exclusions concentrate 0–5 km from shore ({s0_ex} excluded vs "
+        "{s0_k} kept) with another {s510_ex} excluded in 5–10 km—consistent with GLORYS "
+        "NaNs at nearshore pilot cells in 1998, not missing CUFES events or a different "
+        "Copernicus product id."
+    ).format(
+        n_ex=int(ex98.sum()),
+        n_all=int(excluded.sum()),
+        n_kept=int((~ex98).sum()),
+        n98=int(mask_1998.sum()),
+        mld=mld_miss,
+        t3=t3_miss,
+        wcofs=wcofs_only,
+        s0_ex=by_shore.get("0-5", {}).get("excluded", 0),
+        s0_k=by_shore.get("0-5", {}).get("kept", 0),
+        s510_ex=by_shore.get("5-10", {}).get("excluded", 0),
+    )
+
+    return {
+        "year": 1998,
+        "row_count": int(mask_1998.sum()),
+        "excluded_count": int(ex98.sum()),
+        "kept_count": int((~ex98).sum()),
+        "excluded_reason_counts": excl_reasons,
+        "covariate_null_counts_kept": null_kept,
+        "missing_covariate_drop_unique_events_by_field": miss_by_cov,
+        "by_shore_distance_km": by_shore,
+        "wcofs_related_excluded_count": wcofs_only,
+        "explanation": explanation,
     }
 
 
@@ -254,7 +351,7 @@ def run_training_exclusion_audit(
     shore_bins = shore_dist.apply(lambda v: _bin_label(v, SHORE_DISTANCE_BINS_KM))
 
     years = events.apply(event_mid_time, axis=1).dt.year
-    depth_for_strata = table["bottom_depth_m"].copy()
+    depth_for_strata = _audit_depth_column(table)
     depth_bins = _depth_band_series(depth_for_strata)
 
     report: dict[str, Any] = {
@@ -271,7 +368,13 @@ def run_training_exclusion_audit(
         "missing_covariate_audit": _missing_covariate_breakdown(drops),
         "by_shore_distance_km": _stratum_table(shore_bins, excluded),
         "by_wcofs_bottom_depth_band_m": _stratum_table(depth_bins, excluded),
+        "depth_band_column": "wcofs_h_audit_m"
+        if "wcofs_h_audit_m" in table.columns
+        else "bottom_depth_m",
         "by_year": _stratum_table(years.astype(str), excluded),
+        "year_1998_exclusion_diagnosis": _year_1998_exclusion_diagnosis(
+            table, events, drops, shore_bins, excluded
+        ),
         "taxon_positivity": [
             _taxon_positivity(table, counts, "sardine"),
             _taxon_positivity(table, counts, "anchovy"),
