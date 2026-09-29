@@ -12,7 +12,7 @@ from fishai.ingestion.biology.cps_trawl.constants import (
     ZERO_FRAME_UNVERIFIED_REASON,
 )
 from fishai.ingestion.biology.cps_trawl.taxonomy import (
-    canonical_species_tsn,
+    catch_row_establishes_target_presence,
     unresolved_taxon_blocks_target,
 )
 from fishai.ingestion.biology.cps_trawl.zero_frame import (
@@ -86,20 +86,22 @@ def expand_haul_species_matrix(
         )
 
         haul_catch = catch_by_haul.get(haul_id, [])
-        catch_by_tsn: dict[int, Mapping[str, Any]] = {}
-        for row in haul_catch:
-            tsn = canonical_species_tsn(_parse_catch_tsn(row))
-            if tsn is None:
-                continue
-            catch_by_tsn[tsn] = row
 
         for species in species_list:
             target_tsn = species_itis_tsn.get(species)
             if target_tsn is None:
                 raise ValueError(f"species_itis_tsn missing entry for target species: {species}")
-            canonical_target = canonical_species_tsn(target_tsn)
 
-            row = catch_by_tsn.get(canonical_target) if canonical_target is not None else None
+            row: Mapping[str, Any] | None = None
+            for catch_row in haul_catch:
+                catch_species = str(catch_row.get("species", ""))
+                catch_tsn = _parse_catch_tsn(catch_row)
+                if catch_row_establishes_target_presence(
+                    catch_species, catch_tsn, species, target_tsn
+                ):
+                    row = catch_row
+                    break
+
             if row is not None:
                 out.append(
                     {
@@ -120,7 +122,9 @@ def expand_haul_species_matrix(
                 for catch_row in haul_catch:
                     catch_species = str(catch_row.get("species", ""))
                     catch_tsn = _parse_catch_tsn(catch_row)
-                    if unresolved_taxon_blocks_target(catch_species, catch_tsn, species):
+                    if unresolved_taxon_blocks_target(
+                        catch_species, catch_tsn, species, target_tsn
+                    ):
                         per_target_block = UNRESOLVED_HIGHER_TAXON_REASON
                         break
 

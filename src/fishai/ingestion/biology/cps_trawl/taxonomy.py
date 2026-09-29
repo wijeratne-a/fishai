@@ -62,6 +62,68 @@ def _has_ambiguous_name_token(scientific_name: str) -> bool:
     return any(token in lower for token in _AMBIGUOUS_NAME_TOKENS)
 
 
+def is_genus_only_taxon(scientific_name: str) -> bool:
+    """True for a single-word genus name (e.g. ``Sardinops``), not family/order ranks."""
+    name = scientific_name.strip()
+    if not name:
+        return False
+    if _genera_for_family_or_order(name) is not None:
+        return False
+    parts = name.split()
+    return len(parts) == 1
+
+
+def species_name_matches_target(catch_species: str, target_species: str) -> bool:
+    """True when ``catch_species`` is the target binomial or an infraspecific of it."""
+    catch_parts = catch_species.strip().split()
+    target_parts = target_species.strip().split()
+    if len(target_parts) < 2 or len(catch_parts) < 2:
+        return False
+    return catch_parts[0] == target_parts[0] and catch_parts[1] == target_parts[1]
+
+
+def taxon_identity_disagreement_blocks_target(
+    catch_species: str,
+    catch_itis_tsn: int | None,
+    target_species: str,
+    target_itis_tsn: int | None,
+) -> bool:
+    """Name and TSN disagree on whether this row is the target species."""
+    name_matches = species_name_matches_target(catch_species, target_species)
+    canon_catch = canonical_species_tsn(catch_itis_tsn)
+    canon_target = canonical_species_tsn(target_itis_tsn)
+    if name_matches and canon_catch != canon_target:
+        return True
+    if (
+        canon_catch is not None
+        and canon_target is not None
+        and canon_catch == canon_target
+        and not name_matches
+    ):
+        return True
+    return False
+
+
+def catch_row_establishes_target_presence(
+    catch_species: str,
+    catch_itis_tsn: int | None,
+    target_species: str,
+    target_itis_tsn: int | None,
+) -> bool:
+    """True only when name and TSN both agree on the target species (or subspecies)."""
+    if is_unresolved_higher_taxon(catch_species, catch_itis_tsn):
+        return False
+    if taxon_identity_disagreement_blocks_target(
+        catch_species, catch_itis_tsn, target_species, target_itis_tsn
+    ):
+        return False
+    canon_catch = canonical_species_tsn(catch_itis_tsn)
+    canon_target = canonical_species_tsn(target_itis_tsn)
+    if canon_catch is None or canon_target is None or canon_catch != canon_target:
+        return False
+    return species_name_matches_target(catch_species, target_species)
+
+
 def is_unresolved_higher_taxon(scientific_name: str, itis_tsn: int | None) -> bool:
     """
     True when the row is a coarser taxon that could subsume species-level targets.
@@ -84,6 +146,8 @@ def is_unresolved_higher_taxon(scientific_name: str, itis_tsn: int | None) -> bo
         return True
     if _genera_for_family_or_order(name) is not None:
         return True
+    if is_genus_only_taxon(name):
+        return True
     return False
 
 
@@ -91,8 +155,13 @@ def unresolved_taxon_blocks_target(
     catch_species: str,
     catch_itis_tsn: int | None,
     target_species: str,
+    target_itis_tsn: int | None = None,
 ) -> bool:
     """True when an unresolved catch row could include ``target_species``."""
+    if target_itis_tsn is not None and taxon_identity_disagreement_blocks_target(
+        catch_species, catch_itis_tsn, target_species, target_itis_tsn
+    ):
+        return True
     if not is_unresolved_higher_taxon(catch_species, catch_itis_tsn):
         return False
     name = catch_species.strip()
@@ -112,6 +181,8 @@ def unresolved_taxon_blocks_target(
     genera = _genera_for_family_or_order(name)
     if genera is not None:
         return tgt_genus in genera
+    if is_genus_only_taxon(name):
+        return name.split()[0] == tgt_genus
     if catch_itis_tsn is None:
         return True
     return False
