@@ -232,11 +232,13 @@ def _catalog_entries_from_json_payload(payload: object) -> list[GlorysCatalogEnt
                 _REASON_GLORYS_DATASET_NOT_IN_CATALOG,
                 "glorys: pinned catalogue entry must be an object",
             )
-        dataset_id = str(item.get("dataset_id") or "").strip()
-        version = str(item.get("dataset_version") or "").strip()
+        dataset_id_raw = item.get("dataset_id")
+        version_raw = item.get("dataset_version")
         start_raw = item.get("coverage_start")
         end_raw = item.get("coverage_end")
-        if not dataset_id or not version or not start_raw or not end_raw:
+        dataset_id = "" if dataset_id_raw is None else str(dataset_id_raw).strip()
+        version = "" if version_raw is None else str(version_raw).strip()
+        if dataset_id == "" or version == "" or not start_raw or not end_raw:
             raise GlorysCatalogError(
                 _REASON_GLORYS_DATASET_NOT_IN_CATALOG,
                 "glorys: pinned catalogue entry missing required fields",
