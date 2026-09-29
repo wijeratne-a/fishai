@@ -7,19 +7,20 @@ import io
 from dataclasses import dataclass
 from typing import Literal
 
-import requests
+import fsspec
 import xarray as xr
 
-from fishai.ingestion.physics.http_util import _CONNECT_TIMEOUT, _READ_TIMEOUT
+from fishai.ingestion.physics.http_util import get_bytes
 from fishai.ingestion.physics.wcofs_daily import read_ocean_time_utc
 from fishai.ingestion.physics.wcofs_pds_store import (
+    WCOFS_PDS_BUCKET,
     ListKeysFn,
     _s3_url,
     resolve_avg_nowcast_key,
     resolve_fields_key,
 )
+
 ProductKind = Literal["fields", "avg_nowcast"]
-OCEAN_TIME_RANGE_BYTES = 250_000
 
 
 @dataclass
@@ -54,21 +55,33 @@ def _cached_list_keys(inner: ListKeysFn, budget: HttpRequestBudget | None) -> Li
     return wrapped
 
 
-def _fetch_netcdf_prefix(url: str, *, budget: HttpRequestBudget | None) -> bytes:
-    headers = {"Range": f"bytes=0-{OCEAN_TIME_RANGE_BYTES - 1}"}
-    if budget is not None:
-        budget.charge_get()
-    resp = requests.get(url, headers=headers, timeout=(_CONNECT_TIMEOUT, _READ_TIMEOUT))
-    if resp.status_code not in (200, 206):
-        resp.raise_for_status()
-    return resp.content
+def _read_ocean_time_from_open_dataset(open_fn) -> dt.datetime:
+    with open_fn() as handle:
+        ds = xr.open_dataset(handle, engine="h5netcdf", decode_times=False)
+        try:
+            ds["ocean_time"].load()
+            return read_ocean_time_utc(ds)
+        finally:
+            ds.close()
 
 
 def read_ocean_time_from_s3_key(key: str, *, budget: HttpRequestBudget | None = None) -> dt.datetime:
-    url = _s3_url(key)
-    chunk = _fetch_netcdf_prefix(url, budget=budget)
-    with xr.open_dataset(io.BytesIO(chunk), engine="h5netcdf", decode_times=False) as ds:
-        return read_ocean_time_utc(ds)
+    """Lazy S3 read of ``ocean_time`` only (HDF5 metadata + one scalar chunk)."""
+    url = f"s3://{WCOFS_PDS_BUCKET}/{key.lstrip('/')}"
+    fs = fsspec.filesystem("s3", anon=True)
+
+    def open_s3():
+        if budget is not None:
+            budget.charge_get()
+        return fs.open(url, "rb")
+
+    try:
+        return _read_ocean_time_from_open_dataset(open_s3)
+    except Exception:
+        if budget is not None:
+            budget.charge_get()
+        data = get_bytes(_s3_url(key), extra_cache_key=key)
+        return _read_ocean_time_from_open_dataset(lambda: io.BytesIO(data))
 
 
 def probe_fields_ocean_time(
