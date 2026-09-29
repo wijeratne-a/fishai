@@ -82,7 +82,12 @@ def _probe_one(
         return ref, None, None, f"{type(exc).__name__}: {exc}"
 
 
-def run_evidence(*, max_http_requests: int | None) -> dict[str, Any]:
+def run_evidence(
+    *,
+    max_http_requests: int | None,
+    avg_only: bool = False,
+    fields_only: bool = False,
+) -> dict[str, Any]:
     config = load_overlap_config()
     days = overlap_dates(config)
     budget = HttpRequestBudget()
@@ -102,7 +107,12 @@ def run_evidence(*, max_http_requests: int | None) -> dict[str, Any]:
 
     seen: set[str] = set()
     unique_refs: list[FileRef] = []
-    for ref in field_refs + legacy_avg_refs + new_avg_refs:
+    ref_lists = []
+    if not avg_only:
+        ref_lists.append(field_refs)
+    if not fields_only:
+        ref_lists.extend([legacy_avg_refs, new_avg_refs])
+    for ref in [r for group in ref_lists for r in group]:
         key = ref.cache_key()
         if key in seen:
             continue
@@ -258,7 +268,7 @@ def run_evidence(*, max_http_requests: int | None) -> dict[str, Any]:
 
     return {
         "git_sha": "678b853500cee8308975fcbebcb10b1b09695d34",
-        "evidence_branch_sha": "01583fb",
+        "evidence_branch_sha": "bf542b5",
         "overlap_days_attempted": len(days),
         "http_requests": {
             "list": budget.list_requests,
@@ -322,8 +332,22 @@ def main(argv: list[str] | None = None) -> int:
         default=None,
         help="Write JSON report (not committed)",
     )
+    parser.add_argument(
+        "--fields-only",
+        action="store_true",
+        help="Probe 3-hourly nowcast fields only",
+    )
+    parser.add_argument(
+        "--avg-only",
+        action="store_true",
+        help="Probe avg.nowcast legacy + D+1 cycles only",
+    )
     args = parser.parse_args(argv)
-    report = run_evidence(max_http_requests=args.max_http_requests)
+    report = run_evidence(
+        max_http_requests=args.max_http_requests,
+        avg_only=args.avg_only,
+        fields_only=args.fields_only,
+    )
     text = json.dumps(report, indent=2, sort_keys=True)
     print(text)
     if args.json_out is not None:
