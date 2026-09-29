@@ -74,14 +74,16 @@ if (!is.na(counts_path)) {
 if (!is.na(cov_path)) {
   cfg$data$covariates_path <- cov_path
 }
-drops_empty <- file.path(out_dir, paste0(species, "_empty_drops.csv"))
-drops_src <- file.path(root, "src", "models", "tests", "fixtures", "synthetic_covariate_drops.csv")
-if (file.exists(drops_src)) {
-  file.copy(drops_src, drops_empty, overwrite = TRUE)
-} else {
-  writeLines("event_id,reason,covariate,latitude,longitude", drops_empty)
+if (is.null(cfg$data$covariate_drops_path) || !nzchar(cfg$data$covariate_drops_path)) {
+  drops_empty <- file.path(out_dir, paste0(species, "_empty_drops.csv"))
+  drops_src <- file.path(root, "src", "models", "tests", "fixtures", "synthetic_covariate_drops.csv")
+  if (file.exists(drops_src)) {
+    file.copy(drops_src, drops_empty, overwrite = TRUE)
+  } else {
+    writeLines("event_id,reason,covariate,latitude,longitude", drops_empty)
+  }
+  cfg$data$covariate_drops_path <- drops_empty
 }
-cfg$data$covariate_drops_path <- drops_empty
 cfg$data$covariate_drop_summary_path <- NULL
 cfg$data$event_count_guard <- NULL
 
@@ -127,6 +129,8 @@ if (length(qc_load$dropped_unavailable_covariates)) {
 }
 
 bot2_branch_ref <- "origin/cursor/cufes-glorys-training-covariates-faff"
+pr15_pin_ref <- Sys.getenv("PR15_PIN_REF", unset = "794261bfb0cd86ce72145190a1b564ea85202865")
+pr15_pin_short <- substr(pr15_pin_ref, 1L, 7L)
 branch_existed <- system2(
   "git",
   c("rev-parse", "--verify", bot2_branch_ref),
@@ -248,6 +252,9 @@ manifest <- list(
   out_dir = out_dir,
   config = config_path,
   bot2_branch_ref = "cursor/cufes-glorys-training-covariates-faff",
+  pr15_pull = "https://github.com/wijeratne-a/fishai/pull/15",
+  pr15_pin_ref = pr15_pin_ref,
+  pr15_pin_short = pr15_pin_short,
   branch_existed = branch_existed,
   mode = schema_mode,
   dropped_unavailable_covariates = as.list(qc_load$dropped_unavailable_covariates %||% character()),
