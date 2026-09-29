@@ -97,13 +97,15 @@ fit_delta_engine <- function(dat, mesh, cfg) {
   }
   fit <- do.call(sdmTMB::sdmTMB, fit_args)
 
-  structure(
-    list(
-      fit = fit,
-      delta_type = cfg$model$delta_type %||% "poisson-link"
-    ),
-    class = "fishai_fit"
+  out <- list(
+    fit = fit,
+    delta_type = cfg$model$delta_type %||% "poisson-link",
+    mesh_spatial_scale = mesh_spatial_scale_report(
+      mesh,
+      structure(list(fit = fit), class = "fishai_fit")
+    )
   )
+  structure(out, class = "fishai_fit")
 }
 
 #' @export

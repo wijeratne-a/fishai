@@ -73,6 +73,10 @@ test_that("spatial CV output includes fold table and block metadata", {
   )
   expect_gte(cv$spatial_block_cv$block_size_km, cv$spatial_block_cv$spatial_range_km)
   expect_equal(cv$spatial_block_cv$block_size_km, max(cfg$mesh$cutoff_km, cfg$mesh$range_guess_km))
+  expect_true("mesh_spatial_scale" %in% names(cv))
+  ms <- cv$mesh_spatial_scale
+  expect_true(is.finite(ms$water_triangle_edge_km$median_km))
+  expect_true(is.na(ms$fitted_spatial_range_km))
 })
 
 test_that("spatial CV shares identical folds across species on the same events", {

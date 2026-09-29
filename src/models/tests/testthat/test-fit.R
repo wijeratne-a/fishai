@@ -13,4 +13,13 @@ test_that("pilot config uses poisson-link delta with log effort offset", {
   mesh <- build_fishai_mesh(dat, cfg$mesh)
   fit <- fit_delta_engine(dat, mesh, cfg)
   expect_true(fit_uses_log_effort_offset(fit))
+  expect_true("mesh_spatial_scale" %in% names(fit))
+  ms <- fit$mesh_spatial_scale
+  expect_true(all(c(
+    "fitted_spatial_range_km",
+    "water_triangle_edge_km",
+    "barrier_triangle_edge_km"
+  ) %in% names(ms)))
+  expect_true(is.finite(ms$water_triangle_edge_km$min_km))
+  expect_true(is.finite(ms$fitted_spatial_range_km))
 })
