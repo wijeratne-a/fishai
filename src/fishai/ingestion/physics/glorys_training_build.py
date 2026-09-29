@@ -92,6 +92,21 @@ def is_allowed_wcofs_hmin_source(hmin_source: str) -> bool:
     )
 
 
+# Retired live-build stand-in: a spatially constant 500 m ``h`` is not WCOFS bathymetry.
+PLACEHOLDER_FLAT_BOTTOM_DEPTH_M = 500.0
+
+
+def is_flat_placeholder_bathymetry(h_m: Any) -> bool:
+    """True when every finite depth equals the retired 500 m placeholder."""
+    import numpy as np
+
+    arr = np.asarray(h_m, dtype=float)
+    finite = arr[np.isfinite(arr)]
+    if finite.size == 0:
+        return False
+    return bool(np.all(np.isclose(finite, PLACEHOLDER_FLAT_BOTTOM_DEPTH_M)))
+
+
 def assert_wcofs_bathymetry_hmin_source(hmin_source: str) -> None:
     if not is_allowed_wcofs_hmin_source(hmin_source):
         raise GlorysTrainingBuildError(
@@ -100,8 +115,17 @@ def assert_wcofs_bathymetry_hmin_source(hmin_source: str) -> None:
         )
 
 
+def assert_wcofs_h_array_not_placeholder(h_m: Any) -> None:
+    if is_flat_placeholder_bathymetry(h_m):
+        raise GlorysTrainingBuildError(
+            REASON_WCOFS_BATHYMETRY_PLACEHOLDER,
+            "refusing flat 500 m WCOFS h placeholder; load regridded ROMS h",
+        )
+
+
 def assert_wcofs_bathymetry_store(store: Any) -> None:
     assert_wcofs_bathymetry_hmin_source(str(getattr(store, "hmin_source", "")))
+    assert_wcofs_h_array_not_placeholder(getattr(store, "wcofs_h_m", None))
 
 
 def assert_may_write_glorys_training_parquet(store: Any | None) -> None:
