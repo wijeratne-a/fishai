@@ -18,8 +18,8 @@ test_that("min_duration_min drops short events and logs QC", {
   writeLines(
     paste(
       cufes_covariates_csv_header(),
-      "CUFES:T:AK:long,0,0,0,0,0,0,0,FALSE",
-      "CUFES:T:AK:short,0,0,0,0,0,0,0,FALSE",
+      "CUFES:T:AK:long,0,0,0,0,0,0,0,cmems_mod_glo_phy_my_0.083deg_P1D-m,FALSE",
+      "CUFES:T:AK:short,0,0,0,0,0,0,0,cmems_mod_glo_phy_my_0.083deg_P1D-m,FALSE",
       sep = "\n"
     ),
     cov

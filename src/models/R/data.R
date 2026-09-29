@@ -745,6 +745,7 @@ fishai_data_prep_qc <- function(dat) {
   for (col in extra_cov_cols) {
     events[[col]] <- cov[[col]]
   }
+  .assert_glorys_covariate_source_product(events, cfg)
   events <- .map_model_covariates(events, cfg)
   .assert_non_excluded_covariates_complete(events, cfg)
   ex <- .parse_excluded_logical(events$excluded)

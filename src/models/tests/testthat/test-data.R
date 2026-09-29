@@ -26,8 +26,8 @@ test_that("missing effort rows are refused", {
   writeLines(
     paste(
       cufes_covariates_csv_header(),
-      "CUFES:T:AK:a,0,0,0,0,0,0,0,FALSE",
-      "CUFES:T:AK:b,0,0,0,0,0,0,0,FALSE",
+      "CUFES:T:AK:a,0,0,0,0,0,0,0,cmems_mod_glo_phy_my_0.083deg_P1D-m,FALSE",
+      "CUFES:T:AK:b,0,0,0,0,0,0,0,cmems_mod_glo_phy_my_0.083deg_P1D-m,FALSE",
       sep = "\n"
     ),
     cov
@@ -112,8 +112,8 @@ test_that("cufes_events counts and covariates join on event_id", {
   writeLines(
     paste(
       cufes_covariates_csv_header(),
-      "CUFES:2024:SH:1,0.1,0.2,10,0,0,0,0,FALSE",
-      "CUFES:2024:SH:2,0.2,0.3,11,0,0,0,0,FALSE",
+      "CUFES:2024:SH:1,0.1,0.2,10,0,0,0,0,cmems_mod_glo_phy_myint_0.083deg_P1D-m,FALSE",
+      "CUFES:2024:SH:2,0.2,0.3,11,0,0,0,0,cmems_mod_glo_phy_myint_0.083deg_P1D-m,FALSE",
       sep = "\n"
     ),
     cov
@@ -156,7 +156,7 @@ test_that("mesh X/Y are UTM 11N track midpoints", {
   writeLines(
     paste(
       cufes_covariates_csv_header(),
-      "CUFES:T:AK:mid,1,1,1,0,0,0,0,FALSE",
+      "CUFES:T:AK:mid,1,1,1,0,0,0,0,cmems_mod_glo_phy_my_0.083deg_P1D-m,FALSE",
       sep = "\n"
     ),
     cov
@@ -193,7 +193,7 @@ test_that("covariate event_id mismatch is refused when covariates omit an event"
   writeLines(
     paste(
       cufes_covariates_csv_header(),
-      "CUFES:T:AK:ok,0,0,0,0,0,0,0,FALSE",
+      "CUFES:T:AK:ok,0,0,0,0,0,0,0,cmems_mod_glo_phy_my_0.083deg_P1D-m,FALSE",
       sep = "\n"
     ),
     cov
@@ -227,8 +227,8 @@ test_that("missing endpoint dropped with aligned covariate ids", {
   writeLines(
     paste(
       cufes_covariates_csv_header(),
-      "CUFES:T:AK:ok,0,0,0,0,0,0,0,FALSE",
-      "CUFES:T:AK:bad,0,0,0,0,0,0,0,FALSE",
+      "CUFES:T:AK:ok,0,0,0,0,0,0,0,cmems_mod_glo_phy_my_0.083deg_P1D-m,FALSE",
+      "CUFES:T:AK:bad,0,0,0,0,0,0,0,cmems_mod_glo_phy_my_0.083deg_P1D-m,FALSE",
       sep = "\n"
     ),
     cov
@@ -264,7 +264,7 @@ test_that("covariate event_id mismatch is refused", {
   writeLines(
     paste(
       cufes_covariates_csv_header(),
-      "CUFES:T:AK:b,0,0,0,0,0,0,0,FALSE",
+      "CUFES:T:AK:b,0,0,0,0,0,0,0,cmems_mod_glo_phy_my_0.083deg_P1D-m,FALSE",
       sep = "\n"
     ),
     cov
@@ -335,7 +335,7 @@ test_that("bot1 start_latitude columns are accepted on cufes_events", {
   writeLines(
     paste(
       cufes_covariates_csv_header(),
-      "CUFES:T:AK:bot,0,0,0,0,0,0,0,FALSE",
+      "CUFES:T:AK:bot,0,0,0,0,0,0,0,cmems_mod_glo_phy_my_0.083deg_P1D-m,FALSE",
       sep = "\n"
     ),
     cov
@@ -374,8 +374,8 @@ test_that("empty covariate on non-excluded row stops with error", {
   writeLines(
     paste(
       cufes_covariates_csv_header(),
-      "CUFES:T:AK:ok,0.5,0,0,0,0,0,0,FALSE",
-      "CUFES:T:AK:na,,0,0,0,0,0,0,FALSE",
+      "CUFES:T:AK:ok,0.5,0,0,0,0,0,0,cmems_mod_glo_phy_my_0.083deg_P1D-m,FALSE",
+      "CUFES:T:AK:na,,0,0,0,0,0,0,cmems_mod_glo_phy_my_0.083deg_P1D-m,FALSE",
       sep = "\n"
     ),
     cov

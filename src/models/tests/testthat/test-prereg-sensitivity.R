@@ -49,7 +49,7 @@ test_that("missing count row species framing excludes taxon without zero imputat
   writeLines(
     paste(
       cufes_covariates_csv_header(),
-      paste0(eid, ",0,0,0,0,0,0,0,FALSE"),
+      paste0(eid, ",0,0,0,0,0,0,0,cmems_mod_glo_phy_my_0.083deg_P1D-m,FALSE"),
       sep = "\n"
     ),
     cov

@@ -68,8 +68,8 @@ test_that("excluded_no_count_row counts events without taxon row", {
   writeLines(
     paste(
       cufes_covariates_csv_header(),
-      "CUFES:T:AK:a,0,0,0,0,0,0,0,FALSE",
-      "CUFES:T:AK:b,0,0,0,0,0,0,0,FALSE",
+      "CUFES:T:AK:a,0,0,0,0,0,0,0,cmems_mod_glo_phy_my_0.083deg_P1D-m,FALSE",
+      "CUFES:T:AK:b,0,0,0,0,0,0,0,cmems_mod_glo_phy_my_0.083deg_P1D-m,FALSE",
       sep = "\n"
     ),
     cov

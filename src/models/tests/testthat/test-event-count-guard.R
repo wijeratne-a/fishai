@@ -14,7 +14,7 @@ test_that("event_count_guard reads from config and stops on mismatch", {
   writeLines(
     paste(
       cufes_covariates_csv_header(),
-      "CUFES:T:AK:a,0,0,0,0,0,0,0,FALSE",
+      "CUFES:T:AK:a,0,0,0,0,0,0,0,cmems_mod_glo_phy_my_0.083deg_P1D-m,FALSE",
       sep = "\n"
     ),
     cov
