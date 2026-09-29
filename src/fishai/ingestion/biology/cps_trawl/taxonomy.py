@@ -35,6 +35,7 @@ _UNIDENTIFIED_FISH_RE = re.compile(r"unidentified\s+fish", re.IGNORECASE)
 _FAMILY_RE = re.compile(r"^[A-Za-z]+idae$", re.IGNORECASE)
 _ORDER_RE = re.compile(r"^[A-Za-z]+iformes$", re.IGNORECASE)
 _AMBIGUOUS_NAME_TOKENS: Final = ("unid.", "unidentified", "larvae")
+_UNCERTAIN_ID_TOKENS: Final = frozenset({"cf", "cf.", "aff", "aff."})
 
 
 def normalize_scientific_name(scientific_name: str) -> str:
@@ -92,6 +93,13 @@ def _has_ambiguous_name_token(scientific_name: str) -> bool:
     return any(token in lower for token in _AMBIGUOUS_NAME_TOKENS)
 
 
+def _has_uncertain_id_qualifier(scientific_name: str) -> bool:
+    """True for cf./aff. qualifiers or ``?`` attached to or between name tokens."""
+    if "?" in scientific_name:
+        return True
+    return any(token in _UNCERTAIN_ID_TOKENS for token in scientific_name.lower().split())
+
+
 def is_genus_only_taxon(scientific_name: str) -> bool:
     """True for a single-word genus name (e.g. ``Sardinops``), not family/order ranks."""
     name = scientific_name.strip()
@@ -104,7 +112,11 @@ def is_genus_only_taxon(scientific_name: str) -> bool:
 
 
 def species_name_matches_target(catch_species: str, target_species: str) -> bool:
-    """True when ``catch_species`` is the target binomial (modulo case/whitespace/authors)."""
+    """True when ``catch_species`` is the target binomial (modulo case/whitespace/authors).
+
+    A trinomial such as ``Sardinops sagax caerulea`` with species TSN 161729 counts as
+    sardine presence on purpose (genus + epithet match after normalization).
+    """
     catch_norm = normalize_scientific_name(catch_species)
     target_norm = normalize_scientific_name(target_species)
     if not catch_norm or not target_norm:
@@ -176,6 +188,8 @@ def is_unresolved_higher_taxon(scientific_name: str, itis_tsn: int | None) -> bo
         return True
     if _has_ambiguous_name_token(name):
         return True
+    if _has_uncertain_id_qualifier(name):
+        return True
     if " sp." in name or name.endswith(" spp.") or name.endswith(" sp"):
         return True
     if _genera_for_family_or_order(name) is not None:
@@ -209,6 +223,9 @@ def unresolved_taxon_blocks_target(
         return True
     if _has_ambiguous_name_token(name):
         return True
+    if _has_uncertain_id_qualifier(name):
+        catch_genus = name.split()[0]
+        return catch_genus.lower() == tgt_genus.lower()
     if " sp." in name or name.endswith(" spp.") or name.endswith(" sp"):
         catch_genus = name.split()[0]
         return catch_genus == tgt_genus

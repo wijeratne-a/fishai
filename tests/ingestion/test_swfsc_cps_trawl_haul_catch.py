@@ -748,6 +748,55 @@ class CpsTrawlSyncGenusAndNameTsnTests(unittest.TestCase):
         self.assertTrue(sard["is_implied_zero"])
         self.assertEqual(sard["fill_reason"], "verified_zero_frame")
 
+    def test_sync_uncertain_id_qualifiers_block_pilot_species_zeros(self) -> None:
+        # ITIS genus TSN 161728 = Sardinops; unrelated species TSNs exercise non-target IDs.
+        sardinops_genus_tsn = "161728"
+        engraulis_genus_tsn = "999011"
+        sardine_cases = (
+            ("Sardinops cf. sagax", sardinops_genus_tsn),
+            ("Sardinops cf. sagax", str(ITIS_TSN_ENGRAULIS_MORDAX)),
+            ("Sardinops aff. sagax", sardinops_genus_tsn),
+            ("Sardinops aff. sagax", str(ITIS_TSN_ENGRAULIS_MORDAX)),
+            ("Sardinops sagax?", sardinops_genus_tsn),
+            ("Sardinops sagax?", str(ITIS_TSN_ENGRAULIS_MORDAX)),
+            ("Sardinops ?sagax", sardinops_genus_tsn),
+            ("Sardinops ?sagax", str(ITIS_TSN_ENGRAULIS_MORDAX)),
+        )
+        anchovy_cases = (
+            ("Engraulis cf. mordax", engraulis_genus_tsn),
+            ("Engraulis cf. mordax", str(ITIS_TSN_SARDINOPS_SAGAX)),
+            ("Engraulis aff. mordax", engraulis_genus_tsn),
+            ("Engraulis aff. mordax", str(ITIS_TSN_SARDINOPS_SAGAX)),
+            ("Engraulis mordax?", engraulis_genus_tsn),
+            ("Engraulis mordax?", str(ITIS_TSN_SARDINOPS_SAGAX)),
+            ("Engraulis ?mordax", engraulis_genus_tsn),
+            ("Engraulis ?mordax", str(ITIS_TSN_SARDINOPS_SAGAX)),
+        )
+        rows: list[dict[str, str]] = []
+        haul_ids: list[int] = []
+        haul = 1
+        for scientific_name, itis_tsn in sardine_cases + anchovy_cases:
+            rows.append(self._erddap_row(str(haul), scientific_name, itis_tsn))
+            haul_ids.append(haul)
+            haul += 1
+        with tempfile.TemporaryDirectory() as tmp:
+            evidence = _evidence_yaml_tmp(Path(tmp), hauls=haul_ids)
+            matrix = _matrix_rows(_run_sync_cps_trawl(rows, evidence, Path(tmp) / "processed"))
+        for haul_num, (scientific_name, _) in enumerate(sardine_cases, start=1):
+            haul_matrix = [m for m in matrix if m["haul_id"].endswith(f":{haul_num}")]
+            sard = next(m for m in haul_matrix if m["species"] == "Sardinops sagax")
+            with self.subTest(species="Sardinops sagax", name=scientific_name, haul=haul_num):
+                self.assertEqual(sard["fill_reason"], UNRESOLVED_HIGHER_TAXON_REASON)
+                self.assertFalse(sard["is_implied_zero"])
+        offset = len(sardine_cases)
+        for idx, (scientific_name, _) in enumerate(anchovy_cases, start=1):
+            haul_num = offset + idx
+            haul_matrix = [m for m in matrix if m["haul_id"].endswith(f":{haul_num}")]
+            anch = next(m for m in haul_matrix if m["species"] == "Engraulis mordax")
+            with self.subTest(species="Engraulis mordax", name=scientific_name, haul=haul_num):
+                self.assertEqual(anch["fill_reason"], UNRESOLVED_HIGHER_TAXON_REASON)
+                self.assertFalse(anch["is_implied_zero"])
+
 
 class CpsTrawlMergeSpeciesTests(unittest.TestCase):
     def test_weighted_row_wins_over_presence_only_duplicate(self) -> None:
