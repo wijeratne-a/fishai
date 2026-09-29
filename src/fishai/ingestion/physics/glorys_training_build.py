@@ -50,6 +50,10 @@ def assert_copernicus_env_credentials() -> None:
 
 def classify_copernicus_subset_error(exc: BaseException) -> str:
     """Map toolbox / HTTP failures to stable reason codes (no secrets in messages)."""
+    from fishai.ingestion.physics.glorys_catalog import GlorysCatalogError
+
+    if isinstance(exc, GlorysCatalogError):
+        return exc.reason_code
     text = str(exc).lower()
     if "not found" in text or "not in catalog" in text:
         return REASON_DATASET_NOT_IN_CATALOG

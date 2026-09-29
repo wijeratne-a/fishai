@@ -71,6 +71,7 @@ from fishai.ingestion.physics.glorys_training_build import (
     assert_wcofs_bathymetry_hmin_source,
     classify_copernicus_subset_error,
 )
+from fishai.ingestion.physics.glorys_catalog import guard_glorys_version_before_fetch
 from fishai.ingestion.physics.sources.glorys import (
     glorys_column_features,
     glorys_dataset_id_for_date,
@@ -544,10 +545,16 @@ def _subset_batch_live(
 
     output_dir.mkdir(parents=True, exist_ok=True)
     out_file = subset_nc_path(output_dir, batch)
+    resolution = guard_glorys_version_before_fetch(batch.date_start, log_path=log_path)
     glorys_dataset_id_for_date(batch.date_start, batch.dataset_id)
+    if batch.dataset_id != resolution.dataset_id:
+        raise ValueError(
+            f"batch dataset_id {batch.dataset_id!r} does not match catalogue "
+            f"resolution {resolution.dataset_id!r}"
+        )
     la0, la1, lo0, lo1 = batch.bbox
     copernicusmarine.subset(
-        dataset_id=batch.dataset_id,
+        dataset_id=resolution.dataset_id,
         variables=list(batch.variables),
         minimum_latitude=la0,
         maximum_latitude=la1,
@@ -559,26 +566,17 @@ def _subset_batch_live(
         end_datetime=f"{batch.date_end.isoformat()}T23:59:59",
         output_filename=str(out_file),
     )
-    version = ""
-    try:
-        import xarray as xr
-
-        with xr.open_dataset(out_file) as ds:
-            version = str(ds.attrs.get("product_version") or ds.attrs.get("version") or "")
-    except Exception:
-        version = ""
-    append_pull_log(
-        build_pull_record(
-            dataset_id=batch.dataset_id,
-            date_start=batch.date_start.isoformat(),
-            date_end=batch.date_end.isoformat(),
-            variables=batch.variables,
-            bbox=batch.bbox,
-            dataset_version=version or None,
-            file_sha256=_sha256_file(out_file),
-        ),
-        log_path=log_path,
+    pull_record = build_pull_record(
+        dataset_id=resolution.dataset_id,
+        date_start=batch.date_start.isoformat(),
+        date_end=batch.date_end.isoformat(),
+        variables=batch.variables,
+        bbox=batch.bbox,
+        dataset_version=resolution.dataset_version,
+        file_sha256=_sha256_file(out_file),
     )
+    pull_record.update(resolution.pull_log_fields())
+    append_pull_log(pull_record, log_path=log_path)
     return out_file
 
 

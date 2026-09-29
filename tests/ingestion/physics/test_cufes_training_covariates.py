@@ -35,11 +35,7 @@ from fishai.ingestion.physics.cufes_training_covariates import (
 )
 from fishai.ingestion.physics.glorys_training_build import GLORYS_COVARIATE_SOURCE_COPERNICUS
 from cufes_glorys_synthetic_fixture import glorys_store_from_synthetic_days
-from fishai.ingestion.physics.sources.glorys import (
-    PRODUCT_ID_MY,
-    PRODUCT_ID_MYINT,
-    glorys_product_for_date,
-)
+from fishai.ingestion.physics.sources.glorys import PRODUCT_ID_MY, glorys_product_for_date
 from fishai.ingestion.sources import require_approved
 
 
@@ -77,12 +73,10 @@ def _synthetic_events() -> pd.DataFrame:
     )
 
 
-def test_glorys_product_switch_at_my_myint_boundary() -> None:
-    my_id = glorys_product_for_date(dt.date(2021, 6, 30))
-    myint_id = glorys_product_for_date(dt.date(2021, 7, 1))
-    assert my_id == PRODUCT_ID_MY
-    assert myint_id == PRODUCT_ID_MYINT
-    assert my_id != myint_id
+def test_glorys_product_id_from_live_catalogue_at_boundary() -> None:
+    """PR #24: finished reanalysis id from catalogue for pre- and post-2021-07 dates."""
+    assert glorys_product_for_date(dt.date(2021, 6, 30)) == PRODUCT_ID_MY
+    assert glorys_product_for_date(dt.date(2021, 7, 1)) == PRODUCT_ID_MY
 
 
 def test_training_glorys_product_ids_track_glorys_product_for_date(tmp_path: Path) -> None:
@@ -126,7 +120,7 @@ def test_training_glorys_product_ids_track_glorys_product_for_date(tmp_path: Pat
         assert out.loc[out["event_id"] == ev["event_id"], "source_product"].iloc[0] == expected
 
 
-def test_plan_batches_splits_my_and_myint_months() -> None:
+def test_plan_batches_splits_calendar_months_same_catalogue_product() -> None:
     days = [
         dt.date(2021, 6, 15),
         dt.date(2021, 6, 30),
@@ -136,7 +130,7 @@ def test_plan_batches_splits_my_and_myint_months() -> None:
     batches = plan_glorys_subset_batches(days)
     assert len(batches) == 2
     assert batches[0].dataset_id == PRODUCT_ID_MY
-    assert batches[1].dataset_id == PRODUCT_ID_MYINT
+    assert batches[1].dataset_id == PRODUCT_ID_MY
 
 
 def test_one_row_per_event_id_and_required_columns(tmp_path: Path) -> None:
