@@ -1,23 +1,36 @@
 #!/usr/bin/env python3
-"""Add dist_shore_km to local cufes_events.parquet (track midpoint to pilot shoreline)."""
+"""Add dist_shore_km to local cufes_events.parquet (staging dry-run; subsampled shoreline)."""
 
 from __future__ import annotations
 
-import sys
+import json
 from pathlib import Path
 
+import numpy as np
 import pandas as pd
+from pyproj import Geod
 
-PR28 = Path("/tmp/fishai-pr28")
-sys.path.insert(0, str(PR28 / "src"))
+GEOD = Geod(ellps="WGS84")
+VERTEX_STRIDE = 25
 
-from fishai.ingestion.physics.coast_distance import distance_to_shoreline_km, shoreline_path_from_config
-def _midpoint_lat_lon(ev: pd.DataFrame) -> tuple[pd.Series, pd.Series]:
-    lat0 = ev["lat"] if "lat" in ev.columns else ev["start_latitude"]
-    lon0 = ev["lon"] if "lon" in ev.columns else ev["start_longitude"]
-    lat1 = ev["stop_lat"] if "stop_lat" in ev.columns else ev["stop_latitude"]
-    lon1 = ev["stop_lon"] if "stop_lon" in ev.columns else ev["stop_longitude"]
-    return (lat0 + lat1) / 2.0, (lon0 + lon1) / 2.0
+
+def _coast_vertices(geojson_path: Path) -> tuple[np.ndarray, np.ndarray]:
+    data = json.loads(geojson_path.read_text(encoding="utf-8"))
+    lats: list[float] = []
+    lons: list[float] = []
+    for feature in data.get("features", []):
+        geom = feature.get("geometry") or {}
+        rings: list = []
+        if geom.get("type") == "Polygon":
+            rings = [geom.get("coordinates", [[[]]])[0]]
+        elif geom.get("type") == "MultiPolygon":
+            rings = [poly[0] for poly in geom.get("coordinates", []) if poly]
+        for ring in rings:
+            for i in range(0, max(0, len(ring) - 1), VERTEX_STRIDE):
+                lon, lat = ring[i][:2]
+                lons.append(float(lon))
+                lats.append(float(lat))
+    return np.asarray(lats, dtype=float), np.asarray(lons, dtype=float)
 
 
 def main() -> int:
@@ -27,12 +40,17 @@ def main() -> int:
     if "dist_shore_km" in ev.columns and ev["dist_shore_km"].notna().all():
         print("dist_shore_km already present")
         return 0
-    lat, lon = _midpoint_lat_lon(ev)
     shore = root / "data/reference/shoreline/ne_10m_land_pilot_clip.json"
-    dist = distance_to_shoreline_km(lat, lon, geojson_path=shore)
-    ev["dist_shore_km"] = dist
+    clat, clon = _coast_vertices(shore)
+    plat = (ev["lat"] + ev["stop_lat"]) / 2.0
+    plon = (ev["lon"] + ev["stop_lon"]) / 2.0
+    out = np.empty(len(ev), dtype=float)
+    for i, (la, lo) in enumerate(zip(plat.to_numpy(), plon.to_numpy())):
+        _, _, dm = GEOD.inv(np.full(clon.size, lo), np.full(clat.size, la), clon, clat)
+        out[i] = float(np.min(dm)) / 1000.0
+    ev["dist_shore_km"] = out
     ev.to_parquet(path, index=False)
-    print(f"wrote dist_shore_km for {len(ev)} events; min={dist.min():.2f} max={dist.max():.2f}")
+    print(f"wrote dist_shore_km for {len(ev)} events; min={out.min():.2f} max={out.max():.2f}")
     return 0
 
 

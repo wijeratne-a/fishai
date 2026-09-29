@@ -28,6 +28,7 @@ has_flag <- function(flag) {
 species_arg <- parse_flag("--species", "both")
 out_root <- parse_flag("--out-dir", file.path(root, "staging", "cv-real-run", "dry-run"))
 mesh_cutoff <- as.numeric(parse_flag("--mesh-cutoff-km", NA_character_))
+skip_barrier <- has_flag("--skip-barrier")
 evidence_only <- !has_flag("--allow-display-metrics")
 
 dir.create(out_root, recursive = TRUE, showWarnings = FALSE)
@@ -76,20 +77,21 @@ dir.create(out_root, recursive = TRUE, showWarnings = FALSE)
 
   land_sf <- NULL
   mesh <- build_fishai_mesh(dat_fit, cfg$mesh)
-  if (isTRUE(cfg$mesh$barrier$enabled)) {
+  if (isTRUE(cfg$mesh$barrier$enabled) && !skip_barrier) {
     land_path <- cfg$mesh$barrier$land_sf_rds
     if (!file.exists(land_path)) {
       stop("barrier land_sf missing: ", land_path, call. = FALSE)
     }
     land_sf <- readRDS(land_path)
-    # sdmTMB ships add_barrier_mesh; PR #5 mesh.R delegates to sdmTMBextra when present.
-    mesh <- sdmTMB::add_barrier_mesh(
-      spde_obj = mesh,
-      barrier_sf = land_sf,
-      range_fraction = cfg$mesh$barrier$range_fraction %||% 0.1,
-      proj_scaling = 1000,
-      plot = FALSE
-    )
+    if (requireNamespace("sdmTMBextra", quietly = TRUE)) {
+      mesh <- add_barrier_land(mesh, land_sf, range_fraction = cfg$mesh$barrier$range_fraction %||% 0.1)
+    } else {
+      stop(
+        "barrier mesh requires sdmTMBextra (sdmTMB::add_barrier_mesh is defunct); ",
+        "install INLA + sdmTMBextra or pass --skip-barrier for non-barrier evidence-only dry run",
+        call. = FALSE
+      )
+    }
     check_barrier(mesh, dat_fit, land_sf = land_sf)
   }
 
