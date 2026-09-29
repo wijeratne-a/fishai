@@ -1,0 +1,22 @@
+#!/usr/bin/env bash
+# Official first real spatial-block CV dry-run command (after bot2 training table exists).
+set -euo pipefail
+ROOT="$(cd "$(dirname "$0")/../.." && pwd)"
+cd "$ROOT"
+
+export FISHAI_ROOT="$ROOT"
+export RENV_PATHS_LIBRARY="${RENV_PATHS_LIBRARY:-$ROOT/renv/library}"
+
+if [[ ! -f "$ROOT/data/processed/calcofi_cufes/cufes_training_covariates.parquet" ]]; then
+  echo "Missing training table; run staging/cv-real-run/build_bot2_training_table.sh first" >&2
+  exit 1
+fi
+
+if [[ ! -f "$ROOT/staging/cv-real-run/artifacts/scb_pilot_land_sf.rds" ]]; then
+  Rscript staging/cv-real-run/build_scb_pilot_land_sf.R
+fi
+
+# Coarser mesh fallback: pass --mesh-cutoff-km 12 (or 15) before --out-dir.
+Rscript scripts/models/cufes_real_spatial_cv_staging.R \
+  --species both \
+  --out-dir "$ROOT/staging/cv-real-run/dry-run"
