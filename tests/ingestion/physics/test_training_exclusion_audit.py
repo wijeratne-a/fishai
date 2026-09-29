@@ -28,6 +28,7 @@ def test_training_exclusion_audit_smoke(tmp_path: Path) -> None:
                 "upwelling": float("nan"),
                 "upwelling_status": "",
                 "bottom_depth_m": 150.0,
+                "wcofs_h_audit_m": 140.0,
                 "depth_at_model_floor": False,
                 "source": "glorys",
                 "provenance": "test",
@@ -45,6 +46,7 @@ def test_training_exclusion_audit_smoke(tmp_path: Path) -> None:
                 "upwelling": float("nan"),
                 "upwelling_status": "",
                 "bottom_depth_m": float("nan"),
+                "wcofs_h_audit_m": 45.0,
                 "depth_at_model_floor": False,
                 "source": "glorys",
                 "provenance": "test",
@@ -109,4 +111,7 @@ def test_training_exclusion_audit_smoke(tmp_path: Path) -> None:
     assert report["kept_count"] == 1
     assert report["excluded_count"] == 1
     assert report["missing_covariate_audit"]["missing_by_covariate_unique_events"]["MLD_m"] == 1
+    depth_table = report["by_wcofs_bottom_depth_band_m"]
+    assert depth_table["<50"]["excluded"] == 1
+    assert depth_table["100-200"]["kept"] == 1
     json.loads(json.dumps(report))
