@@ -24,12 +24,13 @@ mkdir -p "$DATA_ROOT/data/processed/calcofi_cufes"
 mkdir -p "$DATA_ROOT/data/derived/physics" "$DATA_ROOT/data/derived/manifests"
 mkdir -p "$DATA_ROOT/data/cache/glorys_cufes"
 
-if [[ ! -d "$DATA_ROOT/data/derived/physics/wcofs_h_glorys_pilot.zarr" ]]; then
+if [[ ! -d "$PR28_ROOT/data/derived/physics/wcofs_h_glorys_pilot.zarr" ]]; then
   echo "== WCOFS h on GLORYS grid (one ROMS export) =="
+  mkdir -p "$PR28_ROOT/data/derived/physics" "$PR28_ROOT/data/derived/manifests"
   python3 "$ROOT/staging/cv-real-run/export_wcofs_h_glorys_pilot.py" \
     --repo-root "$PR28_ROOT" \
-    --artifact "$DATA_ROOT/data/derived/physics/wcofs_h_glorys_pilot.zarr" \
-    --manifest "$DATA_ROOT/data/derived/manifests/wcofs_h_glorys_grid.json"
+    --artifact "$PR28_ROOT/data/derived/physics/wcofs_h_glorys_pilot.zarr" \
+    --manifest "$PR28_ROOT/data/derived/manifests/wcofs_h_glorys_grid.json"
 fi
 
 echo "== GLORYS training covariates (live Copernicus) =="
