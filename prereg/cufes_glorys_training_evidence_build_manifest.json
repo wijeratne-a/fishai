@@ -23,6 +23,7 @@
     "subset_bytes_downloaded": 232933874,
     "pull_log_path": "data/provenance/copernicus_pull_log.jsonl",
     "time_matching": {
+      "utc_day_join_rule_plain_text": "Compute event_mid_time as the UTC midpoint of start_time and stop_time. Join GLORYS daily-mean fields on the UTC calendar date event_mid_time.date() (same key as store.days and unique_event_days). Do not use local-timezone calendar dates or date() on non-UTC timestamps.",
       "event_timestamp": "UTC midpoint of start_time and stop_time (event_mid_time)",
       "glorys_day_key": "UTC calendar date of event_mid_time (mid.date())",
       "subset_convention": "Copernicus daily-mean GLORYS fields; store.days keyed by UTC date; field_sampler uses when.date()",
