@@ -40,8 +40,16 @@ UNRESOLVED_HIGHER_TAXON_REASON: Final = "unresolved_higher_taxon"
 UNPARSEABLE_CATCH_ROW_REASON: Final = "unparseable_catch_row"
 WEIGHT_FLAG_PARTIAL: Final = "weight_partial"
 
+# ITIS https://www.itis.gov/ITISWebService/jsonservice/getFullRecordFromTSN?tsn=161729
+# Sardinops sagax; taxonUsageRating=valid (accepted name).
 ITIS_TSN_SARDINOPS_SAGAX: Final = 161729
+# ITIS https://www.itis.gov/ITISWebService/jsonservice/getFullRecordFromTSN?tsn=161828
+# Engraulis mordax; taxonUsageRating=valid (accepted name).
 ITIS_TSN_ENGRAULIS_MORDAX: Final = 161828
+# ITIS https://www.itis.gov/ITISWebService/jsonservice/getFullRecordFromTSN?tsn=161730
+# Sardinops caeruleus; taxonUsageRating=invalid, unacceptReason=junior synonym;
+# acceptedName Sardinops sagax TSN 161729 (getAcceptedNamesFromTSN?tsn=161730).
+ITIS_TSN_SARDINOPS_CAERULEUS: Final = 161730
 PILOT_MATRIX_SPECIES: Final = ("Sardinops sagax", "Engraulis mordax")
 PILOT_SPECIES_ITIS_TSN: Final = {
     "Sardinops sagax": ITIS_TSN_SARDINOPS_SAGAX,

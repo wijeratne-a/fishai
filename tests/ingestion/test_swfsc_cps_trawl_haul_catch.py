@@ -22,6 +22,7 @@ from fishai.ingestion.biology.cps_trawl.constants import (
     ANIMALIA_ONLY_ZERO_FRAME_REASON,
     HAUL_META_MISSING_REASON,
     ITIS_TSN_ENGRAULIS_MORDAX,
+    ITIS_TSN_SARDINOPS_CAERULEUS,
     ITIS_TSN_SARDINOPS_SAGAX,
     PILOT_SPECIES_ITIS_TSN,
     UNPARSEABLE_CATCH_ROW_REASON,
@@ -29,7 +30,6 @@ from fishai.ingestion.biology.cps_trawl.constants import (
     WEIGHT_FLAG_PARTIAL,
 )
 from fishai.ingestion.biology.cps_trawl import pipeline as cps_pipeline
-from fishai.ingestion.biology.cps_trawl.taxonomy import SUBSPECIES_TSN_TO_SPECIES_TSN
 from fishai.ingestion.biology.cps_trawl.fetch import read_cps_trawl_csv
 from fishai.ingestion.biology.cps_trawl.pipeline import sync_cps_trawl_haul_catch
 from fishai.ingestion.biology.cps_trawl.matrix import ZeroFrameUnverifiedError, expand_haul_species_matrix
@@ -48,9 +48,8 @@ FIXTURES = Path(__file__).resolve().parents[1] / "fixtures"
 EVIDENCE_FIXTURE = FIXTURES / "cps_trawl_zero_frame_evidence_test.yaml"
 
 SPECIES_TSN = dict(PILOT_SPECIES_ITIS_TSN)
-TSN_SARDINOPS_CAERULEA = next(
-    k for k, v in SUBSPECIES_TSN_TO_SPECIES_TSN.items() if v == ITIS_TSN_SARDINOPS_SAGAX
-)
+# ITIS TSN 623656 is Mentodus longirostris (not Sardinops); used for non-blocking regression tests.
+ITIS_TSN_MENTODUS_LONGIROSTRIS = 623656
 
 
 def _evidence_yaml_tmp(tmpdir: Path, *, hauls: list[int] = [1]) -> Path:
@@ -354,15 +353,15 @@ class CpsTrawlFalseZeroGapTests(unittest.TestCase):
             )
         self.assertEqual(matrix[0]["fill_reason"], HAUL_META_MISSING_REASON)
 
-    def test_subspecies_tsn_suppresses_implied_zero_for_species(self) -> None:
+    def test_itis_junior_synonym_tsn_suppresses_implied_zero_for_sardine(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
             evidence = _evidence_yaml_tmp(Path(tmp))
             matrix = expand_haul_species_matrix(
                 [
                     {
                         "haul_id": "CPSTrawl:209901:SY:1",
-                        "species": "Sardinops sagax caerulea",
-                        "itis_tsn": TSN_SARDINOPS_CAERULEA,
+                        "species": "Sardinops caeruleus",
+                        "itis_tsn": ITIS_TSN_SARDINOPS_CAERULEUS,
                         "subsample_count": 3,
                         "count_raised_est": 3,
                         "weight_kg": 1.0,
@@ -380,6 +379,30 @@ class CpsTrawlFalseZeroGapTests(unittest.TestCase):
         self.assertEqual(sard["subsample_count"], 3)
         anch = next(m for m in matrix if m["species"] == "Engraulis mordax")
         self.assertTrue(anch["is_implied_zero"])
+
+    def test_mentodus_longirostris_tsn_does_not_block_sardine_zero(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            evidence = _evidence_yaml_tmp(Path(tmp))
+            matrix = expand_haul_species_matrix(
+                [
+                    {
+                        "haul_id": "CPSTrawl:209901:SY:1",
+                        "species": "Mentodus longirostris",
+                        "itis_tsn": ITIS_TSN_MENTODUS_LONGIROSTRIS,
+                        "subsample_count": 1,
+                        "weight_kg": 1.0,
+                        "presence_only": False,
+                    }
+                ],
+                ["CPSTrawl:209901:SY:1"],
+                ["Sardinops sagax", "Engraulis mordax"],
+                species_itis_tsn=SPECIES_TSN,
+                evidence_path=evidence,
+                haul_meta=[{"haul_id": "CPSTrawl:209901:SY:1", "animalia_only_haul": False}],
+            )
+        sard = next(m for m in matrix if m["species"] == "Sardinops sagax")
+        self.assertTrue(sard["is_implied_zero"])
+        self.assertEqual(sard["fill_reason"], "verified_zero_frame")
 
     def test_unresolved_higher_taxon_blocks_target_zero(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
@@ -668,6 +691,62 @@ class CpsTrawlSyncGenusAndNameTsnTests(unittest.TestCase):
         anch2 = next(m for m in haul2 if m["species"] == "Engraulis mordax")
         self.assertEqual(anch2["fill_reason"], UNRESOLVED_HIGHER_TAXON_REASON)
         self.assertFalse(anch2["is_implied_zero"])
+
+    def test_sync_sardinops_caeruleus_synonym_counts_as_sardine_presence(self) -> None:
+        rows = [
+            self._erddap_row(
+                "1",
+                "Sardinops caeruleus",
+                str(ITIS_TSN_SARDINOPS_CAERULEUS),
+            )
+        ]
+        with tempfile.TemporaryDirectory() as tmp:
+            evidence = _evidence_yaml_tmp(Path(tmp))
+            matrix = _matrix_rows(_run_sync_cps_trawl(rows, evidence, Path(tmp) / "processed"))
+        sard = next(m for m in matrix if m["species"] == "Sardinops sagax")
+        self.assertFalse(sard["is_implied_zero"])
+        self.assertEqual(sard["subsample_count"], 1)
+
+    def test_sync_normalized_scientific_names_count_as_presence(self) -> None:
+        rows = [
+            self._erddap_row("1", "sardinops sagax", str(ITIS_TSN_SARDINOPS_SAGAX)),
+            self._erddap_row(
+                "2",
+                "  Engraulis   mordax ",
+                str(ITIS_TSN_ENGRAULIS_MORDAX),
+            ),
+            self._erddap_row(
+                "3",
+                "Sardinops sagax (Jenyns, 1842)",
+                str(ITIS_TSN_SARDINOPS_SAGAX),
+            ),
+        ]
+        with tempfile.TemporaryDirectory() as tmp:
+            evidence = _evidence_yaml_tmp(Path(tmp), hauls=[1, 2, 3])
+            matrix = _matrix_rows(_run_sync_cps_trawl(rows, evidence, Path(tmp) / "processed"))
+        haul1 = next(m for m in matrix if m["haul_id"].endswith(":1") and m["species"] == "Sardinops sagax")
+        self.assertFalse(haul1["is_implied_zero"])
+        haul2 = next(
+            m for m in matrix if m["haul_id"].endswith(":2") and m["species"] == "Engraulis mordax"
+        )
+        self.assertFalse(haul2["is_implied_zero"])
+        haul3 = next(m for m in matrix if m["haul_id"].endswith(":3") and m["species"] == "Sardinops sagax")
+        self.assertFalse(haul3["is_implied_zero"])
+
+    def test_sync_mentodus_longirostris_does_not_block_sardine_zero(self) -> None:
+        rows = [
+            self._erddap_row(
+                "1",
+                "Mentodus longirostris",
+                str(ITIS_TSN_MENTODUS_LONGIROSTRIS),
+            )
+        ]
+        with tempfile.TemporaryDirectory() as tmp:
+            evidence = _evidence_yaml_tmp(Path(tmp))
+            matrix = _matrix_rows(_run_sync_cps_trawl(rows, evidence, Path(tmp) / "processed"))
+        sard = next(m for m in matrix if m["species"] == "Sardinops sagax")
+        self.assertTrue(sard["is_implied_zero"])
+        self.assertEqual(sard["fill_reason"], "verified_zero_frame")
 
 
 class CpsTrawlMergeSpeciesTests(unittest.TestCase):

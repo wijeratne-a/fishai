@@ -5,11 +5,17 @@ from __future__ import annotations
 import re
 from typing import Final
 
-from fishai.ingestion.biology.cps_trawl.constants import ITIS_TSN_SARDINOPS_SAGAX
+from fishai.ingestion.biology.cps_trawl.constants import (
+    ITIS_TSN_SARDINOPS_CAERULEUS,
+    ITIS_TSN_SARDINOPS_SAGAX,
+)
 
-# Subspecies (or infraspecific) ITIS TSN → accepted species TSN. No network lookups at runtime.
+# ITIS junior synonym / invalid usage TSN → accepted species TSN (verified offline; no network at runtime).
 SUBSPECIES_TSN_TO_SPECIES_TSN: Final[dict[int, int]] = {
-    623656: ITIS_TSN_SARDINOPS_SAGAX,  # Sardinops sagax caerulea → Sardinops sagax
+    # ITIS https://www.itis.gov/ITISWebService/jsonservice/getFullRecordFromTSN?tsn=161730
+    # Sardinops caeruleus; taxonUsageRating=invalid; unacceptReason=junior synonym;
+    # accepted Sardinops sagax TSN 161729.
+    ITIS_TSN_SARDINOPS_CAERULEUS: ITIS_TSN_SARDINOPS_SAGAX,
 }
 
 # Family names (ITIS-style) → genera that may appear as CPS trawl targets.
@@ -31,11 +37,35 @@ _ORDER_RE = re.compile(r"^[A-Za-z]+iformes$", re.IGNORECASE)
 _AMBIGUOUS_NAME_TOKENS: Final = ("unid.", "unidentified", "larvae")
 
 
+def normalize_scientific_name(scientific_name: str) -> str:
+    """Lowercase binomial for comparison; trim/collapse whitespace; drop trailing author tokens."""
+    collapsed = " ".join(scientific_name.strip().split())
+    if not collapsed:
+        return ""
+    parts = collapsed.split()
+    if len(parts) >= 2:
+        collapsed = f"{parts[0]} {parts[1]}"
+    return collapsed.casefold()
+
+
 def canonical_species_tsn(itis_tsn: int | None) -> int | None:
     """Map infraspecific TSN to species-level TSN when known."""
     if itis_tsn is None:
         return None
     return SUBSPECIES_TSN_TO_SPECIES_TSN.get(itis_tsn, itis_tsn)
+
+
+def itis_alias_tsn_establishes_species_match(
+    catch_itis_tsn: int | None,
+    target_itis_tsn: int | None,
+) -> bool:
+    """True when ITIS maps catch TSN to the same accepted species TSN as the target."""
+    if catch_itis_tsn is None or target_itis_tsn is None:
+        return False
+    mapped = SUBSPECIES_TSN_TO_SPECIES_TSN.get(catch_itis_tsn)
+    if mapped is None:
+        return False
+    return mapped == canonical_species_tsn(target_itis_tsn)
 
 
 def target_genus(scientific_name: str) -> str | None:
@@ -74,12 +104,12 @@ def is_genus_only_taxon(scientific_name: str) -> bool:
 
 
 def species_name_matches_target(catch_species: str, target_species: str) -> bool:
-    """True when ``catch_species`` is the target binomial or an infraspecific of it."""
-    catch_parts = catch_species.strip().split()
-    target_parts = target_species.strip().split()
-    if len(target_parts) < 2 or len(catch_parts) < 2:
+    """True when ``catch_species`` is the target binomial (modulo case/whitespace/authors)."""
+    catch_norm = normalize_scientific_name(catch_species)
+    target_norm = normalize_scientific_name(target_species)
+    if not catch_norm or not target_norm:
         return False
-    return catch_parts[0] == target_parts[0] and catch_parts[1] == target_parts[1]
+    return catch_norm == target_norm
 
 
 def taxon_identity_disagreement_blocks_target(
@@ -100,6 +130,8 @@ def taxon_identity_disagreement_blocks_target(
         and canon_catch == canon_target
         and not name_matches
     ):
+        if itis_alias_tsn_establishes_species_match(catch_itis_tsn, target_itis_tsn):
+            return False
         return True
     return False
 
@@ -110,7 +142,7 @@ def catch_row_establishes_target_presence(
     target_species: str,
     target_itis_tsn: int | None,
 ) -> bool:
-    """True only when name and TSN both agree on the target species (or subspecies)."""
+    """True when name and TSN both agree on the target species (or ITIS synonym TSN)."""
     if is_unresolved_higher_taxon(catch_species, catch_itis_tsn):
         return False
     if taxon_identity_disagreement_blocks_target(
@@ -121,7 +153,9 @@ def catch_row_establishes_target_presence(
     canon_target = canonical_species_tsn(target_itis_tsn)
     if canon_catch is None or canon_target is None or canon_catch != canon_target:
         return False
-    return species_name_matches_target(catch_species, target_species)
+    if species_name_matches_target(catch_species, target_species):
+        return True
+    return itis_alias_tsn_establishes_species_match(catch_itis_tsn, target_itis_tsn)
 
 
 def is_unresolved_higher_taxon(scientific_name: str, itis_tsn: int | None) -> bool:
