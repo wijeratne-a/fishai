@@ -3,6 +3,9 @@
 from __future__ import annotations
 
 import hashlib
+import ipaddress
+import os
+import socket
 import sys
 from pathlib import Path
 
@@ -39,6 +42,68 @@ def _tree_snapshot(root: Path) -> dict[str, tuple[int, int]]:
         for p in root.rglob("*")
         if p.is_file()
     }
+
+
+@pytest.fixture(scope="session", autouse=True)
+def _offline_glorys_catalog_fixture() -> None:
+    """In-process tests use the committed catalogue fixture unless a hook overrides it."""
+    fixture = REPO_ROOT / "src" / "models" / "tests" / "fixtures" / "glorys_pinned_catalog.json"
+    os.environ["FISHAI_GLORYS_PINNED_CATALOG_JSON"] = str(fixture)
+    from fishai.ingestion.physics.glorys_catalog import clear_glorys_catalog_cache
+
+    clear_glorys_catalog_cache()
+    yield
+    os.environ.pop("FISHAI_GLORYS_PINNED_CATALOG_JSON", None)
+
+
+def _is_loopback_host(host: object) -> bool:
+    if isinstance(host, bytes):
+        host = host.decode(errors="ignore")
+    if not isinstance(host, str):
+        return False
+    if host in ("localhost", "localhost.localdomain"):
+        return True
+    try:
+        return ipaddress.ip_address(host).is_loopback
+    except ValueError:
+        return False
+
+
+class LiveNetworkBlocked(RuntimeError):
+    """Raised when a unit test tries to reach a non-loopback host."""
+
+
+@pytest.fixture(autouse=True)
+def _block_live_network(monkeypatch: pytest.MonkeyPatch) -> None:
+    """Unit tests are hermetic: any non-loopback connection or DNS lookup fails at once."""
+    real_connect = socket.socket.connect
+    real_connect_ex = socket.socket.connect_ex
+    real_getaddrinfo = socket.getaddrinfo
+
+    def _refuse(target: object) -> LiveNetworkBlocked:
+        return LiveNetworkBlocked(f"live network access blocked in unit tests: {target!r}")
+
+    def _addr_host(address: object) -> object:
+        return address[0] if isinstance(address, tuple) and address else address
+
+    def guarded_connect(self: socket.socket, address: object) -> None:
+        if self.family in (socket.AF_INET, socket.AF_INET6) and not _is_loopback_host(_addr_host(address)):
+            raise _refuse(address)
+        return real_connect(self, address)
+
+    def guarded_connect_ex(self: socket.socket, address: object) -> int:
+        if self.family in (socket.AF_INET, socket.AF_INET6) and not _is_loopback_host(_addr_host(address)):
+            raise _refuse(address)
+        return real_connect_ex(self, address)
+
+    def guarded_getaddrinfo(host: object, *args: object, **kwargs: object):
+        if not _is_loopback_host(host):
+            raise _refuse(host)
+        return real_getaddrinfo(host, *args, **kwargs)
+
+    monkeypatch.setattr(socket.socket, "connect", guarded_connect)
+    monkeypatch.setattr(socket.socket, "connect_ex", guarded_connect_ex)
+    monkeypatch.setattr(socket, "getaddrinfo", guarded_getaddrinfo)
 
 
 @pytest.fixture(scope="session", autouse=True)

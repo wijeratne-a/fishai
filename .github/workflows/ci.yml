@@ -32,3 +32,16 @@ jobs:
 
       - name: Pytest
         run: pytest
+
+  docker-r:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Build modeling image
+        run: docker build -t fishai-pilot .
+
+      - name: Run Python and R tests in container
+        env:
+          GIT_SHA: ${{ github.sha }}
+        run: docker run --rm -e GIT_SHA="$GIT_SHA" fishai-pilot

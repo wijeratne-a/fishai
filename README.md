@@ -1,6 +1,6 @@
 # FishAI — Southern California Bight pilot
 
-FishAI is a **50-mile nowcast skeleton** for the Southern California Bight pilot domain (**32–35°N, 121–117°W**). The active program ingests **CalCOFI CUFES sardine/anchovy egg-stage evidence**, **WCOFS/GLORYS-class physics**, and **SCCOOS HF radar / NDBC / IOOS glider consistency checks**, then fits **sdmTMB delta-lognormal** models in R. This branch provides installable layout, CI, and contracts—not live ingestion or published nowcasts.
+FishAI is a **50-mile nowcast skeleton** for the Southern California Bight pilot domain (**32–35°N, 121–117°W**). The active program ingests **CalCOFI CUFES sardine/anchovy egg-stage evidence**, **WCOFS/GLORYS-class physics**, and **SCCOOS HF radar / NDBC / IOOS glider consistency checks**, then fits **sdmTMB Poisson-link delta** egg models in R (see [`docs/CUFES_DELTA_MODEL_SPEC.md`](docs/CUFES_DELTA_MODEL_SPEC.md)). This branch provides installable layout, CI, and contracts—not live ingestion or published nowcasts.
 
 ## Evidence-state vocabulary
 
@@ -25,12 +25,15 @@ src/fishai/
   physics/store.py       Read-only ``open_wcofs_cycle`` / ``list_wcofs_cycles`` (Bot4 sensors)
   ingestion/sensors/     SCCOOS HF radar, NDBC, IOOS glider stubs
   models/                Python experiment config, baselines, run manifest
-  models/R/              sdmTMB R code (bootstrap via renv)
+  models/R/              legacy bootstrap note (see src/models/)
   evaluation/            Metrics and numeric support mask (reusable)
   validation/            Survey file eligibility gate
   api/                   Future nowcast API stub
   schemas/               JSON schemas for observations and provenance
 data/SOURCES.yaml        License manifest (CI-enforced for ingestion modules)
+src/models/              fishaisdm R package (sdmTMB delta core) + testthat suite
+python/fishai_models/    fishai-models CLI (Rscript wrapper)
+configs/models/          CUFES sardine/anchovy pilot YAML configs
 labels/                  Label validation rules (YAML/JSON)
 science/                 Measurement and temporal integrity rules
 security/                Sensitive-data pre-commit scanner
