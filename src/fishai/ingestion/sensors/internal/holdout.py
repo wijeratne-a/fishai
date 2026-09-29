@@ -8,6 +8,7 @@ import numpy as np
 import pandas as pd
 import xarray as xr
 
+from fishai.ingestion.physics.vertical import mld_from_profile
 from fishai.ingestion.sensors.internal.consistency import _align_model_surface
 from fishai.ingestion.sensors.internal.grid import build_training_grid_10km, model_on_training_grid
 
@@ -22,21 +23,11 @@ def mixed_layer_depth(
     ref_depth_m: float = 10.0,
     delta_c: float = 0.2,
 ) -> float:
-    """MLD: depth where T first falls below T(ref_depth) - delta_c."""
-    order = np.argsort(depth)
-    d = depth[order]
-    t = temp[order]
-    ref_idx = np.argmin(np.abs(d - ref_depth_m))
-    t_ref = t[ref_idx]
-    if not np.isfinite(t_ref):
+    """MLD via shared ``vertical.mld_from_profile`` (10 m reference, 0.2 °C threshold)."""
+    depth_m, reason = mld_from_profile(depth, temp, dT=delta_c, zref_m=ref_depth_m)
+    if reason is not None or depth_m is None:
         return float("nan")
-    below = d > d[ref_idx]
-    if not np.any(below):
-        return float(d.max())
-    for i in range(ref_idx + 1, len(d)):
-        if np.isfinite(t[i]) and t[i] <= t_ref - delta_c:
-            return float(d[i])
-    return float(d.max())
+    return float(depth_m)
 
 
 def thermocline_depth(depth: np.ndarray, temp: np.ndarray) -> float:

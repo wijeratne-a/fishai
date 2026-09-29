@@ -26,7 +26,7 @@ Only **`wcofs_coarsened_mapped`** receives PASS/DEGRADED/FAIL **nowcast-forcing*
 
 ## Fields and grids
 
-**Five graded inputs:** **T3m**, **S3m**, **MLD_m**, **sst_grad**, **front_distance_km**. Each stratum passes when RMSE ≤ 0.5× GLORYS spatial SD, is DEGRADED up to 1.0×, and FAILs above; a failed input makes the stratum **UNKNOWN**. **`upwelling`** stays in `variables` as **`shared_forcing`** (reported, never graded). **`u_surf`** and **`v_surf`** are report-only. The graded-input gate refuses to run if any of the five graded names is missing from `variables`. If no single wind product covers both CUFES training years and daily nowcasts, **`upwelling`** is blank with reason `no_consistent_wind_product`, dropped from the pilot model, and no events are excluded.
+**Five graded cell-gate inputs:** **T3m**, **S3m**, **MLD_m**, **sst_grad**, **front_distance_km** (listed in `pass_fail_thresholds.cutoffs.graded_inputs`). Each stratum passes when RMSE ≤ 0.5× GLORYS spatial SD, is DEGRADED up to 1.0×, and FAILs above; a failed input makes the stratum **UNKNOWN**. Buoy scoring uses hull temperature at **0.494 m** only. **`upwelling`** stays in `variables` with **`grading: shared_forcing`** (report-only; both paths use the same outside wind product, so WCOFS-vs-GLORYS would only test regridding). **`u_surf`** and **`v_surf`** are report-only (presumed assimilated). Stratum **`combination_rule: worst_of`** combines the buoy verdict with all five input verdicts.
 
 WCOFS is coarsened to the GLORYS horizontal grid with **area-weighted** regridding (WCOFS cell weight `1/(pm*pn)`, half-open GLORYS boxes, `wet_fraction` with `min_wet_fraction: 0.5` matching `data/config/wcofs_glorys_overlap.yaml` when present). SST/T3m/S3m use depth below the **moving surface** (`zeta - z_rho`); SST at **0.494 m** below surface (GLORYS top level). **GLORYS product choice** follows the live Copernicus Marine catalogue time coverage (cached per run; prefer **`cmems_mod_glo_phy_my_0.083deg_P1D-m`** when multiple products cover the same date). The pilot harmonization overlap window is served by finished reanalysis **`cmems_mod_glo_phy_my_0.083deg_P1D-m`**.
 
@@ -53,7 +53,7 @@ Per stratum, take the **worst** verdict in order **UNKNOWN → FAIL → DEGRADED
 
 ## Upwelling lags (if `upwelling` survives)
 
-Trailing means over **0, 7, 14, and 28** days ending the day before the event (no other lags). Selected by time-forward CV on the fit split through **2017-12-31** by mean out-of-fold log-likelihood; frozen before **2018-01-01** and never re-selected for the **2018-01-01–2022-04-27** test (auditor accepted).
+Trailing means over **0, 7, 14, and 28** days ending the day before the event (no other lags). Selected by time-forward CV on the fit split through **2017-12-31** by mean out-of-fold log-likelihood; frozen before **2018-01-01** and never re-selected for the **2018-01-01–2022-04-27** test (auditor accepted). **Do not re-select lags after test results or holdout diagnostics are seen.**
 
 ## Independence
 
@@ -61,7 +61,7 @@ Scores use `config/assimilated_sources.yaml` (versioned, cited). Unknown assimil
 
 ## Metrics
 
-Per variable: **bias**, **RMSE**, **Pearson r**, by season (DJF/MAM/JJA/SON), nearshore/offshore, and pooled, each with **n** and a **7-day block bootstrap 95% CI**. **Common-support scoring:** all four harmonization model rows use only buoy/HF matches where **every row has a value**; drops because any row is blanked are reported as **`insufficient_model_coverage`** (nearshore/offshore). **Map labels:** **`egg encounter likelihood`** only — not spawning habitat, spawning locations, or adult distribution.
+Per variable: **bias**, **RMSE**, **Pearson r**, by season (DJF/MAM/JJA/SON), nearshore/offshore, and pooled, each with **n** and a **7-day block bootstrap 95% CI**. **Common-support scoring:** all four harmonization model rows use only buoy/HF matches where **every row has a value**; drops because any row is blanked are reported as **`insufficient_model_coverage`** (nearshore/offshore). **auditbot1 pass/degraded numeric cutoffs** and **`combination_rule: worst_of`** (buoy plus five `graded_inputs` cell-gate verdicts per stratum) are locked in YAML **`pass_fail_thresholds.cutoffs`**. **Map labels:** **`egg encounter likelihood`** only — not spawning habitat, spawning locations, or adult distribution.
 
 ## Shoreline (bot2 PR #7)
 

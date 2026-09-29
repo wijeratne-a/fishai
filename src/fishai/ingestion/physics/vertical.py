@@ -167,6 +167,65 @@ def bottom_layer(temp: np.ndarray, salt: np.ndarray | None = None) -> dict[str, 
     return out
 
 
+MLD_NOT_REACHED = "mld_not_reached"
+
+
+def _mld_depth_from_z_column(
+    zz: np.ndarray,
+    tt: np.ndarray,
+    *,
+    dT: float,
+    zref_m: float,
+) -> tuple[float | None, str | None]:
+    """
+    Shared MLD kernel for model columns and glider profiles.
+
+    ``zz`` / ``tt`` are ROMS-style z (negative down), bottom-first ordering.
+    Returns positive depth in metres, or ``(None, MLD_NOT_REACHED)``.
+    """
+    if not np.isfinite(tt).all():
+        return None, MLD_NOT_REACHED
+    zu, tu = zz[::-1], tt[::-1]
+    zref = -abs(zref_m)
+    if zu[-1] > zref:
+        return None, MLD_NOT_REACHED
+    t10 = np.interp(-zref, -zu, tu)
+    below = np.where((zu < zref) & (tu < t10 - dT))[0]
+    if not below.size:
+        return None, MLD_NOT_REACHED
+    k = int(below[0])
+    z1, z2, t1, t2 = zu[k - 1], zu[k], tu[k - 1], tu[k]
+    if t2 != t1:
+        zc = z1 + (t10 - dT - t1) * (z2 - z1) / (t2 - t1)
+    else:
+        zc = z2
+    return float(-zc), None
+
+
+def mld_from_profile(
+    depth_m: np.ndarray,
+    temp_c: np.ndarray,
+    *,
+    dT: float = 0.2,
+    zref_m: float = 10.0,
+) -> tuple[float | None, str | None]:
+    """
+    Temperature-threshold MLD for a single glider/model profile (depth positive down).
+    """
+    depth_m = np.asarray(depth_m, dtype=float)
+    temp_c = np.asarray(temp_c, dtype=float)
+    ok = np.isfinite(depth_m) & np.isfinite(temp_c)
+    if ok.sum() < 2:
+        return None, MLD_NOT_REACHED
+    order = np.argsort(depth_m[ok])
+    d = depth_m[ok][order]
+    t = temp_c[ok][order]
+    # ROMS bottom-first z column (deepest level at index 0).
+    zz = -d[::-1]
+    tt = t[::-1]
+    return _mld_depth_from_z_column(zz, tt, dT=dT, zref_m=zref_m)
+
+
 def mld(
     z: np.ndarray,
     temp: np.ndarray,
@@ -177,35 +236,21 @@ def mld(
     """
     Temperature-threshold MLD (positive depth in metres).
 
-    Shared by WCOFS and GLORYS columns. GLORYS native ``mlotst`` is never used as
-    a model covariate (cross-check column only). Reference at zref_m below the
-    surface; shallowest depth where T drops by dT.
+    Shared by WCOFS, GLORYS columns, and glider holdout scoring. When the 0.2 °C
+    criterion is not met before the deepest valid level, the cell is NaN
+    (``mld_not_reached``).
     """
     z = np.asarray(z, dtype=float)
     temp = np.asarray(temp, dtype=float)
     ny, nx = temp.shape[1], temp.shape[2]
     out = np.full((ny, nx), np.nan, dtype=float)
-    zref = -abs(zref_m)
     for j in range(ny):
         for i in range(nx):
-            zz, tt = z[:, j, i], temp[:, j, i]
-            if not np.isfinite(tt).all():
-                continue
-            zu, tu = zz[::-1], tt[::-1]
-            if zu[-1] > zref:
-                continue
-            t10 = np.interp(-zref, -zu, tu)
-            below = np.where((zu < zref) & (tu < t10 - dT))[0]
-            if below.size:
-                k = int(below[0])
-                z1, z2, t1, t2 = zu[k - 1], zu[k], tu[k - 1], tu[k]
-                if t2 != t1:
-                    zc = z1 + (t10 - dT - t1) * (z2 - z1) / (t2 - t1)
-                else:
-                    zc = z2
-                out[j, i] = -zc
-            else:
-                out[j, i] = -zu[-1]
+            depth_m, _reason = _mld_depth_from_z_column(
+                z[:, j, i], temp[:, j, i], dT=dT, zref_m=zref_m
+            )
+            if depth_m is not None:
+                out[j, i] = depth_m
     return out
 
 

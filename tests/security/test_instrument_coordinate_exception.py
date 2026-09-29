@@ -25,7 +25,7 @@ from precommit_sensitive_scan import scan_file  # noqa: E402
 class InstrumentCoordinateExceptionTests(unittest.TestCase):
     def test_manifest_lists_approved_enabled_instrument_sources_only(self) -> None:
         ids = instrument_source_ids()
-        self.assertEqual(ids, frozenset({"sccoos_hfr", "ndbc_met"}))
+        self.assertEqual(ids, frozenset({"sccoos_hfr", "ndbc_met", "spray_glider"}))
 
     def test_glider_pending_disabled_not_exempt(self) -> None:
         rel = "tests/fixtures/instrument_data/ioos_glider_dac/_tmp_glider.parquet"

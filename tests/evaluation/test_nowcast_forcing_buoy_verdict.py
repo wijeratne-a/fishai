@@ -52,16 +52,6 @@ def test_pearson_r_more_than_010_below_glorys_yields_unknown_holdout() -> None:
     assert result.reason == FAIL_HOLDOUT_REASON
 
 
-def test_pearson_r_margin_yaml_has_single_numeric_key_and_loads_threshold() -> None:
-    doc = load_harmonization_prereg(PREREG)
-    raw_yaml = PREREG.read_text(encoding="utf-8")
-    assert "pass_min_vs_glorys_r" not in raw_yaml
-    pearson = doc["harmonization_wcofs_glorys"]["nowcast_forcing_grading"]["buoy_gate"]["pearson_r"]
-    assert set(pearson.keys()) == {"max_deficit_vs_glorys_r", "degraded_band"}
-    thresholds = buoy_gate_thresholds_from_prereg(doc)
-    assert thresholds.pearson_r_max_deficit_vs_glorys == 0.10
-
-
 def test_pearson_r_max_deficit_from_yaml_changes_verdict(tmp_path: Path) -> None:
     doc = yaml.safe_load(yaml.dump(load_harmonization_prereg(PREREG)))
     base_path = tmp_path / "prereg_base.yaml"

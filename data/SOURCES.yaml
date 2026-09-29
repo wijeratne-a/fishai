@@ -173,3 +173,14 @@ sources:
     attribution: "Ingestion disabled until per-dataset ERDDAP NC_GLOBAL creator_name attribution is confirmed at enable time."
     status: pending
     enabled: false
+
+  spray_glider:
+    module: fishai.ingestion.sensors.spray_glider
+    record_type: instrument
+    erddap_base: https://spraydata.ucsd.edu/erddap/tabledap
+    provider: Scripps Institution of Oceanography Spray gliders
+    license: free use and redistribution (ERDDAP dataset terms)
+    license_url: https://spraydata.ucsd.edu/erddap/info/index.html
+    attribution: "Scripps Spray glider binned profiles (binnedCUGN80, binnedCUGN90) via ERDDAP tabledap."
+    status: approved
+    enabled: true
