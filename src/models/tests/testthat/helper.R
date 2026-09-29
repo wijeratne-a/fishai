@@ -10,6 +10,18 @@
 
 FISHAI_ROOT <- .fishai_root_from_helper()
 
+.pinned_glorys_catalog_json <- file.path(
+  FISHAI_ROOT,
+  "src",
+  "models",
+  "tests",
+  "fixtures",
+  "glorys_pinned_catalog.json"
+)
+if (file.exists(.pinned_glorys_catalog_json)) {
+  Sys.setenv(FISHAI_GLORYS_PINNED_CATALOG_JSON = .pinned_glorys_catalog_json)
+}
+
 load_fishaisdm <- function(root = FISHAI_ROOT) {
   root <- normalizePath(root, mustWork = TRUE)
   lib <- file.path(root, "renv", "library")
