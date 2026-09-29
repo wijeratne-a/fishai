@@ -82,7 +82,14 @@ dir.create(out_root, recursive = TRUE, showWarnings = FALSE)
       stop("barrier land_sf missing: ", land_path, call. = FALSE)
     }
     land_sf <- readRDS(land_path)
-    mesh <- add_barrier_land(mesh, land_sf, range_fraction = cfg$mesh$barrier$range_fraction %||% 0.1)
+    # sdmTMB ships add_barrier_mesh; PR #5 mesh.R delegates to sdmTMBextra when present.
+    mesh <- sdmTMB::add_barrier_mesh(
+      spde_obj = mesh,
+      barrier_sf = land_sf,
+      range_fraction = cfg$mesh$barrier$range_fraction %||% 0.1,
+      proj_scaling = 1000,
+      plot = FALSE
+    )
     check_barrier(mesh, dat_fit, land_sf = land_sf)
   }
 
