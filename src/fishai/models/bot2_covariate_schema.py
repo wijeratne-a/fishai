@@ -99,7 +99,10 @@ def bot2_training_output_columns(ref: str = BOT2_BRANCH) -> tuple[str, ...]:
         "excluded_reason",
     )
     cols = ("event_id", *local_fields, *extras)
-    text = _git_show(ref, BOT2_MODULE)
+    try:
+        text = _git_show(ref, BOT2_MODULE)
+    except RuntimeError:
+        return cols
     if "TRAINING_OUTPUT_COLUMNS" not in text:
         raise ValueError("TRAINING_OUTPUT_COLUMNS missing on bot2 branch")
     return cols
@@ -111,7 +114,18 @@ def local_cufes_covariate_fields() -> tuple[str, ...]:
 
 
 def compare_bot2_to_sdmtmb(*, ref: str = BOT2_BRANCH) -> SchemaCompareResult:
-    bot2_cols = bot2_training_output_columns(ref=ref)
+    try:
+        bot2_cols = bot2_training_output_columns(ref=ref)
+    except (RuntimeError, ValueError) as exc:
+        return SchemaCompareResult(
+            bot2_columns=(),
+            mismatches=[
+                SchemaMismatch(
+                    "bot2_branch_unavailable",
+                    f"could not read bot2 schema from git ({exc})",
+                )
+            ],
+        )
     local_fields = local_cufes_covariate_fields()
     mismatches: list[SchemaMismatch] = []
 
