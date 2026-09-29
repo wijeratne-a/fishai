@@ -1,22 +1,5 @@
-FROM rocker/r-ver:4.5.2
-
-RUN apt-get update && apt-get install -y --no-install-recommends \
-    python3 \
-    python3-pip \
-    python3-venv \
-    cmake \
-    pkg-config \
-    libabsl-dev \
-    libcurl4-openssl-dev \
-    libssl-dev \
-    libxml2-dev \
-    libgdal-dev \
-    libgeos-dev \
-    libproj-dev \
-    libuv1-dev \
-    libudunits2-dev \
-    git \
-    && rm -rf /var/lib/apt/lists/*
+ARG R_BASE_IMAGE
+FROM ${R_BASE_IMAGE}
 
 WORKDIR /app
 

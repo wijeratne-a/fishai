@@ -5,6 +5,9 @@ on:
     branches: [main, "feature/**", "cursor/**"]
   pull_request:
 
+permissions:
+  contents: read
+
 jobs:
   test:
     runs-on: ubuntu-latest
@@ -33,13 +36,72 @@ jobs:
       - name: Pytest
         run: pytest
 
-  docker-r:
+  docker-r-base:
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+    outputs:
+      r_base_tag: ${{ steps.ref.outputs.r_base_tag }}
+      r_base_image: ${{ steps.ref.outputs.r_base_image }}
     steps:
       - uses: actions/checkout@v4
 
+      - name: Compute R base image ref
+        id: ref
+        run: |
+          TAG="$(scripts/ci/compute_r_base_image_ref.sh)"
+          echo "r_base_tag=${TAG}" >> "$GITHUB_OUTPUT"
+          echo "r_base_image=ghcr.io/${{ github.repository }}/r-env:${TAG}" >> "$GITHUB_OUTPUT"
+
+      - name: Log in to GHCR
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Ensure cached R base image
+        env:
+          FISHAI_R_BASE_REGISTRY: ghcr.io/${{ github.repository }}/r-env
+        run: scripts/ci/ensure_r_base_image.sh
+
+      - name: Verify R base image label
+        run: scripts/ci/verify_r_base_image.sh "${{ steps.ref.outputs.r_base_image }}"
+
+  docker-r:
+    needs: docker-r-base
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: read
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Compute R base image ref
+        id: ref
+        run: |
+          TAG="$(scripts/ci/compute_r_base_image_ref.sh)"
+          echo "r_base_tag=${TAG}" >> "$GITHUB_OUTPUT"
+          echo "r_base_image=ghcr.io/${{ github.repository }}/r-env:${TAG}" >> "$GITHUB_OUTPUT"
+
+      - name: Log in to GHCR
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Pull verified R base image
+        run: |
+          docker pull "${{ needs.docker-r-base.outputs.r_base_image }}"
+          scripts/ci/verify_r_base_image.sh "${{ needs.docker-r-base.outputs.r_base_image }}"
+
       - name: Build modeling image
-        run: docker build -t fishai-pilot .
+        run: |
+          docker build \
+            --build-arg "R_BASE_IMAGE=${{ needs.docker-r-base.outputs.r_base_image }}" \
+            -t fishai-pilot .
 
       - name: Run Python and R tests in container
         env:
