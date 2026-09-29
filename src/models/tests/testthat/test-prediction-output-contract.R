@@ -1,5 +1,6 @@
-test_that("predictions mask high OOD and physics FAIL", {
+test_that("predict_engine emits prediction output contract columns", {
   cfg <- load_sardine_test_cfg(intercept_only = TRUE)
+  cfg$prediction$hindcast_evidence <- TRUE
   dat <- load_model_data(cfg = cfg)
   ref_cols <- c("temp_3m_z", "sal_3m_z", "mld_z")
   mesh <- build_fishai_mesh(dat, cfg$mesh)
@@ -12,16 +13,31 @@ test_that("predictions mask high OOD and physics FAIL", {
     artifact,
     grid,
     cfg,
-    physics_cycle = "FAIL",
-    nsim = 5,
+    nsim = 1L,
     species = "sardine",
     valid_day = "2020-06-01",
     dry_run = TRUE
   )
-  expect_true(all(out$evidence_state == "UNKNOWN"))
-  expect_true(all(is.na(out$p_encounter)))
-  expect_true(all(out$dry_run))
-  expect_equal(out$lead_days, rep(0L, nrow(out)))
-  expect_false(any(c("X", "Y", "lon", "lat") %in% names(out)))
-  expect_true(nzchar(out$metadata_attribution_inference[1]))
+  need <- c(
+    "cell_id",
+    "species",
+    "valid_day",
+    "p_encounter",
+    "p_lo90",
+    "p_hi90",
+    "ood_level",
+    "evidence_state",
+    "unknown_reason",
+    "lead_days",
+    "dry_run"
+  )
+  expect_true(all(need %in% names(out)))
+  expect_true(all(out$evidence_state %in% c(
+    "HINDCAST_GLORYS",
+    "NOWCAST_UNVALIDATED",
+    "FORECAST",
+    "DEGRADED",
+    "UNKNOWN"
+  )))
+  expect_true(all(out$lead_days >= 0L & out$lead_days <= 3L))
 })

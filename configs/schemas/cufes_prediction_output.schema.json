@@ -1,0 +1,45 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://fishai.local/schemas/cufes_prediction_output.schema.json",
+  "title": "CUFES egg encounter grid prediction row (per cell / species / valid day)",
+  "description": "DRY RUN and production map products share this column contract. Values are not interpretable until a reviewed fit is frozen.",
+  "type": "object",
+  "required": [
+    "cell_id",
+    "species",
+    "valid_day",
+    "p_encounter",
+    "p_lo90",
+    "p_hi90",
+    "ood_level",
+    "evidence_state",
+    "unknown_reason",
+    "lead_days",
+    "dry_run"
+  ],
+  "properties": {
+    "cell_id": { "type": "string", "minLength": 1 },
+    "species": { "type": "string", "enum": ["sardine", "anchovy"] },
+    "valid_day": { "type": ["string", "null"], "pattern": "^[0-9]{4}-[0-9]{2}-[0-9]{2}$" },
+    "p_encounter": { "type": ["number", "null"], "minimum": 0, "maximum": 1 },
+    "p_lo90": { "type": ["number", "null"], "minimum": 0, "maximum": 1 },
+    "p_hi90": { "type": ["number", "null"], "minimum": 0, "maximum": 1 },
+    "ood_level": { "type": "integer", "minimum": 0, "maximum": 3 },
+    "evidence_state": {
+      "type": "string",
+      "enum": [
+        "HINDCAST_GLORYS",
+        "NOWCAST_UNVALIDATED",
+        "FORECAST",
+        "DEGRADED",
+        "UNKNOWN"
+      ]
+    },
+    "unknown_reason": { "type": ["string", "null"] },
+    "lead_days": { "type": "integer", "minimum": 0, "maximum": 3 },
+    "dry_run": { "type": "boolean" },
+    "product_label": { "type": "string" },
+    "reference_volume_m3": { "type": "number" }
+  },
+  "additionalProperties": true
+}

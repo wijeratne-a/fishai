@@ -44,6 +44,8 @@ Output metadata includes `reference_volume_m3` and states that encounter probabi
 
 If `reference_volume_m3` is absent from the frozen config, prediction **refuses** output.
 
+Gridded prediction row columns are defined in [CUFES_PREDICTION_OUTPUT_CONTRACT.md](CUFES_PREDICTION_OUTPUT_CONTRACT.md) (`p_encounter`, `p_lo90`, `p_hi90`, `ood_level`, `evidence_state`, `unknown_reason`, `lead_days`, per cell/species/day).
+
 ## Cross-validation and held-out scoring
 
 **Held-out events** (spatial CV, LFO, frozen-model scoring) use each row’s own **`log(volume_m3)`** offset—the real sample effort. Only gridded map products use \(V_\text{ref}\).
