@@ -37,7 +37,6 @@ from fishai.ingestion.physics.glorys_training_build import GLORYS_COVARIATE_SOUR
 from cufes_glorys_synthetic_fixture import glorys_store_from_synthetic_days
 from fishai.ingestion.physics.sources.glorys import (
     PRODUCT_ID_MY,
-    PRODUCT_ID_MYINT,
     glorys_product_for_date,
 )
 from fishai.ingestion.sources import require_approved
@@ -77,12 +76,10 @@ def _synthetic_events() -> pd.DataFrame:
     )
 
 
-def test_glorys_product_switch_at_my_myint_boundary() -> None:
-    my_id = glorys_product_for_date(dt.date(2021, 6, 30))
-    myint_id = glorys_product_for_date(dt.date(2021, 7, 1))
-    assert my_id == PRODUCT_ID_MY
-    assert myint_id == PRODUCT_ID_MYINT
-    assert my_id != myint_id
+def test_glorys_product_is_my_for_pre_and_post_legacy_myint_dates() -> None:
+    """Live catalogue exposes only ``my`` (``myint`` removed in PR #24)."""
+    assert glorys_product_for_date(dt.date(2021, 6, 30)) == PRODUCT_ID_MY
+    assert glorys_product_for_date(dt.date(2021, 7, 1)) == PRODUCT_ID_MY
 
 
 def test_training_glorys_product_ids_track_glorys_product_for_date(tmp_path: Path) -> None:
@@ -126,7 +123,7 @@ def test_training_glorys_product_ids_track_glorys_product_for_date(tmp_path: Pat
         assert out.loc[out["event_id"] == ev["event_id"], "source_product"].iloc[0] == expected
 
 
-def test_plan_batches_splits_my_and_myint_months() -> None:
+def test_plan_batches_one_batch_per_month_same_dataset_id() -> None:
     days = [
         dt.date(2021, 6, 15),
         dt.date(2021, 6, 30),
@@ -136,7 +133,7 @@ def test_plan_batches_splits_my_and_myint_months() -> None:
     batches = plan_glorys_subset_batches(days)
     assert len(batches) == 2
     assert batches[0].dataset_id == PRODUCT_ID_MY
-    assert batches[1].dataset_id == PRODUCT_ID_MYINT
+    assert batches[1].dataset_id == PRODUCT_ID_MY
 
 
 def test_one_row_per_event_id_and_required_columns(tmp_path: Path) -> None:

@@ -70,6 +70,7 @@ def _min_distance_to_coast_vertices_km(
     coast_lon: np.ndarray,
     *,
     chunk: int = 8000,
+    point_batch: int = 512,
 ) -> np.ndarray:
     lat = np.asarray(lat, dtype=float)
     lon = np.asarray(lon, dtype=float)
@@ -79,18 +80,27 @@ def _min_distance_to_coast_vertices_km(
     if coast_lat.size == 0:
         out.fill(np.nan)
         return out.reshape(lat.shape)
-    for idx, (la, lo) in enumerate(zip(flat_lat, flat_lon, strict=True)):
-        best_m = float("inf")
-        for start in range(0, coast_lat.size, chunk):
-            sl = slice(start, min(start + chunk, coast_lat.size))
+    n_coast = coast_lat.size
+    for p0 in range(0, flat_lat.size, point_batch):
+        p1 = min(p0 + point_batch, flat_lat.size)
+        plat = flat_lat[p0:p1]
+        plon = flat_lon[p0:p1]
+        best_m = np.full(p1 - p0, np.inf, dtype=float)
+        for start in range(0, n_coast, chunk):
+            end = min(start + chunk, n_coast)
+            clon = coast_lon[start:end]
+            clat = coast_lat[start:end]
+            nc = end - start
+            pp = p1 - p0
             _, _, dist_m = GEOD.inv(
-                np.full(sl.stop - sl.start, lo),
-                np.full(sl.stop - sl.start, la),
-                coast_lon[sl],
-                coast_lat[sl],
+                np.repeat(plon, nc),
+                np.repeat(plat, nc),
+                np.tile(clon, pp),
+                np.tile(clat, pp),
             )
-            best_m = min(best_m, float(np.min(dist_m)))
-        out[idx] = best_m / 1000.0
+            dist_m = dist_m.reshape(pp, nc)
+            best_m = np.minimum(best_m, np.min(dist_m, axis=1))
+        out[p0:p1] = best_m / 1000.0
     return out.reshape(lat.shape)
 
 

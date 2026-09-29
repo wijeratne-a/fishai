@@ -1,0 +1,57 @@
+{
+  "schema_version": 1,
+  "evidence_status": "EVIDENCE-ONLY until auditbot1 passes; not #5-ready while upwelling is null on all rows",
+  "code_sha": "5e283e28a61bcb37103e6c6804d11faee41f5e7d",
+  "branch": "cursor/real-training-table-evidence",
+  "review_scope_commits": [
+    "379aad25b0d1b5842b4f61d143ab148d05a23435",
+    "b394309733bfc4022b0c729f17d97cc3ab3b2788"
+  ],
+  "note_pr15_pr24": "Until PR #15 and PR #24 merge to main, this branch diff includes their commits via merge ancestry; review only the scoped commits above plus later evidence commits.",
+  "cufes_input": {
+    "events_parquet": "data/processed/calcofi_cufes/cufes_events.parquet",
+    "qc_kept_event_count": 14592,
+    "biology_qc_dropped_unique": 1377
+  },
+  "glorys": {
+    "dataset_id": "cmems_mod_glo_phy_my_0.083deg_P1D-m",
+    "catalogue_version": "202311",
+    "subset_request_count": 97,
+    "subset_bytes_downloaded": 232933874,
+    "pull_log_path": "data/provenance/copernicus_pull_log.jsonl",
+    "time_matching": {
+      "event_timestamp": "UTC midpoint of start_time and stop_time (event_mid_time)",
+      "glorys_day_key": "UTC calendar date of event_mid_time (mid.date())",
+      "subset_convention": "Copernicus daily-mean GLORYS fields; store.days keyed by UTC date; field_sampler uses when.date()",
+      "nearest_time_check": "glorys_day_fields_from_open_dataset requires nearest subset time equals requested UTC day"
+    }
+  },
+  "wcofs_bathymetry": {
+    "artifact_path_local_only": "data/derived/physics/wcofs_h_glorys_pilot.zarr",
+    "source_grid_url": "https://noaa-nos-ofs-pds.s3.amazonaws.com/wcofs/netcdf/2025/06/01/wcofs.t03z.20250601.fields.n003.nc",
+    "source_grid_sha256": "9bed633ae6bfc66f50c9f89d79750da1e3e657c97f49d0f8534724c9cd5e2fa8",
+    "hmin_source": "wet_cell_minimum_h",
+    "roms_hmin_m": 15.0,
+    "variables": ["h", "mask_rho"]
+  },
+  "training_table": {
+    "output_parquet_local_only": "data/processed/calcofi_cufes/cufes_training_covariates.parquet",
+    "row_count": 14592,
+    "kept_count": 12085,
+    "excluded_count": 2507,
+    "excluded_reason_counts": {
+      "missing_covariate": 2407,
+      "missing_covariate;too_few_track_points": 3,
+      "missing_covariate;wcofs_low_wet_fraction": 81,
+      "too_few_track_points": 16
+    },
+    "join_uniqueness": "one row per event_id; 14592 input QC-kept events"
+  },
+  "upwelling_policy": {
+    "column": "upwelling",
+    "null_on_all_rows": 14592,
+    "imputed": false,
+    "status_column": "upwelling_status documents no consistent wind product",
+    "prereg_action_required": "Remove upwelling from #5 pre-registered formula (bot3) or table is not #5-ready"
+  }
+}

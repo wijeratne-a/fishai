@@ -7,25 +7,22 @@ import datetime as dt
 import pytest
 
 from fishai.ingestion.physics.sources.glorys import (
-    MYINT_PRODUCT_END_DEFAULT,
-    MY_PRODUCT_END,
+    MY_COVERAGE_END_DEFAULT,
     MY_PRODUCT_START,
     PRODUCT_ID_MY,
-    PRODUCT_ID_MYINT,
     VARIABLES,
     glorys_product_for_date,
 )
-from fishai.ingestion.sources import SourceNotApprovedError, require_approved
+from fishai.ingestion.sources import require_approved
 
 
 def test_glorys_product_metadata() -> None:
     assert "bottomT" in VARIABLES
     assert "tob" not in VARIABLES
     assert MY_PRODUCT_START == dt.date(1993, 1, 1)
-    assert MY_PRODUCT_END == dt.date(2021, 6, 30)
-    assert MYINT_PRODUCT_END_DEFAULT == dt.date(2026, 6, 23)
+    assert MY_COVERAGE_END_DEFAULT == dt.date(2026, 6, 23)
     assert glorys_product_for_date(dt.date(2021, 6, 30)) == PRODUCT_ID_MY
-    assert glorys_product_for_date(dt.date(2021, 7, 1)) == PRODUCT_ID_MYINT
+    assert glorys_product_for_date(dt.date(2021, 7, 1)) == PRODUCT_ID_MY
 
 
 def test_glorys_without_purpose_is_approved() -> None:
