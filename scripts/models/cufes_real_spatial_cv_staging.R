@@ -29,6 +29,7 @@ species_arg <- parse_flag("--species", "both")
 out_root <- parse_flag("--out-dir", file.path(root, "staging", "cv-real-run", "dry-run"))
 mesh_cutoff <- as.numeric(parse_flag("--mesh-cutoff-km", NA_character_))
 skip_barrier <- has_flag("--skip-barrier")
+counts_only <- has_flag("--counts-only")
 evidence_only <- !has_flag("--allow-display-metrics")
 
 dir.create(out_root, recursive = TRUE, showWarnings = FALSE)
@@ -73,6 +74,45 @@ dir.create(out_root, recursive = TRUE, showWarnings = FALSE)
   )
   if (!is.null(dat_test)) {
     dat_test <- .apply_log_depth_from_bottom_m(dat_test, cfg)
+    fold_test <- fold_all$fold_id[match(dat_test$event_id, fold_all$event_id)]
+    if (any(is.na(fold_test))) {
+      stop("missing fold_id for some test-period modelling rows", call. = FALSE)
+    }
+  } else {
+    fold_test <- NULL
+  }
+
+  fold_ids_all <- sort(unique(as.integer(fold_match)))
+  fold_stats <- list(
+    evidence_only_not_for_display = evidence_only,
+    year_1998_note = paste0(
+      "1998 nearshore exclusions (trainable table): 1,171 of 2,507 excluded events; ",
+      "year_1998 rows below are EVIDENCE ONLY — NOT FOR DISPLAY."
+    ),
+    fit = .per_fold_event_stats_by_year(dat_fit, fold_match, fold_ids_all, 1998L),
+    test = .per_fold_event_stats_by_year(dat_test, fold_test, fold_ids_all, 1998L)
+  )
+
+  if (counts_only) {
+    prev_gap <- .sardine_prevalence_gap_note(cfg, events)
+    return(list(
+      species = sp,
+      config = config_path,
+      evidence_only_not_for_display = evidence_only,
+      counts_only = TRUE,
+      training_domain = domain,
+      fold_event_stats = fold_stats,
+      spatial_cv = list(skipped = TRUE, reason = "--counts-only"),
+      elpd_sum_loglik = NA_real_,
+      elpd_eligible = FALSE,
+      time_holdout = list(skipped = TRUE, reason = "--counts-only"),
+      notes = c(
+        "Metrics labeled EVIDENCE ONLY — NOT FOR DISPLAY.",
+        "Wording: egg encounter likelihood (not spawning habitat).",
+        prev_gap
+      ),
+      fold_failures = character(0)
+    ))
   }
 
   land_sf <- NULL
@@ -108,7 +148,6 @@ dir.create(out_root, recursive = TRUE, showWarnings = FALSE)
     }
   }
 
-  fold_stats <- .per_fold_event_stats(dat_fit, fold_match)
   fold_scores <- .score_cv_folds_in_domain(cv, dat_fit, fold_match, cfg, domain)
 
   test_scores <- if (is.null(dat_test)) {
@@ -206,16 +245,44 @@ dir.create(out_root, recursive = TRUE, showWarnings = FALSE)
     bd <= limits$bottom_depth_m_max
 }
 
-.per_fold_event_stats <- function(dat, fold_ids) {
-  folds <- sort(unique(as.integer(fold_ids)))
+.event_calendar_year <- function(dat) {
+  if (is.null(dat) || !nrow(dat) || !"time" %in% names(dat)) {
+    return(integer(0))
+  }
+  as.integer(format(as.POSIXct(dat$time, tz = "UTC"), "%Y"))
+}
+
+.per_fold_event_stats_by_year <- function(dat, fold_ids, folds, breakout_year = 1998L) {
+  folds <- sort(unique(as.integer(folds)))
+  n <- if (is.null(dat) || !nrow(dat)) 0L else nrow(dat)
+  if (n > 0L) {
+    if (is.null(fold_ids) || length(fold_ids) != n) {
+      stop("fold_ids length must match modelling rows", call. = FALSE)
+    }
+    years <- .event_calendar_year(dat)
+    y_pos <- as.integer(dat$y > 0)
+    fold_ids <- as.integer(fold_ids)
+  } else {
+    years <- integer(0)
+    y_pos <- integer(0)
+    fold_ids <- integer(0)
+  }
   stats::setNames(
     lapply(folds, function(f) {
-      idx <- as.integer(fold_ids) == f
-      z <- as.integer(dat$y[idx] > 0)
+      idx_fold <- if (length(fold_ids)) fold_ids == f else rep(FALSE, n)
+      idx_yr <- idx_fold & years == breakout_year
       list(
         fold_id = f,
-        n_events = sum(idx),
-        n_positives = sum(z == 1L)
+        evidence_only_not_for_display = TRUE,
+        all_years = list(
+          n_events = sum(idx_fold),
+          n_positives = if (any(idx_fold)) sum(y_pos[idx_fold] == 1L) else 0L
+        ),
+        year_1998 = list(
+          calendar_year = breakout_year,
+          n_events = sum(idx_yr),
+          n_positives = if (any(idx_yr)) sum(y_pos[idx_yr] == 1L) else 0L
+        )
       )
     }),
     as.character(folds)

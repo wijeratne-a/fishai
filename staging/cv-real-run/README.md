@@ -38,4 +38,13 @@ Rscript scripts/models/cufes_real_spatial_cv_staging.R --species both \
 
 Manifest: `staging/cv-real-run/dry-run/cufes_real_spatial_cv_staging_manifest.json`.
 
+Per-species `fold_event_stats` (EVIDENCE ONLY — NOT FOR DISPLAY): for each spatial fold, `fit` and `test` tables with `all_years` and `year_1998` event/positive counts.
+
+Fold-balance counts only (no sdmTMB fit):
+
+```bash
+Rscript scripts/models/cufes_real_spatial_cv_staging.R --species both --counts-only \
+  --out-dir staging/cv-real-run/fold-counts
+```
+
 Configs (no `upwelling`; `log(bottom_depth_m)` via `bottom_depth_m`): `configs/staging/cufes_*_real_cv.yaml`.
