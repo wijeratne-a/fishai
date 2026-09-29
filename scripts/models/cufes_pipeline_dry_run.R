@@ -114,6 +114,31 @@ record_stage <- function(name, expr) {
 }
 
 dat <- record_stage("load_model_data", load_model_data(cfg = cfg, min_duration_min = 2L, egg_split_scope = "all"))
+qc_load <- attr(dat, "fishai_data_qc")
+if (length(qc_load$dropped_unavailable_covariates)) {
+  cfg$covariates$dynamic <- setdiff(
+    cfg$covariates$dynamic %||% character(),
+    qc_load$dropped_unavailable_covariates
+  )
+  cfg$covariates$static <- setdiff(
+    cfg$covariates$static %||% character(),
+    qc_load$dropped_unavailable_covariates
+  )
+}
+
+bot2_branch_ref <- "origin/cursor/cufes-glorys-training-covariates-faff"
+branch_existed <- system2(
+  "git",
+  c("rev-parse", "--verify", bot2_branch_ref),
+  stdout = FALSE,
+  stderr = FALSE
+) == 0
+schema_mode_env <- Sys.getenv("BOT2_SCHEMA_MODE", unset = "auto")
+schema_mode <- if (identical(schema_mode_env, "auto")) {
+  if (branch_existed) "git" else "expected"
+} else {
+  schema_mode_env
+}
 
 record_stage(
   "bottom_depth_qc",
@@ -222,6 +247,10 @@ manifest <- list(
   species = species,
   out_dir = out_dir,
   config = config_path,
+  bot2_branch_ref = "cursor/cufes-glorys-training-covariates-faff",
+  branch_existed = branch_existed,
+  mode = schema_mode,
+  dropped_unavailable_covariates = as.list(qc_load$dropped_unavailable_covariates %||% character()),
   stages = stages,
   prediction_grid = grid_out
 )

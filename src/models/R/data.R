@@ -35,6 +35,7 @@ load_model_data <- function(
     excluded_no_count_row = 0L,
     dropped_short_duration = 0L,
     dropped_short_event = 0L,
+    dropped_unavailable_covariates = character(),
     taxon = NA_character_,
     join_drop_event_ids = character()
   )
@@ -110,7 +111,10 @@ load_model_data <- function(
     .validate_covariate_drop_events(drops, events)
     .validate_excluded_vs_drop_table(cov, drops)
     cov <- cov[cov$event_id %in% dat$event_id, , drop = FALSE]
-    dat <- .join_covariates_bot2(dat, cov, cfg)
+    joined <- .join_covariates_bot2(dat, cov, cfg)
+    dat <- joined$dat
+    cfg <- joined$cfg
+    qc$dropped_unavailable_covariates <- joined$dropped_unavailable %||% character()
     if (!is.null(drops) && nrow(drops)) {
       qc$join_drop_event_ids <- .join_drop_event_ids(drops)
     }
@@ -151,8 +155,9 @@ load_model_data <- function(
     qc$dropped_missing_endpoint <- prep$dropped_missing_endpoint
   }
 
-  cov_prep <- .map_and_assert_covariates(dat, cfg)
+  cov_prep <- .map_and_drop_covariates(dat, cfg)
   dat <- cov_prep$dat
+  cfg <- cov_prep$cfg
   dat <- .ensure_time_idx(dat)
 
   short_filt <- .apply_short_event_filter(dat, exclude_short_events)
@@ -725,6 +730,87 @@ fishai_data_prep_qc <- function(dat) {
   )
 }
 
+.planned_covariate_gap_reasons <- function() {
+  c(upwelling = "no_consistent_wind_product")
+}
+
+.covariate_status_column <- function(model_slug) {
+  if (identical(model_slug, "upwelling")) {
+    return("upwelling_status")
+  }
+  paste0(model_slug, "_status")
+}
+
+.covariate_values_all_blank <- function(vals) {
+  if (is.character(vals)) {
+    trim <- trimws(vals)
+    return(is.na(vals) | !nzchar(trim) | toupper(trim) %in% c("NA", "NAN"))
+  }
+  v <- suppressWarnings(as.numeric(vals))
+  is.na(vals) | is.na(v) | !is.finite(v)
+}
+
+.covariate_planned_gap_on_frame <- function(dat, model_slug, upstream_col) {
+  reasons <- .planned_covariate_gap_reasons()
+  if (!model_slug %in% names(reasons)) {
+    return(FALSE)
+  }
+  expected_reason <- reasons[[model_slug]]
+  if (is.null(expected_reason) || !nzchar(expected_reason)) {
+    return(FALSE)
+  }
+  status_col <- .covariate_status_column(model_slug)
+  if (!status_col %in% names(dat)) {
+    return(FALSE)
+  }
+  if (!upstream_col %in% names(dat)) {
+    return(FALSE)
+  }
+  ex <- if ("excluded" %in% names(dat)) {
+    .parse_excluded_logical(dat$excluded)
+  } else {
+    rep(FALSE, nrow(dat))
+  }
+  keep <- !(ex %in% TRUE)
+  if (!any(keep)) {
+    return(FALSE)
+  }
+  sub <- dat[keep, , drop = FALSE]
+  status_vals <- trimws(as.character(sub[[status_col]]))
+  if (!all(status_vals == expected_reason)) {
+    return(FALSE)
+  }
+  all(.covariate_values_all_blank(sub[[upstream_col]]))
+}
+
+.drop_covariates_if_unavailable <- function(dat, cfg) {
+  dropped <- character()
+  upstream_map <- cfg$covariates$upstream_fields %||% .default_upstream_covariate_map()
+  dyn <- cfg$covariates$dynamic %||% character()
+  static <- cfg$covariates$static %||% character()
+  if (!length(dyn) && !length(static)) {
+    return(list(dat = dat, cfg = cfg, dropped_unavailable = dropped))
+  }
+  slugs <- c(dyn, static)
+  for (slug in slugs) {
+    upstream <- upstream_map[[slug]]
+    if (is.null(upstream) || (length(upstream) == 1L && is.na(upstream))) {
+      upstream <- slug
+    }
+    if (!.covariate_planned_gap_on_frame(dat, slug, upstream)) {
+      next
+    }
+    dropped <- c(dropped, slug)
+    cfg$covariates$dynamic <- setdiff(cfg$covariates$dynamic, slug)
+    cfg$covariates$static <- setdiff(cfg$covariates$static, slug)
+    model_col <- paste0(slug, "_z")
+    if (model_col %in% names(dat)) {
+      dat[[model_col]] <- NULL
+    }
+  }
+  list(dat = dat, cfg = cfg, dropped_unavailable = dropped)
+}
+
 .join_covariates_bot2 <- function(events, cov, cfg) {
   ev_ids <- sort(unique(as.character(events$event_id)))
   cov_ids <- sort(unique(as.character(cov$event_id)))
@@ -746,6 +832,10 @@ fishai_data_prep_qc <- function(dat) {
     events[[col]] <- cov[[col]]
   }
   .assert_glorys_covariate_source_product(events, cfg)
+  drop_res <- .drop_covariates_if_unavailable(events, cfg)
+  events <- drop_res$dat
+  cfg <- drop_res$cfg
+  dropped_unavailable <- drop_res$dropped_unavailable
   events <- .map_model_covariates(events, cfg)
   .assert_non_excluded_covariates_complete(events, cfg)
   ex <- .parse_excluded_logical(events$excluded)
@@ -753,7 +843,7 @@ fishai_data_prep_qc <- function(dat) {
   if (nrow(events) == 0L) {
     stop("no events remain after excluding covariate-join failures", call. = FALSE)
   }
-  events
+  list(dat = events, cfg = cfg, dropped_unavailable = dropped_unavailable)
 }
 
 .map_model_covariates <- function(dat, cfg) {
@@ -958,7 +1048,18 @@ fishai_data_prep_qc <- function(dat) {
 }
 
 .map_and_drop_covariates <- function(dat, cfg) {
-  .map_and_assert_covariates(dat, cfg)
+  if ("excluded" %in% names(dat)) {
+    return(list(dat = dat, cfg = cfg))
+  }
+  drop_res <- .drop_covariates_if_unavailable(dat, cfg)
+  dat <- drop_res$dat
+  cfg <- drop_res$cfg
+  dat <- .map_model_covariates(dat, cfg)
+  .assert_non_excluded_covariates_complete(
+    data.frame(excluded = FALSE, dat, stringsAsFactors = FALSE),
+    cfg
+  )
+  list(dat = dat, cfg = cfg)
 }
 
 .ensure_time_idx <- function(dat) {

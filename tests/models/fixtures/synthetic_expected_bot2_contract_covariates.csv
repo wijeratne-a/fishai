@@ -1,0 +1,4 @@
+event_id,T3m,S3m,MLD_m,sst_grad,front_distance_km,upwelling,upwelling_status,bottom_depth_m,depth_at_model_floor,source,provenance,excluded,source_product,excluded_reason
+CUFES:SYN:AK:001,14.2,33.1,25.0,0.05,12.0,,no_consistent_wind_product,118.0,FALSE,glorys,SYNTHETIC_expected_bot2_contract_dry_run,FALSE,cmems_mod_glo_phy_my_0.083deg_P1D-m,
+CUFES:SYN:AK:002,14.5,33.0,22.0,0.04,10.5,,no_consistent_wind_product,115.0,FALSE,glorys,SYNTHETIC_expected_bot2_contract_dry_run,FALSE,cmems_mod_glo_phy_my_0.083deg_P1D-m,
+CUFES:SYN:AK:003,13.9,33.2,28.0,0.06,8.0,,no_consistent_wind_product,120.0,FALSE,glorys,SYNTHETIC_expected_bot2_contract_dry_run,FALSE,cmems_mod_glo_phy_my_0.083deg_P1D-m,

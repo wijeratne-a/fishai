@@ -15,6 +15,11 @@ from fishai.models.bot2_covariate_schema import (
     compare_bot2_to_sdmtmb,
     mismatches_as_dicts,
 )
+from fishai.models.bot2_expected_contract import (
+    expected_training_output_columns,
+    harness_run_metadata,
+    resolve_bot2_schema_mode,
+)
 
 _TEST_DIR = Path(__file__).resolve().parent
 if str(_TEST_DIR) not in sys.path:
@@ -54,10 +59,29 @@ def test_bot2_branch_training_columns_include_source_product() -> None:
     assert "source_product" in result.bot2_columns
 
 
+def test_expected_contract_columns_cover_pr4_and_covariates() -> None:
+    cols = expected_training_output_columns()
+    for name in ("time", "lat", "lon", "stop_lat", "stop_lon"):
+        assert name not in cols  # events table, not covariate output
+    assert "event_id" in cols
+    assert "source_product" in cols
+    assert "upwelling_status" in cols
+    meta = harness_run_metadata()
+    assert meta["mode"] in ("expected", "git")
+    assert isinstance(meta["branch_existed"], bool)
+
+
+def test_bot2_schema_mode_auto_resolves() -> None:
+    mode = resolve_bot2_schema_mode("auto")
+    assert mode in ("expected", "git")
+
+
 @pytest.mark.skipif(shutil.which("Rscript") is None, reason="Rscript required (docker-r job)")
 @pytest.mark.parametrize("species", ["sardine", "anchovy"])
 def test_cufes_pipeline_dry_run_stages(tmp_path: Path, species: str) -> None:
     paths = write_spring_subset_csvs(tmp_path / "inputs")
+    assert paths["mode"] in ("expected", "git")
+    assert isinstance(paths["branch_existed"], bool)
     out_dir = tmp_path / "dry_run" / species
     out_dir.mkdir(parents=True, exist_ok=True)
     cmd = [
@@ -99,6 +123,9 @@ def test_cufes_pipeline_dry_run_stages(tmp_path: Path, species: str) -> None:
     manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
     assert manifest["dry_run"] is True
     assert manifest["not_for_interpretation"] is True
+    assert manifest["branch_existed"] is paths["branch_existed"]
+    assert manifest["mode"] == paths["mode"]
+    assert manifest.get("dropped_unavailable_covariates") == ["upwelling"]
     stage_names = [s["stage"] for s in manifest["stages"]]
     expected = [
         "load_model_data",
