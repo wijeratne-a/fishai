@@ -36,6 +36,10 @@ def test_doc_mentions_required_contract_fields() -> None:
         "evidence_state",
         "unknown_reason",
         "lead_days",
+        "forecast_age_hours",
+        "source_run_time",
+        "fallback_used",
+        "valid_time",
     ):
         assert field in text
 
@@ -53,6 +57,10 @@ def test_example_dry_run_row_validates() -> None:
         "evidence_state": "HINDCAST_GLORYS",
         "unknown_reason": None,
         "lead_days": 0,
+        "forecast_age_hours": None,
+        "source_run_time": None,
+        "fallback_used": False,
+        "valid_time": None,
         "dry_run": True,
     }
     jsonschema.validate(row, schema)

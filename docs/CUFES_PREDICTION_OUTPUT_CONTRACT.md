@@ -14,7 +14,13 @@ Each output row is keyed by **`cell_id`**, **`species`**, and **`valid_day`** (I
 | `ood_level` | int | 0–3 | Max OOD severity across points aggregated into the cell (`classify_ood_level`) |
 | `evidence_state` | string | one of five labels below | Issuance / forcing tier |
 | `unknown_reason` | string or null | machine token when `evidence_state = UNKNOWN` | e.g. `insufficient_model_coverage`, `physics_cycle_fail`, `ood_level_ge_2` |
-| `lead_days` | int | 0–3 | WCOFS forecast lead when `evidence_state = FORECAST`; **0** for hindcast/nowcast scoring rows. Resolved from WCOFS **`forecast_age_hours`** (valid time minus source run time), never from raw `lead_hours`. Nowcast when `forecast_age_hours <= 0` and `fallback_used` is false; else `ceil(forecast_age_hours / 24)`. Input Zarr may omit or NaN `lead_days` for nowcast steps; output always uses **0**, never **-1** or NaN. |
+| `lead_days` | int | 0–3 | WCOFS forecast lead when `evidence_state = FORECAST`; **0** for hindcast/nowcast scoring rows. Resolved from WCOFS **`forecast_age_hours`** (valid time minus source run time), never from raw `lead_hours` or **`valid_offset_h`**. Nowcast when `forecast_age_hours <= 0` and `fallback_used` is false; else `ceil(forecast_age_hours / 24)`. Input Zarr may omit or NaN `lead_days` for nowcast steps; output always uses **0**, never **-1** or NaN. |
+| `forecast_age_hours` | float or null | hours | WCOFS valid time minus **source** model run time (`ocean_time` − source run). Drives `lead_days` and 90% interval widening. |
+| `source_run_time` | string or null | ISO-8601 UTC | Model run time **R** of the WCOFS file used for the step (e.g. R−48h under two-missed-cycle fallback). |
+| `fallback_used` | bool | | True when the step used a prior-cycle file (`cycle_date != target` or explicit fallback). |
+| `valid_time` | string or null | ISO-8601 UTC | Valid time of the forcing step (from `ocean_time` / Zarr `time`). |
+
+**Interval policy:** posterior 90% width (`p_hi90 − p_lo90`) widens with **`forecast_age_hours`**, not with timeline index **`valid_offset_h`**.
 
 ## `evidence_state` labels (exactly one)
 

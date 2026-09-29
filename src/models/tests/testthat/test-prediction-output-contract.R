@@ -29,6 +29,10 @@ test_that("predict_engine emits prediction output contract columns", {
     "evidence_state",
     "unknown_reason",
     "lead_days",
+    "forecast_age_hours",
+    "source_run_time",
+    "fallback_used",
+    "valid_time",
     "dry_run"
   )
   expect_true(all(need %in% names(out)))

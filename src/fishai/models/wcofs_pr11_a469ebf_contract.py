@@ -249,7 +249,7 @@ def build_pr11_scenario(name: str, target: dt.date) -> dict[str, Any]:
         plan = _plan_for_scenario(
             name, target, primary_available=False, cycle_exists_fn=exists
         )
-        sample_offsets = (24, 27, 72)
+        sample_offsets = tuple(range(-21, 25, 3)) + (27, 72)
     elif name == "download_failed_absent_from_zarr":
         plan = _plan_for_scenario(
             name, target, primary_available=True, cycle_exists_fn=lambda _d: True

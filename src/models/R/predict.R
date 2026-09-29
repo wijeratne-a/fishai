@@ -27,7 +27,9 @@ predict_engine <- function(
   forecast_age_hours = NULL,
   fallback_used = FALSE,
   lead_days_input = NULL,
-  wcofs_unknown_reason = NULL
+  wcofs_unknown_reason = NULL,
+  valid_time = NULL,
+  source_run_time = NULL
 ) {
   attr_meta <- assert_prediction_attributions(
     prediction_attribution_metadata(artifact, cfg)
@@ -54,6 +56,13 @@ predict_engine <- function(
     lead_days_input = lead_days_input,
     unknown_reason = wcofs_unknown_reason
   )
+  wcofs_prov <- .prediction_wcofs_provenance_columns(
+    forecast_age_hours = forecast_age_hours,
+    fallback_used = fallback_used,
+    valid_time = valid_time,
+    source_run_time = source_run_time,
+    wcofs_step = wcofs_step
+  )
   if (!is.null(wcofs_step) && identical(wcofs_step$evidence_state, "UNKNOWN")) {
     ood_level <- rep(3L, nrow(grid))
     reason <- wcofs_step$unknown_reason %||% "missing_operational_cycle"
@@ -67,7 +76,8 @@ predict_engine <- function(
       species = species,
       valid_day = valid_day,
       dry_run = dry_run,
-      lead_days = 0L
+      lead_days = 0L,
+      wcofs_provenance = wcofs_prov
     ))
   }
 
@@ -83,7 +93,8 @@ predict_engine <- function(
       species = species,
       valid_day = valid_day,
       dry_run = dry_run,
-      lead_days = 0L
+      lead_days = 0L,
+      wcofs_provenance = wcofs_prov
     ))
   }
 
@@ -121,13 +132,26 @@ predict_engine <- function(
   if (is.null(dim(eta2))) {
     eta2 <- matrix(as.numeric(eta2), ncol = 1L)
   }
-  p_s <- encounter_probability(eta1, cfg = cfg)
+  p_s <- if (is.matrix(eta1)) {
+    if (is_poisson_link_delta(cfg)) {
+      1 - exp(-exp(eta1))
+    } else {
+      1 / (1 + exp(-eta1))
+    }
+  } else {
+    encounter_probability(eta1, cfg = cfg)
+  }
   if (is.null(dim(p_s))) {
     p_s <- matrix(as.numeric(p_s), ncol = 1L)
   }
   mu_s <- exp(eta2)
+  if (is.null(dim(mu_s))) {
+    mu_s <- matrix(as.numeric(mu_s), ncol = 1L)
+  }
   if (ncol(mu_s) == 1L && ncol(p_s) > 1L) {
     mu_s <- matrix(rep(mu_s[, 1L], ncol(p_s)), nrow = nrow(mu_s), ncol = ncol(p_s))
+  } else if (ncol(p_s) == 1L && ncol(mu_s) > 1L) {
+    p_s <- matrix(rep(p_s[, 1L], ncol(mu_s)), nrow = nrow(p_s), ncol = ncol(mu_s))
   }
   d_s <- p_s * mu_s
 
@@ -179,6 +203,14 @@ predict_engine <- function(
     agg$p_hi90 <- pmin(1, agg$p_hi90 * w)
   }
 
+  if (!is.null(wcofs_prov$forecast_age_hours) && is.finite(wcofs_prov$forecast_age_hours)) {
+    wfac <- .prediction_interval_widen_from_forecast_age(wcofs_prov$forecast_age_hours, cfg)
+    half <- (agg$p_hi90 - agg$p_lo90) / 2
+    half <- half * wfac
+    agg$p_lo90 <- pmax(0, agg$p_encounter - half)
+    agg$p_hi90 <- pmin(1, agg$p_encounter + half)
+  }
+
   .finalize_prediction_table(
     agg,
     attr_cols,
@@ -189,7 +221,8 @@ predict_engine <- function(
     species = species,
     valid_day = valid_day,
     dry_run = dry_run,
-    lead_days = agg$lead_days[1L]
+    lead_days = agg$lead_days[1L],
+    wcofs_provenance = wcofs_prov
   )
 }
 
@@ -230,14 +263,16 @@ predict_engine <- function(
     return(list(
       evidence_state = "UNKNOWN",
       lead_days = 0L,
-      unknown_reason = unknown_reason
+      unknown_reason = unknown_reason,
+      forecast_age_hours = NA_real_
     ))
   }
   if (is.null(forecast_age_hours) || is.na(forecast_age_hours) || !is.finite(forecast_age_hours)) {
     return(list(
       evidence_state = "UNKNOWN",
       lead_days = 0L,
-      unknown_reason = "missing_operational_cycle"
+      unknown_reason = "missing_operational_cycle",
+      forecast_age_hours = NA_real_
     ))
   }
   if (!is.null(lead_days_input) && !is.na(lead_days_input)) {
@@ -257,7 +292,8 @@ predict_engine <- function(
     return(list(
       evidence_state = "NOWCAST",
       lead_days = 0L,
-      unknown_reason = NA_character_
+      unknown_reason = NA_character_,
+      forecast_age_hours = age
     ))
   }
   if (fb) {
@@ -268,8 +304,39 @@ predict_engine <- function(
   list(
     evidence_state = "FORECAST",
     lead_days = max(0L, min(3L, ld)),
-    unknown_reason = NA_character_
+    unknown_reason = NA_character_,
+    forecast_age_hours = age
   )
+}
+
+.prediction_wcofs_provenance_columns <- function(
+  forecast_age_hours = NULL,
+  fallback_used = FALSE,
+  valid_time = NULL,
+  source_run_time = NULL,
+  wcofs_step = NULL
+) {
+  age <- forecast_age_hours
+  if (!is.null(wcofs_step) && !is.null(wcofs_step$forecast_age_hours)) {
+    age <- wcofs_step$forecast_age_hours
+  }
+  if (is.null(age)) {
+    age <- NA_real_
+  }
+  list(
+    forecast_age_hours = age,
+    fallback_used = isTRUE(fallback_used),
+    valid_time = valid_time %||% NA_character_,
+    source_run_time = source_run_time %||% NA_character_
+  )
+}
+
+.prediction_interval_widen_from_forecast_age <- function(forecast_age_hours, cfg) {
+  pred <- cfg$prediction %||% list()
+  per_24h <- pred$interval_widen_per_24h %||% 0.2
+  base <- pred$interval_widen_base %||% 1.0
+  age <- max(0, as.numeric(forecast_age_hours))
+  base + per_24h * (age / 24)
 }
 
 .finalize_prediction_table <- function(
@@ -282,7 +349,8 @@ predict_engine <- function(
   species = NA_character_,
   valid_day = NA_character_,
   dry_run = FALSE,
-  lead_days = 0L
+  lead_days = 0L,
+  wcofs_provenance = list()
 ) {
   agg$species <- species
   agg$valid_day <- valid_day
@@ -303,6 +371,11 @@ predict_engine <- function(
   if (!"p_hi90" %in% names(agg)) {
     agg$p_hi90 <- NA_real_
   }
+  prov <- wcofs_provenance %||% list()
+  agg$forecast_age_hours <- prov$forecast_age_hours %||% NA_real_
+  agg$fallback_used <- isTRUE(prov$fallback_used)
+  agg$valid_time <- prov$valid_time %||% NA_character_
+  agg$source_run_time <- prov$source_run_time %||% NA_character_
   agg$metadata_validated_forcing <- "glorys"
   agg$metadata_training_end <- artifact$training_end %||% NA_character_
   agg$metadata_nsim <- nsim
@@ -327,6 +400,10 @@ predict_engine <- function(
     "evidence_state",
     "unknown_reason",
     "lead_days",
+    "forecast_age_hours",
+    "source_run_time",
+    "fallback_used",
+    "valid_time",
     "dry_run",
     "product_label",
     "reference_volume_m3",

@@ -15,6 +15,10 @@
     "evidence_state",
     "unknown_reason",
     "lead_days",
+    "forecast_age_hours",
+    "source_run_time",
+    "fallback_used",
+    "valid_time",
     "dry_run"
   ],
   "properties": {
@@ -37,6 +41,10 @@
     },
     "unknown_reason": { "type": ["string", "null"] },
     "lead_days": { "type": "integer", "minimum": 0, "maximum": 3 },
+    "forecast_age_hours": { "type": ["number", "null"] },
+    "source_run_time": { "type": ["string", "null"] },
+    "fallback_used": { "type": "boolean" },
+    "valid_time": { "type": ["string", "null"] },
     "dry_run": { "type": "boolean" },
     "product_label": { "type": "string" },
     "reference_volume_m3": { "type": "number" }
