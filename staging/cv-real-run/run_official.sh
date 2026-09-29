@@ -12,6 +12,12 @@ if [[ ! -f "$ROOT/data/processed/calcofi_cufes/cufes_training_covariates.parquet
   exit 1
 fi
 
+export R_LIBS="${R_LIBS:-$ROOT/renv/library}"
+export RENV_PATHS_LIBRARY="${RENV_PATHS_LIBRARY:-$ROOT/renv/library}"
+
+python3 "$ROOT/staging/cv-real-run/patch_source_product_myint.py"
+python3 "$ROOT/staging/cv-real-run/enrich_events_dist_shore_km.py"
+
 if [[ ! -f "$ROOT/staging/cv-real-run/artifacts/scb_pilot_land_sf.rds" ]]; then
   Rscript staging/cv-real-run/build_scb_pilot_land_sf.R
 fi
