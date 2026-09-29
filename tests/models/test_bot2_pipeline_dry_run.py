@@ -6,6 +6,7 @@ import json
 import os
 import shutil
 import subprocess
+import sys
 from pathlib import Path
 
 import pytest
@@ -14,7 +15,11 @@ from fishai.models.bot2_covariate_schema import (
     compare_bot2_to_sdmtmb,
     mismatches_as_dicts,
 )
-from tests.models.bot2_spring_subset_fixtures import write_spring_subset_csvs
+
+_TEST_DIR = Path(__file__).resolve().parent
+if str(_TEST_DIR) not in sys.path:
+    sys.path.insert(0, str(_TEST_DIR))
+from bot2_spring_subset_fixtures import write_spring_subset_csvs
 
 REPO = Path(__file__).resolve().parents[2]
 DRY_RUN_R = REPO / "scripts" / "models" / "cufes_pipeline_dry_run.R"
