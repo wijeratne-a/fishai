@@ -24,6 +24,7 @@ COPY pyproject.toml README.md ./
 COPY src ./src
 COPY python ./python
 COPY configs ./configs
+COPY docs ./docs
 COPY tests ./tests
 COPY scripts ./scripts
 COPY security ./security
