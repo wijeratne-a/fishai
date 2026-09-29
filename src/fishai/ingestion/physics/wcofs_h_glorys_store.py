@@ -243,18 +243,30 @@ def load_wcofs_h_glorys_grid(
         if actual != expected:
             raise ValueError(f"wcofs h artifact sha256 mismatch: expected {expected}, got {actual}")
     ds = xr.open_zarr(path)
+    attrs = dict(ds.attrs)
+
+    def _meta(key: str, default: Any = None) -> Any:
+        val = manifest.get(key)
+        if val is None:
+            val = attrs.get(key, default)
+        return val
+
+    roms_hmin = _meta("roms_hmin_m")
+    if roms_hmin is None:
+        raise ValueError("wcofs h artifact missing roms_hmin_m in manifest and zarr attrs")
+    min_wet = _meta("min_wet_fraction", 0.5)
     return WcofsHGlorysGrid(
         lat=np.asarray(ds["lat"].values, dtype=float),
         lon=np.asarray(ds["lon"].values, dtype=float),
         h_m=np.asarray(ds["h"].values, dtype=float),
         has_source=np.asarray(ds["has_source"].values, dtype=bool),
         wet_fraction=np.asarray(ds["wet_fraction"].values, dtype=float),
-        min_wet_fraction=float(manifest.get("min_wet_fraction", ds.attrs.get("min_wet_fraction"))),
-        roms_hmin_m=float(manifest.get("roms_hmin_m", ds.attrs.get("roms_hmin_m"))),
-        hmin_source=str(manifest.get("hmin_source", ds.attrs.get("hmin_source", ""))),
-        regridding_rule=str(manifest.get("regridding_rule", ds.attrs.get("regridding_rule", ""))),
-        source_variable=str(manifest.get("source_variable", WCOFS_BOTTOM_DEPTH_VARIABLE)),
-        source_file=str(manifest.get("source_file", ds.attrs.get("source_file", ""))),
+        min_wet_fraction=float(min_wet),
+        roms_hmin_m=float(roms_hmin),
+        hmin_source=str(_meta("hmin_source", "")),
+        regridding_rule=str(_meta("regridding_rule", "")),
+        source_variable=str(_meta("source_variable", WCOFS_BOTTOM_DEPTH_VARIABLE)),
+        source_file=str(_meta("source_file", "")),
     )
 
 

@@ -73,3 +73,67 @@ def sample_wcofs_h_bottom_depth_m(
     if not np.isfinite(val) or val <= 0.0:
         return float("nan"), DROP_REASON_WCOFS_LOW_WET_FRACTION
     return val, None
+
+
+def _coarse_glorys_cell_is_wet(
+    j: int,
+    i: int,
+    h_m: np.ndarray,
+    has_source: np.ndarray,
+    wet_fraction: np.ndarray,
+) -> bool:
+    """True when the coarsened cell has any wet ROMS contribution and finite positive ``h``."""
+    if not bool(has_source[j, i]):
+        return False
+    wf = float(wet_fraction[j, i])
+    if not np.isfinite(wf) or wf <= 0.0:
+        return False
+    val = float(h_m[j, i])
+    return np.isfinite(val) and val > 0.0
+
+
+def sample_wcofs_h_audit_m(
+    lat: float,
+    lon: float,
+    h_m: np.ndarray,
+    lat_axis: np.ndarray,
+    lon_axis: np.ndarray,
+    *,
+    has_source: np.ndarray,
+    wet_fraction: np.ndarray,
+) -> float:
+    """
+    Audit-only WCOFS ``h`` (m) at the nearest wet coarsened GLORYS cell.
+
+    Ignores ``min_wet_fraction`` gating used for trainable ``bottom_depth_m``.
+    Returns NaN when no wet cell exists within the WCOFS overlap grid.
+    """
+    j0, i0 = nearest_glorys_cell_indices(lat, lon, lat_axis, lon_axis)
+    nj, ni = h_m.shape
+    if _coarse_glorys_cell_is_wet(j0, i0, h_m, has_source, wet_fraction):
+        return float(h_m[j0, i0])
+    lon_norm = normalize_lon_for_axis(lon, lon_axis)
+    best_dist2: float | None = None
+    best_h = float("nan")
+    max_r = max(nj, ni)
+    for r in range(1, max_r + 1):
+        found_at_r = False
+        for dj in range(-r, r + 1):
+            for di in range(-r, r + 1):
+                if max(abs(dj), abs(di)) != r:
+                    continue
+                j, i = j0 + dj, i0 + di
+                if j < 0 or j >= nj or i < 0 or i >= ni:
+                    continue
+                if not _coarse_glorys_cell_is_wet(j, i, h_m, has_source, wet_fraction):
+                    continue
+                cell_lat = float(lat_axis[j])
+                cell_lon = float(lon_axis[i])
+                dist2 = (cell_lat - lat) ** 2 + (cell_lon - lon_norm) ** 2
+                if best_dist2 is None or dist2 < best_dist2:
+                    best_dist2 = dist2
+                    best_h = float(h_m[j, i])
+                    found_at_r = True
+        if found_at_r and best_dist2 is not None:
+            return best_h
+    return best_h
