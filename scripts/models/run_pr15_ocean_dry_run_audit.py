@@ -14,11 +14,64 @@ import pandas as pd
 
 REPO = Path(__file__).resolve().parents[2]
 DEFAULT_PR15 = "794261bfb0cd86ce72145190a1b564ea85202865"
+PR15_PULL = "https://github.com/wijeratne-a/fishai/pull/15"
+# At 794261b, ``upwelling`` is filled from ocean currents through a wind formula — not usable.
+PR15_PIN_IGNORE_UPWELLING_VALUES = frozenset({DEFAULT_PR15[:7], DEFAULT_PR15})
+# When PR #15 posts a new head with blank upwelling + upwelling_status, recheck these only:
+PR15_PARTIAL_RECHECK_COLUMNS = (
+    "upwelling",
+    "upwelling_status",
+    "source_product",
+)
+PR15_PRODUCT_BOUNDARY_DATES = (
+    "2021-06-30",
+    "2021-07-01",
+)
 EVENTS = REPO / "data/processed/calcofi_cufes/cufes_events.parquet"
 COUNTS = REPO / "data/processed/calcofi_cufes/cufes_counts.parquet"
 
 
-def _ensure_worktree(ref: str, dest: Path) -> Path:
+def _ref_ignores_upwelling_values(ref: str) -> bool:
+    short = ref[:7] if len(ref) >= 7 else ref
+    return ref in PR15_PIN_IGNORE_UPWELLING_VALUES or short in PR15_PIN_IGNORE_UPWELLING_VALUES
+
+
+def audit_pr15_partial_recheck(out_dir: Path, ref: str) -> dict:
+    """Delta QA when PR #15 head changes upwelling / source_product only."""
+    cov = pd.read_parquet(out_dir / "cufes_training_covariates.parquet")
+    events = _normalize_events(pd.read_parquet(EVENTS))
+    events["day"] = pd.to_datetime(events["start_time"], utc=True).dt.date.astype(str)
+    merged = cov.merge(events[["event_id", "day"]], on="event_id", how="left")
+    excluded = cov["excluded"].astype(str).str.upper().isin({"TRUE", "1", "T", "YES"}) | cov[
+        "excluded"
+    ].eq(True)
+    kept = merged[~excluded]
+    boundary = PR15_PRODUCT_BOUNDARY_DATES
+    by_day = kept.groupby("day")["source_product"].apply(
+        lambda s: sorted(set(s.dropna().astype(str)))
+    )
+    products_at_boundary = {
+        d: (list(by_day.loc[d]) if d in by_day.index else []) for d in boundary
+    }
+    upwelling_blank = True
+    if "upwelling" in kept.columns:
+        upwelling_blank = kept["upwelling"].isna().all() or (
+            kept["upwelling"].astype(str).str.strip() == ""
+        ).all()
+    status_ok = True
+    if "upwelling_status" in kept.columns:
+        status_ok = (
+            kept["upwelling_status"].astype(str) == "no_consistent_wind_product"
+        ).all()
+    return {
+        "pr15_ref": ref,
+        "partial_recheck_columns": list(PR15_PARTIAL_RECHECK_COLUMNS),
+        "upwelling_blank_on_kept": upwelling_blank,
+        "upwelling_status_no_consistent_wind_product_on_kept": status_ok,
+        "source_product_by_boundary_day": products_at_boundary,
+    }
+
+
     if dest.is_dir() and (dest / "src/fishai/ingestion/physics/cufes_training_covariates.py").is_file():
         return dest
     dest.parent.mkdir(parents=True, exist_ok=True)
@@ -145,12 +198,26 @@ def audit(out_dir: Path, ref: str) -> dict:
             "not live CMEMS values."
         ),
     }
-    if "upwelling" not in cov.columns:
+    if _ref_ignores_upwelling_values(ref):
+        report["upwelling"] = {
+            "treat_as_unavailable": True,
+            "reason": "794261b: ocean currents fed to wind formula — ignore column; #5 should drop via planned gap",
+        }
+    elif "upwelling" not in cov.columns:
         report["upwelling"] = "absent_column"
-    elif kept["upwelling"].isna().all():
+    elif kept["upwelling"].isna().all() or (kept["upwelling"].astype(str).str.strip() == "").all():
         report["upwelling"] = "blank_on_kept"
+        if "upwelling_status" in cov.columns:
+            report["upwelling_status"] = (
+                cov.loc[~excluded, "upwelling_status"].astype(str).value_counts().to_dict()
+            )
     else:
         report["upwelling"] = "present_on_kept"
+    report["partial_recheck_when_new_pr15_head"] = {
+        "columns": list(PR15_PARTIAL_RECHECK_COLUMNS),
+        "boundary_days": list(PR15_PRODUCT_BOUNDARY_DATES),
+        "cli": "python3 scripts/models/run_pr15_ocean_dry_run_audit.py --partial-only --ref <new_head>",
+    }
     path = out_dir / "pr15_dry_run_audit_report.json"
     path.write_text(json.dumps(report, indent=2, default=str) + "\n")
     return report
@@ -160,9 +227,17 @@ def main() -> None:
     parser = argparse.ArgumentParser()
     parser.add_argument("--ref", default=DEFAULT_PR15)
     parser.add_argument("--out-dir", type=Path, default=Path("/tmp/pr15_dry_run_794261b"))
+    parser.add_argument(
+        "--partial-only",
+        action="store_true",
+        help="Only run upwelling/source_product boundary recheck (after new PR #15 head)",
+    )
     args = parser.parse_args()
-    build_table(args.ref, args.out_dir)
-    report = audit(args.out_dir, args.ref)
+    if not args.partial_only:
+        build_table(args.ref, args.out_dir)
+        report = audit(args.out_dir, args.ref)
+    else:
+        report = audit_pr15_partial_recheck(args.out_dir, args.ref)
     print(json.dumps(report, indent=2, default=str))
 
 

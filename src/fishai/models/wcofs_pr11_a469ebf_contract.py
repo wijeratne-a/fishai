@@ -1,6 +1,8 @@
 """Frozen WCOFS Zarr / pull-log contract from bot2 PR #11 (read-only git ref).
 
 Pinned to PR #11 head ``f71dca9`` — do **not** merge PR #11 into ``feature/sdmtmb-core``.
+When bot2 posts PR #11's post-merge head on ``main``, bump ``PR11_COMMIT`` / regenerate
+``tests/models/fixtures/wcofs_pr11_contract.json``; until then keep ``f71dca9``.
 """
 
 from __future__ import annotations
