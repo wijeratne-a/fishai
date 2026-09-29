@@ -57,6 +57,62 @@ exdet_scores <- function(pred, reference) {
   data.frame(nt1 = nt1, nt2 = nt2)
 }
 
+#' Fail closed unless the frozen OOD reference supports a Mahalanobis calibration.
+#'
+#' Requires finite numeric columns with non-zero variance, full column rank after
+#' centering (no collinear columns), strictly more rows than columns + 1 (so the
+#' covariance can have full rank), a positive-definite well-conditioned
+#' covariance, and finite reference distances.
+#' @export
+assert_usable_ood_reference <- function(reference, cols = NULL, min_rcond = 1e-10) {
+  fail <- function(...) stop("unusable OOD reference: ", ..., call. = FALSE)
+  if (is.null(reference)) {
+    fail("reference is missing")
+  }
+  cols <- cols %||% colnames(reference)
+  if (!length(cols) || anyNA(cols) || anyDuplicated(cols) || !all(cols %in% colnames(reference))) {
+    fail("reference columns are missing or duplicated")
+  }
+  ref_df <- as.data.frame(reference)[, cols, drop = FALSE]
+  if (!all(vapply(ref_df, is.numeric, logical(1)))) {
+    fail("reference columns must be numeric")
+  }
+  x <- as.matrix(ref_df)
+  if (any(!is.finite(x))) {
+    fail("reference contains non-finite values")
+  }
+  n <- nrow(x)
+  p <- ncol(x)
+  if (n < p + 2L) {
+    fail(sprintf("%d rows cannot calibrate %d columns (need at least %d)", n, p, p + 2L))
+  }
+  sds <- apply(x, 2L, stats::sd)
+  scale_ref <- pmax(1, abs(colMeans(x)))
+  flat <- !is.finite(sds) | sds <= 1e-8 * scale_ref
+  if (any(flat)) {
+    fail("zero-variance column(s): ", paste(cols[flat], collapse = ", "))
+  }
+  z <- scale(x)
+  rank <- qr(z, tol = 1e-7)$rank
+  if (rank < p) {
+    fail(sprintf("collinear columns (rank %d of %d)", rank, p))
+  }
+  s_mat <- stats::cov(x)
+  ok_chol <- tryCatch({
+    chol(s_mat)
+    TRUE
+  }, error = function(e) FALSE)
+  rc <- tryCatch(rcond(stats::cor(x)), error = function(e) 0)
+  if (!ok_chol || !is.finite(rc) || rc < min_rcond) {
+    fail("covariance is singular or not positive definite")
+  }
+  d <- tryCatch(maha_distance(x, x), error = function(e) NULL, warning = function(w) NULL)
+  if (is.null(d) || any(!is.finite(d))) {
+    fail("reference Mahalanobis distances are not finite")
+  }
+  invisible(TRUE)
+}
+
 #' Mahalanobis distance for each prediction row.
 #' @export
 maha_distance <- function(pred, reference) {

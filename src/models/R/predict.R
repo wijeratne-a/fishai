@@ -1,3 +1,61 @@
+#' Fail closed unless the frozen artifact, config and grid share one time_idx origin.
+#'
+#' ``artifact$time_idx_origin`` is required. It must equal the supplied config
+#' origin (and the origin inside the frozen config, when present). A grid
+#' ``time_idx`` must be one of the frozen training indices and, when ``valid_day``
+#' falls in the training index range, equal the index of ``valid_day``.
+.assert_prediction_time_origin <- function(artifact, cfg, grid, valid_day = NA_character_) {
+  frozen <- artifact$time_idx_origin
+  if (is.null(frozen)) {
+    stop("frozen artifact lacks time_idx_origin; refusing to predict", call. = FALSE)
+  }
+  art_origin <- tryCatch(
+    .time_idx_origin_date(list(data = list(time_idx_origin = frozen))),
+    error = function(e) {
+      stop("frozen artifact time_idx_origin is invalid; refusing to predict", call. = FALSE)
+    }
+  )
+  cfg_origin <- .time_idx_origin_date(cfg)
+  if (!identical(art_origin, cfg_origin)) {
+    stop(
+      "config data.time_idx_origin (", format(cfg_origin),
+      ") disagrees with frozen artifact time_idx_origin (", format(art_origin),
+      "); refusing to predict",
+      call. = FALSE
+    )
+  }
+  inner <- artifact$config$data$time_idx_origin
+  if (!is.null(inner) && !identical(.time_idx_origin_date(artifact$config), art_origin)) {
+    stop("frozen artifact config time_idx_origin disagrees with artifact time_idx_origin", call. = FALSE)
+  }
+  if ("time_idx" %in% names(grid)) {
+    levels <- artifact$time_idx_levels
+    if (is.null(levels) || !length(levels)) {
+      stop("frozen artifact lacks time_idx_levels; cannot verify grid time_idx", call. = FALSE)
+    }
+    supplied <- suppressWarnings(as.integer(grid$time_idx))
+    if (anyNA(supplied) || !all(supplied %in% as.integer(levels))) {
+      stop(
+        "grid time_idx is not among the frozen training time indices under time_idx_origin ",
+        format(art_origin), "; refusing to predict",
+        call. = FALSE
+      )
+    }
+    day <- suppressWarnings(as.Date(as.character(valid_day)))
+    if (length(day) == 1L && !is.na(day)) {
+      expected <- as.integer(day - art_origin) + 1L
+      if (expected %in% as.integer(levels) && any(supplied != expected)) {
+        stop(
+          "grid time_idx disagrees with valid_day ", format(day), " under time_idx_origin ",
+          format(art_origin), " (expected ", expected, "); refusing to predict",
+          call. = FALSE
+        )
+      }
+    }
+  }
+  invisible(art_origin)
+}
+
 #' Predict egg encounter surfaces with coupled posterior draws.
 #'
 #' Aggregates to 10 km grid cells before summarizing. Outputs exclude point
@@ -36,6 +94,7 @@ predict_engine <- function(
   )
   attr_cols <- .flatten_attributions_for_columns(attr_meta)
   vref <- assert_reference_volume(artifact)
+  .assert_prediction_time_origin(artifact, cfg, grid, valid_day)
 
   fit <- artifact$fit
   pred_cfg <- cfg$prediction %||% list()
@@ -103,6 +162,7 @@ predict_engine <- function(
   if (is.null(ref) || !length(cov_cols) || !all(cov_cols %in% names(ref)) || nrow(ref) < 2L) {
     stop("frozen artifact lacks the OOD reference rows and columns; refusing to predict", call. = FALSE)
   }
+  assert_usable_ood_reference(ref, cov_cols)
   if (!all(cov_cols %in% names(grid))) {
     stop("prediction grid lacks frozen reference columns: ", paste(setdiff(cov_cols, names(grid)), collapse = ", "), call. = FALSE)
   }

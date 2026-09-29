@@ -215,12 +215,6 @@ record_stage("spatial_cv_metrics", {
 })
 
 grid <- read.csv(cfg$prediction$grid_table, stringsAsFactors = FALSE)
-ref_cols <- grep("_z$", names(dat), value = TRUE)
-if (!length(ref_cols)) {
-  stop("no *_z covariate columns for OOD reference", call. = FALSE)
-}
-artifact$reference <- dat[, ref_cols, drop = FALSE]
-artifact$reference_cols <- ref_cols
 pred <- record_stage(
   "predict_grid",
   predict_engine(

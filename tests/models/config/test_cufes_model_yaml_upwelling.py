@@ -54,8 +54,11 @@ class CufesModelYamlUpwellingTests(unittest.TestCase):
         self.assertIn("later prereg amendment", text)
         self.assertIn("publicly licensed", text)
 
-    @unittest.skipUnless(DOCKERFILE.is_file(), "Dockerfile is not part of the image")
     def test_docker_image_copies_amendment_artifact(self) -> None:
+        self.assertTrue(
+            DOCKERFILE.is_file(),
+            "Dockerfile must be COPY'd into the image so this contract is observable",
+        )
         copied = [
             line.split()[1].rstrip("/")
             for line in DOCKERFILE.read_text(encoding="utf-8").splitlines()
@@ -66,6 +69,8 @@ class CufesModelYamlUpwellingTests(unittest.TestCase):
             any(rel == src or rel.startswith(src + "/") for src in copied),
             f"Dockerfile must COPY {rel}",
         )
+        self.assertIn("Dockerfile", copied, "Dockerfile must COPY itself into the image")
+        self.assertTrue(AMENDMENT.is_file(), f"{rel} is absent from the image")
 
 
 if __name__ == "__main__":

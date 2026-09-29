@@ -66,6 +66,9 @@ freeze_model <- function(fit_obj, cfg, path, training_dat = NULL, sources_manife
   }
   .assert_bot2_covariate_join_counts(cfg)
   time_idx_origin <- .time_idx_origin_date(cfg)
+  if ("time" %in% names(training_dat)) {
+    .ensure_time_idx(training_dat, cfg)
+  }
   reference <- .derive_ood_reference(training_dat, cfg)
   ref_vol <- compute_reference_volume_metadata(training_dat, cfg)
   cfg <- cfg
@@ -82,6 +85,7 @@ freeze_model <- function(fit_obj, cfg, path, training_dat = NULL, sources_manife
     renv_hash = lock_hash,
     training_end = egg_split_fit_end(cfg) %||% cfg$training_end %||% NA_character_,
     time_idx_origin = format(time_idx_origin),
+    time_idx_levels = sort(unique(as.integer(training_dat$time_idx))),
     reference = reference$rows,
     reference_cols = reference$cols,
     training_sources = training_sources,
@@ -104,10 +108,7 @@ freeze_model <- function(fit_obj, cfg, path, training_dat = NULL, sources_manife
     stop("no covariate columns to freeze as the OOD reference", call. = FALSE)
   }
   rows <- as.data.frame(rows)[, cols, drop = FALSE]
-  vals <- as.matrix(rows)
-  if (nrow(vals) < 2L || !is.numeric(vals) || any(!is.finite(vals))) {
-    stop("OOD reference rows must be at least 2 finite numeric rows", call. = FALSE)
-  }
+  assert_usable_ood_reference(rows, cols)
   rownames(rows) <- NULL
   list(rows = rows, cols = cols)
 }

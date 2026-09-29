@@ -70,13 +70,13 @@ def write_spring_subset_csvs(
 
     upwelling_gap_reason = PLANNED_COVARIATE_GAPS["upwelling"]
     bot2_rows: list[dict[str, object]] = []
-    for row in cov_rows:
+    for row_idx, row in enumerate(cov_rows):
         ev = next(e for e in ev_rows if e["event_id"] == row["event_id"])
         iso_day = ev["time"][:10]
         product = glorys_product_for_date(
             __import__("datetime").date.fromisoformat(iso_day)
         )
-        depth_m = 120.0
+        depth_m = 60.0 + 17.0 * row_idx + 3.0 * (row_idx % 4)
         excluded = row["excluded"] == "TRUE"
         if planned_upwelling_gap and not excluded:
             upwelling_val: object = ""

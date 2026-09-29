@@ -26,6 +26,7 @@ COPY python ./python
 COPY configs ./configs
 COPY docs ./docs
 COPY prereg ./prereg
+COPY Dockerfile ./Dockerfile
 COPY tests ./tests
 COPY scripts ./scripts
 COPY security ./security

@@ -64,12 +64,24 @@
   frozen <- freeze_model(fit, cfg, artifact_path, training_dat = dat)
   grid <- read.csv(file.path(FISHAI_ROOT, cfg$prediction$grid_table), stringsAsFactors = FALSE)
   grid$time_idx <- dat$time_idx[[1L]]
-  list(cfg = cfg, dat = dat, frozen = frozen, artifact_path = artifact_path, grid = grid)
+  list(
+    cfg = cfg, dat = dat, fit = fit, frozen = frozen,
+    artifact_path = artifact_path, grid = grid
+  )
+}
+
+.production_fixture_cache <- new.env(parent = emptyenv())
+
+.cached_production_fixture <- function(species = "sardine") {
+  if (is.null(.production_fixture_cache[[species]])) {
+    .production_fixture_cache[[species]] <- .production_freeze_fixture(species)
+  }
+  .production_fixture_cache[[species]]
 }
 
 test_that("production-config freeze stores the OOD reference and predict needs no injection", {
   for (sp in c("sardine", "anchovy")) {
-    fx <- .production_freeze_fixture(sp)
+    fx <- .cached_production_fixture(sp)
     artifact <- readRDS(fx$artifact_path)
     expected_cols <- .model_covariate_columns(fx$cfg)
     expect_null(fx$cfg$reference)
@@ -122,11 +134,116 @@ test_that("production-config freeze stores the OOD reference and predict needs n
 })
 
 test_that("predict refuses an artifact without a frozen OOD reference", {
-  fx <- .production_freeze_fixture("sardine")
+  fx <- .cached_production_fixture("sardine")
   artifact <- readRDS(fx$artifact_path)
   artifact$reference <- NULL
   expect_error(
     predict_engine(artifact, fx$grid, fx$cfg, nsim = 2L, species = "sardine", valid_day = "2015-06-01"),
     "OOD reference"
   )
+})
+
+test_that("degenerate OOD reference matrices are rejected", {
+  set.seed(11)
+  good <- data.frame(a = stats::rnorm(30), b = stats::rnorm(30), c = stats::rnorm(30))
+  expect_true(assert_usable_ood_reference(good))
+  expect_error(assert_usable_ood_reference(transform(good, b = 0)), "zero-variance")
+  expect_error(assert_usable_ood_reference(transform(good, c = 2 * a - b)), "collinear")
+  expect_error(assert_usable_ood_reference(good[1:4, ]), "cannot calibrate")
+  expect_error(assert_usable_ood_reference(good[1:2, ]), "cannot calibrate")
+  expect_error(assert_usable_ood_reference(transform(good, a = replace(a, 3, NA))), "non-finite")
+  expect_error(assert_usable_ood_reference(transform(good, b = a + 1e-9 * stats::rnorm(30))), "collinear|singular")
+  expect_error(assert_usable_ood_reference(transform(good, b = as.character(b))), "numeric")
+})
+
+test_that("freeze_model fails closed on a degenerate training reference", {
+  fx <- .cached_production_fixture("sardine")
+  cols <- .model_covariate_columns(fx$cfg)
+  cols <- setdiff(cols, "upwelling_z")
+  path <- tempfile(fileext = ".rds")
+
+  flat <- fx$dat
+  flat[[cols[[1L]]]] <- 0
+  expect_error(freeze_model(fx$fit, fx$cfg, path, training_dat = flat), "zero-variance")
+
+  collinear <- fx$dat
+  collinear[[cols[[2L]]]] <- 3 * collinear[[cols[[1L]]]] + 1
+  expect_error(freeze_model(fx$fit, fx$cfg, path, training_dat = collinear), "collinear")
+
+  few <- fx$dat[seq_len(length(cols) + 1L), , drop = FALSE]
+  expect_error(freeze_model(fx$fit, fx$cfg, path, training_dat = few), "cannot calibrate")
+  expect_false(file.exists(path))
+})
+
+test_that("predict refuses a degenerate frozen reference", {
+  fx <- .cached_production_fixture("sardine")
+  artifact <- readRDS(fx$artifact_path)
+  cols <- artifact$reference_cols
+  run <- function(art) {
+    predict_engine(
+      art, fx$grid, fx$cfg, nsim = 2L, species = "sardine",
+      valid_day = "2015-06-01", dry_run = TRUE
+    )
+  }
+
+  flat <- artifact
+  flat$reference[[cols[[1L]]]] <- 0
+  expect_error(run(flat), "unusable OOD reference.*zero-variance")
+
+  collinear <- artifact
+  collinear$reference[[cols[[2L]]]] <- 2 * collinear$reference[[cols[[1L]]]]
+  expect_error(run(collinear), "unusable OOD reference.*collinear")
+
+  few <- artifact
+  few$reference <- few$reference[seq_len(3L), , drop = FALSE]
+  expect_error(run(few), "unusable OOD reference.*cannot calibrate")
+})
+
+test_that("predict requires and enforces the frozen time_idx origin", {
+  fx <- .cached_production_fixture("sardine")
+  artifact <- readRDS(fx$artifact_path)
+  expect_identical(artifact$time_idx_origin, format(.time_idx_origin_date(fx$cfg)))
+  run <- function(art = artifact, cfg = fx$cfg, grid = fx$grid, valid_day = "2015-06-01") {
+    predict_engine(
+      art, grid, cfg, nsim = 2L, species = "sardine",
+      valid_day = valid_day, dry_run = TRUE
+    )
+  }
+
+  expect_s3_class(run(), "data.frame")
+
+  missing_origin <- artifact
+  missing_origin$time_idx_origin <- NULL
+  expect_error(run(missing_origin), "lacks time_idx_origin")
+
+  invalid_origin <- artifact
+  invalid_origin$time_idx_origin <- "not-a-date"
+  expect_error(run(invalid_origin), "time_idx_origin is invalid")
+
+  cfg_other <- fx$cfg
+  cfg_other$data$time_idx_origin <- "1991-01-01"
+  expect_error(run(cfg = cfg_other), "disagrees with frozen artifact time_idx_origin")
+
+  cfg_missing <- fx$cfg
+  cfg_missing$data$time_idx_origin <- NULL
+  expect_error(run(cfg = cfg_missing), "time_idx_origin")
+
+  art_other <- artifact
+  art_other$time_idx_origin <- "1991-01-01"
+  expect_error(run(art_other), "disagrees with frozen artifact time_idx_origin")
+
+  bad_grid <- fx$grid
+  bad_grid$time_idx <- bad_grid$time_idx + 1L
+  expect_error(run(grid = bad_grid), "grid time_idx disagrees")
+
+  expect_error(run(valid_day = "2015-06-02"), "grid time_idx disagrees")
+
+  shifted_origin_grid <- fx$grid
+  shifted_origin_grid$time_idx <- fx$grid$time_idx + 365L
+  expect_error(run(grid = shifted_origin_grid), "not among the frozen training time indices")
+
+  no_levels <- artifact
+  no_levels$time_idx_levels <- NULL
+  expect_error(run(no_levels), "lacks time_idx_levels")
+  expect_identical(artifact$time_idx_levels, sort(unique(fx$dat$time_idx)))
 })
