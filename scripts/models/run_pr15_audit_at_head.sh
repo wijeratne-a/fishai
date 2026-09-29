@@ -28,6 +28,10 @@ cov.to_csv(csv_dir / "cufes_training_covariates.csv", index=False)
 pd.read_parquet(out / "cufes_training_covariate_drops.parquet").to_csv(
     csv_dir / "cufes_training_covariate_drops.csv", index=False
 )
+events_p = Path("$ROOT/data/processed/calcofi_cufes/cufes_events.parquet")
+counts_p = Path("$ROOT/data/processed/calcofi_cufes/cufes_counts.parquet")
+pd.read_parquet(events_p).to_csv(csv_dir / "cufes_events.csv", index=False)
+pd.read_parquet(counts_p).to_csv(csv_dir / "cufes_counts.csv", index=False)
 PY
 
 COV_CSV="$OUT_DIR/csv_for_r/cufes_training_covariates.csv"

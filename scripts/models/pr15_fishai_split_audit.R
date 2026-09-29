@@ -43,12 +43,31 @@ spring_years_with_positives <- function(dat) {
 }
 
 audit_species <- function(taxon) {
-  cfg <- load_config_yaml(file.path(root, "configs", "models", "cufes_sardine.yaml"))
+  cfg <- load_config_yaml(file.path(root, "configs", "models", "cufes_sardine_synthetic.yaml"))
+  prod <- yaml::read_yaml(file.path(root, "configs", "models", "cufes_sardine.yaml"))
+  cfg$egg_split <- prod$fishai_engine_config$egg_split %||% prod$egg_split
   cfg$species$taxon <- taxon
-  cfg$data$covariates_path <- cov_path
-  cfg$data$covariate_drops_path <- drops_path
+  cfg$data$events_path <- normalizePath(
+    file.path(root, "data/processed/calcofi_cufes/cufes_events.parquet"),
+    mustWork = TRUE
+  )
+  cfg$data$counts_path <- normalizePath(
+    file.path(root, "data/processed/calcofi_cufes/cufes_counts.parquet"),
+    mustWork = TRUE
+  )
+  if (!requireNamespace("arrow", quietly = TRUE)) {
+    csv_dir <- dirname(normalizePath(cov_path, mustWork = TRUE))
+    ev_csv <- file.path(csv_dir, "cufes_events.csv")
+    ct_csv <- file.path(csv_dir, "cufes_counts.csv")
+    if (!file.exists(ev_csv) || !file.exists(ct_csv)) {
+      stop("arrow missing; export events/counts CSV beside covariates for audit", call. = FALSE)
+    }
+    cfg$data$events_path <- ev_csv
+    cfg$data$counts_path <- ct_csv
+  }
+  cfg$data$covariates_path <- normalizePath(cov_path, mustWork = TRUE)
+  cfg$data$covariate_drops_path <- normalizePath(drops_path, mustWork = TRUE)
   cfg$data$covariate_drop_summary_path <- NULL
-  cfg$data$fold_assignment_path <- NULL
   cfg$covariates$upstream_fields$log_depth <- "bottom_depth_m"
   cfg$mesh$barrier$enabled <- FALSE
   dat_all <- load_model_data(cfg = cfg, min_duration_min = 2L, egg_split_scope = "all")
