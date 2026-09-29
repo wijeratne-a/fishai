@@ -30,6 +30,8 @@ fishai_engine_config:
       n_folds: 4
     event_count_guard:
       n_events: 14592
+      n_short_event: 1266
+      n_long_event: 13326
   covariates:
     forcing_source_id: glorys
     depth_sample_m: 3
