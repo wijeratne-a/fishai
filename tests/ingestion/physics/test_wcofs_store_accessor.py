@@ -11,7 +11,20 @@ import xarray as xr
 
 from fishai.ingestion.physics.wcofs_store import package_wcofs_cycle, write_wcofs_cycle
 from fishai.ingestion.sources import attribution_for
-from fishai.physics.store import CycleNotAvailable, list_wcofs_cycles, open_wcofs_cycle
+from fishai.ingestion.physics.wcofs_pull_log import (
+    append_pull_log,
+    build_day_success_record,
+    build_day_tombstone_record,
+    pull_log_path_for_date,
+    resolve_pull_log_dir,
+)
+from fishai.physics.store import (
+    CycleNotAvailable,
+    WcofsDayFailed,
+    latest_wcofs_cycle_date,
+    list_wcofs_cycles,
+    open_wcofs_cycle,
+)
 
 
 def _snapshot_files(root: Path) -> dict[str, tuple[int, int]]:
@@ -91,3 +104,48 @@ def test_open_never_calls_network(tmp_path: Path, monkeypatch: pytest.MonkeyPatc
 def test_package_wcofs_cycle_depth_positive_down() -> None:
     packaged = package_wcofs_cycle(_synthetic_merged(), dt.date(2026, 9, 28))
     assert float(packaged["z"].min()) >= 0
+
+
+def test_stale_tombstone_superseded_by_success_allows_read(tmp_path: Path) -> None:
+    day = dt.date(2026, 9, 28)
+    write_wcofs_cycle(_synthetic_merged(), day, tmp_path)
+    log_path = pull_log_path_for_date(day, out_root=tmp_path)
+    append_pull_log(
+        build_day_tombstone_record(day, reason="wcofs_nowcast_missing"),
+        log_path=log_path,
+    )
+    append_pull_log(build_day_success_record(day), log_path=log_path)
+    open_wcofs_cycle(day, store_root=tmp_path)
+    assert latest_wcofs_cycle_date(tmp_path, as_of=day) == day
+
+
+def test_failed_rerun_after_success_still_serves_valid_zarr(tmp_path: Path) -> None:
+    """A newer tombstone after success must not hide an existing valid Zarr."""
+    day = dt.date(2026, 9, 28)
+    write_wcofs_cycle(_synthetic_merged(), day, tmp_path)
+    log_path = pull_log_path_for_date(day, out_root=tmp_path)
+    append_pull_log(build_day_success_record(day), log_path=log_path)
+    append_pull_log(
+        build_day_tombstone_record(day, reason="download_failed"),
+        log_path=log_path,
+    )
+    ds = open_wcofs_cycle(day, store_root=tmp_path)
+    assert ds.attrs["cycle_id"] == "20260928T03Z"
+    assert latest_wcofs_cycle_date(tmp_path, as_of=day) == day
+
+
+def test_tombstoned_day_without_zarr_raises(tmp_path: Path) -> None:
+    prev = dt.date(2026, 9, 27)
+    failed = dt.date(2026, 9, 28)
+    write_wcofs_cycle(_synthetic_merged(), prev, tmp_path)
+    log_path = pull_log_path_for_date(failed, out_root=tmp_path)
+    append_pull_log(
+        build_day_tombstone_record(failed, reason="wcofs_nowcast_missing"),
+        log_path=log_path,
+    )
+    with pytest.raises(WcofsDayFailed) as excinfo:
+        open_wcofs_cycle(failed, store_root=tmp_path)
+    assert excinfo.value.reason == "wcofs_nowcast_missing"
+    with pytest.raises(WcofsDayFailed):
+        latest_wcofs_cycle_date(tmp_path, as_of=failed)
+    open_wcofs_cycle(prev, store_root=tmp_path)
