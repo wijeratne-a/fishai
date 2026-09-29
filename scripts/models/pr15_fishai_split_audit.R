@@ -43,9 +43,14 @@ spring_years_with_positives <- function(dat) {
 }
 
 audit_species <- function(taxon) {
+  message("audit_species start: ", taxon, " ", Sys.time())
   cfg <- load_config_yaml(file.path(root, "configs", "models", "cufes_sardine_synthetic.yaml"))
   prod <- yaml::read_yaml(file.path(root, "configs", "models", "cufes_sardine.yaml"))
-  cfg$egg_split <- prod$fishai_engine_config$egg_split %||% prod$egg_split
+  cfg$egg_split <- prod$fishai_engine_config$egg_split
+  prod_cov <- prod$fishai_engine_config$covariates
+  cfg$covariates$dynamic <- prod_cov$dynamic
+  cfg$covariates$static <- prod_cov$static
+  cfg$covariates$upstream_fields <- prod_cov$upstream_fields
   cfg$species$taxon <- taxon
   cfg$data$events_path <- normalizePath(
     file.path(root, "data/processed/calcofi_cufes/cufes_events.parquet"),
@@ -70,7 +75,13 @@ audit_species <- function(taxon) {
   cfg$data$covariate_drop_summary_path <- NULL
   cfg$covariates$upstream_fields$log_depth <- "bottom_depth_m"
   cfg$mesh$barrier$enabled <- FALSE
+  # Split audit uses egg_split only; skip spatial-block fold assignment (O(blocks) md5 temp I/O).
+  cfg$data$fold_assignment_path <- NULL
+  cfg$data$spatial_block_cv <- NULL
+  cfg$training$covariate_forcing_source_id <- "audit_pr15_table"
+  cfg$covariates$forcing_source_id <- "audit_pr15_table"
   dat_all <- load_model_data(cfg = cfg, min_duration_min = 2L, egg_split_scope = "all")
+  message("audit_species loaded n=", nrow(dat_all), " ", taxon, " ", Sys.time())
   qc <- attr(dat_all, "fishai_data_qc")
   fit <- filter_egg_split_scope(dat_all, cfg, scope = "fit")
   test <- filter_egg_split_scope(dat_all, cfg, scope = "test")
@@ -86,7 +97,8 @@ audit_species <- function(taxon) {
   )
 }
 
-drops <- if (requireNamespace("arrow", quietly = TRUE)) {
+drops <- if (grepl("\\.[Pp][Aa][Rr][Qq][Uu][Ee][Tt]$", drops_path) &&
+    requireNamespace("arrow", quietly = TRUE)) {
   as.data.frame(arrow::read_parquet(drops_path))
 } else {
   utils::read.csv(drops_path, stringsAsFactors = FALSE)
