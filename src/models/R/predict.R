@@ -1,9 +1,49 @@
+#' Coerce grid time_idx without truncating fractional values.
+#'
+#' Integer and integer-valued numeric values are accepted. Character values must
+#' be an optional sign plus digits (no decimal point). Missing, fractional,
+#' and non-numeric values fail closed.
+.integer_grid_time_idx <- function(x) {
+  fail <- function() {
+    stop(
+      "grid time_idx must be an integer; missing or fractional values are rejected; refusing to predict",
+      call. = FALSE
+    )
+  }
+  if (is.null(x) || is.factor(x) || is.logical(x) || is.list(x) || is.complex(x)) {
+    fail()
+  }
+  if (!length(x)) {
+    return(integer(0))
+  }
+  if (is.character(x)) {
+    if (anyNA(x)) {
+      fail()
+    }
+    txt <- trimws(x)
+    if (any(!nzchar(txt)) || any(!grepl("^-?[0-9]+$", txt))) {
+      fail()
+    }
+    num <- suppressWarnings(as.numeric(txt))
+  } else if (is.numeric(x)) {
+    num <- as.numeric(x)
+  } else {
+    fail()
+  }
+  if (anyNA(num) || any(!is.finite(num)) || any(num != trunc(num)) || any(abs(num) > .Machine$integer.max)) {
+    fail()
+  }
+  as.integer(num)
+}
+
 #' Fail closed unless the frozen artifact, config and grid share one time_idx origin.
 #'
 #' ``artifact$time_idx_origin`` is required. It must equal the supplied config
-#' origin (and the origin inside the frozen config, when present). A grid
-#' ``time_idx`` must be one of the frozen training indices and, when ``valid_day``
-#' falls in the training index range, equal the index of ``valid_day``.
+#' origin (and the origin inside the frozen config, when present). Grid
+#' ``time_idx`` is required on every prediction path. It must already be an
+#' integer (fractional values are rejected, not truncated), must be one of the
+#' frozen training indices and, when ``valid_day`` falls in the training index
+#' range, equal the index of ``valid_day``.
 .assert_prediction_time_origin <- function(artifact, cfg, grid, valid_day = NA_character_) {
   frozen <- artifact$time_idx_origin
   if (is.null(frozen)) {
@@ -28,32 +68,47 @@
   if (!is.null(inner) && !identical(.time_idx_origin_date(artifact$config), art_origin)) {
     stop("frozen artifact config time_idx_origin disagrees with artifact time_idx_origin", call. = FALSE)
   }
-  if ("time_idx" %in% names(grid)) {
-    levels <- artifact$time_idx_levels
-    if (is.null(levels) || !length(levels)) {
-      stop("frozen artifact lacks time_idx_levels; cannot verify grid time_idx", call. = FALSE)
-    }
-    supplied <- suppressWarnings(as.integer(grid$time_idx))
-    if (anyNA(supplied) || !all(supplied %in% as.integer(levels))) {
+  if (!"time_idx" %in% names(grid)) {
+    stop("grid lacks time_idx; refusing to predict", call. = FALSE)
+  }
+  levels <- artifact$time_idx_levels
+  if (is.null(levels) || !length(levels)) {
+    stop("frozen artifact lacks time_idx_levels; cannot verify grid time_idx", call. = FALSE)
+  }
+  supplied <- .integer_grid_time_idx(grid$time_idx)
+  if (anyNA(supplied) || !all(supplied %in% as.integer(levels))) {
+    stop(
+      "grid time_idx is not among the frozen training time indices under time_idx_origin ",
+      format(art_origin), "; refusing to predict",
+      call. = FALSE
+    )
+  }
+  day <- suppressWarnings(as.Date(as.character(valid_day)))
+  if (length(day) == 1L && !is.na(day)) {
+    expected <- as.integer(day - art_origin) + 1L
+    if (expected %in% as.integer(levels) && any(supplied != expected)) {
       stop(
-        "grid time_idx is not among the frozen training time indices under time_idx_origin ",
-        format(art_origin), "; refusing to predict",
+        "grid time_idx disagrees with valid_day ", format(day), " under time_idx_origin ",
+        format(art_origin), " (expected ", expected, "); refusing to predict",
         call. = FALSE
       )
     }
-    day <- suppressWarnings(as.Date(as.character(valid_day)))
-    if (length(day) == 1L && !is.na(day)) {
-      expected <- as.integer(day - art_origin) + 1L
-      if (expected %in% as.integer(levels) && any(supplied != expected)) {
-        stop(
-          "grid time_idx disagrees with valid_day ", format(day), " under time_idx_origin ",
-          format(art_origin), " (expected ", expected, "); refusing to predict",
-          call. = FALSE
-        )
-      }
-    }
   }
   invisible(art_origin)
+}
+
+#' Fail closed unless the frozen artifact stores a usable OOD reference.
+#'
+#' Called before physics-cycle FAIL and WCOFS-UNKNOWN early returns so a
+#' degenerate stored reference cannot skip calibration checks.
+.require_stored_ood_reference <- function(artifact) {
+  cov_cols <- artifact$reference_cols
+  ref <- artifact$reference
+  if (is.null(ref) || !length(cov_cols) || !all(cov_cols %in% names(ref)) || nrow(ref) < 2L) {
+    stop("frozen artifact lacks the OOD reference rows and columns; refusing to predict", call. = FALSE)
+  }
+  assert_usable_ood_reference(ref, cov_cols)
+  list(rows = ref, cols = cov_cols)
 }
 
 #' Predict egg encounter surfaces with coupled posterior draws.
@@ -122,6 +177,7 @@ predict_engine <- function(
     source_run_time = source_run_time,
     wcofs_step = wcofs_step
   )
+  stored_ood <- .require_stored_ood_reference(artifact)
   if (!is.null(wcofs_step) && identical(wcofs_step$evidence_state, "UNKNOWN")) {
     ood_level <- rep(3L, nrow(grid))
     reason <- wcofs_step$unknown_reason %||% "missing_operational_cycle"
@@ -157,12 +213,8 @@ predict_engine <- function(
     ))
   }
 
-  cov_cols <- artifact$reference_cols
-  ref <- artifact$reference
-  if (is.null(ref) || !length(cov_cols) || !all(cov_cols %in% names(ref)) || nrow(ref) < 2L) {
-    stop("frozen artifact lacks the OOD reference rows and columns; refusing to predict", call. = FALSE)
-  }
-  assert_usable_ood_reference(ref, cov_cols)
+  cov_cols <- stored_ood$cols
+  ref <- stored_ood$rows
   if (!all(cov_cols %in% names(grid))) {
     stop("prediction grid lacks frozen reference columns: ", paste(setdiff(cov_cols, names(grid)), collapse = ", "), call. = FALSE)
   }

@@ -247,3 +247,86 @@ test_that("predict requires and enforces the frozen time_idx origin", {
   expect_error(run(no_levels), "lacks time_idx_levels")
   expect_identical(artifact$time_idx_levels, sort(unique(fx$dat$time_idx)))
 })
+
+test_that("FAIL and WCOFS-UNKNOWN fail closed on an unusable stored OOD reference", {
+  fx <- .cached_production_fixture("sardine")
+  artifact <- readRDS(fx$artifact_path)
+  cols <- artifact$reference_cols
+  refuse <- function(art, ...) {
+    predict_engine(
+      art, fx$grid, fx$cfg,
+      nsim = 2L, species = "sardine",
+      valid_day = "2015-06-01", dry_run = TRUE,
+      ...
+    )
+  }
+
+  flat <- artifact
+  flat$reference <- artifact$reference
+  flat$reference[[cols[[1L]]]] <- 0
+  expect_error(refuse(flat, physics_cycle = "FAIL"), "unusable OOD reference.*zero-variance")
+  expect_error(
+    refuse(flat, wcofs_unknown_reason = "missing_operational_cycle"),
+    "unusable OOD reference.*zero-variance"
+  )
+
+  missing_ref <- artifact
+  missing_ref$reference <- NULL
+  expect_error(refuse(missing_ref, physics_cycle = "FAIL"), "OOD reference")
+  expect_error(
+    refuse(missing_ref, wcofs_unknown_reason = "missing_operational_cycle"),
+    "OOD reference"
+  )
+
+  ok_fail <- refuse(artifact, physics_cycle = "FAIL")
+  expect_true(all(ok_fail$evidence_state == "UNKNOWN"))
+  expect_equal(unique(ok_fail$unknown_reason), "physics_cycle_fail")
+  ok_unk <- refuse(artifact, wcofs_unknown_reason = "missing_operational_cycle")
+  expect_true(all(ok_unk$evidence_state == "UNKNOWN"))
+  expect_equal(unique(ok_unk$unknown_reason), "missing_operational_cycle")
+  expect_true(all(is.na(ok_fail$p_encounter) & is.na(ok_unk$p_encounter)))
+})
+
+test_that("missing and non-integer grid time_idx fail closed, including FAIL and WCOFS-UNKNOWN", {
+  fx <- .cached_production_fixture("sardine")
+  artifact <- readRDS(fx$artifact_path)
+  run <- function(grid, ...) {
+    predict_engine(
+      artifact, grid, fx$cfg,
+      nsim = 2L, species = "sardine",
+      valid_day = "2015-06-01", dry_run = TRUE,
+      ...
+    )
+  }
+
+  missing_idx <- fx$grid
+  missing_idx$time_idx <- NULL
+  frac <- fx$grid
+  frac$time_idx <- fx$grid$time_idx + 0.9
+  expect_true(all(as.integer(frac$time_idx) %in% artifact$time_idx_levels))
+  expect_true(all(as.integer(frac$time_idx) == fx$grid$time_idx))
+
+  for (args in list(
+    list(),
+    list(physics_cycle = "FAIL"),
+    list(wcofs_unknown_reason = "missing_operational_cycle")
+  )) {
+    expect_error(do.call(run, c(list(missing_idx), args)), "lacks time_idx")
+    expect_error(do.call(run, c(list(frac), args)), "must be an integer")
+  }
+
+  na_idx <- fx$grid
+  na_idx$time_idx <- NA_real_
+  expect_error(run(na_idx, physics_cycle = "FAIL"), "must be an integer")
+
+  whole <- fx$grid
+  whole$time_idx <- as.numeric(fx$grid$time_idx)
+  ok <- run(whole, physics_cycle = "FAIL")
+  expect_true(all(ok$evidence_state == "UNKNOWN"))
+  expect_equal(unique(ok$unknown_reason), "physics_cycle_fail")
+  chars <- fx$grid
+  chars$time_idx <- as.character(fx$grid$time_idx)
+  ok_chr <- run(chars, wcofs_unknown_reason = "missing_operational_cycle")
+  expect_true(all(ok_chr$evidence_state == "UNKNOWN"))
+  expect_equal(unique(ok_chr$unknown_reason), "missing_operational_cycle")
+})
