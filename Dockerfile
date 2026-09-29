@@ -25,6 +25,7 @@ COPY src ./src
 COPY python ./python
 COPY configs ./configs
 COPY docs ./docs
+COPY prereg ./prereg
 COPY tests ./tests
 COPY scripts ./scripts
 COPY security ./security

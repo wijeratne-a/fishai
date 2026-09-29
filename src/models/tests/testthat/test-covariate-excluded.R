@@ -47,7 +47,7 @@ test_that("excluded flag inconsistent with drop table stops with error", {
     paste(
       cufes_events_csv_header("time_idx"),
       cufes_event_row("CUFES:T:AK:a", 10, time_idx = 1),
-      cufes_event_row("CUFES:T:AK:b", 10, time_idx = 2),
+      cufes_event_row("CUFES:T:AK:b", 10, time_idx = 1),
       sep = "\n"
     ),
     ev
@@ -79,6 +79,7 @@ test_that("excluded flag inconsistent with drop table stops with error", {
       events_path = ev,
       counts_path = ct,
       covariates_path = cov,
+      time_idx_origin = "2020-01-01",
       covariate_drops_path = drops
     ),
     covariates = list(
@@ -113,7 +114,7 @@ test_that("NaN covariate on non-excluded row stops with error", {
   )
   cfg <- list(
     species = list(taxon = "sardine"),
-    data = list(events_path = ev, counts_path = ct, covariates_path = cov),
+    data = list(events_path = ev, counts_path = ct, covariates_path = cov, time_idx_origin = "2020-01-01"),
     covariates = list(
       dynamic = c("temp_3m", "sal_3m", "mld", "sst_grad", "dist_front", "upwelling"),
       static = "log_depth"
@@ -142,7 +143,7 @@ test_that("covariate table without excluded column stops with error", {
   )
   cfg <- list(
     species = list(taxon = "sardine"),
-    data = list(events_path = ev, counts_path = ct, covariates_path = cov),
+    data = list(events_path = ev, counts_path = ct, covariates_path = cov, time_idx_origin = "2020-01-01"),
     covariates = list(dynamic = "temp_3m", static = character()),
     response = list(column = "egg_count", effort_column = "volume_m3")
   )

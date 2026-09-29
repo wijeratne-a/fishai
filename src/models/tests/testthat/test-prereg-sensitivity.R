@@ -39,7 +39,7 @@ test_that("missing count row species framing excludes taxon without zero imputat
   eid <- "CUFES:T:AK:mixed"
   writeLines(
     paste(
-      "event_id,time,lat,lon,stop_time,stop_lat,stop_lon,volume_m3,pump_readings_used,duration_min,short_event,time_idx",
+      "event_id,time,lat,lon,stop_time,stop_lat,stop_lon,volume_m3,pump_readings_used,duration_min,short_event",
       paste0(eid, ",2020-01-01T00:00:00Z,33,-119,2020-01-01T00:12:00Z,33.01,-118.99,100,1,12"),
       sep = "\n"
     ),
@@ -57,7 +57,7 @@ test_that("missing count row species framing excludes taxon without zero imputat
   mk_cfg <- function(taxon) {
     list(
       species = list(taxon = taxon),
-      data = list(events_path = ev, counts_path = ct, covariates_path = cov),
+      data = list(events_path = ev, counts_path = ct, covariates_path = cov, time_idx_origin = "2020-01-01"),
       covariates = list(
         dynamic = c("temp_3m", "sal_3m", "mld", "sst_grad", "dist_front", "upwelling"),
         static = "log_depth"

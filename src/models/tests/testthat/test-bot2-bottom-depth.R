@@ -26,7 +26,7 @@ test_that("bot2 bottom_depth_m maps to log_depth_z for modeling", {
   cfg <- list(
     species = list(taxon = "sardine"),
     training = list(covariate_forcing_source_id = "glorys"),
-    data = list(events_path = ev, counts_path = ct, covariates_path = cov),
+    data = list(events_path = ev, counts_path = ct, covariates_path = cov, time_idx_origin = "2020-01-01"),
     covariates = list(
       dynamic = "temp_3m",
       static = "log_depth",

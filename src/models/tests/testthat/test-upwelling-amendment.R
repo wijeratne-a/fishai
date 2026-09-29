@@ -46,17 +46,17 @@ test_that("all-null upwelling table loads and fits under the production model fo
     n <- 30L
     ids <- sprintf("CUFES:U:AK:%03d", seq_len(n))
     set.seed(3)
+    day_idx <- rep(1:3, length.out = n)
     ev_tab <- data.frame(
       event_id = ids,
-      time = "2020-06-01T12:00:00Z",
+      time = sprintf("2020-06-%02dT12:00:00Z", day_idx),
       lat = 33 + stats::runif(n, -0.5, 0.5),
       lon = -119 + stats::runif(n, -0.5, 0.5),
-      stop_time = "2020-06-01T12:08:00Z",
+      stop_time = sprintf("2020-06-%02dT12:08:00Z", day_idx),
       volume_m3 = stats::runif(n, 50, 150),
       pump_readings_used = 2L,
       duration_min = 8,
       short_event = FALSE,
-      time_idx = rep(1:3, length.out = n),
       stringsAsFactors = FALSE
     )
     ev_tab$stop_lat <- ev_tab$lat + 0.01

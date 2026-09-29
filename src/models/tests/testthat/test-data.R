@@ -34,7 +34,7 @@ test_that("missing effort rows are refused", {
   )
   cfg <- list(
     species = list(taxon = "sardine"),
-    data = list(events_path = ev, counts_path = ct, covariates_path = cov),
+    data = list(events_path = ev, counts_path = ct, covariates_path = cov, time_idx_origin = "2020-01-01"),
     covariates = list(
       dynamic = c("temp_3m", "sal_3m", "mld", "sst_grad", "dist_front", "upwelling"),
       static = "log_depth"
@@ -69,14 +69,14 @@ test_that("sample_id is accepted as event_id alias in legacy table", {
   td <- tempfile(fileext = ".csv")
   writeLines(
     paste(
-      "sample_id,egg_count,volume_m3,lat,lon,stop_lat,stop_lon,time_idx,temp_3m_z,sal_3m_z,mld_z,sst_grad_z,dist_front_z,upwelling_z,log_depth_z",
-      "CUFES:T:AK:x,3,5,33,-119,33.01,-118.99,1,0,0,0,0,0,0,0",
+      "sample_id,time,egg_count,volume_m3,lat,lon,stop_lat,stop_lon,time_idx,temp_3m_z,sal_3m_z,mld_z,sst_grad_z,dist_front_z,upwelling_z,log_depth_z",
+      "CUFES:T:AK:x,2020-01-01T00:00:00Z,3,5,33,-119,33.01,-118.99,1,0,0,0,0,0,0,0",
       sep = "\n"
     ),
     td
   )
   cfg <- list(
-    data = list(table_path = td),
+    data = list(table_path = td, time_idx_origin = "2020-01-01"),
     covariates = list(
       dynamic = c("temp_3m", "sal_3m", "mld", "sst_grad", "dist_front", "upwelling"),
       static = "log_depth"
@@ -93,7 +93,7 @@ test_that("cufes_events counts and covariates join on event_id", {
   cov <- tempfile(fileext = ".csv")
   writeLines(
     paste(
-      "event_id,time,lat,lon,stop_time,stop_lat,stop_lon,volume_m3,pump_readings_used,duration_min,short_event,time_idx",
+      "event_id,time,lat,lon,stop_time,stop_lat,stop_lon,volume_m3,pump_readings_used,duration_min,short_event",
       "CUFES:2024:SH:1,2020-01-01T00:00:00Z,33.0,-120.0,2020-01-01T00:08:00Z,33.02,-119.98,100,1,FALSE",
       "CUFES:2024:SH:2,2020-01-01T00:00:00Z,33.1,-120.1,2020-01-01T00:08:00Z,33.12,-119.88,200,1,FALSE",
       sep = "\n"
@@ -120,7 +120,7 @@ test_that("cufes_events counts and covariates join on event_id", {
   )
   cfg <- list(
     species = list(taxon = "sardine"),
-    data = list(events_path = ev, counts_path = ct, covariates_path = cov),
+    data = list(events_path = ev, counts_path = ct, covariates_path = cov, time_idx_origin = "2020-01-01"),
     covariates = list(
       dynamic = c("temp_3m", "sal_3m", "mld", "sst_grad", "dist_front", "upwelling"),
       static = "log_depth"
@@ -143,7 +143,7 @@ test_that("mesh X/Y are UTM 11N track midpoints", {
   lon1 <- -119.23
   writeLines(
     paste(
-      "event_id,time,lat,lon,stop_time,stop_lat,stop_lon,volume_m3,pump_readings_used,duration_min,short_event,time_idx",
+      "event_id,time,lat,lon,stop_time,stop_lat,stop_lon,volume_m3,pump_readings_used,duration_min,short_event",
       sprintf(
         "CUFES:T:AK:mid,2020-01-01T00:00:00Z,%s,%s,2020-01-01T00:10:00Z,%s,%s,50,1,FALSE",
         lat0, lon0, lat1, lon1
@@ -163,7 +163,7 @@ test_that("mesh X/Y are UTM 11N track midpoints", {
   )
   cfg <- list(
     species = list(taxon = "sardine"),
-    data = list(events_path = ev, counts_path = ct, covariates_path = cov),
+    data = list(events_path = ev, counts_path = ct, covariates_path = cov, time_idx_origin = "2020-01-01"),
     covariates = list(
       dynamic = c("temp_3m", "sal_3m", "mld", "sst_grad", "dist_front", "upwelling"),
       static = "log_depth"
@@ -182,7 +182,7 @@ test_that("covariate event_id mismatch is refused when covariates omit an event"
   cov <- tempfile(fileext = ".csv")
   writeLines(
     paste(
-      "event_id,time,lat,lon,stop_time,stop_lat,stop_lon,volume_m3,pump_readings_used,duration_min,short_event,time_idx",
+      "event_id,time,lat,lon,stop_time,stop_lat,stop_lon,volume_m3,pump_readings_used,duration_min,short_event",
       "CUFES:T:AK:ok,2020-01-01T00:00:00Z,33,-119,2020-01-01T00:05:00Z,33.01,-118.99,10,1,FALSE",
       "CUFES:T:AK:bad,2020-01-01T00:00:00Z,33,-119,2020-01-01T00:05:00Z,NA,-118.99,10,1,FALSE",
       sep = "\n"
@@ -200,7 +200,7 @@ test_that("covariate event_id mismatch is refused when covariates omit an event"
   )
   cfg <- list(
     species = list(taxon = "sardine"),
-    data = list(events_path = ev, counts_path = ct, covariates_path = cov),
+    data = list(events_path = ev, counts_path = ct, covariates_path = cov, time_idx_origin = "2020-01-01"),
     covariates = list(
       dynamic = c("temp_3m", "sal_3m", "mld", "sst_grad", "dist_front", "upwelling"),
       static = "log_depth"
@@ -216,7 +216,7 @@ test_that("missing endpoint dropped with aligned covariate ids", {
   cov <- tempfile(fileext = ".csv")
   writeLines(
     paste(
-      "event_id,time,lat,lon,stop_time,stop_lat,stop_lon,volume_m3,pump_readings_used,duration_min,short_event,time_idx",
+      "event_id,time,lat,lon,stop_time,stop_lat,stop_lon,volume_m3,pump_readings_used,duration_min,short_event",
       "CUFES:T:AK:ok,2020-01-01T00:00:00Z,33,-119,2020-01-01T00:05:00Z,33.01,-118.99,10,1,FALSE",
       "CUFES:T:AK:bad,2020-01-01T00:00:00Z,33,-119,2020-01-01T00:05:00Z,NA,-118.99,10,1,FALSE",
       sep = "\n"
@@ -235,7 +235,7 @@ test_that("missing endpoint dropped with aligned covariate ids", {
   )
   cfg <- list(
     species = list(taxon = "sardine"),
-    data = list(events_path = ev, counts_path = ct, covariates_path = cov),
+    data = list(events_path = ev, counts_path = ct, covariates_path = cov, time_idx_origin = "2020-01-01"),
     covariates = list(
       dynamic = c("temp_3m", "sal_3m", "mld", "sst_grad", "dist_front", "upwelling"),
       static = "log_depth"
@@ -254,7 +254,7 @@ test_that("covariate event_id mismatch is refused", {
   cov <- tempfile(fileext = ".csv")
   writeLines(
     paste(
-      "event_id,time,lat,lon,stop_time,stop_lat,stop_lon,volume_m3,pump_readings_used,duration_min,short_event,time_idx",
+      "event_id,time,lat,lon,stop_time,stop_lat,stop_lon,volume_m3,pump_readings_used,duration_min,short_event",
       "CUFES:T:AK:a,2020-01-01T00:00:00Z,33,-119,2020-01-01T00:05:00Z,33.01,-118.99,10,1,FALSE",
       sep = "\n"
     ),
@@ -271,7 +271,7 @@ test_that("covariate event_id mismatch is refused", {
   )
   cfg <- list(
     species = list(taxon = "sardine"),
-    data = list(events_path = ev, counts_path = ct, covariates_path = cov),
+    data = list(events_path = ev, counts_path = ct, covariates_path = cov, time_idx_origin = "2020-01-01"),
     covariates = list(
       dynamic = c("temp_3m", "sal_3m", "mld", "sst_grad", "dist_front", "upwelling"),
       static = "log_depth"
@@ -382,7 +382,7 @@ test_that("empty covariate on non-excluded row stops with error", {
   )
   cfg <- list(
     species = list(taxon = "sardine"),
-    data = list(events_path = ev, counts_path = ct, covariates_path = cov),
+    data = list(events_path = ev, counts_path = ct, covariates_path = cov, time_idx_origin = "2020-01-01"),
     covariates = list(
       dynamic = c("temp_3m", "sal_3m", "mld", "sst_grad", "dist_front", "upwelling"),
       static = "log_depth"
@@ -488,10 +488,43 @@ test_that("missing or invalid time_idx origin fails closed", {
   )
 })
 
-test_that("pilot production configs fix a time_idx origin", {
+test_that("pilot production configs fix a time_idx origin before the tracked pilot minimum", {
+  pilot_min_event <- as.Date("1996-03-15")
   for (sp in c("sardine", "anchovy")) {
     raw <- yaml::read_yaml(file.path(FISHAI_ROOT, "configs", "models", paste0("cufes_", sp, ".yaml")))
     cfg <- raw$fishai_engine_config
-    expect_false(is.na(.time_idx_origin_date(cfg)))
+    origin <- .time_idx_origin_date(cfg)
+    expect_equal(origin, as.Date("1990-01-01"))
+    expect_lt(origin, pilot_min_event)
+    first <- data.frame(time = "1996-03-15T23:40:00Z", stringsAsFactors = FALSE)
+    expect_gte(.ensure_time_idx(first, cfg)$time_idx, 1L)
   }
+})
+
+test_that("supplied time_idx must match the derived index", {
+  cfg <- .time_idx_scope_cfg()
+  derived <- load_model_data(cfg = cfg, egg_split_scope = "all")
+  ev <- read.csv(cfg$data$events_path, stringsAsFactors = FALSE)
+  ev <- ev[match(derived$event_id, ev$event_id), , drop = FALSE]
+
+  ev$time_idx <- derived$time_idx
+  ok_path <- tempfile(fileext = ".csv")
+  utils::write.csv(ev, ok_path, row.names = FALSE)
+  cfg_ok <- cfg
+  cfg_ok$data$events_path <- ok_path
+  matched <- load_model_data(cfg = cfg_ok, egg_split_scope = "all")
+  expect_equal(matched$time_idx, derived$time_idx)
+
+  ev$time_idx[2L] <- ev$time_idx[2L] + 1L
+  bad_path <- tempfile(fileext = ".csv")
+  utils::write.csv(ev, bad_path, row.names = FALSE)
+  cfg_bad <- cfg
+  cfg_bad$data$events_path <- bad_path
+  expect_error(load_model_data(cfg = cfg_bad, egg_split_scope = "all"), "disagrees")
+  expect_error(load_model_data(cfg = cfg_bad, egg_split_scope = "fit"), "disagrees")
+  expect_error(load_model_data(cfg = cfg_bad, egg_split_scope = "test"), "disagrees")
+
+  cfg_no_origin <- cfg_ok
+  cfg_no_origin$data$time_idx_origin <- NULL
+  expect_error(load_model_data(cfg = cfg_no_origin), "time_idx_origin")
 })

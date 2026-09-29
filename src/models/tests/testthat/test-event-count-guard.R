@@ -25,6 +25,7 @@ test_that("event_count_guard reads from config and stops on mismatch", {
       events_path = ev,
       counts_path = ct,
       covariates_path = cov,
+      time_idx_origin = "2020-01-01",
       event_count_guard = list(n_events = 2L, n_short_event = 0L, n_long_event = 2L)
     ),
     covariates = list(

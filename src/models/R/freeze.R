@@ -65,6 +65,8 @@ freeze_model <- function(fit_obj, cfg, path, training_dat = NULL, sources_manife
     stop("training_dat is required to compute reference_volume_m3", call. = FALSE)
   }
   .assert_bot2_covariate_join_counts(cfg)
+  time_idx_origin <- .time_idx_origin_date(cfg)
+  reference <- .derive_ood_reference(training_dat, cfg)
   ref_vol <- compute_reference_volume_metadata(training_dat, cfg)
   cfg <- cfg
   cfg$prediction <- cfg$prediction %||% list()
@@ -79,14 +81,35 @@ freeze_model <- function(fit_obj, cfg, path, training_dat = NULL, sources_manife
     config = cfg,
     renv_hash = lock_hash,
     training_end = egg_split_fit_end(cfg) %||% cfg$training_end %||% NA_character_,
-    reference = cfg$reference %||% NULL,
-    reference_cols = cfg$reference_cols %||% NULL,
+    time_idx_origin = format(time_idx_origin),
+    reference = reference$rows,
+    reference_cols = reference$cols,
     training_sources = training_sources,
     reference_volume = ref_vol,
     frozen_at = format(Sys.time(), tz = "UTC", usetz = TRUE)
   )
   saveRDS(artifact, path)
   invisible(artifact)
+}
+
+#' Immutable OOD reference (training covariate rows and columns) frozen with the model.
+#'
+#' Prediction judges MESS, ExDet, hull and Mahalanobis novelty against these
+#' rows only. ``cfg$reference`` / ``cfg$reference_cols`` override when set;
+#' otherwise the model covariate columns of the training frame are used.
+.derive_ood_reference <- function(training_dat, cfg) {
+  cols <- cfg$reference_cols %||% intersect(.model_covariate_columns(cfg), names(training_dat))
+  rows <- cfg$reference %||% training_dat[, cols, drop = FALSE]
+  if (!length(cols)) {
+    stop("no covariate columns to freeze as the OOD reference", call. = FALSE)
+  }
+  rows <- as.data.frame(rows)[, cols, drop = FALSE]
+  vals <- as.matrix(rows)
+  if (nrow(vals) < 2L || !is.numeric(vals) || any(!is.finite(vals))) {
+    stop("OOD reference rows must be at least 2 finite numeric rows", call. = FALSE)
+  }
+  rownames(rows) <- NULL
+  list(rows = rows, cols = cols)
 }
 
 digest_renv_lock <- function() {

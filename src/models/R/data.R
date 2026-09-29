@@ -1084,29 +1084,36 @@ fishai_data_prep_qc <- function(dat) {
 }
 
 .ensure_time_idx <- function(dat, cfg) {
-  if ("time_idx" %in% names(dat)) {
-    dat$time_idx <- as.integer(dat$time_idx)
-    return(dat)
+  origin <- .time_idx_origin_date(cfg)
+  if (!"time" %in% names(dat)) {
+    stop("events need time to derive time_idx from data.time_idx_origin", call. = FALSE)
   }
-  if ("time" %in% names(dat)) {
-    origin <- .time_idx_origin_date(cfg)
-    tt <- as.POSIXct(dat$time, tz = "UTC")
-    if (any(is.na(tt))) {
-      stop("could not parse event time for time_idx", call. = FALSE)
-    }
-    idx <- as.integer(as.Date(tt) - origin) + 1L
-    if (any(idx < 1L)) {
+  tt <- as.POSIXct(dat$time, tz = "UTC")
+  if (any(is.na(tt))) {
+    stop("could not parse event time for time_idx", call. = FALSE)
+  }
+  idx <- as.integer(as.Date(tt) - origin) + 1L
+  if (any(idx < 1L)) {
+    stop(
+      "event time precedes data.time_idx_origin (",
+      format(origin),
+      "); time_idx must be >= 1",
+      call. = FALSE
+    )
+  }
+  if ("time_idx" %in% names(dat)) {
+    supplied <- suppressWarnings(as.integer(dat$time_idx))
+    if (anyNA(supplied) || !identical(supplied, idx)) {
       stop(
-        "event time precedes data.time_idx_origin (",
+        "supplied time_idx disagrees with event time and data.time_idx_origin (",
         format(origin),
-        "); time_idx must be >= 1",
+        "); refusing to fit",
         call. = FALSE
       )
     }
-    dat$time_idx <- idx
-    return(dat)
   }
-  stop("events need time_idx or time for sdmTMB time index", call. = FALSE)
+  dat$time_idx <- idx
+  dat
 }
 
 .apply_min_duration_filter <- function(dat, min_duration_min) {

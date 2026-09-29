@@ -59,7 +59,7 @@ test_that("planned blank upwelling drops covariate and fit still runs", {
     paste(
       cufes_events_csv_header("time_idx"),
       cufes_event_row("CUFES:T:AK:u1", 10, time_idx = 1),
-      cufes_event_row("CUFES:T:AK:u2", 12, time_idx = 2),
+      cufes_event_row("CUFES:T:AK:u2", 12, time_idx = 1),
       sep = "\n"
     ),
     ev
@@ -85,7 +85,7 @@ test_that("planned blank upwelling drops covariate and fit still runs", {
   cfg <- list(
     species = list(taxon = "sardine"),
     training = list(covariate_forcing_source_id = "glorys"),
-    data = list(events_path = ev, counts_path = ct, covariates_path = cov),
+    data = list(events_path = ev, counts_path = ct, covariates_path = cov, time_idx_origin = "2020-01-01"),
     covariates = list(
       dynamic = c("temp_3m", "sal_3m", "mld", "sst_grad", "dist_front", "upwelling"),
       static = "log_depth",

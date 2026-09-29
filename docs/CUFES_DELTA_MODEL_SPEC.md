@@ -83,10 +83,12 @@ Training and every spatial-CV fold mesh are built by ``build_fishai_production_m
 
 ``time_idx`` (days since ``data.time_idx_origin``, plus 1) is derived from event time with one fixed origin from the model config (frozen in the artifact config). It never depends on the earliest event in a frame, so fit, test, and all scopes give identical indices for identical timestamps. A missing or invalid origin, or an event before it, stops loading.
 
+``time_idx`` is always recomputed from event timestamps. A supplied ``time_idx`` column is only validated: any missing value or disagreement with the timestamp-derived index stops loading. The pilot production configs use the stable epoch ``1990-01-01``, which precedes the earliest tracked pilot CUFES event (1996-03-15); the origin day is index 1. Changing the epoch changes every index and requires refitting. The artifact stores ``time_idx_origin``.
+
 ### Pilot covariates (upwelling)
 
 Upwelling is removed from the sardine and anchovy pilot covariates and formulas; see ``prereg/pilot_model_upwelling_amendment.md``.
 
 ### Out-of-domain and DEGRADED output
 
-Mahalanobis novelty is judged against distances of the frozen reference rows (0.99 quantile), never the prediction grid's own distribution. Cells with ``ood_level >= 2`` are ``UNKNOWN``. ``DEGRADED`` keeps ``UNKNOWN`` cells and their reasons, leaves ``p_encounter`` unchanged, and widens only ``p_lo90`` and ``p_hi90`` around it by ``prediction.interval_widen`` (>= 1).
+Mahalanobis novelty is judged against distances of the frozen reference rows (0.99 quantile), never the prediction grid's own distribution. ``freeze_model()`` derives and stores the reference (the training-frame model covariate columns, upwelling excluded) in the artifact as ``reference`` and ``reference_cols``; production configs need no ``reference`` key, and ``predict_engine()`` refuses an artifact without them. Cells with ``ood_level >= 2`` are ``UNKNOWN``. ``DEGRADED`` keeps ``UNKNOWN`` cells and their reasons, leaves ``p_encounter`` unchanged, and widens only ``p_lo90`` and ``p_hi90`` around it by ``prediction.interval_widen`` (>= 1).

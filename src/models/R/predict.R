@@ -100,6 +100,12 @@ predict_engine <- function(
 
   cov_cols <- artifact$reference_cols
   ref <- artifact$reference
+  if (is.null(ref) || !length(cov_cols) || !all(cov_cols %in% names(ref)) || nrow(ref) < 2L) {
+    stop("frozen artifact lacks the OOD reference rows and columns; refusing to predict", call. = FALSE)
+  }
+  if (!all(cov_cols %in% names(grid))) {
+    stop("prediction grid lacks frozen reference columns: ", paste(setdiff(cov_cols, names(grid)), collapse = ", "), call. = FALSE)
+  }
   mess <- mess_scores(grid[, cov_cols, drop = FALSE], ref)
   ex <- exdet_scores(grid[, cov_cols, drop = FALSE], ref)
   maha <- maha_distance(grid[, cov_cols, drop = FALSE], ref)
