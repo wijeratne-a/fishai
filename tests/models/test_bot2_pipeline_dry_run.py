@@ -20,6 +20,16 @@ DRY_RUN_R = REPO / "scripts" / "models" / "cufes_pipeline_dry_run.R"
 BOT2_BRANCH = "origin/cursor/cufes-glorys-training-covariates-faff"
 
 
+@pytest.fixture(scope="module", autouse=True)
+def _fetch_bot2_branch_for_schema_tests() -> None:
+    subprocess.run(
+        ["git", "fetch", "origin", "cursor/cufes-glorys-training-covariates-faff"],
+        cwd=REPO,
+        check=False,
+        capture_output=True,
+    )
+
+
 def test_bot2_schema_mismatch_report_is_stable() -> None:
     result = compare_bot2_to_sdmtmb(ref=BOT2_BRANCH)
     assert result.bot2_columns
