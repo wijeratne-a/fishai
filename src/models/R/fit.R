@@ -33,7 +33,7 @@ assert_shared_delta_formula <- function(formula_list) {
 #'
 #' Effort is ``log(volume_m3)`` via ``offset = \"log_effort\"``. For
 #' ``delta_* (type = \"poisson-link\")``, the offset enters **both** delta
-#' linear predictors; encounter probability is ``1 - exp(-exp(eta))``. See
+#' linear predictors; egg encounter probability is ``1 - exp(-exp(eta))``. See
 #' ``docs/CUFES_DELTA_MODEL_SPEC.md``.
 #'
 #' @export

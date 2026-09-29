@@ -8,7 +8,7 @@ Each output row is keyed by **`cell_id`**, **`species`**, and **`valid_day`** (I
 
 | Column | Type | Constraints | Meaning |
 | --- | --- | --- | --- |
-| `p_encounter` | float or null | [0, 1] when finite | Mean encounter probability per reference volume \(V_\text{ref}\) |
+| `p_encounter` | float or null | [0, 1] when finite | Mean egg encounter probability per reference volume \(V_\text{ref}\) |
 | `p_lo90` | float or null | [0, 1] when finite | Lower bound of 90% interval on `p_encounter` (5th percentile of posterior draws) |
 | `p_hi90` | float or null | [0, 1] when finite | Upper bound of 90% interval (95th percentile of draws) |
 | `ood_level` | int | 0–3 | Max OOD severity across points aggregated into the cell (`classify_ood_level`) |
@@ -30,7 +30,7 @@ Each output row is keyed by **`cell_id`**, **`species`**, and **`valid_day`** (I
 | `NOWCAST_UNVALIDATED` | Operational grid with current forcing, not yet validated against Tier-1 outcomes |
 | `FORECAST` | Operational grid using forecast-cycle physics (`lead_days` 1–3) |
 | `DEGRADED` | Physics cycle degraded; intervals widened per config |
-| `UNKNOWN` | No interpretable encounter probability (OOD ≥ 2, coverage blanking, or physics FAIL) |
+| `UNKNOWN` | No interpretable egg encounter probability (OOD ≥ 2, coverage blanking, or physics FAIL) |
 
 ## Dry run marking
 

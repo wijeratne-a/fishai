@@ -24,7 +24,7 @@ is_poisson_link_delta <- function(cfg) {
   identical(cfg$model$delta_type %||% "poisson-link", "poisson-link")
 }
 
-#' Encounter probability from delta component-1 linear predictor.
+#' Egg encounter probability from delta component-1 linear predictor.
 #'
 #' Poisson-link (Thorson): \eqn{p = 1 - \exp(-\exp(\eta))} with \eqn{\eta} including
 #' \eqn{\log(V)} offset. Standard delta uses logistic on \eqn{\eta}.

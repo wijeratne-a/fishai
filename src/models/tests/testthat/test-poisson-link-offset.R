@@ -1,4 +1,4 @@
-test_that("encounter probability rises with volume under poisson-link offset", {
+test_that("egg encounter probability rises with volume under poisson-link offset", {
   cfg <- load_config_yaml(file.path(FISHAI_ROOT, "configs", "models", "cufes_sardine_synthetic.yaml"))
   cfg$model$formula_shared <- "~ 1"
   cfg$model$spatial <- list("off", "off")
@@ -100,6 +100,6 @@ test_that("predict output records reference volume basis", {
   grid <- read.csv(cfg$prediction$grid_table, stringsAsFactors = FALSE)
   out <- predict_engine(art, grid, cfg, physics_cycle = "FAIL", nsim = 3)
   expect_true(all(out$reference_volume_m3 == art$config$prediction$reference_volume_m3))
-  expect_match(out$metadata_encounter_effort_basis[1], "encounter probability per")
+  expect_match(out$metadata_encounter_effort_basis[1], "egg encounter probability per")
   expect_match(out$metadata_encounter_effort_basis[1], "m\\^3 filtered")
 })

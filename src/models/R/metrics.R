@@ -56,7 +56,7 @@ brier_score <- function(z, p) {
   mean((p - as.numeric(z))^2)
 }
 
-#' Encounter probability on observed events using each row's ``log(volume_m3)`` offset.
+#' Egg encounter probability on observed events using each row's ``log(volume_m3)`` offset.
 #' @export
 score_encounter_on_events <- function(fit, newdata, cfg) {
   if (!"log_effort" %in% names(newdata)) {
@@ -67,7 +67,7 @@ score_encounter_on_events <- function(fit, newdata, cfg) {
   encounter_probability(eta, cfg = cfg)
 }
 
-#' Map-scale encounter draws using ``log(V_ref)`` offset (never fitted offsets).
+#' Map-scale egg encounter draws using ``log(V_ref)`` offset (never fitted offsets).
 #' @export
 predict_encounter_on_grid <- function(fit, newdata, artifact, cfg, nsim = 1L) {
   assert_reference_volume(artifact)

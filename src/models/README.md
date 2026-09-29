@@ -6,7 +6,7 @@ or `delta_lognormal(type = "poisson-link")`). See **`docs/CUFES_DELTA_MODEL_SPEC
 ## Effort offset
 
 Sample volume **`volume_m3`** enters as **`offset = log(volume_m3)`** on both delta
-components. Encounter probability follows **`p = 1 - exp(-exp(eta))`** with **`eta`**
+components. Egg encounter probability follows **`p = 1 - exp(-exp(eta))`** with **`eta`**
 including **`log(V)`**. Do not add **`log_effort`** to the pilot formula when using
 Poisson-link (effort is offset-only).
 

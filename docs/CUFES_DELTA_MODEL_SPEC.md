@@ -40,7 +40,7 @@ No hard-coded round reference volumes.
 
 **Prediction maps** always apply **`log(V_ref)`** to the component-1 linear predictor (and pass **`offset = rep(log(V_ref), n)`** to component 2). sdmTMB **`predict()`** with **`newdata`** returns component-1 **`est1`** without the training offset; FishAI adds **`log(V)`** back before **`1 - exp(-exp(eta))`**. Fitted per-event offsets are never replayed on maps.
 
-Output metadata includes `reference_volume_m3` and states that encounter probability is **per \(V_\text{ref}\) m³ filtered**.
+Output metadata includes `reference_volume_m3` and states that egg encounter probability is **per \(V_\text{ref}\) m³ filtered**.
 
 If `reference_volume_m3` is absent from the frozen config, prediction **refuses** output.
 

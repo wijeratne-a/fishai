@@ -382,7 +382,7 @@ predict_engine <- function(
   agg$metadata_seed <- seed
   agg$reference_volume_m3 <- vref
   agg$metadata_encounter_effort_basis <- paste0(
-    "encounter probability per ",
+    "egg encounter probability per ",
     format(vref, digits = 6),
     " m^3 filtered"
   )
