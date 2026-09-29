@@ -72,6 +72,7 @@ def audit_pr15_partial_recheck(out_dir: Path, ref: str) -> dict:
     }
 
 
+def _ensure_worktree(ref: str, dest: Path) -> Path:
     if dest.is_dir() and (dest / "src/fishai/ingestion/physics/cufes_training_covariates.py").is_file():
         return dest
     dest.parent.mkdir(parents=True, exist_ok=True)
