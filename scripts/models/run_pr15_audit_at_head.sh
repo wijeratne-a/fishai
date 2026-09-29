@@ -50,6 +50,13 @@ from pathlib import Path
 head = "$HEAD_SHA"
 audit = json.loads(Path("$AUDIT_JSON").read_text())
 audit["fishai_head_sha"] = head
+sys_path = Path("$ROOT/src")
+import sys
+sys.path.insert(0, str(sys_path))
+from fishai.models.bot2_covariate_schema import compare_bot2_to_sdmtmb, mismatches_as_dicts
+audit["schema_mismatches_pr5_vs_pr15"] = mismatches_as_dicts(
+    compare_bot2_to_sdmtmb(ref="$PR15_REF")
+)
 Path("$AUDIT_JSON").write_text(json.dumps(audit, indent=2) + "\\n")
 print(json.dumps(audit, indent=2))
 PY

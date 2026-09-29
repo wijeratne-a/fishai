@@ -137,6 +137,8 @@ def build_table(ref: str, out_dir: Path) -> tuple[Path, Path]:
         "row_count": int(len(table)),
     }
     (out_dir / "build_meta.json").write_text(json.dumps(meta, indent=2, default=str) + "\n")
+    wt_root = str(wt / "src")
+    sys.path[:] = [p for p in sys.path if p != wt_root]
     return cov_path, drops_path
 
 
