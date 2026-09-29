@@ -8,6 +8,12 @@
 #' frozen artifact (median training ``volume_m3``). Refuses output when
 #' ``reference_volume_m3`` or attributions are missing.
 #'
+#' @param forecast_age_hours Optional WCOFS valid-time minus source run time (hours).
+#'   When set (with optional `fallback_used`), lead/evidence follow the WCOFS
+#'   contract using **only** this field (never `lead_hours`).
+#' @param fallback_used Whether the step used a prior-cycle fallback file.
+#' @param lead_days_input Optional `lead_days` from input Zarr (may be NaN for nowcast).
+#' @param wcofs_unknown_reason When set, row is `UNKNOWN` with this reason (failed pull / missing cycle).
 #' @export
 predict_engine <- function(
   artifact,
@@ -17,7 +23,11 @@ predict_engine <- function(
   nsim = NULL,
   species = NA_character_,
   valid_day = NA_character_,
-  dry_run = FALSE
+  dry_run = FALSE,
+  forecast_age_hours = NULL,
+  fallback_used = FALSE,
+  lead_days_input = NULL,
+  wcofs_unknown_reason = NULL
 ) {
   attr_meta <- assert_prediction_attributions(
     prediction_attribution_metadata(artifact, cfg)
@@ -37,6 +47,29 @@ predict_engine <- function(
     "_",
     floor(grid$Y / 10)
   )
+
+  wcofs_step <- .prediction_from_wcofs_step(
+    forecast_age_hours = forecast_age_hours,
+    fallback_used = fallback_used,
+    lead_days_input = lead_days_input,
+    unknown_reason = wcofs_unknown_reason
+  )
+  if (!is.null(wcofs_step) && identical(wcofs_step$evidence_state, "UNKNOWN")) {
+    ood_level <- rep(3L, nrow(grid))
+    reason <- wcofs_step$unknown_reason %||% "missing_operational_cycle"
+    return(.finalize_prediction_table(
+      .unknown_prediction_table(grid, ood_level, reason = reason),
+      attr_cols,
+      artifact,
+      nsim,
+      seed,
+      vref,
+      species = species,
+      valid_day = valid_day,
+      dry_run = dry_run,
+      lead_days = 0L
+    ))
+  }
 
   if (toupper(physics_cycle) == "FAIL") {
     ood_level <- rep(3L, nrow(grid))
@@ -110,9 +143,20 @@ predict_engine <- function(
   )
 
   agg$ood_level <- stats::aggregate(ood_level ~ cell_id, grid, FUN = max)$ood_level
-  agg$evidence_state <- .prediction_evidence_state(physics_cycle, cfg)
+  if (!is.null(wcofs_step)) {
+    agg$evidence_state <- if (identical(wcofs_step$evidence_state, "NOWCAST")) {
+      .prediction_evidence_state("PASS", cfg)
+    } else if (identical(wcofs_step$evidence_state, "FORECAST")) {
+      "FORECAST"
+    } else {
+      .prediction_evidence_state(physics_cycle, cfg)
+    }
+    agg$lead_days <- wcofs_step$lead_days
+  } else {
+    agg$evidence_state <- .prediction_evidence_state(physics_cycle, cfg)
+    agg$lead_days <- .prediction_lead_days(physics_cycle, cfg)
+  }
   agg$unknown_reason <- NA_character_
-  agg$lead_days <- .prediction_lead_days(physics_cycle, cfg)
   agg$product_label <- "egg encounter (eggs sampled near 3 m depth along ship tracks)"
   agg$p_encounter <- agg$draw_p_mean
   agg$expected_density <- agg$draw_d_mean
@@ -173,6 +217,61 @@ predict_engine <- function(
   0L
 }
 
+.prediction_from_wcofs_step <- function(
+  forecast_age_hours = NULL,
+  fallback_used = FALSE,
+  lead_days_input = NULL,
+  unknown_reason = NULL
+) {
+  if (is.null(forecast_age_hours) && (is.null(unknown_reason) || !nzchar(unknown_reason))) {
+    return(NULL)
+  }
+  if (!is.null(unknown_reason) && nzchar(unknown_reason)) {
+    return(list(
+      evidence_state = "UNKNOWN",
+      lead_days = 0L,
+      unknown_reason = unknown_reason
+    ))
+  }
+  if (is.null(forecast_age_hours) || is.na(forecast_age_hours) || !is.finite(forecast_age_hours)) {
+    return(list(
+      evidence_state = "UNKNOWN",
+      lead_days = 0L,
+      unknown_reason = "missing_operational_cycle"
+    ))
+  }
+  if (!is.null(lead_days_input) && !is.na(lead_days_input)) {
+    ld_in <- suppressWarnings(as.integer(lead_days_input))
+    if (is.na(ld_in) || ld_in < 0L) {
+      stop(
+        "invalid lead_days input ",
+        lead_days_input,
+        "; must be >= 0 (never -1 in prediction output)",
+        call. = FALSE
+      )
+    }
+  }
+  age <- as.numeric(forecast_age_hours)
+  fb <- isTRUE(fallback_used)
+  if (!fb && age <= 0) {
+    return(list(
+      evidence_state = "NOWCAST",
+      lead_days = 0L,
+      unknown_reason = NA_character_
+    ))
+  }
+  if (fb) {
+    ld <- as.integer(max(1L, ceiling(age / 24)))
+  } else {
+    ld <- as.integer(ceiling(age / 24))
+  }
+  list(
+    evidence_state = "FORECAST",
+    lead_days = max(0L, min(3L, ld)),
+    unknown_reason = NA_character_
+  )
+}
+
 .finalize_prediction_table <- function(
   agg,
   attr_cols,
@@ -190,6 +289,10 @@ predict_engine <- function(
   agg$dry_run <- isTRUE(dry_run)
   if (!"lead_days" %in% names(agg)) {
     agg$lead_days <- lead_days
+  }
+  agg$lead_days <- as.integer(pmax(0L, pmin(3L, agg$lead_days)))
+  if (any(is.na(agg$lead_days))) {
+    stop("lead_days must not be NA in prediction output", call. = FALSE)
   }
   if (!"unknown_reason" %in% names(agg)) {
     agg$unknown_reason <- NA_character_
