@@ -1,0 +1,371 @@
+{
+  "pr11_commit": "a469ebf39fb2d8b2d4ae3bbdb77b5eeb49a5c5f0",
+  "note": "SYNTHETIC PR #11 a469ebf contract fixture for PR #5 tests; not production Zarr.",
+  "valid_offset_h_timeline": [
+    -21,
+    -18,
+    -15,
+    -12,
+    -9,
+    -6,
+    -3,
+    0,
+    3,
+    6,
+    9,
+    12,
+    15,
+    18,
+    21,
+    24,
+    27,
+    30,
+    33,
+    36,
+    39,
+    42,
+    45,
+    48,
+    51,
+    54,
+    57,
+    60,
+    63,
+    66,
+    69,
+    72
+  ],
+  "scenarios": [
+    {
+      "name": "normal_primary_cycle",
+      "target_date": "2026-09-28",
+      "pr11_commit": "a469ebf39fb2d8b2d4ae3bbdb77b5eeb49a5c5f0",
+      "zarr_steps": [
+        {
+          "valid_offset_h": -21,
+          "requested_cycle_time": "2026-09-28T03:00:00+00:00",
+          "source_cycle_time": "2026-09-28T03:00:00+00:00",
+          "valid_time": "2026-09-27T06:00:00+00:00",
+          "forecast_age_hours": -21.0,
+          "fallback_used": false,
+          "evidence_state_hint": "nowcast",
+          "primary_cycle_available": true,
+          "lead_tag": "n003"
+        },
+        {
+          "valid_offset_h": -3,
+          "requested_cycle_time": "2026-09-28T03:00:00+00:00",
+          "source_cycle_time": "2026-09-28T03:00:00+00:00",
+          "valid_time": "2026-09-28T00:00:00+00:00",
+          "forecast_age_hours": -3.0,
+          "fallback_used": false,
+          "evidence_state_hint": "nowcast",
+          "primary_cycle_available": true,
+          "lead_tag": "n021"
+        },
+        {
+          "valid_offset_h": 0,
+          "requested_cycle_time": "2026-09-28T03:00:00+00:00",
+          "source_cycle_time": "2026-09-28T03:00:00+00:00",
+          "valid_time": "2026-09-28T03:00:00+00:00",
+          "forecast_age_hours": 0.0,
+          "fallback_used": false,
+          "evidence_state_hint": "nowcast",
+          "primary_cycle_available": true,
+          "lead_tag": "n024"
+        },
+        {
+          "valid_offset_h": 3,
+          "requested_cycle_time": "2026-09-28T03:00:00+00:00",
+          "source_cycle_time": "2026-09-28T03:00:00+00:00",
+          "valid_time": "2026-09-28T06:00:00+00:00",
+          "forecast_age_hours": 3.0,
+          "fallback_used": false,
+          "evidence_state_hint": "forecast",
+          "primary_cycle_available": true,
+          "lead_tag": "f003",
+          "lead_days": 1
+        },
+        {
+          "valid_offset_h": 24,
+          "requested_cycle_time": "2026-09-28T03:00:00+00:00",
+          "source_cycle_time": "2026-09-28T03:00:00+00:00",
+          "valid_time": "2026-09-29T03:00:00+00:00",
+          "forecast_age_hours": 24.0,
+          "fallback_used": false,
+          "evidence_state_hint": "forecast",
+          "primary_cycle_available": true,
+          "lead_tag": "f024",
+          "lead_days": 1
+        },
+        {
+          "valid_offset_h": 72,
+          "requested_cycle_time": "2026-09-28T03:00:00+00:00",
+          "source_cycle_time": "2026-09-28T03:00:00+00:00",
+          "valid_time": "2026-10-01T03:00:00+00:00",
+          "forecast_age_hours": 72.0,
+          "fallback_used": false,
+          "evidence_state_hint": "forecast",
+          "primary_cycle_available": true,
+          "lead_tag": "f072",
+          "lead_days": 3
+        }
+      ],
+      "zarr_absent_offsets": [],
+      "pull_log_unknown": [],
+      "expected_pr5_predictions": {
+        "-21": {
+          "evidence_state": "NOWCAST_UNVALIDATED",
+          "lead_days": 0,
+          "unknown_reason": null
+        },
+        "-3": {
+          "evidence_state": "NOWCAST_UNVALIDATED",
+          "lead_days": 0,
+          "unknown_reason": null
+        },
+        "0": {
+          "evidence_state": "NOWCAST_UNVALIDATED",
+          "lead_days": 0,
+          "unknown_reason": null
+        },
+        "3": {
+          "evidence_state": "FORECAST",
+          "lead_days": 1,
+          "unknown_reason": null
+        },
+        "24": {
+          "evidence_state": "FORECAST",
+          "lead_days": 1,
+          "unknown_reason": null
+        },
+        "72": {
+          "evidence_state": "FORECAST",
+          "lead_days": 3,
+          "unknown_reason": null
+        }
+      }
+    },
+    {
+      "name": "r1_fallback_previous_cycle",
+      "target_date": "2026-09-28",
+      "pr11_commit": "a469ebf39fb2d8b2d4ae3bbdb77b5eeb49a5c5f0",
+      "zarr_steps": [
+        {
+          "valid_offset_h": -21,
+          "requested_cycle_time": "2026-09-28T03:00:00+00:00",
+          "source_cycle_time": "2026-09-27T03:00:00+00:00",
+          "valid_time": "2026-09-27T06:00:00+00:00",
+          "forecast_age_hours": 3.0,
+          "fallback_used": true,
+          "evidence_state_hint": "forecast",
+          "primary_cycle_available": false,
+          "lead_tag": "f003",
+          "lead_days": 1,
+          "fallback": "previous_cycle"
+        },
+        {
+          "valid_offset_h": -3,
+          "requested_cycle_time": "2026-09-28T03:00:00+00:00",
+          "source_cycle_time": "2026-09-27T03:00:00+00:00",
+          "valid_time": "2026-09-28T00:00:00+00:00",
+          "forecast_age_hours": 21.0,
+          "fallback_used": true,
+          "evidence_state_hint": "forecast",
+          "primary_cycle_available": false,
+          "lead_tag": "f021",
+          "lead_days": 1,
+          "fallback": "previous_cycle"
+        },
+        {
+          "valid_offset_h": 0,
+          "requested_cycle_time": "2026-09-28T03:00:00+00:00",
+          "source_cycle_time": "2026-09-27T03:00:00+00:00",
+          "valid_time": "2026-09-28T03:00:00+00:00",
+          "forecast_age_hours": 24.0,
+          "fallback_used": true,
+          "evidence_state_hint": "forecast",
+          "primary_cycle_available": false,
+          "lead_tag": "f024",
+          "lead_days": 1,
+          "fallback": "previous_cycle"
+        },
+        {
+          "valid_offset_h": 3,
+          "requested_cycle_time": "2026-09-28T03:00:00+00:00",
+          "source_cycle_time": "2026-09-27T03:00:00+00:00",
+          "valid_time": "2026-09-28T06:00:00+00:00",
+          "forecast_age_hours": 27.0,
+          "fallback_used": true,
+          "evidence_state_hint": "forecast",
+          "primary_cycle_available": false,
+          "lead_tag": "f027",
+          "lead_days": 2,
+          "fallback": "previous_cycle"
+        },
+        {
+          "valid_offset_h": 24,
+          "requested_cycle_time": "2026-09-28T03:00:00+00:00",
+          "source_cycle_time": "2026-09-27T03:00:00+00:00",
+          "valid_time": "2026-09-29T03:00:00+00:00",
+          "forecast_age_hours": 48.0,
+          "fallback_used": true,
+          "evidence_state_hint": "forecast",
+          "primary_cycle_available": false,
+          "lead_tag": "f048",
+          "lead_days": 2,
+          "fallback": "previous_cycle"
+        }
+      ],
+      "zarr_absent_offsets": [],
+      "pull_log_unknown": [],
+      "expected_pr5_predictions": {
+        "-21": {
+          "evidence_state": "FORECAST",
+          "lead_days": 1,
+          "unknown_reason": null
+        },
+        "-3": {
+          "evidence_state": "FORECAST",
+          "lead_days": 1,
+          "unknown_reason": null
+        },
+        "0": {
+          "evidence_state": "FORECAST",
+          "lead_days": 1,
+          "unknown_reason": null
+        },
+        "3": {
+          "evidence_state": "FORECAST",
+          "lead_days": 2,
+          "unknown_reason": null
+        },
+        "24": {
+          "evidence_state": "FORECAST",
+          "lead_days": 2,
+          "unknown_reason": null
+        }
+      }
+    },
+    {
+      "name": "r2_fallback_offsets_beyond_24_unknown",
+      "target_date": "2026-09-28",
+      "pr11_commit": "a469ebf39fb2d8b2d4ae3bbdb77b5eeb49a5c5f0",
+      "zarr_steps": [
+        {
+          "valid_offset_h": 24,
+          "requested_cycle_time": "2026-09-28T03:00:00+00:00",
+          "source_cycle_time": "2026-09-26T03:00:00+00:00",
+          "valid_time": "2026-09-29T03:00:00+00:00",
+          "forecast_age_hours": 72.0,
+          "fallback_used": true,
+          "evidence_state_hint": "forecast",
+          "primary_cycle_available": false,
+          "lead_tag": "f072",
+          "lead_days": 3,
+          "fallback": "previous_cycle"
+        }
+      ],
+      "zarr_absent_offsets": [
+        27,
+        72
+      ],
+      "pull_log_unknown": [
+        {
+          "valid_offset_h": 27,
+          "requested_cycle_time": "2026-09-28T03:00:00+00:00",
+          "valid_time": "2026-09-29T06:00:00+00:00",
+          "state": "UNKNOWN",
+          "reason": "missing_operational_cycle",
+          "evidence_state_hint": "UNKNOWN"
+        },
+        {
+          "valid_offset_h": 72,
+          "requested_cycle_time": "2026-09-28T03:00:00+00:00",
+          "valid_time": "2026-10-01T03:00:00+00:00",
+          "state": "UNKNOWN",
+          "reason": "missing_operational_cycle",
+          "evidence_state_hint": "UNKNOWN"
+        }
+      ],
+      "expected_pr5_predictions": {
+        "24": {
+          "evidence_state": "FORECAST",
+          "lead_days": 3,
+          "unknown_reason": null
+        },
+        "27": {
+          "evidence_state": "UNKNOWN",
+          "lead_days": 0,
+          "unknown_reason": "missing_operational_cycle"
+        },
+        "72": {
+          "evidence_state": "UNKNOWN",
+          "lead_days": 0,
+          "unknown_reason": "missing_operational_cycle"
+        }
+      }
+    },
+    {
+      "name": "download_failed_absent_from_zarr",
+      "target_date": "2026-09-28",
+      "pr11_commit": "a469ebf39fb2d8b2d4ae3bbdb77b5eeb49a5c5f0",
+      "zarr_steps": [
+        {
+          "valid_offset_h": 0,
+          "requested_cycle_time": "2026-09-28T03:00:00+00:00",
+          "source_cycle_time": "2026-09-28T03:00:00+00:00",
+          "valid_time": "2026-09-28T03:00:00+00:00",
+          "forecast_age_hours": 0.0,
+          "fallback_used": false,
+          "evidence_state_hint": "nowcast",
+          "primary_cycle_available": true,
+          "lead_tag": "n024"
+        }
+      ],
+      "zarr_absent_offsets": [
+        3
+      ],
+      "pull_log_unknown": [
+        {
+          "valid_offset_h": 3,
+          "requested_cycle_time": "2026-09-28T03:00:00+00:00",
+          "valid_time": "2026-09-28T06:00:00+00:00",
+          "state": "UNKNOWN",
+          "reason": "download_failed",
+          "evidence_state_hint": "UNKNOWN"
+        }
+      ],
+      "expected_pr5_predictions": {
+        "0": {
+          "evidence_state": "NOWCAST_UNVALIDATED",
+          "lead_days": 0,
+          "unknown_reason": null
+        },
+        "3": {
+          "evidence_state": "UNKNOWN",
+          "lead_days": 0,
+          "unknown_reason": "download_failed"
+        }
+      }
+    }
+  ],
+  "schema_mismatch_report": [
+    {
+      "area": "zarr_coords",
+      "detail": "feature/sdmtmb-core adds per-step source_run_time coord; PR #11 a469ebf Zarr exposes source_cycle_time only"
+    },
+    {
+      "area": "step_provenance",
+      "detail": "feature branch step_provenance_record includes source_run_time; a469ebf uses source_cycle_time only"
+    },
+    {
+      "area": "pull_log_unknown_reason",
+      "detail": "feature branch adds UNKNOWN reason valid_time_mismatch; a469ebf documents missing_operational_cycle and download_failed only"
+    },
+    {
+      "area": "pull_log_record_types",
+      "detail": "feature branch adds day success/tombstone pull-log record types beyond a469ebf core step records"
+    }
+  ]
+}
