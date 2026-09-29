@@ -545,6 +545,8 @@ def _subset_batch_live(
 
     output_dir.mkdir(parents=True, exist_ok=True)
     out_file = subset_nc_path(output_dir, batch)
+    if out_file.is_file() and out_file.stat().st_size > 0:
+        return out_file
     glorys_dataset_id_for_date(batch.date_start, batch.dataset_id)
     guard_glorys_version_before_fetch(batch.date_start, log_path=log_path)
     la0, la1, lo0, lo1 = batch.bbox
