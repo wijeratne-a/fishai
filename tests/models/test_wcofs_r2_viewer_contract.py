@@ -21,7 +21,7 @@ def test_r2_offsets_through_24_match_age_offset_plus_48() -> None:
         assert lp is not None, off
         assert lp["fallback_used"] is True
         assert float(lp["forecast_age_hours"]) == off + 48
-        assert lp["source_cycle_time"] == source_run
+        assert lp["source_run_time"] == source_run
         pred = pr5_prediction_from_pr11_zarr_step(lp)
         assert pred["evidence_state"] == "FORECAST"
         expected_lead = int(min(3, max(1, math.ceil((off + 48) / 24))))

@@ -98,7 +98,23 @@ test_that("R-2 two-missed-runs viewer contract and lead_days from forecast_age_h
     valid_time = format(r_target + as.difftime(72, units = "hours"), "%Y-%m-%dT%H:%M:%SZ", tz = "UTC"),
     source_run_time = format(r_source, "%Y-%m-%dT%H:%M:%SZ", tz = "UTC")
   )
-  expect_true(all(unk72$evidence_state == "UNKNOWN"))
+  expect_true(all(is.na(unk$p_encounter)))
+})
+
+test_that("valid_time_mismatch is UNKNOWN with reason passthrough and no fill", {
+  fx <- .wcofs_predict_fixture()
+  out <- predict_engine(
+    fx$artifact,
+    fx$grid,
+    fx$cfg,
+    nsim = 5L,
+    wcofs_unknown_reason = "valid_time_mismatch",
+    valid_time = "2026-09-28T06:00:00Z"
+  )
+  expect_true(all(out$evidence_state == "UNKNOWN"))
+  expect_equal(unique(out$unknown_reason), "valid_time_mismatch")
+  expect_true(all(is.na(out$p_encounter)))
+  expect_equal(unique(out$lead_days), 0L)
 })
 
 test_that("viewer contract columns include WCOFS provenance fields", {

@@ -1,6 +1,8 @@
 {
-  "pr11_commit": "a469ebf39fb2d8b2d4ae3bbdb77b5eeb49a5c5f0",
-  "note": "SYNTHETIC PR #11 a469ebf contract fixture for PR #5 tests; not production Zarr.",
+  "pr11_commit": "42261b4d3b07522ff6cb30dec4f70225eaa715cb",
+  "pr11_commit_short": "42261b4",
+  "pr11_pull": "https://github.com/wijeratne-a/fishai/pull/11",
+  "note": "SYNTHETIC PR #11 42261b4 contract fixture for PR #5 tests; not production Zarr.",
   "valid_offset_h_timeline": [
     -21,
     -18,
@@ -39,12 +41,15 @@
     {
       "name": "normal_primary_cycle",
       "target_date": "2026-09-28",
-      "pr11_commit": "a469ebf39fb2d8b2d4ae3bbdb77b5eeb49a5c5f0",
+      "pr11_commit": "42261b4d3b07522ff6cb30dec4f70225eaa715cb",
+      "pr11_commit_short": "42261b4",
+      "pr11_pull": "https://github.com/wijeratne-a/fishai/pull/11",
       "zarr_steps": [
         {
           "valid_offset_h": -21,
           "requested_cycle_time": "2026-09-28T03:00:00+00:00",
           "source_cycle_time": "2026-09-28T03:00:00+00:00",
+          "source_run_time": "2026-09-28T03:00:00+00:00",
           "valid_time": "2026-09-27T06:00:00+00:00",
           "forecast_age_hours": -21.0,
           "fallback_used": false,
@@ -56,6 +61,7 @@
           "valid_offset_h": -3,
           "requested_cycle_time": "2026-09-28T03:00:00+00:00",
           "source_cycle_time": "2026-09-28T03:00:00+00:00",
+          "source_run_time": "2026-09-28T03:00:00+00:00",
           "valid_time": "2026-09-28T00:00:00+00:00",
           "forecast_age_hours": -3.0,
           "fallback_used": false,
@@ -67,6 +73,7 @@
           "valid_offset_h": 0,
           "requested_cycle_time": "2026-09-28T03:00:00+00:00",
           "source_cycle_time": "2026-09-28T03:00:00+00:00",
+          "source_run_time": "2026-09-28T03:00:00+00:00",
           "valid_time": "2026-09-28T03:00:00+00:00",
           "forecast_age_hours": 0.0,
           "fallback_used": false,
@@ -78,6 +85,7 @@
           "valid_offset_h": 3,
           "requested_cycle_time": "2026-09-28T03:00:00+00:00",
           "source_cycle_time": "2026-09-28T03:00:00+00:00",
+          "source_run_time": "2026-09-28T03:00:00+00:00",
           "valid_time": "2026-09-28T06:00:00+00:00",
           "forecast_age_hours": 3.0,
           "fallback_used": false,
@@ -90,6 +98,7 @@
           "valid_offset_h": 24,
           "requested_cycle_time": "2026-09-28T03:00:00+00:00",
           "source_cycle_time": "2026-09-28T03:00:00+00:00",
+          "source_run_time": "2026-09-28T03:00:00+00:00",
           "valid_time": "2026-09-29T03:00:00+00:00",
           "forecast_age_hours": 24.0,
           "fallback_used": false,
@@ -102,6 +111,7 @@
           "valid_offset_h": 72,
           "requested_cycle_time": "2026-09-28T03:00:00+00:00",
           "source_cycle_time": "2026-09-28T03:00:00+00:00",
+          "source_run_time": "2026-09-28T03:00:00+00:00",
           "valid_time": "2026-10-01T03:00:00+00:00",
           "forecast_age_hours": 72.0,
           "fallback_used": false,
@@ -117,44 +127,71 @@
         "-21": {
           "evidence_state": "NOWCAST_UNVALIDATED",
           "lead_days": 0,
-          "unknown_reason": null
+          "unknown_reason": null,
+          "source_run_time": "2026-09-28T03:00:00+00:00",
+          "forecast_age_hours": -21.0,
+          "fallback_used": false,
+          "valid_time": "2026-09-27T06:00:00+00:00"
         },
         "-3": {
           "evidence_state": "NOWCAST_UNVALIDATED",
           "lead_days": 0,
-          "unknown_reason": null
+          "unknown_reason": null,
+          "source_run_time": "2026-09-28T03:00:00+00:00",
+          "forecast_age_hours": -3.0,
+          "fallback_used": false,
+          "valid_time": "2026-09-28T00:00:00+00:00"
         },
         "0": {
           "evidence_state": "NOWCAST_UNVALIDATED",
           "lead_days": 0,
-          "unknown_reason": null
+          "unknown_reason": null,
+          "source_run_time": "2026-09-28T03:00:00+00:00",
+          "forecast_age_hours": 0.0,
+          "fallback_used": false,
+          "valid_time": "2026-09-28T03:00:00+00:00"
         },
         "3": {
           "evidence_state": "FORECAST",
           "lead_days": 1,
-          "unknown_reason": null
+          "unknown_reason": null,
+          "source_run_time": "2026-09-28T03:00:00+00:00",
+          "forecast_age_hours": 3.0,
+          "fallback_used": false,
+          "valid_time": "2026-09-28T06:00:00+00:00"
         },
         "24": {
           "evidence_state": "FORECAST",
           "lead_days": 1,
-          "unknown_reason": null
+          "unknown_reason": null,
+          "source_run_time": "2026-09-28T03:00:00+00:00",
+          "forecast_age_hours": 24.0,
+          "fallback_used": false,
+          "valid_time": "2026-09-29T03:00:00+00:00"
         },
         "72": {
           "evidence_state": "FORECAST",
           "lead_days": 3,
-          "unknown_reason": null
+          "unknown_reason": null,
+          "source_run_time": "2026-09-28T03:00:00+00:00",
+          "forecast_age_hours": 72.0,
+          "fallback_used": false,
+          "valid_time": "2026-10-01T03:00:00+00:00"
         }
       }
     },
     {
       "name": "r1_fallback_previous_cycle",
       "target_date": "2026-09-28",
-      "pr11_commit": "a469ebf39fb2d8b2d4ae3bbdb77b5eeb49a5c5f0",
+      "pr11_commit": "42261b4d3b07522ff6cb30dec4f70225eaa715cb",
+      "pr11_commit_short": "42261b4",
+      "pr11_pull": "https://github.com/wijeratne-a/fishai/pull/11",
       "zarr_steps": [
         {
           "valid_offset_h": -21,
           "requested_cycle_time": "2026-09-28T03:00:00+00:00",
           "source_cycle_time": "2026-09-27T03:00:00+00:00",
+          "source_run_time": "2026-09-27T03:00:00+00:00",
           "valid_time": "2026-09-27T06:00:00+00:00",
           "forecast_age_hours": 3.0,
           "fallback_used": true,
@@ -168,6 +205,7 @@
           "valid_offset_h": -3,
           "requested_cycle_time": "2026-09-28T03:00:00+00:00",
           "source_cycle_time": "2026-09-27T03:00:00+00:00",
+          "source_run_time": "2026-09-27T03:00:00+00:00",
           "valid_time": "2026-09-28T00:00:00+00:00",
           "forecast_age_hours": 21.0,
           "fallback_used": true,
@@ -181,6 +219,7 @@
           "valid_offset_h": 0,
           "requested_cycle_time": "2026-09-28T03:00:00+00:00",
           "source_cycle_time": "2026-09-27T03:00:00+00:00",
+          "source_run_time": "2026-09-27T03:00:00+00:00",
           "valid_time": "2026-09-28T03:00:00+00:00",
           "forecast_age_hours": 24.0,
           "fallback_used": true,
@@ -194,6 +233,7 @@
           "valid_offset_h": 3,
           "requested_cycle_time": "2026-09-28T03:00:00+00:00",
           "source_cycle_time": "2026-09-27T03:00:00+00:00",
+          "source_run_time": "2026-09-27T03:00:00+00:00",
           "valid_time": "2026-09-28T06:00:00+00:00",
           "forecast_age_hours": 27.0,
           "fallback_used": true,
@@ -207,6 +247,7 @@
           "valid_offset_h": 24,
           "requested_cycle_time": "2026-09-28T03:00:00+00:00",
           "source_cycle_time": "2026-09-27T03:00:00+00:00",
+          "source_run_time": "2026-09-27T03:00:00+00:00",
           "valid_time": "2026-09-29T03:00:00+00:00",
           "forecast_age_hours": 48.0,
           "fallback_used": true,
@@ -223,39 +264,62 @@
         "-21": {
           "evidence_state": "FORECAST",
           "lead_days": 1,
-          "unknown_reason": null
+          "unknown_reason": null,
+          "source_run_time": "2026-09-27T03:00:00+00:00",
+          "forecast_age_hours": 3.0,
+          "fallback_used": true,
+          "valid_time": "2026-09-27T06:00:00+00:00"
         },
         "-3": {
           "evidence_state": "FORECAST",
           "lead_days": 1,
-          "unknown_reason": null
+          "unknown_reason": null,
+          "source_run_time": "2026-09-27T03:00:00+00:00",
+          "forecast_age_hours": 21.0,
+          "fallback_used": true,
+          "valid_time": "2026-09-28T00:00:00+00:00"
         },
         "0": {
           "evidence_state": "FORECAST",
           "lead_days": 1,
-          "unknown_reason": null
+          "unknown_reason": null,
+          "source_run_time": "2026-09-27T03:00:00+00:00",
+          "forecast_age_hours": 24.0,
+          "fallback_used": true,
+          "valid_time": "2026-09-28T03:00:00+00:00"
         },
         "3": {
           "evidence_state": "FORECAST",
           "lead_days": 2,
-          "unknown_reason": null
+          "unknown_reason": null,
+          "source_run_time": "2026-09-27T03:00:00+00:00",
+          "forecast_age_hours": 27.0,
+          "fallback_used": true,
+          "valid_time": "2026-09-28T06:00:00+00:00"
         },
         "24": {
           "evidence_state": "FORECAST",
           "lead_days": 2,
-          "unknown_reason": null
+          "unknown_reason": null,
+          "source_run_time": "2026-09-27T03:00:00+00:00",
+          "forecast_age_hours": 48.0,
+          "fallback_used": true,
+          "valid_time": "2026-09-29T03:00:00+00:00"
         }
       }
     },
     {
       "name": "r2_fallback_offsets_beyond_24_unknown",
       "target_date": "2026-09-28",
-      "pr11_commit": "a469ebf39fb2d8b2d4ae3bbdb77b5eeb49a5c5f0",
+      "pr11_commit": "42261b4d3b07522ff6cb30dec4f70225eaa715cb",
+      "pr11_commit_short": "42261b4",
+      "pr11_pull": "https://github.com/wijeratne-a/fishai/pull/11",
       "zarr_steps": [
         {
           "valid_offset_h": -21,
           "requested_cycle_time": "2026-09-28T03:00:00+00:00",
           "source_cycle_time": "2026-09-26T03:00:00+00:00",
+          "source_run_time": "2026-09-26T03:00:00+00:00",
           "valid_time": "2026-09-27T06:00:00+00:00",
           "forecast_age_hours": 27.0,
           "fallback_used": true,
@@ -269,6 +333,7 @@
           "valid_offset_h": -18,
           "requested_cycle_time": "2026-09-28T03:00:00+00:00",
           "source_cycle_time": "2026-09-26T03:00:00+00:00",
+          "source_run_time": "2026-09-26T03:00:00+00:00",
           "valid_time": "2026-09-27T09:00:00+00:00",
           "forecast_age_hours": 30.0,
           "fallback_used": true,
@@ -282,6 +347,7 @@
           "valid_offset_h": -15,
           "requested_cycle_time": "2026-09-28T03:00:00+00:00",
           "source_cycle_time": "2026-09-26T03:00:00+00:00",
+          "source_run_time": "2026-09-26T03:00:00+00:00",
           "valid_time": "2026-09-27T12:00:00+00:00",
           "forecast_age_hours": 33.0,
           "fallback_used": true,
@@ -295,6 +361,7 @@
           "valid_offset_h": -12,
           "requested_cycle_time": "2026-09-28T03:00:00+00:00",
           "source_cycle_time": "2026-09-26T03:00:00+00:00",
+          "source_run_time": "2026-09-26T03:00:00+00:00",
           "valid_time": "2026-09-27T15:00:00+00:00",
           "forecast_age_hours": 36.0,
           "fallback_used": true,
@@ -308,6 +375,7 @@
           "valid_offset_h": -9,
           "requested_cycle_time": "2026-09-28T03:00:00+00:00",
           "source_cycle_time": "2026-09-26T03:00:00+00:00",
+          "source_run_time": "2026-09-26T03:00:00+00:00",
           "valid_time": "2026-09-27T18:00:00+00:00",
           "forecast_age_hours": 39.0,
           "fallback_used": true,
@@ -321,6 +389,7 @@
           "valid_offset_h": -6,
           "requested_cycle_time": "2026-09-28T03:00:00+00:00",
           "source_cycle_time": "2026-09-26T03:00:00+00:00",
+          "source_run_time": "2026-09-26T03:00:00+00:00",
           "valid_time": "2026-09-27T21:00:00+00:00",
           "forecast_age_hours": 42.0,
           "fallback_used": true,
@@ -334,6 +403,7 @@
           "valid_offset_h": -3,
           "requested_cycle_time": "2026-09-28T03:00:00+00:00",
           "source_cycle_time": "2026-09-26T03:00:00+00:00",
+          "source_run_time": "2026-09-26T03:00:00+00:00",
           "valid_time": "2026-09-28T00:00:00+00:00",
           "forecast_age_hours": 45.0,
           "fallback_used": true,
@@ -347,6 +417,7 @@
           "valid_offset_h": 0,
           "requested_cycle_time": "2026-09-28T03:00:00+00:00",
           "source_cycle_time": "2026-09-26T03:00:00+00:00",
+          "source_run_time": "2026-09-26T03:00:00+00:00",
           "valid_time": "2026-09-28T03:00:00+00:00",
           "forecast_age_hours": 48.0,
           "fallback_used": true,
@@ -360,6 +431,7 @@
           "valid_offset_h": 3,
           "requested_cycle_time": "2026-09-28T03:00:00+00:00",
           "source_cycle_time": "2026-09-26T03:00:00+00:00",
+          "source_run_time": "2026-09-26T03:00:00+00:00",
           "valid_time": "2026-09-28T06:00:00+00:00",
           "forecast_age_hours": 51.0,
           "fallback_used": true,
@@ -373,6 +445,7 @@
           "valid_offset_h": 6,
           "requested_cycle_time": "2026-09-28T03:00:00+00:00",
           "source_cycle_time": "2026-09-26T03:00:00+00:00",
+          "source_run_time": "2026-09-26T03:00:00+00:00",
           "valid_time": "2026-09-28T09:00:00+00:00",
           "forecast_age_hours": 54.0,
           "fallback_used": true,
@@ -386,6 +459,7 @@
           "valid_offset_h": 9,
           "requested_cycle_time": "2026-09-28T03:00:00+00:00",
           "source_cycle_time": "2026-09-26T03:00:00+00:00",
+          "source_run_time": "2026-09-26T03:00:00+00:00",
           "valid_time": "2026-09-28T12:00:00+00:00",
           "forecast_age_hours": 57.0,
           "fallback_used": true,
@@ -399,6 +473,7 @@
           "valid_offset_h": 12,
           "requested_cycle_time": "2026-09-28T03:00:00+00:00",
           "source_cycle_time": "2026-09-26T03:00:00+00:00",
+          "source_run_time": "2026-09-26T03:00:00+00:00",
           "valid_time": "2026-09-28T15:00:00+00:00",
           "forecast_age_hours": 60.0,
           "fallback_used": true,
@@ -412,6 +487,7 @@
           "valid_offset_h": 15,
           "requested_cycle_time": "2026-09-28T03:00:00+00:00",
           "source_cycle_time": "2026-09-26T03:00:00+00:00",
+          "source_run_time": "2026-09-26T03:00:00+00:00",
           "valid_time": "2026-09-28T18:00:00+00:00",
           "forecast_age_hours": 63.0,
           "fallback_used": true,
@@ -425,6 +501,7 @@
           "valid_offset_h": 18,
           "requested_cycle_time": "2026-09-28T03:00:00+00:00",
           "source_cycle_time": "2026-09-26T03:00:00+00:00",
+          "source_run_time": "2026-09-26T03:00:00+00:00",
           "valid_time": "2026-09-28T21:00:00+00:00",
           "forecast_age_hours": 66.0,
           "fallback_used": true,
@@ -438,6 +515,7 @@
           "valid_offset_h": 21,
           "requested_cycle_time": "2026-09-28T03:00:00+00:00",
           "source_cycle_time": "2026-09-26T03:00:00+00:00",
+          "source_run_time": "2026-09-26T03:00:00+00:00",
           "valid_time": "2026-09-29T00:00:00+00:00",
           "forecast_age_hours": 69.0,
           "fallback_used": true,
@@ -451,6 +529,7 @@
           "valid_offset_h": 24,
           "requested_cycle_time": "2026-09-28T03:00:00+00:00",
           "source_cycle_time": "2026-09-26T03:00:00+00:00",
+          "source_run_time": "2026-09-26T03:00:00+00:00",
           "valid_time": "2026-09-29T03:00:00+00:00",
           "forecast_age_hours": 72.0,
           "fallback_used": true,
@@ -487,104 +566,179 @@
         "-21": {
           "evidence_state": "FORECAST",
           "lead_days": 2,
-          "unknown_reason": null
+          "unknown_reason": null,
+          "source_run_time": "2026-09-26T03:00:00+00:00",
+          "forecast_age_hours": 27.0,
+          "fallback_used": true,
+          "valid_time": "2026-09-27T06:00:00+00:00"
         },
         "-18": {
           "evidence_state": "FORECAST",
           "lead_days": 2,
-          "unknown_reason": null
+          "unknown_reason": null,
+          "source_run_time": "2026-09-26T03:00:00+00:00",
+          "forecast_age_hours": 30.0,
+          "fallback_used": true,
+          "valid_time": "2026-09-27T09:00:00+00:00"
         },
         "-15": {
           "evidence_state": "FORECAST",
           "lead_days": 2,
-          "unknown_reason": null
+          "unknown_reason": null,
+          "source_run_time": "2026-09-26T03:00:00+00:00",
+          "forecast_age_hours": 33.0,
+          "fallback_used": true,
+          "valid_time": "2026-09-27T12:00:00+00:00"
         },
         "-12": {
           "evidence_state": "FORECAST",
           "lead_days": 2,
-          "unknown_reason": null
+          "unknown_reason": null,
+          "source_run_time": "2026-09-26T03:00:00+00:00",
+          "forecast_age_hours": 36.0,
+          "fallback_used": true,
+          "valid_time": "2026-09-27T15:00:00+00:00"
         },
         "-9": {
           "evidence_state": "FORECAST",
           "lead_days": 2,
-          "unknown_reason": null
+          "unknown_reason": null,
+          "source_run_time": "2026-09-26T03:00:00+00:00",
+          "forecast_age_hours": 39.0,
+          "fallback_used": true,
+          "valid_time": "2026-09-27T18:00:00+00:00"
         },
         "-6": {
           "evidence_state": "FORECAST",
           "lead_days": 2,
-          "unknown_reason": null
+          "unknown_reason": null,
+          "source_run_time": "2026-09-26T03:00:00+00:00",
+          "forecast_age_hours": 42.0,
+          "fallback_used": true,
+          "valid_time": "2026-09-27T21:00:00+00:00"
         },
         "-3": {
           "evidence_state": "FORECAST",
           "lead_days": 2,
-          "unknown_reason": null
+          "unknown_reason": null,
+          "source_run_time": "2026-09-26T03:00:00+00:00",
+          "forecast_age_hours": 45.0,
+          "fallback_used": true,
+          "valid_time": "2026-09-28T00:00:00+00:00"
         },
         "0": {
           "evidence_state": "FORECAST",
           "lead_days": 2,
-          "unknown_reason": null
+          "unknown_reason": null,
+          "source_run_time": "2026-09-26T03:00:00+00:00",
+          "forecast_age_hours": 48.0,
+          "fallback_used": true,
+          "valid_time": "2026-09-28T03:00:00+00:00"
         },
         "3": {
           "evidence_state": "FORECAST",
           "lead_days": 3,
-          "unknown_reason": null
+          "unknown_reason": null,
+          "source_run_time": "2026-09-26T03:00:00+00:00",
+          "forecast_age_hours": 51.0,
+          "fallback_used": true,
+          "valid_time": "2026-09-28T06:00:00+00:00"
         },
         "6": {
           "evidence_state": "FORECAST",
           "lead_days": 3,
-          "unknown_reason": null
+          "unknown_reason": null,
+          "source_run_time": "2026-09-26T03:00:00+00:00",
+          "forecast_age_hours": 54.0,
+          "fallback_used": true,
+          "valid_time": "2026-09-28T09:00:00+00:00"
         },
         "9": {
           "evidence_state": "FORECAST",
           "lead_days": 3,
-          "unknown_reason": null
+          "unknown_reason": null,
+          "source_run_time": "2026-09-26T03:00:00+00:00",
+          "forecast_age_hours": 57.0,
+          "fallback_used": true,
+          "valid_time": "2026-09-28T12:00:00+00:00"
         },
         "12": {
           "evidence_state": "FORECAST",
           "lead_days": 3,
-          "unknown_reason": null
+          "unknown_reason": null,
+          "source_run_time": "2026-09-26T03:00:00+00:00",
+          "forecast_age_hours": 60.0,
+          "fallback_used": true,
+          "valid_time": "2026-09-28T15:00:00+00:00"
         },
         "15": {
           "evidence_state": "FORECAST",
           "lead_days": 3,
-          "unknown_reason": null
+          "unknown_reason": null,
+          "source_run_time": "2026-09-26T03:00:00+00:00",
+          "forecast_age_hours": 63.0,
+          "fallback_used": true,
+          "valid_time": "2026-09-28T18:00:00+00:00"
         },
         "18": {
           "evidence_state": "FORECAST",
           "lead_days": 3,
-          "unknown_reason": null
+          "unknown_reason": null,
+          "source_run_time": "2026-09-26T03:00:00+00:00",
+          "forecast_age_hours": 66.0,
+          "fallback_used": true,
+          "valid_time": "2026-09-28T21:00:00+00:00"
         },
         "21": {
           "evidence_state": "FORECAST",
           "lead_days": 3,
-          "unknown_reason": null
+          "unknown_reason": null,
+          "source_run_time": "2026-09-26T03:00:00+00:00",
+          "forecast_age_hours": 69.0,
+          "fallback_used": true,
+          "valid_time": "2026-09-29T00:00:00+00:00"
         },
         "24": {
           "evidence_state": "FORECAST",
           "lead_days": 3,
-          "unknown_reason": null
+          "unknown_reason": null,
+          "source_run_time": "2026-09-26T03:00:00+00:00",
+          "forecast_age_hours": 72.0,
+          "fallback_used": true,
+          "valid_time": "2026-09-29T03:00:00+00:00"
         },
         "27": {
           "evidence_state": "UNKNOWN",
           "lead_days": 0,
-          "unknown_reason": "missing_operational_cycle"
+          "unknown_reason": "missing_operational_cycle",
+          "source_run_time": null,
+          "forecast_age_hours": null,
+          "fallback_used": false,
+          "valid_time": "2026-09-29T06:00:00+00:00"
         },
         "72": {
           "evidence_state": "UNKNOWN",
           "lead_days": 0,
-          "unknown_reason": "missing_operational_cycle"
+          "unknown_reason": "missing_operational_cycle",
+          "source_run_time": null,
+          "forecast_age_hours": null,
+          "fallback_used": false,
+          "valid_time": "2026-10-01T03:00:00+00:00"
         }
       }
     },
     {
       "name": "download_failed_absent_from_zarr",
       "target_date": "2026-09-28",
-      "pr11_commit": "a469ebf39fb2d8b2d4ae3bbdb77b5eeb49a5c5f0",
+      "pr11_commit": "42261b4d3b07522ff6cb30dec4f70225eaa715cb",
+      "pr11_commit_short": "42261b4",
+      "pr11_pull": "https://github.com/wijeratne-a/fishai/pull/11",
       "zarr_steps": [
         {
           "valid_offset_h": 0,
           "requested_cycle_time": "2026-09-28T03:00:00+00:00",
           "source_cycle_time": "2026-09-28T03:00:00+00:00",
+          "source_run_time": "2026-09-28T03:00:00+00:00",
           "valid_time": "2026-09-28T03:00:00+00:00",
           "forecast_age_hours": 0.0,
           "fallback_used": false,
@@ -610,32 +764,94 @@
         "0": {
           "evidence_state": "NOWCAST_UNVALIDATED",
           "lead_days": 0,
-          "unknown_reason": null
+          "unknown_reason": null,
+          "source_run_time": "2026-09-28T03:00:00+00:00",
+          "forecast_age_hours": 0.0,
+          "fallback_used": false,
+          "valid_time": "2026-09-28T03:00:00+00:00"
         },
         "3": {
           "evidence_state": "UNKNOWN",
           "lead_days": 0,
-          "unknown_reason": "download_failed"
+          "unknown_reason": "download_failed",
+          "source_run_time": null,
+          "forecast_age_hours": null,
+          "fallback_used": false,
+          "valid_time": "2026-09-28T06:00:00+00:00"
+        }
+      }
+    },
+    {
+      "name": "valid_time_mismatch_absent_from_zarr",
+      "target_date": "2026-09-28",
+      "pr11_commit": "42261b4d3b07522ff6cb30dec4f70225eaa715cb",
+      "pr11_commit_short": "42261b4",
+      "pr11_pull": "https://github.com/wijeratne-a/fishai/pull/11",
+      "zarr_steps": [
+        {
+          "valid_offset_h": 0,
+          "requested_cycle_time": "2026-09-28T03:00:00+00:00",
+          "source_cycle_time": "2026-09-28T03:00:00+00:00",
+          "source_run_time": "2026-09-28T03:00:00+00:00",
+          "valid_time": "2026-09-28T03:00:00+00:00",
+          "forecast_age_hours": 0.0,
+          "fallback_used": false,
+          "evidence_state_hint": "nowcast",
+          "primary_cycle_available": true,
+          "lead_tag": "n024"
+        }
+      ],
+      "zarr_absent_offsets": [
+        3
+      ],
+      "pull_log_unknown": [
+        {
+          "valid_offset_h": 3,
+          "requested_cycle_time": "2026-09-28T03:00:00+00:00",
+          "valid_time": "2026-09-28T06:00:00+00:00",
+          "state": "UNKNOWN",
+          "reason": "valid_time_mismatch",
+          "evidence_state_hint": "UNKNOWN"
+        }
+      ],
+      "expected_pr5_predictions": {
+        "0": {
+          "evidence_state": "NOWCAST_UNVALIDATED",
+          "lead_days": 0,
+          "unknown_reason": null,
+          "source_run_time": "2026-09-28T03:00:00+00:00",
+          "forecast_age_hours": 0.0,
+          "fallback_used": false,
+          "valid_time": "2026-09-28T03:00:00+00:00"
+        },
+        "3": {
+          "evidence_state": "UNKNOWN",
+          "lead_days": 0,
+          "unknown_reason": "valid_time_mismatch",
+          "source_run_time": null,
+          "forecast_age_hours": null,
+          "fallback_used": false,
+          "valid_time": "2026-09-28T06:00:00+00:00"
         }
       }
     }
   ],
   "schema_mismatch_report": [
     {
-      "area": "zarr_coords",
-      "detail": "feature/sdmtmb-core adds per-step source_run_time coord; PR #11 a469ebf Zarr exposes source_cycle_time only"
-    },
-    {
-      "area": "step_provenance",
-      "detail": "feature branch step_provenance_record includes source_run_time; a469ebf uses source_cycle_time only"
-    },
-    {
-      "area": "pull_log_unknown_reason",
-      "detail": "feature branch adds UNKNOWN reason valid_time_mismatch; a469ebf documents missing_operational_cycle and download_failed only"
-    },
-    {
       "area": "pull_log_record_types",
-      "detail": "feature branch adds day success/tombstone pull-log record types beyond a469ebf core step records"
+      "detail": "#5 adds day success/tombstone pull-log record types; PR #11 42261b4 pull log is step-centric only"
+    },
+    {
+      "area": "zarr_field_names",
+      "detail": "PR #11 Zarr carries both source_cycle_time and source_run_time per step; #5 prediction viewer contract exposes source_run_time only (not source_cycle_time)"
+    },
+    {
+      "area": "zarr_vs_prediction_viewer",
+      "detail": "fallback_used is on PR #11 step_provenance rows but not a per-step Zarr coordinate; #5 prediction output includes fallback_used on every viewer row"
+    },
+    {
+      "area": "dtype_lead_days",
+      "detail": "PR #11 Zarr lead_days is float64 with NaN for nowcast steps; #5 prediction output lead_days is integer 0\u20133 (never NaN)"
     }
   ]
 }
