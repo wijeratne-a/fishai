@@ -1,4 +1,4 @@
-"""Contract tests: bot2 PR #11 (42261b4) WCOFS Zarr/pull-log vs PR #5 prediction output."""
+"""Contract tests: bot2 PR #11 (f71dca9) WCOFS Zarr/pull-log vs PR #5 prediction output."""
 
 from __future__ import annotations
 
@@ -16,21 +16,23 @@ from fishai.models.wcofs_pr11_a469ebf_contract import (
     PR11_ZARR_STEP_COORDS,
     assert_pr11_step_schema,
     assert_pr11_zarr_view,
+    assert_pr5_independent_of_run_cycle_qc,
     assert_source_run_time_for_fallback_tier,
     build_pr11_scenario,
     compare_feature_branch_to_pr11,
     load_pr11_fixture,
     pr11_zarr_step_view,
+    pr5_predict_engine_args_from_pr11_zarr_step,
     pr5_prediction_from_pr11_unknown_slot,
     pr5_prediction_from_pr11_zarr_step,
 )
 
 
-def test_fixture_documents_pr11_42261b4_head() -> None:
+def test_fixture_documents_pr11_f71dca9_head() -> None:
     doc = load_pr11_fixture()
     assert doc["pr11_commit"] == PR11_COMMIT
     assert doc["pr11_commit_short"] == PR11_COMMIT_SHORT
-    assert "42261b4" in doc["pr11_commit"]
+    assert "f71dca9" in doc["pr11_commit"]
     assert doc["valid_offset_h_timeline"] == list(PR11_VALID_OFFSETS_H)
 
 
@@ -80,14 +82,22 @@ def test_r2_offsets_through_24_forecast_age_is_offset_plus_48() -> None:
         pred = pr5_prediction_from_pr11_zarr_step(step)
         assert pred["evidence_state"] == "FORECAST"
         assert pred["lead_days"] == int(min(3, max(1, math.ceil((off + 48) / 24))))
+        engine = pr5_predict_engine_args_from_pr11_zarr_step(step)
+        assert engine["source_run_time"] == step["source_run_time"]
+        assert engine["fallback_used"] is True
+        assert engine["expected_evidence_state"] == pred["evidence_state"]
 
 
-def test_r2_unknown_offsets_27_and_72() -> None:
+def test_r2_unknown_offsets_27_through_72() -> None:
     target = dt.date(2026, 9, 28)
     scenario = build_pr11_scenario("r2_fallback_offsets_beyond_24_unknown", target)
     reasons = {int(u["valid_offset_h"]): u["reason"] for u in scenario["pull_log_unknown"]}
-    assert reasons[27] == "missing_operational_cycle"
-    assert reasons[72] == "missing_operational_cycle"
+    for off in range(27, 73, 3):
+        assert off not in {s["valid_offset_h"] for s in scenario["zarr_steps"]}
+        assert reasons[off] == "missing_operational_cycle"
+        pred = scenario["expected_pr5_predictions"][str(off)]
+        assert pred["evidence_state"] == "UNKNOWN"
+        assert pred["unknown_reason"] == "missing_operational_cycle"
 
 
 def test_valid_time_mismatch_maps_to_unknown_without_fill() -> None:
@@ -111,6 +121,10 @@ def test_pr11_step_and_zarr_schemas_require_source_run_time() -> None:
         assert_pr11_step_schema(bad)
 
 
+def test_pr5_models_independent_of_run_cycle_qc_nan_fraction() -> None:
+    assert_pr5_independent_of_run_cycle_qc()
+
+
 def test_schema_mismatch_report_is_explicit_not_silent() -> None:
     doc = load_pr11_fixture()
     reported = doc["schema_mismatch_report"]
@@ -121,7 +135,7 @@ def test_schema_mismatch_report_is_explicit_not_silent() -> None:
     assert "zarr_field_names" in areas
 
 
-def test_unknown_reasons_match_pr11_42261b4_audit() -> None:
+def test_unknown_reasons_match_pr11_f71dca9_audit() -> None:
     assert PR11_UNKNOWN_PULL_REASONS == frozenset(
         {
             "missing_operational_cycle",
@@ -138,7 +152,7 @@ def test_unknown_reasons_match_pr11_42261b4_audit() -> None:
     assert "valid_time_mismatch" in reasons
 
 
-def test_zarr_coord_set_matches_42261b4() -> None:
+def test_zarr_coord_set_matches_f71dca9() -> None:
     assert "source_run_time" in PR11_ZARR_STEP_COORDS
     assert PR11_ZARR_STEP_COORDS == frozenset(
         {

@@ -1,6 +1,6 @@
 """Frozen WCOFS Zarr / pull-log contract from bot2 PR #11 (read-only git ref).
 
-Pinned to PR #11 head ``42261b4`` — do **not** merge PR #11 into ``feature/sdmtmb-core``.
+Pinned to PR #11 head ``f71dca9`` — do **not** merge PR #11 into ``feature/sdmtmb-core``.
 """
 
 from __future__ import annotations
@@ -23,13 +23,13 @@ from fishai.ingestion.physics.wcofs_daily import (
 )
 from fishai.models.wcofs_prediction_lead import prediction_output_from_forecast_age
 
-PR11_COMMIT = "42261b4d3b07522ff6cb30dec4f70225eaa715cb"
-PR11_COMMIT_SHORT = "42261b4"
+PR11_COMMIT = "f71dca994377bd773eaef2945b00a1feeea25d22"
+PR11_COMMIT_SHORT = "f71dca9"
 PR11_PULL = "https://github.com/wijeratne-a/fishai/pull/11"
 
 PR11_VALID_OFFSETS_H = wcofs_src.TARGET_VALID_OFFSETS_H
 
-# ``step_provenance_record`` @ 42261b4 (successful pulls only).
+# ``step_provenance_record`` @ f71dca9 (successful pulls only).
 PR11_STEP_PROVENANCE_KEYS = frozenset(
     {
         "valid_offset_h",
@@ -53,7 +53,7 @@ PR11_UNKNOWN_PULL_REASONS = frozenset(
     }
 )
 
-# Per-step coordinates on packaged Zarr @ 42261b4.
+# Per-step coordinates on packaged Zarr @ f71dca9.
 PR11_ZARR_STEP_COORDS = frozenset(
     {
         "valid_offset_h",
@@ -167,7 +167,7 @@ def compare_feature_branch_to_pr11(
 
 
 def compare_feature_branch_to_pr11_a469ebf() -> list[SchemaMismatch]:
-    """Backward-compatible alias — compares against PR #11 head ``42261b4``."""
+    """Backward-compatible alias — compares against PR #11 head ``f71dca9``."""
     return compare_feature_branch_to_pr11()
 
 
@@ -177,7 +177,7 @@ def pr11_step_provenance_row(
     target: dt.date,
     primary_available: bool,
 ) -> dict[str, Any]:
-    """Mirror ``step_provenance_record`` @ PR #11 ``42261b4``."""
+    """Mirror ``step_provenance_record`` @ PR #11 ``f71dca9``."""
     valid = wcofs_src.valid_time_for_lead_tag(lp.cycle_date, lp.lead_tag)
     source = wcofs_src.cycle_run_time(lp.cycle_date)
     requested = requested_cycle_time(target)
@@ -204,7 +204,7 @@ def pr11_step_provenance_row(
 
 
 def pr11_zarr_step_view(step: dict[str, Any]) -> dict[str, Any]:
-    """Zarr per-step fields as written by ``package_wcofs_cycle`` @ ``42261b4``."""
+    """Zarr per-step fields as written by ``package_wcofs_cycle`` @ ``f71dca9``."""
     lead_days = float("nan")
     if "lead_days" in step:
         lead_days = float(step["lead_days"])
@@ -355,6 +355,13 @@ def build_pr11_scenario(name: str, target: dt.date) -> dict[str, Any]:
     absent = [o for o in sample_offsets if o not in steps]
     unknown_rows = [unknown[o] for o in sample_offsets if o in unknown]
 
+    if name == "r2_fallback_offsets_beyond_24_unknown":
+        for row in plan.unknown_slots:
+            off = int(row["valid_offset_h"])
+            unknown[off] = row
+        unknown_rows = sorted(unknown.values(), key=lambda r: int(r["valid_offset_h"]))
+        absent = [o for o in PR11_VALID_OFFSETS_H if o not in steps]
+
     expected: dict[str, dict[str, Any]] = {}
     for row in zarr_steps:
         off = str(row["valid_offset_h"])
@@ -385,7 +392,7 @@ def assert_pr11_step_schema(step: dict[str, Any]) -> None:
     if missing:
         raise AssertionError(f"PR11 step missing keys: {sorted(missing)}")
     if not step.get("source_run_time"):
-        raise AssertionError("PR11 42261b4 requires source_run_time on every successful step")
+        raise AssertionError("PR11 f71dca9 requires source_run_time on every successful step")
 
 
 def assert_pr11_zarr_view(step: dict[str, Any]) -> None:
@@ -395,6 +402,38 @@ def assert_pr11_zarr_view(step: dict[str, Any]) -> None:
         raise AssertionError(f"PR11 Zarr view missing coords: {sorted(missing)}")
     if not view.get("source_run_time"):
         raise AssertionError("PR11 Zarr view missing source_run_time")
+
+
+def pr5_predict_engine_args_from_pr11_zarr_step(step: dict[str, Any]) -> dict[str, Any]:
+    """#5 ``predict_engine`` WCOFS kwargs derived from a packaged Zarr step row."""
+    pred = pr5_prediction_from_pr11_zarr_step(step)
+    return {
+        "forecast_age_hours": float(step["forecast_age_hours"]),
+        "fallback_used": bool(step["fallback_used"]),
+        "valid_time": step["valid_time"],
+        "source_run_time": step["source_run_time"],
+        "wcofs_unknown_reason": None,
+        "expected_evidence_state": pred["evidence_state"],
+        "expected_lead_days": pred["lead_days"],
+    }
+
+
+def pr5_models_paths() -> list[Path]:
+    roots = [
+        REPO_ROOT / "src" / "fishai" / "models",
+        REPO_ROOT / "src" / "models" / "R",
+    ]
+    skip = {Path("src/fishai/models/wcofs_pr11_a469ebf_contract.py")}
+    paths: list[Path] = []
+    for root in roots:
+        if root.is_dir():
+            paths.extend(root.rglob("*"))
+    return [
+        p
+        for p in paths
+        if p.suffix in {".py", ".R"}
+        and p.relative_to(REPO_ROOT) not in skip
+    ]
 
 
 def assert_source_run_time_for_fallback_tier(
@@ -409,3 +448,22 @@ def assert_source_run_time_for_fallback_tier(
         assert row["source_run_time"] == iso
         view = pr11_zarr_step_view(row)
         assert view["source_run_time"] == row["source_run_time"]
+
+
+_PR5_FORBIDDEN_QC_TOKENS = ("nan_fraction", "run_cycle_qc")
+
+
+def assert_pr5_independent_of_run_cycle_qc() -> None:
+    """#5 prediction must not read ``run_cycle_qc`` missing-share / ``nan_fraction`` (PR #11 mask fix)."""
+    hits: list[str] = []
+    for path in pr5_models_paths():
+        text = path.read_text(encoding="utf-8")
+        rel = path.relative_to(REPO_ROOT)
+        for token in _PR5_FORBIDDEN_QC_TOKENS:
+            if token in text:
+                hits.append(f"{rel}: contains {token!r}")
+    if hits:
+        raise AssertionError(
+            "#5 models/R must not depend on run_cycle_qc missing-share output; "
+            + "; ".join(sorted(hits))
+        )

@@ -1,8 +1,8 @@
 {
-  "pr11_commit": "42261b4d3b07522ff6cb30dec4f70225eaa715cb",
-  "pr11_commit_short": "42261b4",
+  "pr11_commit": "f71dca994377bd773eaef2945b00a1feeea25d22",
+  "pr11_commit_short": "f71dca9",
   "pr11_pull": "https://github.com/wijeratne-a/fishai/pull/11",
-  "note": "SYNTHETIC PR #11 42261b4 contract fixture for PR #5 tests; not production Zarr.",
+  "note": "SYNTHETIC PR #11 f71dca9 contract fixture for PR #5 tests; not production Zarr.",
   "valid_offset_h_timeline": [
     -21,
     -18,
@@ -41,8 +41,8 @@
     {
       "name": "normal_primary_cycle",
       "target_date": "2026-09-28",
-      "pr11_commit": "42261b4d3b07522ff6cb30dec4f70225eaa715cb",
-      "pr11_commit_short": "42261b4",
+      "pr11_commit": "f71dca994377bd773eaef2945b00a1feeea25d22",
+      "pr11_commit_short": "f71dca9",
       "pr11_pull": "https://github.com/wijeratne-a/fishai/pull/11",
       "zarr_steps": [
         {
@@ -183,8 +183,8 @@
     {
       "name": "r1_fallback_previous_cycle",
       "target_date": "2026-09-28",
-      "pr11_commit": "42261b4d3b07522ff6cb30dec4f70225eaa715cb",
-      "pr11_commit_short": "42261b4",
+      "pr11_commit": "f71dca994377bd773eaef2945b00a1feeea25d22",
+      "pr11_commit_short": "f71dca9",
       "pr11_pull": "https://github.com/wijeratne-a/fishai/pull/11",
       "zarr_steps": [
         {
@@ -311,8 +311,8 @@
     {
       "name": "r2_fallback_offsets_beyond_24_unknown",
       "target_date": "2026-09-28",
-      "pr11_commit": "42261b4d3b07522ff6cb30dec4f70225eaa715cb",
-      "pr11_commit_short": "42261b4",
+      "pr11_commit": "f71dca994377bd773eaef2945b00a1feeea25d22",
+      "pr11_commit_short": "f71dca9",
       "pr11_pull": "https://github.com/wijeratne-a/fishai/pull/11",
       "zarr_steps": [
         {
@@ -542,6 +542,20 @@
       ],
       "zarr_absent_offsets": [
         27,
+        30,
+        33,
+        36,
+        39,
+        42,
+        45,
+        48,
+        51,
+        54,
+        57,
+        60,
+        63,
+        66,
+        69,
         72
       ],
       "pull_log_unknown": [
@@ -549,6 +563,118 @@
           "valid_offset_h": 27,
           "requested_cycle_time": "2026-09-28T03:00:00+00:00",
           "valid_time": "2026-09-29T06:00:00+00:00",
+          "state": "UNKNOWN",
+          "reason": "missing_operational_cycle",
+          "evidence_state_hint": "UNKNOWN"
+        },
+        {
+          "valid_offset_h": 30,
+          "requested_cycle_time": "2026-09-28T03:00:00+00:00",
+          "valid_time": "2026-09-29T09:00:00+00:00",
+          "state": "UNKNOWN",
+          "reason": "missing_operational_cycle",
+          "evidence_state_hint": "UNKNOWN"
+        },
+        {
+          "valid_offset_h": 33,
+          "requested_cycle_time": "2026-09-28T03:00:00+00:00",
+          "valid_time": "2026-09-29T12:00:00+00:00",
+          "state": "UNKNOWN",
+          "reason": "missing_operational_cycle",
+          "evidence_state_hint": "UNKNOWN"
+        },
+        {
+          "valid_offset_h": 36,
+          "requested_cycle_time": "2026-09-28T03:00:00+00:00",
+          "valid_time": "2026-09-29T15:00:00+00:00",
+          "state": "UNKNOWN",
+          "reason": "missing_operational_cycle",
+          "evidence_state_hint": "UNKNOWN"
+        },
+        {
+          "valid_offset_h": 39,
+          "requested_cycle_time": "2026-09-28T03:00:00+00:00",
+          "valid_time": "2026-09-29T18:00:00+00:00",
+          "state": "UNKNOWN",
+          "reason": "missing_operational_cycle",
+          "evidence_state_hint": "UNKNOWN"
+        },
+        {
+          "valid_offset_h": 42,
+          "requested_cycle_time": "2026-09-28T03:00:00+00:00",
+          "valid_time": "2026-09-29T21:00:00+00:00",
+          "state": "UNKNOWN",
+          "reason": "missing_operational_cycle",
+          "evidence_state_hint": "UNKNOWN"
+        },
+        {
+          "valid_offset_h": 45,
+          "requested_cycle_time": "2026-09-28T03:00:00+00:00",
+          "valid_time": "2026-09-30T00:00:00+00:00",
+          "state": "UNKNOWN",
+          "reason": "missing_operational_cycle",
+          "evidence_state_hint": "UNKNOWN"
+        },
+        {
+          "valid_offset_h": 48,
+          "requested_cycle_time": "2026-09-28T03:00:00+00:00",
+          "valid_time": "2026-09-30T03:00:00+00:00",
+          "state": "UNKNOWN",
+          "reason": "missing_operational_cycle",
+          "evidence_state_hint": "UNKNOWN"
+        },
+        {
+          "valid_offset_h": 51,
+          "requested_cycle_time": "2026-09-28T03:00:00+00:00",
+          "valid_time": "2026-09-30T06:00:00+00:00",
+          "state": "UNKNOWN",
+          "reason": "missing_operational_cycle",
+          "evidence_state_hint": "UNKNOWN"
+        },
+        {
+          "valid_offset_h": 54,
+          "requested_cycle_time": "2026-09-28T03:00:00+00:00",
+          "valid_time": "2026-09-30T09:00:00+00:00",
+          "state": "UNKNOWN",
+          "reason": "missing_operational_cycle",
+          "evidence_state_hint": "UNKNOWN"
+        },
+        {
+          "valid_offset_h": 57,
+          "requested_cycle_time": "2026-09-28T03:00:00+00:00",
+          "valid_time": "2026-09-30T12:00:00+00:00",
+          "state": "UNKNOWN",
+          "reason": "missing_operational_cycle",
+          "evidence_state_hint": "UNKNOWN"
+        },
+        {
+          "valid_offset_h": 60,
+          "requested_cycle_time": "2026-09-28T03:00:00+00:00",
+          "valid_time": "2026-09-30T15:00:00+00:00",
+          "state": "UNKNOWN",
+          "reason": "missing_operational_cycle",
+          "evidence_state_hint": "UNKNOWN"
+        },
+        {
+          "valid_offset_h": 63,
+          "requested_cycle_time": "2026-09-28T03:00:00+00:00",
+          "valid_time": "2026-09-30T18:00:00+00:00",
+          "state": "UNKNOWN",
+          "reason": "missing_operational_cycle",
+          "evidence_state_hint": "UNKNOWN"
+        },
+        {
+          "valid_offset_h": 66,
+          "requested_cycle_time": "2026-09-28T03:00:00+00:00",
+          "valid_time": "2026-09-30T21:00:00+00:00",
+          "state": "UNKNOWN",
+          "reason": "missing_operational_cycle",
+          "evidence_state_hint": "UNKNOWN"
+        },
+        {
+          "valid_offset_h": 69,
+          "requested_cycle_time": "2026-09-28T03:00:00+00:00",
+          "valid_time": "2026-10-01T00:00:00+00:00",
           "state": "UNKNOWN",
           "reason": "missing_operational_cycle",
           "evidence_state_hint": "UNKNOWN"
@@ -716,6 +842,132 @@
           "fallback_used": false,
           "valid_time": "2026-09-29T06:00:00+00:00"
         },
+        "30": {
+          "evidence_state": "UNKNOWN",
+          "lead_days": 0,
+          "unknown_reason": "missing_operational_cycle",
+          "source_run_time": null,
+          "forecast_age_hours": null,
+          "fallback_used": false,
+          "valid_time": "2026-09-29T09:00:00+00:00"
+        },
+        "33": {
+          "evidence_state": "UNKNOWN",
+          "lead_days": 0,
+          "unknown_reason": "missing_operational_cycle",
+          "source_run_time": null,
+          "forecast_age_hours": null,
+          "fallback_used": false,
+          "valid_time": "2026-09-29T12:00:00+00:00"
+        },
+        "36": {
+          "evidence_state": "UNKNOWN",
+          "lead_days": 0,
+          "unknown_reason": "missing_operational_cycle",
+          "source_run_time": null,
+          "forecast_age_hours": null,
+          "fallback_used": false,
+          "valid_time": "2026-09-29T15:00:00+00:00"
+        },
+        "39": {
+          "evidence_state": "UNKNOWN",
+          "lead_days": 0,
+          "unknown_reason": "missing_operational_cycle",
+          "source_run_time": null,
+          "forecast_age_hours": null,
+          "fallback_used": false,
+          "valid_time": "2026-09-29T18:00:00+00:00"
+        },
+        "42": {
+          "evidence_state": "UNKNOWN",
+          "lead_days": 0,
+          "unknown_reason": "missing_operational_cycle",
+          "source_run_time": null,
+          "forecast_age_hours": null,
+          "fallback_used": false,
+          "valid_time": "2026-09-29T21:00:00+00:00"
+        },
+        "45": {
+          "evidence_state": "UNKNOWN",
+          "lead_days": 0,
+          "unknown_reason": "missing_operational_cycle",
+          "source_run_time": null,
+          "forecast_age_hours": null,
+          "fallback_used": false,
+          "valid_time": "2026-09-30T00:00:00+00:00"
+        },
+        "48": {
+          "evidence_state": "UNKNOWN",
+          "lead_days": 0,
+          "unknown_reason": "missing_operational_cycle",
+          "source_run_time": null,
+          "forecast_age_hours": null,
+          "fallback_used": false,
+          "valid_time": "2026-09-30T03:00:00+00:00"
+        },
+        "51": {
+          "evidence_state": "UNKNOWN",
+          "lead_days": 0,
+          "unknown_reason": "missing_operational_cycle",
+          "source_run_time": null,
+          "forecast_age_hours": null,
+          "fallback_used": false,
+          "valid_time": "2026-09-30T06:00:00+00:00"
+        },
+        "54": {
+          "evidence_state": "UNKNOWN",
+          "lead_days": 0,
+          "unknown_reason": "missing_operational_cycle",
+          "source_run_time": null,
+          "forecast_age_hours": null,
+          "fallback_used": false,
+          "valid_time": "2026-09-30T09:00:00+00:00"
+        },
+        "57": {
+          "evidence_state": "UNKNOWN",
+          "lead_days": 0,
+          "unknown_reason": "missing_operational_cycle",
+          "source_run_time": null,
+          "forecast_age_hours": null,
+          "fallback_used": false,
+          "valid_time": "2026-09-30T12:00:00+00:00"
+        },
+        "60": {
+          "evidence_state": "UNKNOWN",
+          "lead_days": 0,
+          "unknown_reason": "missing_operational_cycle",
+          "source_run_time": null,
+          "forecast_age_hours": null,
+          "fallback_used": false,
+          "valid_time": "2026-09-30T15:00:00+00:00"
+        },
+        "63": {
+          "evidence_state": "UNKNOWN",
+          "lead_days": 0,
+          "unknown_reason": "missing_operational_cycle",
+          "source_run_time": null,
+          "forecast_age_hours": null,
+          "fallback_used": false,
+          "valid_time": "2026-09-30T18:00:00+00:00"
+        },
+        "66": {
+          "evidence_state": "UNKNOWN",
+          "lead_days": 0,
+          "unknown_reason": "missing_operational_cycle",
+          "source_run_time": null,
+          "forecast_age_hours": null,
+          "fallback_used": false,
+          "valid_time": "2026-09-30T21:00:00+00:00"
+        },
+        "69": {
+          "evidence_state": "UNKNOWN",
+          "lead_days": 0,
+          "unknown_reason": "missing_operational_cycle",
+          "source_run_time": null,
+          "forecast_age_hours": null,
+          "fallback_used": false,
+          "valid_time": "2026-10-01T00:00:00+00:00"
+        },
         "72": {
           "evidence_state": "UNKNOWN",
           "lead_days": 0,
@@ -730,8 +982,8 @@
     {
       "name": "download_failed_absent_from_zarr",
       "target_date": "2026-09-28",
-      "pr11_commit": "42261b4d3b07522ff6cb30dec4f70225eaa715cb",
-      "pr11_commit_short": "42261b4",
+      "pr11_commit": "f71dca994377bd773eaef2945b00a1feeea25d22",
+      "pr11_commit_short": "f71dca9",
       "pr11_pull": "https://github.com/wijeratne-a/fishai/pull/11",
       "zarr_steps": [
         {
@@ -784,8 +1036,8 @@
     {
       "name": "valid_time_mismatch_absent_from_zarr",
       "target_date": "2026-09-28",
-      "pr11_commit": "42261b4d3b07522ff6cb30dec4f70225eaa715cb",
-      "pr11_commit_short": "42261b4",
+      "pr11_commit": "f71dca994377bd773eaef2945b00a1feeea25d22",
+      "pr11_commit_short": "f71dca9",
       "pr11_pull": "https://github.com/wijeratne-a/fishai/pull/11",
       "zarr_steps": [
         {
@@ -839,7 +1091,7 @@
   "schema_mismatch_report": [
     {
       "area": "pull_log_record_types",
-      "detail": "#5 adds day success/tombstone pull-log record types; PR #11 42261b4 pull log is step-centric only"
+      "detail": "#5 adds day success/tombstone pull-log record types; PR #11 f71dca9 pull log is step-centric only"
     },
     {
       "area": "zarr_field_names",
