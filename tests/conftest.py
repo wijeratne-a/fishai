@@ -45,13 +45,13 @@ def _tree_snapshot(root: Path) -> dict[str, tuple[int, int]]:
 @pytest.fixture(scope="session", autouse=True)
 def _offline_glorys_catalog_fixture() -> None:
     """In-process tests use the committed catalogue fixture unless a hook overrides it."""
-    fixture = REPO_ROOT / "src" / "models" / "tests" / "fixtures" / "glorys_catalog_fixture.json"
-    os.environ["FISHAI_GLORYS_CATALOG_FIXTURE"] = str(fixture)
+    fixture = REPO_ROOT / "src" / "models" / "tests" / "fixtures" / "glorys_pinned_catalog.json"
+    os.environ["FISHAI_GLORYS_PINNED_CATALOG_JSON"] = str(fixture)
     from fishai.ingestion.physics.glorys_catalog import clear_glorys_catalog_cache
 
     clear_glorys_catalog_cache()
     yield
-    os.environ.pop("FISHAI_GLORYS_CATALOG_FIXTURE", None)
+    os.environ.pop("FISHAI_GLORYS_PINNED_CATALOG_JSON", None)
 
 
 @pytest.fixture(scope="session", autouse=True)

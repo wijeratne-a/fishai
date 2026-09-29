@@ -1,9 +1,9 @@
-#' Point the Python catalogue resolver at the committed fixture.
+#' Point the Python catalogue resolver at the committed pinned catalogue.
 #'
-#' Production runs leave ``FISHAI_GLORYS_CATALOG_FIXTURE`` unset and resolve
-#' against the live Copernicus catalogue, fail-closed. Test and dry-run
-#' entry points call this so R ``system2(python3)`` lookups do not depend
-#' on catalogue availability.
+#' Production CLIs do not call this. They leave
+#' ``FISHAI_GLORYS_PINNED_CATALOG_JSON`` unset and resolve against the live
+#' Copernicus catalogue, fail-closed. Test and dry-run entry points call
+#' this so R ``system2(python3)`` lookups do not depend on catalogue availability.
 .use_glorys_catalog_fixture <- function(root = Sys.getenv("FISHAI_ROOT", unset = normalizePath(getwd()))) {
   fixture <- file.path(
     root,
@@ -11,13 +11,13 @@
     "models",
     "tests",
     "fixtures",
-    "glorys_catalog_fixture.json"
+    "glorys_pinned_catalog.json"
   )
   if (!file.exists(fixture)) {
     stop("missing GLORYS catalogue fixture at ", fixture, call. = FALSE)
   }
-  Sys.setenv(FISHAI_GLORYS_CATALOG_FIXTURE = normalizePath(fixture, mustWork = TRUE))
-  invisible(Sys.getenv("FISHAI_GLORYS_CATALOG_FIXTURE"))
+  Sys.setenv(FISHAI_GLORYS_PINNED_CATALOG_JSON = normalizePath(fixture, mustWork = TRUE))
+  invisible(Sys.getenv("FISHAI_GLORYS_PINNED_CATALOG_JSON"))
 }
 
 #' Expected GLORYS Copernicus product id for a calendar day (via Python ``glorys_product_for_date``).

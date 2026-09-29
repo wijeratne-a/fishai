@@ -78,7 +78,7 @@ class GlorysDatasetResolution:
 
 _catalog_cache: list[GlorysCatalogEntry] | None = None
 _catalog_fetch_hook: Callable[[], list[GlorysCatalogEntry]] | None = None
-FIXTURE_ENV = "FISHAI_GLORYS_CATALOG_FIXTURE"
+PINNED_CATALOG_ENV = "FISHAI_GLORYS_PINNED_CATALOG_JSON"
 
 
 def clear_glorys_catalog_cache() -> None:
@@ -220,51 +220,85 @@ def _fetch_catalog_entries_live() -> list[GlorysCatalogEntry]:
     return entries
 
 
-def entries_from_catalog_fixture(path: Path) -> list[GlorysCatalogEntry]:
-    """Load catalogue entries from a local JSON fixture. Never contacts the network."""
-    try:
-        payload = json.loads(path.read_text(encoding="utf-8"))
-    except (OSError, json.JSONDecodeError) as exc:
-        raise GlorysCatalogError(
-            _REASON_CATALOG_UNREACHABLE,
-            f"glorys: catalogue fixture unreadable ({exc})",
-        ) from exc
+def _catalog_entries_from_json_payload(payload: object) -> list[GlorysCatalogEntry]:
     if not isinstance(payload, list):
         raise GlorysCatalogError(
-            _REASON_CATALOG_UNREACHABLE,
-            "glorys: catalogue fixture must be a JSON list",
+            _REASON_GLORYS_DATASET_NOT_IN_CATALOG,
+            "glorys: pinned catalogue JSON must be a list of entries",
         )
     entries: list[GlorysCatalogEntry] = []
     for item in payload:
         if not isinstance(item, dict):
             raise GlorysCatalogError(
-                _REASON_CATALOG_UNREACHABLE,
-                "glorys: catalogue fixture entry must be an object",
+                _REASON_GLORYS_DATASET_NOT_IN_CATALOG,
+                "glorys: pinned catalogue entry must be an object",
             )
-        try:
-            entries.append(
-                GlorysCatalogEntry(
-                    dataset_id=str(item["dataset_id"]),
-                    dataset_version=str(item["dataset_version"]),
-                    coverage_start=_parse_iso_date(str(item["coverage_start"])),
-                    coverage_end=_parse_iso_date(str(item["coverage_end"])),
-                )
+        raw_id = item.get("dataset_id")
+        raw_version = item.get("dataset_version")
+        start_raw = item.get("coverage_start")
+        end_raw = item.get("coverage_end")
+        dataset_id = "" if raw_id is None else str(raw_id).strip()
+        version = "" if raw_version is None else str(raw_version).strip()
+        missing = [
+            name
+            for name, present in (
+                ("dataset_id", bool(dataset_id)),
+                ("dataset_version", bool(version)),
+                ("coverage_start", start_raw is not None),
+                ("coverage_end", end_raw is not None),
             )
-        except (KeyError, TypeError, ValueError) as exc:
+            if not present
+        ]
+        if missing:
             raise GlorysCatalogError(
-                _REASON_CATALOG_UNREACHABLE,
-                f"glorys: catalogue fixture entry invalid ({exc})",
-            ) from exc
+                _REASON_GLORYS_DATASET_NOT_IN_CATALOG,
+                "glorys: pinned catalogue entry missing required fields",
+            )
+        entries.append(
+            GlorysCatalogEntry(
+                dataset_id=dataset_id,
+                dataset_version=version,
+                coverage_start=_parse_iso_date(str(start_raw)),
+                coverage_end=_parse_iso_date(str(end_raw)),
+            )
+        )
+    return entries
+
+
+def _load_catalog_entries_from_pinned_env() -> list[GlorysCatalogEntry] | None:
+    """Test/CI seam: ``FISHAI_GLORYS_PINNED_CATALOG_JSON`` points at a local entry list."""
+    raw = os.environ.get(PINNED_CATALOG_ENV, "").strip()
+    if not raw:
+        return None
+    path = Path(raw)
+    if not path.is_file():
+        raise GlorysCatalogError(
+            _REASON_GLORYS_DATASET_NOT_IN_CATALOG,
+            f"glorys: pinned catalogue file not found: {path}",
+        )
+    try:
+        payload = json.loads(path.read_text(encoding="utf-8"))
+    except json.JSONDecodeError as exc:
+        raise GlorysCatalogError(
+            _REASON_GLORYS_DATASET_NOT_IN_CATALOG,
+            f"glorys: pinned catalogue JSON is unreadable ({exc})",
+        ) from exc
+    entries = _catalog_entries_from_json_payload(payload)
+    if not entries:
+        raise GlorysCatalogError(
+            _REASON_GLORYS_DATASET_NOT_IN_CATALOG,
+            "glorys: pinned catalogue JSON is empty",
+        )
     return entries
 
 
 def load_catalog_entries() -> list[GlorysCatalogEntry]:
     """Return cached GLORYS catalogue entries (at most one live fetch per run).
 
-    An in-process hook wins. Otherwise ``FISHAI_GLORYS_CATALOG_FIXTURE``, when
-    set, is a test seam: that JSON file is the whole catalogue and the live
-    Copernicus endpoint is not called. Production leaves the variable unset
-    and fails closed when the live catalogue is unreachable.
+    An in-process hook wins. Otherwise ``FISHAI_GLORYS_PINNED_CATALOG_JSON``,
+    when set, is a test seam and the live Copernicus endpoint is not called.
+    Production leaves the variable unset and fails closed when the live
+    catalogue is unreachable.
     """
     global _catalog_cache
     if _catalog_cache is not None:
@@ -277,14 +311,9 @@ def load_catalog_entries() -> list[GlorysCatalogEntry]:
                 "glorys: no GLORYS candidate datasets found in the live catalogue",
             )
         return _catalog_cache
-    fixture = os.environ.get(FIXTURE_ENV, "").strip()
-    if fixture:
-        _catalog_cache = entries_from_catalog_fixture(Path(fixture))
-        if not _catalog_cache:
-            raise GlorysCatalogError(
-                _REASON_GLORYS_DATASET_NOT_IN_CATALOG,
-                "glorys: no GLORYS candidate datasets found in the catalogue fixture",
-            )
+    pinned = _load_catalog_entries_from_pinned_env()
+    if pinned is not None:
+        _catalog_cache = pinned
         return _catalog_cache
     _catalog_cache = _fetch_catalog_entries_live()
     return _catalog_cache

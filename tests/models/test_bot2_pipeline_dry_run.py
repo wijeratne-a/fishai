@@ -105,8 +105,8 @@ def test_cufes_pipeline_dry_run_stages(tmp_path: Path, species: str) -> None:
             **os.environ,
             "FISHAI_ROOT": str(REPO),
             "RENV_PATHS_LIBRARY": str(REPO / "renv" / "library"),
-            "FISHAI_GLORYS_CATALOG_FIXTURE": str(
-                REPO / "src" / "models" / "tests" / "fixtures" / "glorys_catalog_fixture.json"
+            "FISHAI_GLORYS_PINNED_CATALOG_JSON": str(
+                REPO / "src" / "models" / "tests" / "fixtures" / "glorys_pinned_catalog.json"
             ),
         },
         capture_output=True,
