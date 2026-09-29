@@ -76,3 +76,17 @@ Leave-future-out CV trains on the fit window and scores holdout **event dates** 
 ### Barrier mesh
 
 Pilot production configs set ``mesh.barrier.enabled: true`` with ``range_fraction: 0.1`` (Bakka land barrier; see ``add_barrier_land()``). Land polygons are loaded from ``mesh.barrier.land_sf_rds``.
+
+Training and every spatial-CV fold mesh are built by ``build_fishai_production_mesh()``: plain mesh, then ``add_barrier_land()`` with the configured ``range_fraction``, then ``check_barrier()``. Barrier enabled requires a readable land polygon and non-empty barrier triangles; otherwise ``run_cv_spatial()`` stops. With the barrier disabled, fold meshes stay plain.
+
+### Time index
+
+``time_idx`` (days since ``data.time_idx_origin``, plus 1) is derived from event time with one fixed origin from the model config (frozen in the artifact config). It never depends on the earliest event in a frame, so fit, test, and all scopes give identical indices for identical timestamps. A missing or invalid origin, or an event before it, stops loading.
+
+### Pilot covariates (upwelling)
+
+Upwelling is removed from the sardine and anchovy pilot covariates and formulas; see ``prereg/pilot_model_upwelling_amendment.md``.
+
+### Out-of-domain and DEGRADED output
+
+Mahalanobis novelty is judged against distances of the frozen reference rows (0.99 quantile), never the prediction grid's own distribution. Cells with ``ood_level >= 2`` are ``UNKNOWN``. ``DEGRADED`` keeps ``UNKNOWN`` cells and their reasons, leaves ``p_encounter`` unchanged, and widens only ``p_lo90`` and ``p_hi90`` around it by ``prediction.interval_widen`` (>= 1).

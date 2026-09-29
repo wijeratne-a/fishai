@@ -7,12 +7,7 @@ load_fishaisdm(root)
 parsed <- .parse_model_cli_args(commandArgs(trailingOnly = TRUE))
 cfg <- load_config_yaml(parsed$config)
 dat <- load_model_data(cfg = cfg)
-mesh <- build_fishai_mesh(dat, cfg$mesh)
-if (isTRUE(cfg$mesh$barrier$enabled)) {
-  land_sf <- readRDS(cfg$mesh$barrier$land_sf_rds)
-  mesh <- add_barrier_land(mesh, land_sf, range_fraction = cfg$mesh$barrier$range_fraction %||% 0.1)
-  check_barrier(mesh, dat, land_sf = land_sf)
-}
+mesh <- build_fishai_production_mesh(dat, cfg$mesh)
 fit <- fit_delta_engine(dat, mesh, cfg)
 out_dir <- cfg$output$dir %||% "artifacts/models"
 dir.create(out_dir, recursive = TRUE, showWarnings = FALSE)

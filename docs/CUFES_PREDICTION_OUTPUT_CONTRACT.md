@@ -29,7 +29,7 @@ Each output row is keyed by **`cell_id`**, **`species`**, and **`valid_day`** (I
 | `HINDCAST_GLORYS` | Training or held-out scoring with audited GLORYS training covariates |
 | `NOWCAST_UNVALIDATED` | Operational grid with current forcing, not yet validated against Tier-1 outcomes |
 | `FORECAST` | Operational grid using forecast-cycle physics (`lead_days` 1–3) |
-| `DEGRADED` | Physics cycle degraded; intervals widened per config |
+| `DEGRADED` | Physics cycle degraded; bounds widened per config around an unchanged `p_encounter`; `UNKNOWN` cells stay `UNKNOWN` |
 | `UNKNOWN` | No interpretable egg encounter probability (OOD ≥ 2, coverage blanking, or physics FAIL) |
 
 ## Dry run marking

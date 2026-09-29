@@ -73,10 +73,6 @@ test_that("spatial CV output includes fold table and block metadata", {
   )
   expect_gte(cv$spatial_block_cv$block_size_km, cv$spatial_block_cv$spatial_range_km)
   expect_equal(cv$spatial_block_cv$block_size_km, max(cfg$mesh$cutoff_km, cfg$mesh$range_guess_km))
-  expect_true("mesh_spatial_scale" %in% names(cv))
-  ms <- cv$mesh_spatial_scale
-  expect_true(is.finite(ms$water_triangle_edge_km$median_km))
-  expect_true(is.na(ms$fitted_spatial_range_km))
 })
 
 test_that("spatial CV shares identical folds across species on the same events", {
@@ -183,4 +179,88 @@ test_that("run_cv_spatial refuses fold ids that are not the assignment", {
     "fold_ids do not match the assigned fold_id",
     fixed = TRUE
   )
+})
+
+.capture_cv_fold_meshes <- function(cfg, dat) {
+  meshes <- list()
+  real_fit <- get("fit_delta_engine", envir = globalenv())
+  assign(
+    "fit_delta_engine",
+    function(dat, mesh, cfg) {
+      meshes[[length(meshes) + 1L]] <<- mesh
+      real_fit(dat, mesh, cfg)
+    },
+    envir = globalenv()
+  )
+  on.exit(assign("fit_delta_engine", real_fit, envir = globalenv()), add = TRUE)
+  cv <- run_cv_spatial(dat, NULL, cfg, dat$fold_id)
+  list(cv = cv, meshes = meshes)
+}
+
+test_that("spatial CV fold meshes use the production Bakka barrier and range", {
+  cfg <- load_sardine_test_cfg(intercept_only = TRUE)
+  expect_true(isTRUE(cfg$mesh$barrier$enabled))
+  dat <- load_model_data(cfg = cfg)
+  res <- .capture_cv_fold_meshes(cfg, dat)
+  expect_gt(length(res$meshes), 0L)
+  for (m in res$meshes) {
+    expect_gt(length(m$barrier_triangles), 0L)
+    expect_equal(m$barrier_scaling[2], cfg$mesh$barrier$range_fraction)
+  }
+  prod_mesh <- build_fishai_production_mesh(dat, cfg$mesh)
+  expect_gt(length(prod_mesh$barrier_triangles), 0L)
+  expect_equal(prod_mesh$barrier_scaling, res$meshes[[1L]]$barrier_scaling)
+})
+
+test_that("spatial CV with the barrier disabled keeps plain fold meshes", {
+  cfg <- load_sardine_test_cfg(intercept_only = TRUE)
+  cfg$mesh$barrier$enabled <- FALSE
+  cfg$mesh$barrier$land_sf_rds <- file.path(tempdir(), "does-not-exist.rds")
+  dat <- load_model_data(cfg = cfg)
+  res <- .capture_cv_fold_meshes(cfg, dat)
+  expect_gt(length(res$meshes), 0L)
+  for (m in res$meshes) {
+    expect_null(m$barrier_triangles)
+  }
+  expect_equal(res$cv$n_failed_folds, 0L)
+})
+
+test_that("spatial CV with the barrier enabled fails closed on unusable land input", {
+  cfg <- load_sardine_test_cfg(intercept_only = TRUE)
+  dat <- load_model_data(cfg = cfg)
+
+  cfg_missing <- cfg
+  cfg_missing$mesh$barrier$land_sf_rds <- file.path(tempdir(), "missing-land.rds")
+  expect_error(run_cv_spatial(dat, NULL, cfg_missing, dat$fold_id), "land_sf_rds not found")
+
+  cfg_unset <- cfg
+  cfg_unset$mesh$barrier$land_sf_rds <- NULL
+  expect_error(run_cv_spatial(dat, NULL, cfg_unset, dat$fold_id), "land_sf_rds")
+
+  bad_rds <- tempfile(fileext = ".rds")
+  saveRDS(list(not = "sf"), bad_rds)
+  cfg_bad <- cfg
+  cfg_bad$mesh$barrier$land_sf_rds <- bad_rds
+  expect_error(run_cv_spatial(dat, NULL, cfg_bad, dat$fold_id), "sf land polygon")
+})
+
+test_that("spatial CV with the barrier enabled fails closed on empty barrier triangles", {
+  cfg <- load_sardine_test_cfg(intercept_only = TRUE)
+  dat <- load_model_data(cfg = cfg)
+  far <- sf::st_sf(
+    geometry = sf::st_sfc(
+      sf::st_polygon(list(rbind(
+        c(9e6, 9e6),
+        c(9.1e6, 9e6),
+        c(9.1e6, 9.1e6),
+        c(9e6, 9.1e6),
+        c(9e6, 9e6)
+      ))),
+      crs = 32611
+    )
+  )
+  far_rds <- tempfile(fileext = ".rds")
+  saveRDS(far, far_rds)
+  cfg$mesh$barrier$land_sf_rds <- far_rds
+  expect_error(run_cv_spatial(dat, NULL, cfg, dat$fold_id), "barrier")
 })

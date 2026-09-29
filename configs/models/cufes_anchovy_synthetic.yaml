@@ -24,6 +24,7 @@ fishai_engine_config:
     covariates_path: src/models/tests/fixtures/synthetic_cufes_covariates.csv
     covariate_drops_path: src/models/tests/fixtures/synthetic_covariate_drops.csv
     covariate_drop_summary_path: src/models/tests/fixtures/synthetic_covariate_drop_summary.json
+    time_idx_origin: "1990-01-01"
     source_id: calcofi_cufes
     spatial_block_cv:
       n_folds: 4

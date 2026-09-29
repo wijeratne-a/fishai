@@ -64,6 +64,46 @@ check_barrier <- function(bmesh, obs, land_sf = NULL) {
   invisible(TRUE)
 }
 
+#' Read the configured barrier land polygon; fail closed when it is unusable.
+.read_barrier_land <- function(mesh_cfg) {
+  path <- mesh_cfg$barrier$land_sf_rds
+  if (is.null(path) || length(path) != 1L || is.na(path) || !nzchar(path)) {
+    stop("mesh.barrier.enabled requires mesh.barrier.land_sf_rds", call. = FALSE)
+  }
+  if (!file.exists(path)) {
+    stop("mesh.barrier.land_sf_rds not found: ", path, call. = FALSE)
+  }
+  land_sf <- readRDS(path)
+  if (!inherits(land_sf, c("sf", "sfc")) || length(sf::st_geometry(land_sf)) == 0L) {
+    stop("mesh.barrier.land_sf_rds must hold a non-empty sf land polygon: ", path, call. = FALSE)
+  }
+  land_sf
+}
+
+#' Production mesh: plain mesh, plus Bakka land barrier and QA when enabled.
+#'
+#' Training and every spatial-CV fold mesh use this one path. Barrier enabled
+#' requires a valid land polygon and non-empty barrier triangles
+#' ([check_barrier()]); anything else is an error. Barrier disabled returns the
+#' plain mesh.
+#' @param dat Data with X, Y in km.
+#' @param mesh_cfg ``cfg$mesh`` block.
+#' @export
+build_fishai_production_mesh <- function(dat, mesh_cfg) {
+  mesh <- build_fishai_mesh(dat, mesh_cfg)
+  if (!isTRUE(mesh_cfg$barrier$enabled)) {
+    return(mesh)
+  }
+  land_sf <- .read_barrier_land(mesh_cfg)
+  mesh <- add_barrier_land(
+    mesh,
+    land_sf,
+    range_fraction = mesh_cfg$barrier$range_fraction %||% 0.1
+  )
+  check_barrier(mesh, dat, land_sf = land_sf)
+  mesh
+}
+
 #' Ratio of approximate correlation across land vs through water at equal distance.
 #' @export
 barrier_correlation_ratio <- function(bmesh, pt_a, pt_b_land, pt_b_water) {
@@ -77,94 +117,4 @@ barrier_correlation_ratio <- function(bmesh, pt_a, pt_b_land, pt_b_water) {
   cor_land <- exp(-d_land / (20 * rf))
   cor_water <- exp(-d_water / 20)
   cor_land / cor_water
-}
-
-.summarize_edge_lengths_km <- function(x) {
-  if (!length(x)) {
-    return(list(min_km = NA_real_, median_km = NA_real_, max_km = NA_real_, n = 0L))
-  }
-  list(
-    min_km = min(x),
-    median_km = stats::median(x),
-    max_km = max(x),
-    n = length(x)
-  )
-}
-
-.triangle_edge_lengths_km <- function(mesh_obj, triangle_idx = NULL) {
-  fm <- mesh_obj$mesh
-  tv <- fm$graph$tv
-  loc <- fm$loc[, 1:2, drop = FALSE]
-  if (is.null(triangle_idx)) {
-    triangle_idx <- seq_len(nrow(tv))
-  }
-  triangle_idx <- as.integer(triangle_idx)
-  triangle_idx <- triangle_idx[triangle_idx >= 1L & triangle_idx <= nrow(tv)]
-  if (!length(triangle_idx)) {
-    return(numeric())
-  }
-  lengths_km <- vapply(
-    triangle_idx,
-    function(tri) {
-      v <- as.integer(tv[tri, ])
-      p <- loc[v, , drop = FALSE]
-      sqrt(rowSums((p[c(2L, 3L, 1L), , drop = FALSE] - p)^2))
-    },
-    numeric(3)
-  )
-  as.numeric(lengths_km)
-}
-
-.fitted_spatial_range_km <- function(fishai_fit) {
-  if (is.null(fishai_fit)) {
-    return(NA_real_)
-  }
-  fit <- fishai_fit$fit
-  spatial <- fit$spatial
-  if (is.null(spatial) || all(spatial == "off")) {
-    return(NA_real_)
-  }
-  tp <- tryCatch(
-    sdmTMB::tidy(fit, effects = "ran_pars"),
-    error = function(e) NULL
-  )
-  if (is.null(tp) || !"term" %in% names(tp)) {
-    return(NA_real_)
-  }
-  idx <- tp$term == "range" & is.finite(tp$estimate)
-  if (!any(idx)) {
-    return(NA_real_)
-  }
-  as.numeric(tp$estimate[which(idx)[1L]])
-}
-
-#' Mesh triangle edge-length summary (km) with fitted Matérn range when available.
-#'
-#' Water vs barrier triangles are split using ``barrier_triangles`` when present.
-#' @param mesh sdmTMB mesh (optionally with barrier).
-#' @param fishai_fit Optional [fit_delta_engine()] result for fitted range (km).
-#' @export
-mesh_spatial_scale_report <- function(mesh, fishai_fit = NULL) {
-  if (is.null(mesh) || is.null(mesh$mesh) || is.null(mesh$mesh$graph$tv)) {
-    stop("mesh must be an sdmTMB mesh with triangle graph", call. = FALSE)
-  }
-  n_tri <- nrow(mesh$mesh$graph$tv)
-  barrier_idx <- mesh$barrier_triangles
-  if (is.null(barrier_idx) || !length(barrier_idx)) {
-    water_idx <- seq_len(n_tri)
-    barrier_idx <- integer()
-  } else {
-    barrier_idx <- unique(as.integer(barrier_idx))
-    barrier_idx <- barrier_idx[barrier_idx >= 1L & barrier_idx <= n_tri]
-    water_idx <- setdiff(seq_len(n_tri), barrier_idx)
-  }
-  list(
-    fitted_spatial_range_km = .fitted_spatial_range_km(fishai_fit),
-    water_triangle_edge_km = .summarize_edge_lengths_km(
-      .triangle_edge_lengths_km(mesh, water_idx)
-    ),
-    barrier_triangle_edge_km = .summarize_edge_lengths_km(
-      .triangle_edge_lengths_km(mesh, barrier_idx)
-    )
-  )
 }

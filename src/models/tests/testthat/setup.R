@@ -20,3 +20,4 @@
 
 FISHAI_REPO_TRACKED_BEFORE <- .fishai_tracked_repo_file_hashes()
 .use_glorys_catalog_fixture(FISHAI_ROOT)
+write_synthetic_land_barrier()

@@ -160,7 +160,9 @@ run_cv_spatial <- function(dat, mesh, cfg, fold_ids) {
   folds <- sort(unique(as.character(fold_assignment$fold_id)))
   fold_loglik <- stats::setNames(rep(NA_real_, length(folds)), folds)
   fold_failures <- list()
-  cv_fitted_range_km <- NA_real_
+  if (isTRUE(cfg$mesh$barrier$enabled)) {
+    .read_barrier_land(cfg$mesh)
+  }
 
   for (fold_id in folds) {
     train <- dat[as.character(dat$fold_id) != fold_id, , drop = FALSE]
@@ -171,7 +173,12 @@ run_cv_spatial <- function(dat, mesh, cfg, fold_ids) {
       message("CV fold ", fold_id, " failed: ", pre)
       next
     }
-    train_mesh <- build_fishai_mesh(train, cfg$mesh)
+    train_mesh <- tryCatch(
+      build_fishai_production_mesh(train, cfg$mesh),
+      error = function(e) {
+        stop("CV fold ", fold_id, " barrier mesh: ", conditionMessage(e), call. = FALSE)
+      }
+    )
     fit_res <- tryCatch(
       fit_delta_engine(train, train_mesh, cfg),
       error = function(e) {
@@ -189,9 +196,6 @@ run_cv_spatial <- function(dat, mesh, cfg, fold_ids) {
       fold_failures[[fold_id]] <- fit_reason
       message("CV fold ", fold_id, " failed: ", fit_reason)
       next
-    }
-    if (is.na(cv_fitted_range_km)) {
-      cv_fitted_range_km <- fit_res$mesh_spatial_scale$fitted_spatial_range_km %||% NA_real_
     }
     ll <- tryCatch(
       .cv_delta_holdout_loglik(fit_res, test, cfg),
@@ -222,9 +226,6 @@ run_cv_spatial <- function(dat, mesh, cfg, fold_ids) {
     )
   )
 
-  mesh_scale <- mesh_spatial_scale_report(mesh, fishai_fit = NULL)
-  mesh_scale$fitted_spatial_range_km <- cv_fitted_range_km
-
   structure(
     list(
       data = dat,
@@ -234,7 +235,6 @@ run_cv_spatial <- function(dat, mesh, cfg, fold_ids) {
       fold_failures = fold_failures,
       fold_assignment = fold_assignment,
       spatial_block_cv = spatial_meta,
-      mesh_spatial_scale = mesh_scale,
       elpd_eligible = is.null(inel),
       elpd_ineligible_reason = inel
     ),

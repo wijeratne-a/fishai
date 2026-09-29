@@ -98,14 +98,45 @@ convex_hull_flags <- function(pred, reference, pairs = list(c("sst_z", "sal_z"))
   flags
 }
 
-#' Classify OOD level 0-3 per spec defaults.
+#' Frozen Mahalanobis novelty threshold from reference (training) distances.
+#'
+#' The threshold is the 0.99 quantile of the reference rows' own distances to
+#' the reference mean and covariance. It never depends on the prediction grid.
 #' @export
-classify_ood_level <- function(mess, nt1, nt2, maha, hull_out, mess_mask_below = -20) {
+maha_reference_threshold <- function(maha_ref, prob = 0.99) {
+  maha_ref <- as.numeric(maha_ref)
+  if (!length(maha_ref) || any(!is.finite(maha_ref))) {
+    stop("frozen reference Mahalanobis distances must be non-empty and finite", call. = FALSE)
+  }
+  unname(stats::quantile(maha_ref, probs = prob, names = FALSE))
+}
+
+#' Classify OOD level 0-3 per spec defaults.
+#'
+#' Mahalanobis novelty is judged against ``maha_ref``: distances of the frozen
+#' training/reference rows, never the prediction grid's own distribution.
+#' Non-finite grid distances count as novel.
+#' @param maha_ref Frozen reference distances (see [maha_distance()] on the reference).
+#' @export
+classify_ood_level <- function(
+  mess,
+  nt1,
+  nt2,
+  maha,
+  hull_out,
+  mess_mask_below = -20,
+  maha_ref = NULL
+) {
+  if (is.null(maha_ref)) {
+    stop("maha_ref (frozen reference Mahalanobis distances) is required", call. = FALSE)
+  }
+  maha_threshold <- maha_reference_threshold(maha_ref)
   lvl <- rep(0L, length(mess))
   lvl[mess < 0 & mess >= mess_mask_below] <- 2L
   lvl[mess < mess_mask_below] <- 3L
   lvl[nt1 < 0] <- pmax(lvl[nt1 < 0], 2L)
-  caution <- (nt2 > 1) | hull_out | (maha > stats::quantile(maha, 0.99, na.rm = TRUE))
+  maha_novel <- !is.finite(maha) | (maha > maha_threshold) %in% TRUE
+  caution <- (nt2 > 1) %in% TRUE | hull_out %in% TRUE | maha_novel
   lvl[caution & lvl < 2L] <- 1L
   lvl
 }

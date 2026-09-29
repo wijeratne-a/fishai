@@ -114,12 +114,9 @@ predict_engine <- function(
     ex$nt2,
     maha,
     hull,
-    mess_mask_below = cfg$ood$mess_mask_below %||% -20
+    mess_mask_below = cfg$ood$mess_mask_below %||% -20,
+    maha_ref = maha_distance(ref[, cov_cols, drop = FALSE], ref[, cov_cols, drop = FALSE])
   )
-
-  if (toupper(physics_cycle) == "DEGRADED") {
-    # keep computed ood_level; handled after aggregation
-  }
 
   set.seed(seed)
   eta1_raw <- stats::predict(fit, newdata = grid, nsim = nsim, model = 1)
@@ -196,11 +193,17 @@ predict_engine <- function(
   }
 
   if (toupper(physics_cycle) == "DEGRADED") {
-    agg$evidence_state <- "DEGRADED"
+    issued <- agg$evidence_state != "UNKNOWN"
+    agg$evidence_state[issued] <- "DEGRADED"
     w <- pred_cfg$interval_widen %||% 1.25
-    agg$p_encounter <- pmin(1, agg$p_encounter * w)
-    agg$p_lo90 <- pmin(1, agg$p_lo90 * w)
-    agg$p_hi90 <- pmin(1, agg$p_hi90 * w)
+    if (length(w) != 1L || !is.finite(w) || w < 1) {
+      stop("prediction.interval_widen must be a finite number >= 1", call. = FALSE)
+    }
+    p_mean <- agg$p_encounter
+    lo <- agg$p_lo90
+    hi <- agg$p_hi90
+    agg$p_lo90[issued] <- pmin(lo, pmax(0, p_mean - w * (p_mean - lo)))[issued]
+    agg$p_hi90[issued] <- pmax(hi, pmin(1, p_mean + w * (hi - p_mean)))[issued]
   }
 
   if (!is.null(wcofs_prov$forecast_age_hours) && is.finite(wcofs_prov$forecast_age_hours)) {

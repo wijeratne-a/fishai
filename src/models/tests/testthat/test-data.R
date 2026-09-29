@@ -342,7 +342,7 @@ test_that("bot1 start_latitude columns are accepted on cufes_events", {
   )
   cfg <- list(
     species = list(taxon = "sardine"),
-    data = list(events_path = ev, counts_path = ct, covariates_path = cov),
+    data = list(events_path = ev, counts_path = ct, covariates_path = cov, time_idx_origin = "2019-01-01"),
     covariates = list(
       dynamic = c("temp_3m", "sal_3m", "mld", "sst_grad", "dist_front", "upwelling"),
       static = "log_depth"
@@ -390,4 +390,108 @@ test_that("empty covariate on non-excluded row stops with error", {
     response = list(column = "egg_count", effort_column = "volume_m3")
   )
   expect_error(load_model_data(cfg = cfg), "never impute or silently drop")
+})
+
+.time_idx_scope_cfg <- function(origin = "2019-01-01") {
+  ev <- tempfile(fileext = ".csv")
+  ct <- tempfile(fileext = ".csv")
+  cov <- tempfile(fileext = ".csv")
+  times <- c(
+    "2019-03-01T00:00:00Z",
+    "2020-06-15T12:00:00Z",
+    "2021-03-01T00:00:00Z",
+    "2022-01-10T23:59:00Z"
+  )
+  ids <- paste0("CUFES:T:AK:t", seq_along(times))
+  rows <- vapply(
+    seq_along(times),
+    function(i) {
+      paste(
+        ids[[i]], times[[i]], 33, -119, times[[i]], 33.01, -118.99, 10, 2, 5, "TRUE",
+        sep = ","
+      )
+    },
+    character(1)
+  )
+  writeLines(paste(c(cufes_events_csv_header(), rows), collapse = "\n"), ev)
+  writeLines(
+    paste(c("event_id,taxon,count", paste0(ids, ",sardine,", c(1, 0, 2, 0))), collapse = "\n"),
+    ct
+  )
+  writeLines(
+    paste(c(cufes_covariates_csv_header(), vapply(ids, cufes_covariate_row, character(1))), collapse = "\n"),
+    cov
+  )
+  cfg <- list(
+    species = list(taxon = "sardine"),
+    data = list(events_path = ev, counts_path = ct, covariates_path = cov),
+    covariates = list(
+      dynamic = c("temp_3m", "sal_3m", "mld", "sst_grad", "dist_front", "upwelling"),
+      static = "log_depth"
+    ),
+    response = list(column = "egg_count", effort_column = "volume_m3"),
+    egg_split = list(
+      fit_end = "2020-12-31",
+      test_start = "2021-01-01",
+      test_end = "2022-04-27"
+    )
+  )
+  if (!is.null(origin)) {
+    cfg$data$time_idx_origin <- origin
+  }
+  cfg
+}
+
+test_that("time_idx uses one fixed origin identically across fit, test, and all scopes", {
+  cfg <- .time_idx_scope_cfg()
+  fit <- load_model_data(cfg = cfg, egg_split_scope = "fit")
+  test <- load_model_data(cfg = cfg, egg_split_scope = "test")
+  all <- load_model_data(cfg = cfg, egg_split_scope = "all")
+  expect_equal(nrow(fit), 2L)
+  expect_equal(nrow(test), 2L)
+  expect_equal(nrow(all), 4L)
+  idx_all <- stats::setNames(all$time_idx, all$event_id)
+  expect_equal(stats::setNames(fit$time_idx, fit$event_id), idx_all[fit$event_id])
+  expect_equal(stats::setNames(test$time_idx, test$event_id), idx_all[test$event_id])
+  expect_equal(unname(idx_all[["CUFES:T:AK:t1"]]), 60L)
+  expect_gt(min(test$time_idx), max(fit$time_idx))
+  expect_false(min(test$time_idx) == 1L)
+})
+
+test_that("time_idx does not move when a different origin-free subset is loaded", {
+  cfg <- .time_idx_scope_cfg()
+  a <- load_model_data(cfg = cfg, egg_split_scope = "all")
+  cfg_b <- cfg
+  ev <- read.csv(cfg$data$events_path, stringsAsFactors = FALSE)
+  ev <- ev[ev$event_id != "CUFES:T:AK:t1", , drop = FALSE]
+  cov <- read.csv(cfg$data$covariates_path, stringsAsFactors = FALSE)
+  cov <- cov[cov$event_id != "CUFES:T:AK:t1", , drop = FALSE]
+  ev_path <- tempfile(fileext = ".csv")
+  cov_path <- tempfile(fileext = ".csv")
+  utils::write.csv(ev, ev_path, row.names = FALSE)
+  utils::write.csv(cov, cov_path, row.names = FALSE)
+  cfg_b$data$events_path <- ev_path
+  cfg_b$data$covariates_path <- cov_path
+  b <- load_model_data(cfg = cfg_b, egg_split_scope = "all")
+  idx_a <- stats::setNames(a$time_idx, a$event_id)
+  expect_equal(stats::setNames(b$time_idx, b$event_id), idx_a[b$event_id])
+})
+
+test_that("missing or invalid time_idx origin fails closed", {
+  expect_error(load_model_data(cfg = .time_idx_scope_cfg(origin = NULL)), "time_idx_origin")
+  expect_error(load_model_data(cfg = .time_idx_scope_cfg(origin = "")), "time_idx_origin")
+  expect_error(load_model_data(cfg = .time_idx_scope_cfg(origin = "not-a-date")), "time_idx_origin")
+  expect_error(load_model_data(cfg = .time_idx_scope_cfg(origin = "2019-13-40")), "time_idx_origin")
+  expect_error(
+    load_model_data(cfg = .time_idx_scope_cfg(origin = "2020-01-01")),
+    "precedes data.time_idx_origin"
+  )
+})
+
+test_that("pilot production configs fix a time_idx origin", {
+  for (sp in c("sardine", "anchovy")) {
+    raw <- yaml::read_yaml(file.path(FISHAI_ROOT, "configs", "models", paste0("cufes_", sp, ".yaml")))
+    cfg <- raw$fishai_engine_config
+    expect_false(is.na(.time_idx_origin_date(cfg)))
+  }
 })

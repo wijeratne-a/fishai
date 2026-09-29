@@ -158,7 +158,7 @@ load_model_data <- function(
   cov_prep <- .map_and_drop_covariates(dat, cfg)
   dat <- cov_prep$dat
   cfg <- cov_prep$cfg
-  dat <- .ensure_time_idx(dat)
+  dat <- .ensure_time_idx(dat, cfg)
 
   short_filt <- .apply_short_event_filter(dat, exclude_short_events)
   dat <- short_filt$dat
@@ -1062,18 +1062,48 @@ fishai_data_prep_qc <- function(dat) {
   list(dat = dat, cfg = cfg)
 }
 
-.ensure_time_idx <- function(dat) {
+.time_idx_origin_date <- function(cfg) {
+  raw <- cfg$data$time_idx_origin
+  if (is.null(raw) || length(raw) != 1L || is.na(raw) || !nzchar(trimws(as.character(raw)))) {
+    stop(
+      "data.time_idx_origin is required to derive time_idx from event time ",
+      "(one fixed ISO date shared by fit, test, and all scopes)",
+      call. = FALSE
+    )
+  }
+  txt <- trimws(as.character(raw))
+  origin <- if (grepl("^[0-9]{4}-[0-9]{2}-[0-9]{2}$", txt)) {
+    as.Date(txt, format = "%Y-%m-%d")
+  } else {
+    as.Date(NA)
+  }
+  if (is.na(origin)) {
+    stop("data.time_idx_origin must be a valid ISO date (YYYY-MM-DD), got: ", txt, call. = FALSE)
+  }
+  origin
+}
+
+.ensure_time_idx <- function(dat, cfg) {
   if ("time_idx" %in% names(dat)) {
     dat$time_idx <- as.integer(dat$time_idx)
     return(dat)
   }
   if ("time" %in% names(dat)) {
+    origin <- .time_idx_origin_date(cfg)
     tt <- as.POSIXct(dat$time, tz = "UTC")
-    if (all(is.na(tt))) {
+    if (any(is.na(tt))) {
       stop("could not parse event time for time_idx", call. = FALSE)
     }
-    origin <- min(tt, na.rm = TRUE)
-    dat$time_idx <- as.integer(as.numeric(difftime(tt, origin, units = "days"))) + 1L
+    idx <- as.integer(as.Date(tt) - origin) + 1L
+    if (any(idx < 1L)) {
+      stop(
+        "event time precedes data.time_idx_origin (",
+        format(origin),
+        "); time_idx must be >= 1",
+        call. = FALSE
+      )
+    }
+    dat$time_idx <- idx
     return(dat)
   }
   stop("events need time_idx or time for sdmTMB time index", call. = FALSE)

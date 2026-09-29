@@ -25,6 +25,7 @@ fishai_engine_config:
     covariate_drops_path: data/processed/cufes/cufes_physics_covariate_drops.parquet
     covariate_drop_summary_path: data/processed/cufes/cufes_physics_covariate_drop_summary.json
     nearshore_max_km: 20
+    time_idx_origin: "1990-01-01"
     source_id: calcofi_cufes
     spatial_block_cv:
       n_folds: 4
@@ -38,7 +39,6 @@ fishai_engine_config:
       - mld
       - sst_grad
       - dist_front
-      - upwelling
     static:
       - log_depth
     excluded:
@@ -49,7 +49,6 @@ fishai_engine_config:
       mld: MLD_m
       sst_grad: sst_grad
       dist_front: front_distance_km
-      upwelling: upwelling
       log_depth: log_depth_z
   response:
     type: density_delta
@@ -59,12 +58,15 @@ fishai_engine_config:
     engine: sdmTMB
     family: delta_gamma
     delta_type: poisson-link
-    # DECISION OPEN for the leader: PR #28's training table has upwelling null
-    # on every row (not imputed). This formula keeps the preregistered
-    # s(upwelling_z) term. Do not drop the term or impute upwelling here.
+    # Prereg/config amendment (Upwelling path B): the CUFES evidence table has
+    # upwelling null on all 14,592 rows and no consistent, publicly licensed wind
+    # product spans training and nowcast. Upwelling is removed from the pilot
+    # covariates and formula; it is never imputed. Reintroduction needs a later
+    # prereg amendment plus publicly licensed, consistent data
+    # (prereg/pilot_model_upwelling_amendment.md).
     formula_shared: >-
       ~ s(temp_3m_z, k = 3) + s(sal_3m_z, k = 3) + s(mld_z, k = 3)
-      + s(sst_grad_z, k = 3) + s(dist_front_z, k = 3) + s(upwelling_z, k = 3)
+      + s(sst_grad_z, k = 3) + s(dist_front_z, k = 3)
       + s(log_depth_z, k = 3)
     spatial: [on, on]
     spatiotemporal: [iid, off]

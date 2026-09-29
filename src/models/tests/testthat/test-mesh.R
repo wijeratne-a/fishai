@@ -36,31 +36,3 @@ test_that("barrier reduces cross-land correlation proxy", {
   )
   expect_lt(ratio, 1)
 })
-
-test_that("mesh_spatial_scale_report splits water and barrier triangle edges", {
-  suppressPackageStartupMessages(require(sf))
-  dat <- data.frame(X = c(10, 40, 70), Y = c(20, 20, 50))
-  mesh <- build_fishai_mesh(dat, list(cutoff_km = 9))
-  land <- sf::st_sf(
-    geometry = sf::st_sfc(
-      sf::st_polygon(
-        list(
-          rbind(
-            c(15000, 15000),
-            c(25000, 15000),
-            c(25000, 25000),
-            c(15000, 25000),
-            c(15000, 15000)
-          )
-        )
-      ),
-      crs = 32610
-    )
-  )
-  bmesh <- add_barrier_land(mesh, land, range_fraction = 0.1)
-  rep <- mesh_spatial_scale_report(bmesh)
-  expect_gt(rep$water_triangle_edge_km$n, 0L)
-  expect_gt(rep$barrier_triangle_edge_km$n, 0L)
-  expect_true(is.finite(rep$water_triangle_edge_km$max_km))
-  expect_true(is.finite(rep$barrier_triangle_edge_km$max_km))
-})
