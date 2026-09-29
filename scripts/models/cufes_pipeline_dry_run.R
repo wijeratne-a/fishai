@@ -10,6 +10,7 @@ root <- normalizePath(
 setwd(root)
 Sys.setenv(FISHAI_ROOT = root)
 source(file.path(root, "src", "models", "tests", "testthat", "helper.R"))
+.use_glorys_catalog_fixture(root)
 
 .args <- commandArgs(trailingOnly = TRUE)
 parse_flag <- function(flag) {

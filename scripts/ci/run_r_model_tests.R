@@ -9,6 +9,7 @@ root <- if (length(file_arg)) {
 setwd(root)
 Sys.setenv(FISHAI_ROOT = root)
 source(file.path(root, "src", "models", "tests", "testthat", "helper.R"))
+.use_glorys_catalog_fixture(root)
 if (!requireNamespace("testthat", quietly = TRUE)) {
   stop("testthat not available in renv library", call. = FALSE)
 }

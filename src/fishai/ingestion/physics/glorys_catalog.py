@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import datetime as dt
 import json
+import os
 import re
 from dataclasses import dataclass
 from datetime import datetime, timezone
@@ -77,6 +78,7 @@ class GlorysDatasetResolution:
 
 _catalog_cache: list[GlorysCatalogEntry] | None = None
 _catalog_fetch_hook: Callable[[], list[GlorysCatalogEntry]] | None = None
+FIXTURE_ENV = "FISHAI_GLORYS_CATALOG_FIXTURE"
 
 
 def clear_glorys_catalog_cache() -> None:
@@ -218,8 +220,52 @@ def _fetch_catalog_entries_live() -> list[GlorysCatalogEntry]:
     return entries
 
 
+def entries_from_catalog_fixture(path: Path) -> list[GlorysCatalogEntry]:
+    """Load catalogue entries from a local JSON fixture. Never contacts the network."""
+    try:
+        payload = json.loads(path.read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError) as exc:
+        raise GlorysCatalogError(
+            _REASON_CATALOG_UNREACHABLE,
+            f"glorys: catalogue fixture unreadable ({exc})",
+        ) from exc
+    if not isinstance(payload, list):
+        raise GlorysCatalogError(
+            _REASON_CATALOG_UNREACHABLE,
+            "glorys: catalogue fixture must be a JSON list",
+        )
+    entries: list[GlorysCatalogEntry] = []
+    for item in payload:
+        if not isinstance(item, dict):
+            raise GlorysCatalogError(
+                _REASON_CATALOG_UNREACHABLE,
+                "glorys: catalogue fixture entry must be an object",
+            )
+        try:
+            entries.append(
+                GlorysCatalogEntry(
+                    dataset_id=str(item["dataset_id"]),
+                    dataset_version=str(item["dataset_version"]),
+                    coverage_start=_parse_iso_date(str(item["coverage_start"])),
+                    coverage_end=_parse_iso_date(str(item["coverage_end"])),
+                )
+            )
+        except (KeyError, TypeError, ValueError) as exc:
+            raise GlorysCatalogError(
+                _REASON_CATALOG_UNREACHABLE,
+                f"glorys: catalogue fixture entry invalid ({exc})",
+            ) from exc
+    return entries
+
+
 def load_catalog_entries() -> list[GlorysCatalogEntry]:
-    """Return cached GLORYS catalogue entries (at most one live fetch per run)."""
+    """Return cached GLORYS catalogue entries (at most one live fetch per run).
+
+    An in-process hook wins. Otherwise ``FISHAI_GLORYS_CATALOG_FIXTURE``, when
+    set, is a test seam: that JSON file is the whole catalogue and the live
+    Copernicus endpoint is not called. Production leaves the variable unset
+    and fails closed when the live catalogue is unreachable.
+    """
     global _catalog_cache
     if _catalog_cache is not None:
         return _catalog_cache
@@ -229,6 +275,15 @@ def load_catalog_entries() -> list[GlorysCatalogEntry]:
             raise GlorysCatalogError(
                 _REASON_GLORYS_DATASET_NOT_IN_CATALOG,
                 "glorys: no GLORYS candidate datasets found in the live catalogue",
+            )
+        return _catalog_cache
+    fixture = os.environ.get(FIXTURE_ENV, "").strip()
+    if fixture:
+        _catalog_cache = entries_from_catalog_fixture(Path(fixture))
+        if not _catalog_cache:
+            raise GlorysCatalogError(
+                _REASON_GLORYS_DATASET_NOT_IN_CATALOG,
+                "glorys: no GLORYS candidate datasets found in the catalogue fixture",
             )
         return _catalog_cache
     _catalog_cache = _fetch_catalog_entries_live()

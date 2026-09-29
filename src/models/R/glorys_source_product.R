@@ -1,3 +1,25 @@
+#' Point the Python catalogue resolver at the committed fixture.
+#'
+#' Production runs leave ``FISHAI_GLORYS_CATALOG_FIXTURE`` unset and resolve
+#' against the live Copernicus catalogue, fail-closed. Test and dry-run
+#' entry points call this so R ``system2(python3)`` lookups do not depend
+#' on catalogue availability.
+.use_glorys_catalog_fixture <- function(root = Sys.getenv("FISHAI_ROOT", unset = normalizePath(getwd()))) {
+  fixture <- file.path(
+    root,
+    "src",
+    "models",
+    "tests",
+    "fixtures",
+    "glorys_catalog_fixture.json"
+  )
+  if (!file.exists(fixture)) {
+    stop("missing GLORYS catalogue fixture at ", fixture, call. = FALSE)
+  }
+  Sys.setenv(FISHAI_GLORYS_CATALOG_FIXTURE = normalizePath(fixture, mustWork = TRUE))
+  invisible(Sys.getenv("FISHAI_GLORYS_CATALOG_FIXTURE"))
+}
+
 #' Expected GLORYS Copernicus product id for a calendar day (via Python ``glorys_product_for_date``).
 .expected_glorys_product_for_iso_date <- function(iso_date) {
   root <- Sys.getenv("FISHAI_ROOT", unset = normalizePath(getwd()))
