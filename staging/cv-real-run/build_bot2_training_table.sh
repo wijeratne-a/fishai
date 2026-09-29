@@ -3,6 +3,8 @@
 # Run from repo root; uses a read-only clone of cursor/real-training-table-evidence for bot2 code.
 set -euo pipefail
 
+export PATH="${HOME}/.local/bin:${PATH}"
+
 ROOT="$(cd "$(dirname "$0")/../.." && pwd)"
 PR28_ROOT="${PR28_ROOT:-/tmp/fishai-pr28}"
 DATA_ROOT="${DATA_ROOT:-$ROOT}"
