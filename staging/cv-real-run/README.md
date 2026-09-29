@@ -1,6 +1,6 @@
-# Real spatial-block CV staging (PR #5 + bot2 table)
+# Offshore sardine and anchovy egg and spawning-habitat pilot — real spatial-block CV staging (PR #5 + bot2 table)
 
-**Not for publication.** Dry-run outputs are **EVIDENCE ONLY — NOT FOR DISPLAY**.
+**Not for publication.** Dry-run outputs are **EVIDENCE ONLY — NOT FOR DISPLAY**. Prediction target wording is **egg encounter** (not species-named encounter). **Scoring at lead 0 only.**
 
 ## Prerequisites
 
@@ -38,7 +38,7 @@ Rscript scripts/models/cufes_real_spatial_cv_staging.R --species both \
 
 Manifest: `staging/cv-real-run/dry-run/cufes_real_spatial_cv_staging_manifest.json`.
 
-Per-species `fold_event_stats` (EVIDENCE ONLY — NOT FOR DISPLAY): for each spatial fold, `fit` and `test` tables with `all_years` and `year_1998` event/positive counts.
+Manifest `publish` block carries report title, pilot scope, egg encounter target label, lead-0 scoring note, and the evidence-only label. Per-species `fold_event_stats` (EVIDENCE ONLY — NOT FOR DISPLAY): for each spatial fold, `fit` and `test` tables with `all_years` and `year_1998` event counts and `n_egg_encounter_positives`. CV metric keys use the `egg_encounter_*` prefix.
 
 Fold-balance counts only (no sdmTMB fit):
 

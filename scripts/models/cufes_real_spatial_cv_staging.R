@@ -1,6 +1,7 @@
 #!/usr/bin/env Rscript
 # Staging-only spatial-block CV dry run on bot2 training table (PR #28).
-# All reported metrics are EVIDENCE ONLY — NOT FOR DISPLAY.
+# Offshore sardine and anchovy egg and spawning-habitat pilot; egg encounter target.
+# All reported metrics are EVIDENCE ONLY — NOT FOR DISPLAY. Scoring at lead 0 only.
 
 root <- normalizePath(
   file.path(
@@ -33,6 +34,33 @@ counts_only <- has_flag("--counts-only")
 evidence_only <- !has_flag("--allow-display-metrics")
 
 dir.create(out_root, recursive = TRUE, showWarnings = FALSE)
+
+.cv_staging_publish_wording <- function(evidence_only = TRUE) {
+  list(
+    report_title = paste(
+      "Offshore sardine and anchovy egg and spawning-habitat pilot:",
+      "spatial-block CV staging dry-run report",
+      "(EVIDENCE ONLY — NOT FOR DISPLAY)"
+    ),
+    pilot_scope = "Offshore sardine and anchovy egg and spawning-habitat pilot.",
+    prediction_target_label = "egg encounter",
+    scoring_lead_days = 0L,
+    scoring_scope_label = "Scoring at lead 0 only.",
+    evidence_only_not_for_display = isTRUE(evidence_only),
+    evidence_only_label = "EVIDENCE ONLY — NOT FOR DISPLAY"
+  )
+}
+
+.cv_staging_publish_notes <- function(prev_gap, evidence_only = TRUE) {
+  w <- .cv_staging_publish_wording(evidence_only = evidence_only)
+  c(
+    w$evidence_only_label,
+    w$pilot_scope,
+    paste0("Prediction target: ", w$prediction_target_label, " (not species-named encounter)."),
+    w$scoring_scope_label,
+    prev_gap
+  )
+}
 
 .species_configs <- function(sp) {
   switch(
@@ -83,11 +111,17 @@ dir.create(out_root, recursive = TRUE, showWarnings = FALSE)
   }
 
   fold_ids_all <- sort(unique(as.integer(fold_match)))
+  publish <- .cv_staging_publish_wording(evidence_only)
   fold_stats <- list(
+    report_section = "Per-fold egg encounter event counts (EVIDENCE ONLY — NOT FOR DISPLAY)",
+    evidence_only_label = publish$evidence_only_label,
     evidence_only_not_for_display = evidence_only,
+    prediction_target_label = publish$prediction_target_label,
     year_1998_note = paste0(
       "1998 nearshore exclusions (trainable table): 1,171 of 2,507 excluded events; ",
-      "year_1998 rows below are EVIDENCE ONLY — NOT FOR DISPLAY."
+      "year_1998 egg encounter count rows below are ",
+      publish$evidence_only_label,
+      "."
     ),
     fit = .per_fold_event_stats_by_year(dat_fit, fold_match, fold_ids_all, 1998L),
     test = .per_fold_event_stats_by_year(dat_test, fold_test, fold_ids_all, 1998L)
@@ -98,19 +132,24 @@ dir.create(out_root, recursive = TRUE, showWarnings = FALSE)
     return(list(
       species = sp,
       config = config_path,
+      publish = publish,
       evidence_only_not_for_display = evidence_only,
       counts_only = TRUE,
       training_domain = domain,
       fold_event_stats = fold_stats,
-      spatial_cv = list(skipped = TRUE, reason = "--counts-only"),
+      spatial_cv = list(
+        report_section = "Spatial-block CV egg encounter scores (skipped)",
+        skipped = TRUE,
+        reason = "--counts-only"
+      ),
       elpd_sum_loglik = NA_real_,
       elpd_eligible = FALSE,
-      time_holdout = list(skipped = TRUE, reason = "--counts-only"),
-      notes = c(
-        "Metrics labeled EVIDENCE ONLY — NOT FOR DISPLAY.",
-        "Wording: egg encounter likelihood (not spawning habitat).",
-        prev_gap
+      time_holdout = list(
+        report_section = "Temporal holdout egg encounter scores (skipped)",
+        skipped = TRUE,
+        reason = "--counts-only"
       ),
+      notes = .cv_staging_publish_notes(prev_gap, evidence_only),
       fold_failures = character(0)
     ))
   }
@@ -161,20 +200,39 @@ dir.create(out_root, recursive = TRUE, showWarnings = FALSE)
   list(
     species = sp,
     config = config_path,
+    publish = publish,
     evidence_only_not_for_display = evidence_only,
     wall_seconds = as.numeric(elapsed),
     peak_rss_mb = peak_mb,
     training_domain = domain,
     fold_event_stats = fold_stats,
-    spatial_cv = fold_scores,
+    spatial_cv = c(
+      list(
+        report_section = paste0(
+          "Spatial-block CV egg encounter scores (",
+          publish$evidence_only_label,
+          "; ",
+          publish$scoring_scope_label,
+          ")"
+        )
+      ),
+      fold_scores
+    ),
     elpd_sum_loglik = cv$sum_loglik,
     elpd_eligible = cv$elpd_eligible,
-    time_holdout = test_scores,
-    notes = c(
-      "Metrics labeled EVIDENCE ONLY — NOT FOR DISPLAY.",
-      "Wording: egg encounter likelihood (not spawning habitat).",
-      prev_gap
+    time_holdout = c(
+      list(
+        report_section = paste0(
+          "Temporal holdout egg encounter scores (",
+          publish$evidence_only_label,
+          "; ",
+          publish$scoring_scope_label,
+          ")"
+        )
+      ),
+      test_scores
     ),
+    notes = .cv_staging_publish_notes(prev_gap, evidence_only),
     fold_failures = cv$fold_failures
   )
 }
@@ -276,12 +334,12 @@ dir.create(out_root, recursive = TRUE, showWarnings = FALSE)
         evidence_only_not_for_display = TRUE,
         all_years = list(
           n_events = sum(idx_fold),
-          n_positives = if (any(idx_fold)) sum(y_pos[idx_fold] == 1L) else 0L
+          n_egg_encounter_positives = if (any(idx_fold)) sum(y_pos[idx_fold] == 1L) else 0L
         ),
         year_1998 = list(
           calendar_year = breakout_year,
           n_events = sum(idx_yr),
-          n_positives = if (any(idx_yr)) sum(y_pos[idx_yr] == 1L) else 0L
+          n_egg_encounter_positives = if (any(idx_yr)) sum(y_pos[idx_yr] == 1L) else 0L
         )
       )
     }),
@@ -301,12 +359,13 @@ dir.create(out_root, recursive = TRUE, showWarnings = FALSE)
   grid[which.max(tss)]
 }
 
-.score_encounter_block <- function(z, p, thr) {
+.score_egg_encounter_block <- function(z, p, thr) {
   list(
-    auc = auc_mw(z, p),
-    tss = tss_at(z, p, thr),
-    boyce = cbi_continuous(p, z),
-    prevalence = mean(z)
+    egg_encounter_auc = auc_mw(z, p),
+    egg_encounter_tss = tss_at(z, p, thr),
+    egg_encounter_boyce = cbi_continuous(p, z),
+    egg_encounter_prevalence = mean(z),
+    scoring_lead_days = 0L
   )
 }
 
@@ -322,9 +381,9 @@ dir.create(out_root, recursive = TRUE, showWarnings = FALSE)
     if (sum(z == 1L) < 1L) {
       out[[fold_id]] <- list(
         failed = TRUE,
-        reason = "zero positives for species in fold",
+        reason = "zero egg encounter positives in fold",
         n_events = nrow(test),
-        n_positives = sum(z == 1L)
+        n_egg_encounter_positives = sum(z == 1L)
       )
       next
     }
@@ -351,14 +410,14 @@ dir.create(out_root, recursive = TRUE, showWarnings = FALSE)
     if (sum(z_te == 1L) < 1L) {
       out[[fold_id]] <- list(
         failed = TRUE,
-        reason = "zero positives in domain-scored holdout",
+        reason = "zero egg encounter positives in domain-scored holdout",
         n_scored = nrow(test_dom),
         unknown_outside = sum(!in_dom)
       )
       next
     }
     p_te <- score_encounter_on_events(fit_res$fit, test_dom, cfg)
-    sc <- .score_encounter_block(z_te, p_te, thr)
+    sc <- .score_egg_encounter_block(z_te, p_te, thr)
     ll_fold <- cv$fold_loglik[[fold_id]]
     out[[fold_id]] <- c(
       list(
@@ -367,7 +426,7 @@ dir.create(out_root, recursive = TRUE, showWarnings = FALSE)
         unknown_outside = sum(!in_dom),
         unknown_reason = "outside_training_domain",
         elpd_fold_loglik = ll_fold,
-        tss_threshold = thr
+        egg_encounter_tss_threshold = thr
       ),
       sc
     )
@@ -380,27 +439,29 @@ dir.create(out_root, recursive = TRUE, showWarnings = FALSE)
   ok <- vapply(per_fold, function(x) isFALSE(x$failed %||% TRUE), logical(1))
   if (!any(ok)) {
     return(list(
-      aggregate_evidence_only = list(
-        elpd = NA_real_,
-        auc = NA_real_,
-        tss = NA_real_,
-        boyce = NA_real_,
-        prevalence = NA_real_
+      aggregate_evidence_only_not_for_display = list(
+        egg_encounter_elpd = NA_real_,
+        egg_encounter_auc = NA_real_,
+        egg_encounter_tss = NA_real_,
+        egg_encounter_boyce = NA_real_,
+        egg_encounter_prevalence = NA_real_,
+        scoring_lead_days = 0L
       )
     ))
   }
   elpd <- sum(vapply(per_fold[ok], function(x) as.numeric(x$elpd_fold_loglik), numeric(1)), na.rm = TRUE)
-  auc <- mean(vapply(per_fold[ok], function(x) as.numeric(x$auc), numeric(1)), na.rm = TRUE)
-  tss <- mean(vapply(per_fold[ok], function(x) as.numeric(x$tss), numeric(1)), na.rm = TRUE)
-  boyce <- mean(vapply(per_fold[ok], function(x) as.numeric(x$boyce), numeric(1)), na.rm = TRUE)
-  prev <- mean(vapply(per_fold[ok], function(x) as.numeric(x$prevalence), numeric(1)), na.rm = TRUE)
+  auc <- mean(vapply(per_fold[ok], function(x) as.numeric(x$egg_encounter_auc), numeric(1)), na.rm = TRUE)
+  tss <- mean(vapply(per_fold[ok], function(x) as.numeric(x$egg_encounter_tss), numeric(1)), na.rm = TRUE)
+  boyce <- mean(vapply(per_fold[ok], function(x) as.numeric(x$egg_encounter_boyce), numeric(1)), na.rm = TRUE)
+  prev <- mean(vapply(per_fold[ok], function(x) as.numeric(x$egg_encounter_prevalence), numeric(1)), na.rm = TRUE)
   list(
-    aggregate_evidence_only = list(
-      elpd = elpd,
-      auc = auc,
-      tss = tss,
-      boyce = boyce,
-      prevalence = prev
+    aggregate_evidence_only_not_for_display = list(
+      egg_encounter_elpd = elpd,
+      egg_encounter_auc = auc,
+      egg_encounter_tss = tss,
+      egg_encounter_boyce = boyce,
+      egg_encounter_prevalence = prev,
+      scoring_lead_days = 0L
     )
   )
 }
@@ -418,13 +479,13 @@ dir.create(out_root, recursive = TRUE, showWarnings = FALSE)
   test_dom <- dat_test[in_te, , drop = FALSE]
   z_te <- as.integer(test_dom$y > 0)
   p_te <- score_encounter_on_events(fit$fit, test_dom, cfg)
-  sc <- .score_encounter_block(z_te, p_te, thr)
+  sc <- .score_egg_encounter_block(z_te, p_te, thr)
   c(
     list(
       n_scored = nrow(test_dom),
       unknown_outside = sum(!in_te),
       unknown_reason = "outside_training_domain",
-      tss_threshold = thr
+      egg_encounter_tss_threshold = thr
     ),
     sc
   )
@@ -432,7 +493,7 @@ dir.create(out_root, recursive = TRUE, showWarnings = FALSE)
 
 .sardine_prevalence_gap_note <- function(cfg, events) {
   if (cfg$species$taxon != "sardine") {
-    return("sardine prevalence gap: N/A (not sardine run)")
+    return("sardine egg encounter prevalence gap: N/A (not sardine species run)")
   }
   counts <- .read_model_table(cfg$data$counts_path)
   cov <- .read_model_table(cfg$data$covariates_path)
@@ -447,7 +508,7 @@ dir.create(out_root, recursive = TRUE, showWarnings = FALSE)
   prev_kept <- if (any(in_kept)) mean(ev_ids[in_kept] %in% pos_ids) else NA_real_
   prev_drop <- if (any(in_drop)) mean(ev_ids[in_drop] %in% pos_ids) else NA_real_
   sprintf(
-    "sardine prevalence gap (egg encounter): kept %.1f%% vs dropped %.1f%% (trainable covariate rows vs excluded)",
+    "sardine egg encounter prevalence gap: kept %.1f%% vs dropped %.1f%% (trainable covariate rows vs excluded)",
     100 * prev_kept,
     100 * prev_drop
   )
@@ -462,11 +523,14 @@ species_list <- if (species_arg == "both") {
 results <- lapply(species_list, .run_species)
 names(results) <- species_list
 
+publish_root <- .cv_staging_publish_wording(evidence_only)
 manifest <- list(
+  publish = publish_root,
   staging_branch = "wip/cv-real-run-staging",
   evidence_only_not_for_display = evidence_only,
+  evidence_only_label = publish_root$evidence_only_label,
   wall_seconds_by_species = stats::setNames(
-    vapply(results, function(x) x$wall_seconds, numeric(1)),
+    vapply(results, function(x) x$wall_seconds %||% NA_real_, numeric(1)),
     names(results)
   ),
   results = results
@@ -474,4 +538,9 @@ manifest <- list(
 
 manifest_path <- file.path(out_root, "cufes_real_spatial_cv_staging_manifest.json")
 jsonlite::write_json(manifest, manifest_path, auto_unbox = TRUE, pretty = TRUE, null = "null")
-cat("Wrote staging manifest:", manifest_path, "\n")
+cat(
+  publish_root$evidence_only_label,
+  "— Wrote offshore egg encounter pilot staging manifest:",
+  manifest_path,
+  "\n"
+)

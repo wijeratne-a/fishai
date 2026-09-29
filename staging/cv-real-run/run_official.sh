@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Official first real spatial-block CV dry-run command (after bot2 training table exists).
+# Offshore sardine and anchovy egg and spawning-habitat pilot — official spatial-block CV dry-run (egg encounter; lead 0 only; EVIDENCE ONLY — NOT FOR DISPLAY).
 set -euo pipefail
 ROOT="$(cd "$(dirname "$0")/../.." && pwd)"
 cd "$ROOT"
