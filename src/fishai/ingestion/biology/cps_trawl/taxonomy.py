@@ -6,6 +6,8 @@ import re
 from typing import Final
 
 from fishai.ingestion.biology.cps_trawl.constants import (
+    ITIS_TSN_ENGRAULIS_MORDAX,
+    ITIS_TSN_ENGRAULIS_NANUS,
     ITIS_TSN_SARDINOPS_CAERULEUS,
     ITIS_TSN_SARDINOPS_SAGAX,
 )
@@ -16,7 +18,23 @@ SUBSPECIES_TSN_TO_SPECIES_TSN: Final[dict[int, int]] = {
     # Sardinops caeruleus; taxonUsageRating=invalid; unacceptReason=junior synonym;
     # accepted Sardinops sagax TSN 161729.
     ITIS_TSN_SARDINOPS_CAERULEUS: ITIS_TSN_SARDINOPS_SAGAX,
+    ITIS_TSN_ENGRAULIS_NANUS: ITIS_TSN_ENGRAULIS_MORDAX,
 }
+
+# Genera for pilot matrix species (case-insensitive); other single-word names may be coarse containers.
+_PILOT_TARGET_GENERA: Final = frozenset({"sardinops", "engraulis"})
+
+# Coarse fish taxa names (ITIS-style) that subsume pilot targets when identified by name or TSN.
+_COARSE_FISH_TAXON_NAMES: Final = frozenset(
+    {
+        "animalia",
+        "pisces",
+        "teleostei",
+        "actinopterygii",
+        "osteichthyes",
+        "fish",
+    }
+)
 
 # Family names (ITIS-style) → genera that may appear as CPS trawl targets.
 FAMILY_TO_GENERA: Final[dict[str, frozenset[str]]] = {
@@ -36,6 +54,7 @@ _FAMILY_RE = re.compile(r"^[A-Za-z]+idae$", re.IGNORECASE)
 _ORDER_RE = re.compile(r"^[A-Za-z]+iformes$", re.IGNORECASE)
 _AMBIGUOUS_NAME_TOKENS: Final = ("unid.", "unidentified", "larvae")
 _UNCERTAIN_ID_TOKENS: Final = frozenset({"cf", "cf.", "aff", "aff."})
+_GENUS_SP_SPP_RE = re.compile(r"^(\S+)\s+spp?\.?\s*$", re.IGNORECASE)
 
 
 def normalize_scientific_name(scientific_name: str) -> str:
@@ -74,6 +93,14 @@ def target_genus(scientific_name: str) -> str | None:
     if not parts:
         return None
     return parts[0]
+
+
+def _genus_from_sp_spp_placeholder(scientific_name: str) -> str | None:
+    """Return genus when name is a ``Genus sp.`` / ``Genus spp`` style placeholder (any case)."""
+    match = _GENUS_SP_SPP_RE.match(scientific_name.strip())
+    if match is None:
+        return None
+    return match.group(1)
 
 
 def _genera_for_family_or_order(name: str) -> frozenset[str] | None:
@@ -181,8 +208,8 @@ def is_unresolved_higher_taxon(scientific_name: str, itis_tsn: int | None) -> bo
         return True
     if itis_tsn is None:
         return True
-    lower = name.lower()
-    if lower in {"animalia", "pisces", "teleostei", "actinopterygii", "fish"}:
+    lower = name.casefold()
+    if lower in _COARSE_FISH_TAXON_NAMES:
         return True
     if _UNIDENTIFIED_FISH_RE.search(name):
         return True
@@ -190,7 +217,7 @@ def is_unresolved_higher_taxon(scientific_name: str, itis_tsn: int | None) -> bo
         return True
     if _has_uncertain_id_qualifier(name):
         return True
-    if " sp." in name or name.endswith(" spp.") or name.endswith(" sp"):
+    if _genus_from_sp_spp_placeholder(name) is not None:
         return True
     if _genera_for_family_or_order(name) is not None:
         return True
@@ -213,11 +240,11 @@ def unresolved_taxon_blocks_target(
     if not is_unresolved_higher_taxon(catch_species, catch_itis_tsn):
         return False
     name = catch_species.strip()
-    lower = name.lower()
+    lower = name.casefold()
     tgt_genus = target_genus(target_species)
     if tgt_genus is None:
         return False
-    if lower in {"animalia", "pisces", "teleostei", "actinopterygii", "fish"}:
+    if lower in _COARSE_FISH_TAXON_NAMES:
         return True
     if _UNIDENTIFIED_FISH_RE.search(name):
         return True
@@ -226,14 +253,19 @@ def unresolved_taxon_blocks_target(
     if _has_uncertain_id_qualifier(name):
         catch_genus = name.split()[0]
         return catch_genus.lower() == tgt_genus.lower()
-    if " sp." in name or name.endswith(" spp.") or name.endswith(" sp"):
-        catch_genus = name.split()[0]
-        return catch_genus == tgt_genus
+    sp_genus = _genus_from_sp_spp_placeholder(name)
+    if sp_genus is not None:
+        return sp_genus.casefold() == tgt_genus.casefold()
     genera = _genera_for_family_or_order(name)
     if genera is not None:
         return tgt_genus in genera
     if is_genus_only_taxon(name):
-        return name.split()[0] == tgt_genus
+        catch_genus = name.split()[0].casefold()
+        if catch_genus == tgt_genus.casefold():
+            return True
+        if catch_genus not in _PILOT_TARGET_GENERA:
+            return True
+        return False
     if catch_itis_tsn is None:
         return True
     return False

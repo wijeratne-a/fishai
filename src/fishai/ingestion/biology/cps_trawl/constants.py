@@ -50,6 +50,13 @@ ITIS_TSN_ENGRAULIS_MORDAX: Final = 161828
 # Sardinops caeruleus; taxonUsageRating=invalid, unacceptReason=junior synonym;
 # acceptedName Sardinops sagax TSN 161729 (getAcceptedNamesFromTSN?tsn=161730).
 ITIS_TSN_SARDINOPS_CAERULEUS: Final = 161730
+# ITIS https://www.itis.gov/ITISWebService/jsonservice/getFullRecordFromTSN?tsn=161836
+# Engraulis nanus; taxonUsageRating=invalid, unacceptReason=junior synonym;
+# acceptedName Engraulis mordax TSN 161828.
+ITIS_TSN_ENGRAULIS_NANUS: Final = 161836
+# ITIS https://www.itis.gov/ITISWebService/jsonservice/getFullRecordFromTSN?tsn=161030
+# Osteichthyes (superclass); coarse container for bony fishes including pilot targets.
+ITIS_TSN_OSTEICHTHYES: Final = 161030
 PILOT_MATRIX_SPECIES: Final = ("Sardinops sagax", "Engraulis mordax")
 PILOT_SPECIES_ITIS_TSN: Final = {
     "Sardinops sagax": ITIS_TSN_SARDINOPS_SAGAX,
