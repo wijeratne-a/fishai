@@ -17,13 +17,13 @@ import pandas as pd
 import yaml
 import xarray as xr
 
-from fishai.ingestion.copernicus_compliance import append_pull_log, build_pull_record
 from fishai.ingestion.physics.coast_distance import nearshore_mask, shoreline_path_from_config
 from fishai.ingestion.physics.harmonize import glorys_target_grid
-from fishai.ingestion.physics.sources.glorys import (
-    glorys_column_features,
-    resolve_glorys_product_id,
+from fishai.ingestion.physics.glorys_catalog import (
+    guard_glorys_version_before_fetch,
+    write_glorys_pull_log_record,
 )
+from fishai.ingestion.physics.sources.glorys import glorys_column_features, resolve_glorys_product_id
 from fishai.ingestion.physics.wcofs_glorys_coverage import (
     CoverageAccumulator,
     build_coverage_report,
@@ -198,7 +198,7 @@ def build_overlap_metadata(config: dict[str, Any]) -> dict[str, Any]:
         "overlap_start": config["overlap"]["start"],
         "overlap_end": config["overlap"]["end"],
         "expected_days": int(config["overlap"]["expected_days"]),
-        "glorys_product_selection": "date_based_my_vs_myint",
+        "glorys_product_selection": "copernicus_marine_catalog_time_coverage",
         "glorys_product_id_overlap_start": resolve_glorys_product_id(
             _config_date(config["overlap"]["start"]), config
         ),
@@ -351,20 +351,17 @@ def run_overlap_pairing(
         if glorys_fetch is None:
             raise RuntimeError("glorys_fetch is required for live overlap pairing")
         budget.charge(day, 1)
+        glorys_resolution = guard_glorys_version_before_fetch(day, log_path=glorys_log)
         glorys_payload = glorys_fetch(day)
-        glorys_dataset_id = resolve_glorys_product_id(day, config)
-        append_pull_log(
-            build_pull_record(
-                dataset_id=glorys_dataset_id,
-                date_start=day.isoformat(),
-                date_end=day.isoformat(),
-                variables=("thetao", "so"),
-                bbox=(
-                    float(config["pilot_bbox"]["lat_min"]),
-                    float(config["pilot_bbox"]["lat_max"]),
-                    float(config["pilot_bbox"]["lon_min"]),
-                    float(config["pilot_bbox"]["lon_max"]),
-                ),
+        write_glorys_pull_log_record(
+            day,
+            glorys_resolution,
+            variables=("thetao", "so"),
+            bbox=(
+                float(config["pilot_bbox"]["lat_min"]),
+                float(config["pilot_bbox"]["lat_max"]),
+                float(config["pilot_bbox"]["lon_min"]),
+                float(config["pilot_bbox"]["lon_max"]),
             ),
             log_path=glorys_log,
         )

@@ -7,6 +7,7 @@ import datetime as dt
 import sys
 from pathlib import Path
 
+from fishai.ingestion.physics.wcofs_pull_log import utc_today
 from fishai.ingestion.sources import load_sources_manifest
 
 REPO_ROOT = Path(__file__).resolve().parents[3]
@@ -29,7 +30,7 @@ def cmd_daily(args: argparse.Namespace) -> int:
 
     manifest = load_sources_manifest()
     bbox = _pilot_bbox(manifest)
-    run_date = dt.date.fromisoformat(args.date) if args.date else dt.date.today()
+    run_date = dt.date.fromisoformat(args.date) if args.date else utc_today()
     leads = tuple(args.leads.split(",")) if args.leads else NOWCAST_LEADS[:1]
     from fishai.ingestion.physics.wcofs_store import write_wcofs_cycle
 
@@ -48,7 +49,7 @@ def cmd_hindcast(args: argparse.Namespace) -> int:
 def cmd_wcofs_daily(args: argparse.Namespace) -> int:
     from fishai.ingestion.physics.wcofs_daily import run_wcofs_daily
 
-    run_date = dt.date.fromisoformat(args.date) if args.date else dt.date.today()
+    run_date = dt.date.fromisoformat(args.date) if args.date else utc_today()
     out = Path(args.out)
     plan = run_wcofs_daily(
         run_date,
