@@ -121,8 +121,11 @@ def cycle_available(
         if list_keys is not None:
             key = resolve_fields_key(date, "n024", list_keys)
             return check(_s3_url(key))
-        url = _fields_url_s3(date, "n024", list_keys=list_keys)
-        return check(url)
+        # An injected head probe is the availability signal. Do not list the
+        # public PDS first; that listing is what CI hits when NOAA returns 503.
+        if head_fn is not None:
+            return check(_s3_url(fields_s3_key(date, "n024")))
+        return check(_fields_url_s3(date, "n024"))
     except CycleNotAvailable:
         return False
 

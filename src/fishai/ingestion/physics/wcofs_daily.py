@@ -290,7 +290,12 @@ def wait_for_primary_cycle(
 ) -> bool:
     """Retry until the t03z cycle probe succeeds or ``cutoff_utc`` on the target UTC day."""
     check = head_fn or (lambda url: head_metadata(url).get("status") == 200)
-    probe_url = wcofs_src._fields_url_s3(target, wcofs_src.CYCLE_PROBE_LEAD)
+    if head_fn is not None:
+        from fishai.ingestion.physics.wcofs_pds_store import _s3_url
+
+        probe_url = _s3_url(wcofs_src.fields_s3_key(target, wcofs_src.CYCLE_PROBE_LEAD))
+    else:
+        probe_url = wcofs_src._fields_url_s3(target, wcofs_src.CYCLE_PROBE_LEAD)
     now_fn = now_fn or (lambda: dt.datetime.now(dt.timezone.utc))
     attempt = 0
     while True:
