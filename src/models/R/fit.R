@@ -73,7 +73,7 @@ fit_delta_engine <- function(dat, mesh, cfg) {
     as.list(x)
   }
 
-  fit <- sdmTMB::sdmTMB(
+  fit_args <- list(
     formula = frm,
     data = dat,
     mesh = mesh,
@@ -83,8 +83,6 @@ fit_delta_engine <- function(dat, mesh, cfg) {
     spatial = .as_pair(model$spatial, list("on", "on")),
     spatiotemporal = .as_pair(model$spatiotemporal, list("ar1", "iid")),
     share_range = .as_pair(model$share_range, list(TRUE, TRUE)),
-    time_varying = stats::as.formula(model$time_varying$formula %||% "~ 1"),
-    time_varying_type = model$time_varying$type %||% "rw0",
     extra_time = extra,
     priors = pri,
     control = do.call(
@@ -93,6 +91,11 @@ fit_delta_engine <- function(dat, mesh, cfg) {
     ),
     silent = TRUE
   )
+  if (!is.null(model$time_varying)) {
+    fit_args$time_varying <- stats::as.formula(model$time_varying$formula %||% "~ 1")
+    fit_args$time_varying_type <- model$time_varying$type %||% "rw0"
+  }
+  fit <- do.call(sdmTMB::sdmTMB, fit_args)
 
   structure(
     list(

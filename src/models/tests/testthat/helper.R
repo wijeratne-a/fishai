@@ -37,9 +37,14 @@ load_sardine_test_cfg <- function(intercept_only = FALSE) {
     file.path(FISHAI_ROOT, "configs", "models", "cufes_sardine_synthetic.yaml")
   )
   if (isTRUE(intercept_only)) {
+    # Honest spatial blocks can drop a time index from a training fold.
+    # A random-walk time intercept then has a non-PD Hessian. This control
+    # is an intercept-only delta: no spatial field and no time walk.
     cfg$model$formula_shared <- "~ 1"
     cfg$model$spatial <- list("off", "off")
     cfg$model$spatiotemporal <- list("off", "off")
+    cfg$model$share_range <- list(FALSE, FALSE)
+    cfg$model$time_varying <- NULL
   }
   cfg
 }
