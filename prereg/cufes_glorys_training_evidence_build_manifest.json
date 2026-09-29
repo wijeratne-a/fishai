@@ -1,7 +1,7 @@
 {
   "schema_version": 1,
   "evidence_status": "EVIDENCE-ONLY until auditbot1 passes; not #5-ready while upwelling is null on all rows",
-  "code_sha": "733bd318fa6a8a6e1f6597edaa75bd5fcc4b7433",
+  "code_sha": "29e79870e83a5f967b4c6d392c35bac4ff31e05b",
   "branch": "cursor/real-training-table-evidence",
   "review_scope_commits": [
     "379aad25b0d1b5842b4f61d143ab148d05a23435",
