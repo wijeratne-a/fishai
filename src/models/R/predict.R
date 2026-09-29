@@ -37,6 +37,14 @@ predict_engine <- function(
   attr_cols <- .flatten_attributions_for_columns(attr_meta)
   vref <- assert_reference_volume(artifact)
 
+  harmonize_bundle <- NULL
+  hcfg <- NULL
+  if (.inference_requires_harmonization(cfg)) {
+    harmonize_bundle <- assert_harmonization_for_predict(artifact, cfg)
+    hcfg <- load_harmonize_config(cfg$harmonization$config_path %||% NULL)
+    grid <- harmonize_inference_grid(grid, harmonize_bundle, hcfg)
+  }
+
   fit <- artifact$fit
   pred_cfg <- cfg$prediction %||% list()
   nsim <- nsim %||% pred_cfg$nsim %||% 500L
@@ -100,22 +108,32 @@ predict_engine <- function(
 
   cov_cols <- artifact$reference_cols
   ref <- artifact$reference
-  mess <- mess_scores(grid[, cov_cols, drop = FALSE], ref)
-  ex <- exdet_scores(grid[, cov_cols, drop = FALSE], ref)
-  maha <- maha_distance(grid[, cov_cols, drop = FALSE], ref)
-  hull <- convex_hull_flags(
-    grid[, cov_cols, drop = FALSE],
-    ref,
-    pairs = cfg$ood$hull_pairs %||% list(c("temp_3m_z", "sal_3m_z"))
-  )
-  ood_level <- classify_ood_level(
-    mess$mess,
-    ex$nt1,
-    ex$nt2,
-    maha,
-    hull,
-    mess_mask_below = cfg$ood$mess_mask_below %||% -20
-  )
+  if (!is.null(harmonize_bundle)) {
+    ood_level <- harmonize_envelope_ood(grid, ref, cov_cols, cfg)
+    for (col in cov_cols) {
+      bad <- !is.finite(grid[[col]])
+      if (any(bad)) {
+        grid[[col]][bad] <- stats::median(ref[[col]], na.rm = TRUE)
+      }
+    }
+  } else {
+    mess <- mess_scores(grid[, cov_cols, drop = FALSE], ref)
+    ex <- exdet_scores(grid[, cov_cols, drop = FALSE], ref)
+    maha <- maha_distance(grid[, cov_cols, drop = FALSE], ref)
+    hull <- convex_hull_flags(
+      grid[, cov_cols, drop = FALSE],
+      ref,
+      pairs = cfg$ood$hull_pairs %||% list(c("temp_3m_z", "sal_3m_z"))
+    )
+    ood_level <- classify_ood_level(
+      mess$mess,
+      ex$nt1,
+      ex$nt2,
+      maha,
+      hull,
+      mess_mask_below = cfg$ood$mess_mask_below %||% -20
+    )
+  }
 
   if (toupper(physics_cycle) == "DEGRADED") {
     # keep computed ood_level; handled after aggregation

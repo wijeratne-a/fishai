@@ -81,6 +81,7 @@ freeze_model <- function(fit_obj, cfg, path, training_dat = NULL, sources_manife
     training_end = egg_split_fit_end(cfg) %||% cfg$training_end %||% NA_character_,
     reference = cfg$reference %||% NULL,
     reference_cols = cfg$reference_cols %||% NULL,
+    harmonization = cfg$harmonization %||% NULL,
     training_sources = training_sources,
     reference_volume = ref_vol,
     frozen_at = format(Sys.time(), tz = "UTC", usetz = TRUE)

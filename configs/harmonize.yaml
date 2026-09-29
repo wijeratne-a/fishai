@@ -1,0 +1,76 @@
+# GLORYS (training) vs WCOFS (daily inference) covariate harmonization gate.
+# Skill thresholds are placeholders until audit — do not treat null as pass/fail in production.
+
+glorys_wcofs_harmonization:
+  version: "2026.09.28-pilot"
+
+  training_forcing: glorys
+  inference_forcing: wcofs
+
+  nearshore_max_km: 20
+
+  overlap:
+    # Fit quantile maps on the earlier fraction; score on the later fraction (by time).
+    train_fraction: 0.6
+
+  seasons:
+    - DJF
+    - MAM
+    - JJA
+    - SON
+
+  covariates:
+    - id: temp_3m
+      glorys_column: T3m
+      wcofs_column: T3m
+      model_z: temp_3m_z
+    - id: sal_3m
+      glorys_column: S3m
+      wcofs_column: S3m
+      model_z: sal_3m_z
+    - id: mld
+      glorys_column: MLD_m
+      wcofs_column: MLD_m
+      model_z: mld_z
+    - id: sst_grad
+      glorys_column: sst_grad
+      wcofs_column: sst_grad
+      model_z: sst_grad_z
+    - id: dist_front
+      glorys_column: front_distance_km
+      wcofs_column: front_distance_km
+      model_z: dist_front_z
+    - id: upwelling
+      glorys_column: upwelling
+      wcofs_column: upwelling
+      model_z: upwelling_z
+
+  skill_thresholds:
+    temp_3m:
+      min_correlation: null # TODO-audit
+      max_rmse: null # TODO-audit
+    sal_3m:
+      min_correlation: null # TODO-audit
+      max_rmse: null # TODO-audit
+    mld:
+      min_correlation: null # TODO-audit
+      max_rmse: null # TODO-audit
+    sst_grad:
+      min_correlation: null # TODO-audit
+      max_rmse: null # TODO-audit
+    dist_front:
+      min_correlation: null # TODO-audit
+      max_rmse: null # TODO-audit
+    upwelling:
+      min_correlation: null # TODO-audit
+      max_rmse: null # TODO-audit
+
+  data:
+    pairs_table: src/models/tests/fixtures/synthetic_harmonize_pairs.csv
+    time_column: time
+    season_column: season
+    dist_shore_column: dist_shore_km
+
+  output:
+    maps_rds: artifacts/harmonization/wcofs_to_glorys_maps.rds
+    diagnostics_json: artifacts/harmonization/wcofs_to_glorys_diagnostics.json
