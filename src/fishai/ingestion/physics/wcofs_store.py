@@ -4,6 +4,8 @@ from __future__ import annotations
 
 import datetime as dt
 import json
+import shutil
+import uuid
 from pathlib import Path
 from typing import Any
 
@@ -197,5 +199,11 @@ def write_wcofs_cycle(
         "zarr_chunks",
         "lead_hours=1, s_rho=full, eta_rho/xi_rho=tile",
     )
-    packaged.to_zarr(path, mode="w", consolidated=False, encoding=encoding)
+    staging = path.parent / f".{path.name}.staging-{uuid.uuid4().hex}"
+    if staging.exists():
+        shutil.rmtree(staging)
+    packaged.to_zarr(staging, mode="w", consolidated=False, encoding=encoding)
+    if path.exists():
+        shutil.rmtree(path)
+    staging.rename(path)
     return path
