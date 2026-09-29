@@ -117,4 +117,55 @@ test_that("fold assignment CSV may cover all events while fit scope is a subset"
   dat_fit <- load_model_data(cfg = cfg, min_duration_min = 2, egg_split_scope = "fit")
   expect_true(all(dat_fit$event_id %in% fa$event_id))
   expect_false(any(is.na(dat_fit$fold_id)))
+  keyed <- merge(
+    dat_fit[, c("event_id", "fold_id", "block_id")],
+    fa,
+    by = "event_id",
+    suffixes = c("_used", "_assigned")
+  )
+  expect_equal(keyed$fold_id_used, keyed$fold_id_assigned)
+  expect_equal(keyed$block_id_used, keyed$block_id_assigned)
+})
+
+test_that("load_model_data assigns contiguous EPSG:32611 blocks, one fold per block", {
+  cfg <- load_sardine_test_cfg()
+  ev <- read.csv(
+    file.path(FISHAI_ROOT, "src/models/tests/fixtures/synthetic_cufes_events.csv"),
+    stringsAsFactors = FALSE
+  )
+  expect_false("fold_id" %in% names(ev))
+  params <- spatial_block_cv_params(cfg)
+  expect_equal(params$epsg, 32611L)
+  fa <- assign_cufes_spatial_block_folds(ev, params)
+  expect_true(verify_spatial_block_contiguity(fa, ev, params))
+  dat <- load_model_data(cfg = cfg, min_duration_min = 2)
+  keyed <- merge(
+    dat[, c("event_id", "fold_id", "block_id")],
+    fa,
+    by = "event_id",
+    suffixes = c("_used", "_assigned")
+  )
+  expect_equal(nrow(keyed), nrow(dat))
+  expect_equal(keyed$fold_id_used, keyed$fold_id_assigned)
+  expect_equal(keyed$block_id_used, keyed$block_id_assigned)
+  splits <- split(keyed$fold_id_used, keyed$block_id_used)
+  expect_true(all(vapply(splits, function(x) length(unique(x)) == 1L, logical(1))))
+})
+
+test_that("a stale fold_id column that disagrees with the spatial assignment is refused", {
+  ev_path <- tempfile(fileext = ".csv")
+  on.exit(unlink(ev_path), add = TRUE)
+  ev <- read.csv(
+    file.path(FISHAI_ROOT, "src/models/tests/fixtures/synthetic_cufes_events.csv"),
+    stringsAsFactors = FALSE
+  )
+  ev$fold_id <- 1L
+  utils::write.csv(ev, ev_path, row.names = FALSE)
+  cfg <- load_sardine_test_cfg()
+  cfg$data$events_path <- ev_path
+  expect_error(
+    load_model_data(cfg = cfg, min_duration_min = 2),
+    "fold_id disagrees with the spatial-block fold assignment",
+    fixed = TRUE
+  )
 })

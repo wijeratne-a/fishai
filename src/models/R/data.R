@@ -7,8 +7,8 @@
 #' modelling frame; absent rows are **not** zeros (see ``excluded_no_count_row``
 #' in QC). Events are placed on the mesh at the track midpoint in UTM zone 11N (km).
 #' Effort enters as ``log(volume_m3)`` via ``log_effort``; [fit_delta_engine()]
-#' passes that column to sdmTMB as ``offset``, which applies to the **positive**
-#' delta component only.
+#' passes that column to sdmTMB as ``offset`` on both Poisson-link delta
+#' components.
 #'
 #' @param path Deprecated single-table override (tests only).
 #' @param cfg Config with `data`, `response`, and `covariates` blocks.

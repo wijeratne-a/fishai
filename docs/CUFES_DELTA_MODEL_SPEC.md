@@ -52,15 +52,15 @@ Gridded prediction row columns are defined in [CUFES_PREDICTION_OUTPUT_CONTRACT.
 
 ### Spatial-block fold assignment (real CUFES events)
 
-When bot1 ``cufes_events`` has no ``fold_id`` column, FishAI assigns folds on the modeling side from track midpoints in **EPSG:32611** (km):
+FishAI assigns folds on the modeling side from track midpoints in **EPSG:32611** (km). A ``fold_id`` column already on ``cufes_events`` is not authoritative: if any value disagrees with this assignment, loading stops.
 
 | Parameter | Source in model YAML | Pilot value |
 | --- | --- | --- |
-| Block size (km) | ``mesh.cutoff_km`` | **9** |
+| Block size (km) | ``max(mesh.cutoff_km, mesh.range_guess_km)`` | **60** (cutoff 9, range guess 60) |
 | Assignment seed | ``prediction.seed`` | **20260928** |
 | Number of folds | ``data.spatial_block_cv.n_folds`` | **4** |
 
-Each event maps to one spatial block ``block_id = bx{floor(X/block)}_by{floor(Y/block)}`` in **EPSG:32611** (km). Block size is ``max(mesh.cutoff_km, mesh.range_guess_km)`` so blocks are at least the pre-registered spatial range. Blocks are sorted by grid row/column and centroid; contiguous segments of that order receive fold IDs ``1 … n_folds`` (deterministic from geometry and ``prediction.seed``). The species-agnostic table covers **all** ``cufes_events`` rows (fit and test windows) and is written as ``fold_assignment.csv`` (`event_id`, `fold_id`, `block_id`) with SHA-256 recorded in sensitivity run metadata. Spatial-block CV trains on fit-period rows only, using the same fold IDs.
+Each event maps to one spatial block ``block_id = bx{floor(X/block)}_by{floor(Y/block)}`` in **EPSG:32611** (km). Block size is ``max(mesh.cutoff_km, mesh.range_guess_km)`` so blocks are at least the pre-registered spatial range. Blocks are sorted by grid row/column and centroid; contiguous segments of that order receive fold IDs ``1 … n_folds`` (deterministic from geometry and ``prediction.seed``; an MD5 digest breaks ties only). The species-agnostic table covers **all** ``cufes_events`` rows (fit and test windows) and is written as ``fold_assignment.csv`` (`event_id`, `fold_id`, `block_id`) with SHA-256 recorded in sensitivity run metadata. Spatial-block CV trains on fit-period rows only. For every event in that frame, the fold id assigned, the fold id used to score ELPD, and the fold id in ``fold_assignment`` are the same triple. ELPD selection compares only candidates that share that table and drops any run with a failed, non-converged, or non-finite fold.
 
 ### Egg-model temporal split
 

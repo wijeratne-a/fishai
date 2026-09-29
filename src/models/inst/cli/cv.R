@@ -12,10 +12,34 @@ fold_ids <- dat$fold_id
 if (is.null(fold_ids)) stop("config data must include fold_id for spatial CV", call. = FALSE)
 cv_sp <- run_cv_spatial(dat, mesh, cfg, fold_ids)
 cv_lfo <- run_cv_lfo(dat, mesh, cfg, lfo_forecast = 1L, lfo_validations = min(3L, length(unique(dat$time_idx)) - 1L))
+# LFO holds out a different set of dates. It is not an ELPD candidate:
+# selection uses only the spatial-block assignment that was fit and reported.
+selected <- tryCatch(
+  select_by_elpd(list(spatial = cv_sp)),
+  error = function(e) {
+    structure(
+      NA_character_,
+      error = conditionMessage(e),
+      class = "fishai_elpd_selection"
+    )
+  }
+)
 out_dir <- cfg$output$dir %||% "artifacts/models"
 dir.create(out_dir, recursive = TRUE, showWarnings = FALSE)
-saveRDS(list(spatial = cv_sp, lfo = cv_lfo, selected = select_by_elpd(list(spatial = cv_sp, lfo = cv_lfo))), file.path(out_dir, "cv.rds"))
-message("cv complete; ELPD spatial=", cv_sp$sum_loglik, " lfo=", cv_lfo$sum_loglik)
+saveRDS(
+  list(spatial = cv_sp, lfo = cv_lfo, selected = selected),
+  file.path(out_dir, "cv.rds")
+)
+message(
+  "cv complete; ELPD spatial=",
+  cv_sp$sum_loglik,
+  " eligible=",
+  cv_sp$elpd_eligible,
+  " lfo_sum_loglik=",
+  cv_lfo$sum_loglik,
+  " selected=",
+  as.character(selected)
+)
 
 if (!is.null(parsed$min_duration_min)) {
   cmp <- compare_duration_sensitivity(cfg, parsed$min_duration_min)

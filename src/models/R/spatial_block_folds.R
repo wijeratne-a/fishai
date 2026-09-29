@@ -252,6 +252,67 @@ file_sha256 <- function(path) {
   tab[order(tab$event_id), , drop = FALSE]
 }
 
+.canonical_fold_table_for_frame <- function(dat) {
+  req <- c("event_id", "fold_id", "block_id")
+  if (!all(req %in% names(dat))) {
+    stop(
+      "spatial CV frame is missing the fold assignment (event_id, fold_id, block_id)",
+      call. = FALSE
+    )
+  }
+  tab <- data.frame(
+    event_id = as.character(dat$event_id),
+    fold_id = as.integer(dat$fold_id),
+    block_id = as.character(dat$block_id),
+    stringsAsFactors = FALSE
+  )
+  if (any(is.na(tab$fold_id))) {
+    stop("fold assignment contains NA fold_id", call. = FALSE)
+  }
+  if (any(is.na(tab$block_id)) || any(!nzchar(tab$block_id))) {
+    stop(
+      "fold assignment block_id is missing; spatial CV requires EPSG:32611 blocks",
+      call. = FALSE
+    )
+  }
+  tab
+}
+
+#' The fold ids passed into CV must be the assignment already on the frame,
+#' and that assignment must match ``fold_assignment.csv`` when one is configured.
+.assert_supplied_folds_match_assignment <- function(dat, fold_ids, cfg) {
+  assigned <- .canonical_fold_table_for_frame(dat)
+  if (length(fold_ids) != nrow(assigned)) {
+    stop("fold_ids length does not match the fold assignment", call. = FALSE)
+  }
+  if (!identical(as.integer(fold_ids), assigned$fold_id)) {
+    stop(
+      "fold_ids do not match the assigned fold_id for these events",
+      call. = FALSE
+    )
+  }
+  path <- cfg$data$fold_assignment_path
+  if (!is.null(path) && nzchar(as.character(path)) && file.exists(path)) {
+    fa <- .read_fold_assignment_csv(path)
+    idx <- match(assigned$event_id, fa$event_id)
+    if (anyNA(idx)) {
+      stop(
+        sum(is.na(idx)),
+        " CV event_id(s) missing from fold assignment CSV",
+        call. = FALSE
+      )
+    }
+    if (!identical(as.integer(fa$fold_id[idx]), assigned$fold_id) ||
+      !identical(as.character(fa$block_id[idx]), assigned$block_id)) {
+      stop(
+        "fold assignment on the modelling frame does not match fold assignment CSV",
+        call. = FALSE
+      )
+    }
+  }
+  assigned
+}
+
 .assert_cv_fold_assignment_contract <- function(dat, fold_ids, cfg) {
   if (length(fold_ids) != nrow(dat)) {
     stop("fold_id length must match modelling rows", call. = FALSE)
@@ -291,13 +352,10 @@ file_sha256 <- function(path) {
 }
 
 .attach_spatial_fold_ids <- function(events, cfg) {
-  if ("fold_id" %in% names(events)) {
-    events$fold_id <- as.integer(events$fold_id)
-    .assert_unique_keys(events$event_id, "event_id in cufes_events")
-    return(events)
-  }
+  .assert_unique_keys(events$event_id, "event_id in cufes_events")
   path <- cfg$data$fold_assignment_path
-  if (!is.null(path) && nzchar(path) && file.exists(path)) {
+  fa <- NULL
+  if (!is.null(path) && nzchar(as.character(path)) && file.exists(path)) {
     fa <- .read_fold_assignment_csv(path)
   } else if (
     !is.null(cfg$data$spatial_block_cv$n_folds) &&
@@ -306,6 +364,9 @@ file_sha256 <- function(path) {
   ) {
     params <- spatial_block_cv_params(cfg)
     fa <- assign_cufes_spatial_block_folds(events, params)
+  } else if ("fold_id" %in% names(events)) {
+    events$fold_id <- as.integer(events$fold_id)
+    return(events)
   } else {
     return(events)
   }
@@ -320,7 +381,20 @@ file_sha256 <- function(path) {
     )
   }
   idx <- match(ev_ids, fa$event_id)
-  events$fold_id <- fa$fold_id[idx]
-  events$block_id <- fa$block_id[idx]
+  assigned_fold <- as.integer(fa$fold_id[idx])
+  assigned_block <- as.character(fa$block_id[idx])
+  if ("fold_id" %in% names(events)) {
+    existing <- suppressWarnings(as.integer(events$fold_id))
+    if (length(existing) != length(assigned_fold) ||
+      any(is.na(existing)) ||
+      !identical(existing, assigned_fold)) {
+      stop(
+        "cufes_events fold_id disagrees with the spatial-block fold assignment",
+        call. = FALSE
+      )
+    }
+  }
+  events$fold_id <- assigned_fold
+  events$block_id <- assigned_block
   events
 }

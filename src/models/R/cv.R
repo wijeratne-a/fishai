@@ -87,25 +87,28 @@
   ll
 }
 
-.cv_fold_assignment_table <- function(dat, fold_ids) {
-  block_id <- if ("block_id" %in% names(dat)) {
-    as.character(dat$block_id)
-  } else {
-    rep(NA_character_, nrow(dat))
+.cv_flag_any_not_true <- function(x) {
+  if (is.null(x) || !is.atomic(x)) {
+    return(FALSE)
   }
-  data.frame(
-    event_id = as.character(dat$event_id),
-    fold_id = as.integer(fold_ids),
-    block_id = block_id,
-    stringsAsFactors = FALSE
-  )
+  x <- as.logical(x)
+  length(x) > 0L && any(!x %in% TRUE)
 }
 
-#' Reason code when a spatial CV result may not enter ELPD selection.
+#' Reason code when a CV result may not enter ELPD selection.
+#' Failed, non-converged, non-PD, or non-finite runs are ineligible even when
+#' ``sum_loglik`` is finite (a partial sum must not win ``which.max``).
 #' @export
 cv_elpd_ineligible_reason <- function(cv_obj) {
   if (is.null(cv_obj)) {
     return("cv_missing")
+  }
+  if (isFALSE(cv_obj$elpd_eligible)) {
+    reason <- cv_obj$elpd_ineligible_reason
+    if (is.null(reason) || !nzchar(as.character(reason)[1L])) {
+      return("cv_fold_failed")
+    }
+    return(as.character(reason)[1L])
   }
   n_failed <- cv_obj$n_failed_folds %||% 0L
   if (n_failed > 0L) {
@@ -115,15 +118,33 @@ cv_elpd_ineligible_reason <- function(cv_obj) {
     }
     return("cv_fold_failed")
   }
+  if (.cv_flag_any_not_true(cv_obj$converged) || .cv_flag_any_not_true(cv_obj$pdHess)) {
+    return("cv_fold_nonconverged")
+  }
   ll <- cv_obj$sum_loglik
   if (is.null(ll) || length(ll) != 1L || !is.finite(as.numeric(ll))) {
     return("cv_fold_failed")
   }
   fold_ll <- cv_obj$fold_loglik
-  if (!is.null(fold_ll) && any(!is.finite(fold_ll))) {
+  if (!is.null(fold_ll) && any(!is.finite(as.numeric(fold_ll)))) {
     return("cv_fold_failed")
   }
   NULL
+}
+
+.fold_assignment_key <- function(tab) {
+  req <- c("event_id", "fold_id", "block_id")
+  if (is.null(tab) || !all(req %in% names(tab))) {
+    return(NA_character_)
+  }
+  tab <- data.frame(
+    event_id = as.character(tab$event_id),
+    fold_id = as.integer(tab$fold_id),
+    block_id = as.character(tab$block_id),
+    stringsAsFactors = FALSE
+  )
+  tab <- tab[order(tab$event_id, tab$block_id), , drop = FALSE]
+  paste(tab$event_id, tab$fold_id, tab$block_id, sep = "\t", collapse = "\n")
 }
 
 #' Spatial-block cross-validation with explicit fold IDs.
@@ -131,11 +152,12 @@ cv_elpd_ineligible_reason <- function(cv_obj) {
 #' @export
 run_cv_spatial <- function(dat, mesh, cfg, fold_ids) {
   .refuse_random_cv(fold_ids)
-  dat$fold_id <- fold_ids
-  .assert_cv_fold_assignment_contract(dat, fold_ids, cfg)
+  fold_assignment <- .assert_supplied_folds_match_assignment(dat, fold_ids, cfg)
+  dat$fold_id <- fold_assignment$fold_id
+  dat$block_id <- fold_assignment$block_id
+  .assert_cv_fold_assignment_contract(dat, fold_assignment$fold_id, cfg)
   spatial_meta <- spatial_block_cv_params(cfg)
-  fold_assignment <- .cv_fold_assignment_table(dat, fold_ids)
-  folds <- sort(unique(as.character(fold_ids)))
+  folds <- sort(unique(as.character(fold_assignment$fold_id)))
   fold_loglik <- stats::setNames(rep(NA_real_, length(folds)), folds)
   fold_failures <- list()
 
@@ -236,6 +258,10 @@ run_cv_lfo <- function(dat, mesh, cfg, lfo_forecast = 1L, lfo_validations = 3L) 
 }
 
 #' Choose model with higher ELPD (sum_loglik) among eligible candidates only.
+#'
+#' Eligible candidates must share one fold assignment. That table is the
+#' assignment used to score them and the table reported on the selection.
+#' Non-finite ELPD never enters ``which.max``.
 #' @export
 select_by_elpd <- function(cv_results) {
   if (is.null(names(cv_results)) || !nzchar(names(cv_results)[1L])) {
@@ -259,10 +285,31 @@ select_by_elpd <- function(cv_results) {
     )
   }
   elpd <- vapply(cv_results[eligible], function(x) as.numeric(x$sum_loglik), numeric(1))
+  if (any(!is.finite(elpd))) {
+    stop(
+      "elpd_nonfinite_eligible_candidate: refusing to rank a non-finite ELPD",
+      call. = FALSE
+    )
+  }
+  tabs <- lapply(cv_results[eligible], function(x) x$fold_assignment)
+  keys <- vapply(tabs, .fold_assignment_key, character(1))
+  if (any(is.na(keys))) {
+    stop(
+      "elpd_fold_assignment_missing: eligible candidate has no fold assignment",
+      call. = FALSE
+    )
+  }
+  if (length(unique(keys)) != 1L) {
+    stop(
+      "elpd_fold_assignment_mismatch: folds used in ELPD selection are not the same assignment",
+      call. = FALSE
+    )
+  }
   best <- names(cv_results)[eligible][which.max(elpd)]
   structure(
     best,
     elpd_report = report,
+    fold_assignment = cv_results[[best]]$fold_assignment,
     class = "fishai_elpd_selection"
   )
 }

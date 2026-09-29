@@ -137,9 +137,11 @@ check_coefficient_wald_pass <- function(full_fit, reduced_fit, conf_level = 0.95
     stop("missing fold column: ", fold_col, call. = FALSE)
   }
   folds <- sort(unique(dat[[fold_col]]))
-  mean_log_score <- numeric()
-  boyce <- numeric()
+  fold_names <- as.character(folds)
+  mean_log_score <- stats::setNames(rep(NA_real_, length(folds)), fold_names)
+  boyce <- stats::setNames(rep(NA_real_, length(folds)), fold_names)
   for (k in folds) {
+    kn <- as.character(k)
     train <- dat[dat[[fold_col]] != k, , drop = FALSE]
     test <- dat[dat[[fold_col]] == k, , drop = FALSE]
     test <- .cv_holdout_rows(test, eval_min_duration)
@@ -158,14 +160,14 @@ check_coefficient_wald_pass <- function(full_fit, reduced_fit, conf_level = 0.95
     }
     z <- as.integer(test$y > 0)
     if (sum(z == 1L) < 1L || sum(z == 0L) < 1L) {
-      boyce <- c(boyce, NA_real_)
+      boyce[[kn]] <- NA_real_
     } else {
-      boyce <- c(boyce, cbi_continuous(p, p[z == 1L]))
+      boyce[[kn]] <- cbi_continuous(p, p[z == 1L])
     }
     ll <- sum(z * log(pmax(p, 1e-15)) + (1L - z) * log(pmax(1 - p, 1e-15)))
-    mean_log_score <- c(mean_log_score, ll / nrow(test))
+    mean_log_score[[kn]] <- ll / nrow(test)
   }
-  list(mean_log_score = mean_log_score, boyce_index = boyce)
+  list(mean_log_score = mean_log_score, boyce_index = boyce, fold_id = folds)
 }
 
 .lfo_fold_metric_vectors <- function(dat, cfg, eval_min_duration, n_validations = 3L) {
@@ -210,22 +212,55 @@ check_coefficient_wald_pass <- function(full_fit, reduced_fit, conf_level = 0.95
 
 #' @export
 check_cv_metric_pass <- function(full_vals, reduced_vals, margin_se) {
+  fn <- names(full_vals)
+  rn <- names(reduced_vals)
+  if (!is.null(fn) || !is.null(rn)) {
+    if (is.null(fn) || is.null(rn) || !setequal(fn, rn)) {
+      return(list(
+        pass = FALSE,
+        mean_diff = NA_real_,
+        se_diff = NA_real_,
+        n_folds = 0L,
+        fold_ids = character()
+      ))
+    }
+    reduced_vals <- reduced_vals[fn]
+  }
   full_vals <- as.numeric(full_vals)
   reduced_vals <- as.numeric(reduced_vals)
   if (length(full_vals) != length(reduced_vals) || length(full_vals) < 2L) {
-    return(list(pass = FALSE, mean_diff = NA_real_, se_diff = NA_real_, n_folds = length(full_vals)))
+    return(list(
+      pass = FALSE,
+      mean_diff = NA_real_,
+      se_diff = NA_real_,
+      n_folds = length(full_vals),
+      fold_ids = fn %||% character()
+    ))
   }
   ok <- is.finite(full_vals) & is.finite(reduced_vals)
+  compared <- if (!is.null(fn)) fn[ok] else character()
   full_vals <- full_vals[ok]
   reduced_vals <- reduced_vals[ok]
   if (length(full_vals) < 2L) {
-    return(list(pass = FALSE, mean_diff = NA_real_, se_diff = NA_real_, n_folds = length(full_vals)))
+    return(list(
+      pass = FALSE,
+      mean_diff = NA_real_,
+      se_diff = NA_real_,
+      n_folds = length(full_vals),
+      fold_ids = compared
+    ))
   }
   d <- full_vals - reduced_vals
   se <- stats::sd(d) / sqrt(length(d))
   mean_d <- mean(d)
   pass <- is.finite(se) && (se == 0 || mean_d >= -margin_se * se)
-  list(pass = pass, mean_diff = mean_d, se_diff = se, n_folds = length(d))
+  list(
+    pass = pass,
+    mean_diff = mean_d,
+    se_diff = se,
+    n_folds = length(d),
+    fold_ids = compared
+  )
 }
 
 #' @export

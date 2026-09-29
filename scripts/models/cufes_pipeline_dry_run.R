@@ -129,8 +129,6 @@ if (length(qc_load$dropped_unavailable_covariates)) {
 }
 
 bot2_branch_ref <- "origin/cursor/cufes-glorys-training-covariates-faff"
-pr15_pin_ref <- Sys.getenv("PR15_PIN_REF", unset = "794261bfb0cd86ce72145190a1b564ea85202865")
-pr15_pin_short <- substr(pr15_pin_ref, 1L, 7L)
 branch_existed <- system2(
   "git",
   c("rev-parse", "--verify", bot2_branch_ref),
@@ -169,8 +167,15 @@ mesh <- record_stage("barrier_mesh", {
 })
 
 record_stage("spatial_block_folds", {
-  params <- spatial_block_cv_params(cfg)
-  folds <- assign_cufes_spatial_block_folds(dat, params)
+  if (!all(c("event_id", "fold_id", "block_id") %in% names(dat))) {
+    stop("load_model_data did not attach the spatial-block fold assignment")
+  }
+  folds <- data.frame(
+    event_id = as.character(dat$event_id),
+    fold_id = as.integer(dat$fold_id),
+    block_id = as.character(dat$block_id),
+    stringsAsFactors = FALSE
+  )
   write_fold_assignment_csv(folds, file.path(out_dir, paste0(species, "_fold_assignment.csv")))
   folds
 })
@@ -196,15 +201,16 @@ artifact <- record_stage(
 )
 
 record_stage("spatial_cv_metrics", {
-  params <- spatial_block_cv_params(cfg)
-  folds <- assign_cufes_spatial_block_folds(dat, params)
   fit_dat <- tryCatch(filter_egg_split_scope(dat, cfg, scope = "fit"), error = function(e) dat)
-  fold_match <- folds$fold_id[match(fit_dat$event_id, folds$event_id)]
   cv <- tryCatch(
-    run_cv_spatial(fit_dat, mesh, cfg, fold_ids = fold_match),
-    error = function(e) list(elpd = NA_real_, fold_loglik = list(), error = conditionMessage(e))
+    run_cv_spatial(fit_dat, mesh, cfg, fold_ids = fit_dat$fold_id),
+    error = function(e) list(sum_loglik = NA_real_, fold_loglik = numeric(), error = conditionMessage(e))
   )
-  list(elpd = cv$elpd, n_folds = length(cv$fold_loglik), note = cv$error %||% NA_character_)
+  list(
+    elpd = cv$sum_loglik %||% cv$elpd %||% NA_real_,
+    n_folds = length(cv$fold_loglik),
+    note = cv$error %||% NA_character_
+  )
 })
 
 grid <- read.csv(cfg$prediction$grid_table, stringsAsFactors = FALSE)
@@ -252,9 +258,6 @@ manifest <- list(
   out_dir = out_dir,
   config = config_path,
   bot2_branch_ref = "cursor/cufes-glorys-training-covariates-faff",
-  pr15_pull = "https://github.com/wijeratne-a/fishai/pull/15",
-  pr15_pin_ref = pr15_pin_ref,
-  pr15_pin_short = pr15_pin_short,
   branch_existed = branch_existed,
   mode = schema_mode,
   dropped_unavailable_covariates = as.list(qc_load$dropped_unavailable_covariates %||% character()),

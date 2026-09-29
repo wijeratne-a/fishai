@@ -12,8 +12,8 @@ test_that("load_model_data rejects source_product disagreeing with glorys_produc
   eid <- "CUFES:T:AK:badprod"
   writeLines(
     paste(
-      cufes_events_csv_header("fold_id"),
-      paste0(eid, ",2021-07-01T00:00:00Z,33,-119,2021-07-01T00:08:00Z,33.01,-118.99,100,1,12,FALSE,1"),
+      cufes_events_csv_header(),
+      paste0(eid, ",2020-06-01T00:00:00Z,33,-119,2020-06-01T00:08:00Z,33.01,-118.99,100,1,12,FALSE"),
       sep = "\n"
     ),
     ev
@@ -25,7 +25,7 @@ test_that("load_model_data rejects source_product disagreeing with glorys_produc
       paste(
         eid,
         paste(
-          c(rep(0, 7), "cmems_mod_glo_phy_my_0.083deg_P1D-m", "FALSE"),
+          c(rep(0, 7), "cmems_mod_glo_phy_myint_0.083deg_P1D-m", "FALSE"),
           collapse = ","
         ),
         sep = ","
@@ -35,6 +35,7 @@ test_that("load_model_data rejects source_product disagreeing with glorys_produc
     cov
   )
   cfg <- load_sardine_test_cfg()
+  cfg$data$spatial_block_cv <- NULL
   cfg$data$events_path <- ev
   cfg$data$counts_path <- ct
   cfg$data$covariates_path <- cov

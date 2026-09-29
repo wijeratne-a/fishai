@@ -62,9 +62,14 @@ test_that("spatial CV output includes fold table and block metadata", {
   cv <- run_cv_spatial(dat, mesh, cfg, dat$fold_id)
   expect_true(all(c("fold_assignment", "spatial_block_cv") %in% names(cv)))
   expect_equal(nrow(cv$fold_assignment), nrow(dat))
+  expect_equal(cv$fold_assignment$event_id, as.character(dat$event_id))
+  expect_equal(cv$fold_assignment$fold_id, as.integer(dat$fold_id))
+  expect_equal(cv$fold_assignment$block_id, as.character(dat$block_id))
+  sel <- select_by_elpd(list(spatial = cv))
+  expect_equal(as.character(sel), "spatial")
   expect_equal(
-    sort(as.integer(cv$fold_assignment$fold_id)),
-    sort(as.integer(dat$fold_id))
+    attr(sel, "fold_assignment")[, c("event_id", "fold_id", "block_id")],
+    cv$fold_assignment[, c("event_id", "fold_id", "block_id")]
   )
   expect_gte(cv$spatial_block_cv$block_size_km, cv$spatial_block_cv$spatial_range_km)
   expect_equal(cv$spatial_block_cv$block_size_km, max(cfg$mesh$cutoff_km, cfg$mesh$range_guess_km))
@@ -98,4 +103,80 @@ test_that("spatial CV shares identical folds across species on the same events",
   cv_s <- run_cv_spatial(dat_s, mesh_s, cfg_s, dat_s$fold_id)
   cv_a <- run_cv_spatial(dat_a, mesh_a, cfg_a, dat_a$fold_id)
   expect_identical(cv_s$fold_assignment, cv_a$fold_assignment)
+})
+
+.elpd_candidate <- function(sum_loglik, eligible = TRUE, reason = NULL, n_failed = 0L, fold_loglik = NULL, folds = NULL) {
+  if (is.null(fold_loglik)) {
+    fold_loglik <- c(-1, sum_loglik + 1)
+  }
+  if (is.null(folds)) {
+    folds <- data.frame(
+      event_id = c("e1", "e2"),
+      fold_id = c(1L, 2L),
+      block_id = c("bx0_by0", "bx1_by0"),
+      stringsAsFactors = FALSE
+    )
+  }
+  list(
+    sum_loglik = sum_loglik,
+    n_failed_folds = n_failed,
+    fold_loglik = fold_loglik,
+    elpd_eligible = eligible,
+    elpd_ineligible_reason = reason,
+    fold_assignment = folds
+  )
+}
+
+test_that("select_by_elpd drops a failed run even when its sum_loglik is higher", {
+  ok <- .elpd_candidate(-20, eligible = TRUE)
+  bad <- .elpd_candidate(-1, eligible = FALSE, reason = "cv_fold_failed", n_failed = 1L, fold_loglik = c(-1, NA))
+  sel <- select_by_elpd(list(bad = bad, ok = ok))
+  expect_equal(as.character(sel), "ok")
+})
+
+test_that("select_by_elpd honors elpd_eligible FALSE when the stored sum is finite", {
+  ok <- .elpd_candidate(-20, eligible = TRUE)
+  sneaky <- .elpd_candidate(
+    0,
+    eligible = FALSE,
+    reason = "cv_fold_failed",
+    n_failed = 0L,
+    fold_loglik = c(0, 0)
+  )
+  sel <- select_by_elpd(list(sneaky = sneaky, ok = ok))
+  expect_equal(as.character(sel), "ok")
+})
+
+test_that("select_by_elpd does not rank a non-finite ELPD", {
+  ok <- .elpd_candidate(-20, eligible = TRUE)
+  na_cand <- .elpd_candidate(NA_real_, eligible = TRUE, n_failed = 0L, fold_loglik = c(NA_real_, -1))
+  sel <- select_by_elpd(list(na = na_cand, ok = ok))
+  expect_equal(as.character(sel), "ok")
+  expect_error(
+    select_by_elpd(list(only = na_cand)),
+    "elpd_all_candidates_ineligible"
+  )
+})
+
+test_that("select_by_elpd refuses eligible candidates scored on different folds", {
+  ok <- .elpd_candidate(-20, eligible = TRUE)
+  other <- .elpd_candidate(-10, eligible = TRUE)
+  other$fold_assignment$fold_id <- c(2L, 1L)
+  expect_error(
+    select_by_elpd(list(a = ok, b = other)),
+    "elpd_fold_assignment_mismatch",
+    fixed = TRUE
+  )
+})
+
+test_that("run_cv_spatial refuses fold ids that are not the assignment", {
+  cfg <- load_sardine_test_cfg(intercept_only = TRUE)
+  dat <- load_model_data(cfg = cfg)
+  bad <- as.integer(dat$fold_id)
+  bad[1L] <- if (bad[1L] == 1L) 2L else 1L
+  expect_error(
+    run_cv_spatial(dat, NULL, cfg, bad),
+    "fold_ids do not match the assigned fold_id",
+    fixed = TRUE
+  )
 })

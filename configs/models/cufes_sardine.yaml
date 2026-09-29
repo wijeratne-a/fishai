@@ -59,6 +59,9 @@ fishai_engine_config:
     engine: sdmTMB
     family: delta_gamma
     delta_type: poisson-link
+    # DECISION OPEN for the leader: PR #28's training table has upwelling null
+    # on every row (not imputed). This formula keeps the preregistered
+    # s(upwelling_z) term. Do not drop the term or impute upwelling here.
     formula_shared: >-
       ~ s(temp_3m_z, k = 3) + s(sal_3m_z, k = 3) + s(mld_z, k = 3)
       + s(sst_grad_z, k = 3) + s(dist_front_z, k = 3) + s(upwelling_z, k = 3)

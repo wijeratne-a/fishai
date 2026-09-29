@@ -70,6 +70,16 @@ test_that("missing count row species framing excludes taxon without zero imputat
   expect_error(load_model_data(cfg = mk_cfg("hake")), "no events with a cufes_counts row")
 })
 
+test_that("check_cv_metric_pass aligns named folds and does not shift past a failed fold", {
+  full <- c("1" = 0.5, "2" = NA_real_, "3" = 0.5)
+  red <- c("3" = 0.5, "1" = 0.5, "2" = 0.9)
+  res <- check_cv_metric_pass(full, red, margin_se = 1)
+  expect_true(res$pass)
+  expect_equal(res$fold_ids, c("1", "3"))
+  shifted <- c("1" = 0.5, "2" = 0.5, "4" = 0.5)
+  expect_false(check_cv_metric_pass(full, shifted, margin_se = 1)$pass)
+})
+
 test_that("check_cv_metric_pass uses margin from protocol scale", {
   margin <- 1.0
   full <- c(0.5, 0.6, 0.55)
