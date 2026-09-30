@@ -28,6 +28,7 @@ from fishai.ingestion.physics.bathymetry import (
     glorys_pilot_depth_grid,
     normalize_lon_for_axis,
     sample_wcofs_h_bottom_depth_m,
+    sample_wcofs_h_audit_m,
 )
 from fishai.ingestion.physics.covariates import (
     COL_EVENT_ID,
@@ -115,6 +116,7 @@ TRAINING_OUTPUT_COLUMNS: tuple[str, ...] = (
     *CUFES_COVARIATE_FIELDS,
     "upwelling_status",
     "bottom_depth_m",
+    "wcofs_h_audit_m",
     "depth_at_model_floor",
     "source",
     "provenance",
@@ -235,6 +237,17 @@ class GlorysFieldStore:
         # No consistent wind product: leave null. Do not copy or impute grid upwelling.
         out["upwelling"] = float("nan")
         return out
+
+    def sample_wcofs_h_audit_at(self, lat: float, lon: float) -> float:
+        return sample_wcofs_h_audit_m(
+            lat,
+            lon,
+            self.wcofs_h_m,
+            self.lat,
+            self.lon,
+            has_source=self.has_source,
+            wet_fraction=self.wet_fraction,
+        )
 
     def sample_bottom_depth_with_reason(self, lat: float, lon: float) -> tuple[float, str | None]:
         return sample_wcofs_h_bottom_depth_m(
@@ -394,12 +407,14 @@ def attach_bottom_depth_and_reasons(
     """Add ``bottom_depth_m``, ``source_product``, ``excluded_reason``; extend drops if needed."""
     drop_rows = drops.to_dict(orient="records")
     bottom_depth: list[float] = []
+    wcofs_h_audit: list[float] = []
     at_floor: list[bool] = []
     source_products: list[str] = []
     for _, event in events.iterrows():
         eid = event[COL_EVENT_ID]
         mid_lat, mid_lon = event_midpoint_lat_lon(event)
         mid_t = event_mid_time(event)
+        audit_h = store.sample_wcofs_h_audit_at(mid_lat, mid_lon)
         if pd.isna(mid_t):
             product_id = ""
             depth_val = float("nan")
@@ -411,6 +426,7 @@ def attach_bottom_depth_and_reasons(
             floor_flag = depth_at_model_floor(depth_val, store.roms_hmin_m)
         source_products.append(product_id)
         bottom_depth.append(depth_val)
+        wcofs_h_audit.append(audit_h)
         at_floor.append(floor_flag)
         if not np.isfinite(depth_val) or depth_val <= 0.0:
             reasons = depth_reasons or [DROP_REASON_WCOFS_LOW_WET_FRACTION]
@@ -426,6 +442,7 @@ def attach_bottom_depth_and_reasons(
                 )
     out = covariates.copy()
     out["bottom_depth_m"] = bottom_depth
+    out["wcofs_h_audit_m"] = wcofs_h_audit
     out["depth_at_model_floor"] = at_floor
     out["source_product"] = source_products
     drops_out = pd.DataFrame(drop_rows, columns=list(DROP_TABLE_COLUMNS))
@@ -592,6 +609,8 @@ def _subset_batch_live(
 
     output_dir.mkdir(parents=True, exist_ok=True)
     out_file = subset_nc_path(output_dir, batch)
+    if out_file.is_file() and out_file.stat().st_size > 0:
+        return out_file
     resolution = catalogue_resolution_for_subset_batch(batch, log_path=log_path)
     la0, la1, lo0, lo1 = batch.bbox
     copernicusmarine.subset(

@@ -165,6 +165,24 @@ def test_no_zero_filled_nans_for_missing_bottom_depth() -> None:
     assert (drops["reason"] == DROP_REASON_OUTSIDE_WCOFS_DOMAIN).any()
 
 
+def test_wcofs_h_audit_m_retained_when_row_excluded() -> None:
+    events = _synthetic_events().iloc[[0]].copy()
+    days = unique_event_days(events)
+    lat, lon = _small_glorys_axes()
+    has_source = np.zeros((lat.size, lon.size), dtype=bool)
+    store = glorys_store_from_synthetic_days(
+        days,
+        wcofs_h_m=np.full((lat.size, lon.size), np.nan),
+        has_source=has_source,
+        lat=lat,
+        lon=lon,
+    )
+    out, _qc, _drops, _floor = build_cufes_training_covariates_table(events, store)
+    assert bool(out.iloc[0]["excluded"])
+    assert pd.isna(out.iloc[0]["bottom_depth_m"])
+    assert pd.isna(out.iloc[0]["wcofs_h_audit_m"])
+
+
 def test_excluded_reason_nonempty_iff_excluded() -> None:
     events = _synthetic_events()
     lat, lon = _small_glorys_axes()

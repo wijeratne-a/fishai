@@ -65,6 +65,23 @@ def cmd_build_cufes_training_covariates(args: argparse.Namespace) -> int:
     return 0
 
 
+def cmd_audit_training_exclusions(args: argparse.Namespace) -> int:
+    from fishai.ingestion.physics.training_exclusion_audit import run_training_exclusion_audit, format_audit_report
+
+    report = run_training_exclusion_audit(
+        training_path=args.training,
+        events_path=args.events,
+        counts_path=args.counts,
+        drops_path=args.drops,
+    )
+    text = format_audit_report(report)
+    print(text, end="")
+    if args.json_out:
+        args.json_out.parent.mkdir(parents=True, exist_ok=True)
+        args.json_out.write_text(text, encoding="utf-8")
+    return 0
+
+
 def cmd_wcofs_daily(args: argparse.Namespace) -> int:
     from fishai.ingestion.physics.wcofs_daily import run_wcofs_daily
 
@@ -134,6 +151,16 @@ def main(argv: list[str] | None = None) -> int:
         help="Print planned Copernicus subset batches and request count only",
     )
     p_cufes.set_defaults(func=cmd_build_cufes_training_covariates)
+    p_audit = sub.add_parser(
+        "audit-training-exclusions",
+        help="Break down excluded vs kept rows in the CUFES training covariates table",
+    )
+    p_audit.add_argument("--training", type=Path, help="Training covariates parquet")
+    p_audit.add_argument("--events", type=Path, help="cufes_events.parquet")
+    p_audit.add_argument("--counts", type=Path, help="cufes_counts.parquet")
+    p_audit.add_argument("--drops", type=Path, help="covariate drops parquet")
+    p_audit.add_argument("--json-out", type=Path, help="Write JSON report to path")
+    p_audit.set_defaults(func=cmd_audit_training_exclusions)
     args = parser.parse_args(argv)
     return int(args.func(args))
 

@@ -6,8 +6,14 @@ import datetime as dt
 
 import pytest
 
-from fishai.ingestion.physics.sources.glorys import PRODUCT_TIME_END, PRODUCT_TIME_START, VARIABLES
-from fishai.ingestion.sources import SourceNotApprovedError, require_approved
+from fishai.ingestion.physics.sources.glorys import (
+    PRODUCT_ID_MY,
+    PRODUCT_TIME_END,
+    PRODUCT_TIME_START,
+    VARIABLES,
+    glorys_product_for_date,
+)
+from fishai.ingestion.sources import require_approved
 
 
 def test_glorys_product_metadata() -> None:
@@ -15,6 +21,8 @@ def test_glorys_product_metadata() -> None:
     assert "tob" not in VARIABLES
     assert PRODUCT_TIME_START == dt.date(1993, 1, 1)
     assert PRODUCT_TIME_END == dt.date(2026, 6, 23)
+    assert glorys_product_for_date(dt.date(2021, 6, 30)) == PRODUCT_ID_MY
+    assert glorys_product_for_date(dt.date(2021, 7, 1)) == PRODUCT_ID_MY
 
 
 def test_glorys_without_purpose_is_approved() -> None:
