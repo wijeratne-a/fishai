@@ -44,6 +44,20 @@ def _tree_snapshot(root: Path) -> dict[str, tuple[int, int]]:
     }
 
 
+@pytest.fixture(autouse=True)
+def _default_wind_pull_log_not_in_repo(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    """Training table build records wind status; keep that out of data/provenance in tests."""
+    import fishai.ingestion.physics.cufes_training_covariates as ctc
+
+    default_log = tmp_path / "wind_pull_log.jsonl"
+    original = ctc.record_upwelling_wind_status_pull_log
+
+    def _redirect(*, log_path: Path | None = None) -> Path:
+        return original(log_path=log_path or default_log)
+
+    monkeypatch.setattr(ctc, "record_upwelling_wind_status_pull_log", _redirect)
+
+
 @pytest.fixture(scope="session", autouse=True)
 def _offline_glorys_catalog_fixture() -> None:
     """In-process tests use the committed catalogue fixture unless a hook overrides it."""

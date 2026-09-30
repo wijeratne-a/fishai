@@ -30,6 +30,9 @@ dependencies = [
 dev = [
   "pytest==8.3.4",
 ]
+copernicus = [
+  "copernicusmarine>=2.0.0",
+]
 
 [project.scripts]
 fishai-bio = "fishai.cli:main_bio"

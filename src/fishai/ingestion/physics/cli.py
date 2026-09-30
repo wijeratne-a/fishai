@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import argparse
 import datetime as dt
+import json
 import sys
 from pathlib import Path
 
@@ -44,6 +45,24 @@ def cmd_daily(args: argparse.Namespace) -> int:
 def cmd_hindcast(args: argparse.Namespace) -> int:
     print("hindcast: use daily over a date range (orchestrator not bundled in pilot)", file=sys.stderr)
     return 1
+
+
+def cmd_build_cufes_training_covariates(args: argparse.Namespace) -> int:
+    from fishai.ingestion.physics.cufes_training_covariates import (
+        DEFAULT_EVENTS_PATH,
+        DEFAULT_OUTPUT_PATH,
+        run_build_cufes_training_covariates,
+    )
+
+    events_path = Path(args.events) if args.events else DEFAULT_EVENTS_PATH
+    output_path = Path(args.output) if args.output else DEFAULT_OUTPUT_PATH
+    result = run_build_cufes_training_covariates(
+        events_path=events_path,
+        output_path=output_path,
+        dry_run=bool(args.dry_run),
+    )
+    print(json.dumps(result, indent=2, sort_keys=True))
+    return 0
 
 
 def cmd_wcofs_daily(args: argparse.Namespace) -> int:
@@ -100,6 +119,21 @@ def main(argv: list[str] | None = None) -> int:
     p_wdaily.set_defaults(func=cmd_wcofs_daily)
     p_hind = sub.add_parser("hindcast", help="Historical physics backfill (stub)")
     p_hind.set_defaults(func=cmd_hindcast)
+    p_cufes = sub.add_parser(
+        "build-cufes-training-covariates",
+        help="Match Copernicus GLORYS covariates to QC-kept CUFES events (event_id join)",
+    )
+    p_cufes.add_argument(
+        "--events",
+        help="Input cufes_events.parquet (default: data/processed/calcofi_cufes/cufes_events.parquet)",
+    )
+    p_cufes.add_argument("--output", help="Output training covariates parquet path")
+    p_cufes.add_argument(
+        "--dry-run",
+        action="store_true",
+        help="Print planned Copernicus subset batches and request count only",
+    )
+    p_cufes.set_defaults(func=cmd_build_cufes_training_covariates)
     args = parser.parse_args(argv)
     return int(args.func(args))
 

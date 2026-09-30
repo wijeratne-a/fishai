@@ -11,6 +11,7 @@ coverage/
 .vite/
 __pycache__/
 *.pyc
+*.egg-info/
 .pytest_cache/
 .ruff_cache/
 .mypy_cache/
@@ -25,6 +26,7 @@ data/provenance/wcofs_pull_*.jsonl
 # Data trees (never commit raw/processed survey or grid files)
 data/raw/
 data/processed/
+data/cache/
 data/interim/
 data/restricted/
 data/quarantine/*

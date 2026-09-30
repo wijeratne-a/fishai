@@ -170,6 +170,43 @@ def _interp_gridded_column(
     )
 
 
+def coarsen_wcofs_h_to_glorys(
+    ds_wcofs: xr.Dataset,
+    lat_dst: np.ndarray,
+    lon_dst: np.ndarray,
+    *,
+    min_wet_fraction: float = 0.5,
+) -> tuple[np.ndarray, np.ndarray, np.ndarray]:
+    """
+    Area-weight WCOFS ROMS ``h`` (positive depth, m) onto the GLORYS grid.
+
+    Returns ``(h_m, has_source, wet_fraction)`` with the same coarsening rule as
+    temperature and salinity on the overlap / nowcast paths.
+    """
+    slab = _surface_slab(ds_wcofs)
+    lat = np.asarray(slab.lat_rho.values, dtype=float)
+    lon = np.asarray(slab.lon_rho.values, dtype=float)
+    lon = np.where(lon > 180, lon - 360, lon)
+    wet = np.asarray(slab.mask_rho.values == 1, dtype=bool)
+    cell_area = _roms_cell_area(slab)
+    h_native = np.asarray(slab.h.values, dtype=float)
+    bottom = _bottom_depth_below_surface(slab.h.values, slab.zeta.values)
+    depth_ok = np.isfinite(bottom) & (bottom > 0)
+    h_m, wet_fraction = area_weighted_regrid(
+        h_native,
+        lat,
+        lon,
+        lat_dst,
+        lon_dst,
+        wet_mask=wet,
+        cell_area=cell_area,
+        depth_reachable=wet & depth_ok,
+        min_wet_fraction=min_wet_fraction,
+    )
+    has_source = np.isfinite(wet_fraction)
+    return h_m, has_source, wet_fraction
+
+
 def compute_wcofs_covariates_on_glorys_grid(
     gridded: WcofsGlorysGrid,
     *,

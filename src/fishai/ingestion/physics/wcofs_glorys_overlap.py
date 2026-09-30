@@ -48,7 +48,7 @@ class DailyRequestBudgetExceeded(RuntimeError):
     """Raised when the configured daily HTTP request cap is exceeded."""
 
 
-class _DailyRequestBudget:
+class DailyRequestBudget:
     def __init__(self, max_per_day: int) -> None:
         self._max = int(max_per_day)
         self._day: dt.date | None = None
@@ -113,6 +113,14 @@ def depth_grid_m(config: dict[str, Any]) -> np.ndarray:
     end = int(spec["end"])
     step = int(spec["step"])
     return np.arange(start, end + step, step, dtype=float)
+
+
+def coarsen_min_wet_fraction(config: dict[str, Any]) -> float:
+    """Wet-fraction gate for WCOFS→GLORYS coarsening (legacy ``wcofs_glorys_coarsen`` block)."""
+    block = config.get("wcofs_glorys_coarsen") or {}
+    if "min_wet_fraction" in block:
+        return float(block["min_wet_fraction"])
+    return min_wet_fraction_from_config(config)
 
 
 def glorys_grid_from_config(config: dict[str, Any]) -> tuple[np.ndarray, np.ndarray]:
@@ -304,7 +312,7 @@ def run_overlap_pairing(
     days: Sequence[dt.date] | None = None,
     wcofs_open: Callable[[dt.date], xr.Dataset] | None = None,
     glorys_fetch: Callable[[dt.date], dict[str, Any]] | None = None,
-    budget: _DailyRequestBudget | None = None,
+    budget: DailyRequestBudget | None = None,
     wcofs_log: Path | None = None,
     glorys_log: Path | None = None,
     output_path: Path | None = None,
@@ -329,7 +337,7 @@ def run_overlap_pairing(
         lat_dst, lon_dst, nearshore, depth_grid, min_wf
     )
     rate = config.get("rate_limits") or {}
-    budget = budget or _DailyRequestBudget(int(rate.get("max_requests_per_day", 200)))
+    budget = budget or DailyRequestBudget(int(rate.get("max_requests_per_day", 200)))
     wcofs_log = wcofs_log or REPO_ROOT / str(config["pull_logs"]["wcofs"])
     glorys_log = glorys_log or REPO_ROOT / str(config["pull_logs"]["glorys"])
     all_rows: list[dict[str, Any]] = []

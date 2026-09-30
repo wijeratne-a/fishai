@@ -2,9 +2,17 @@
 
 from __future__ import annotations
 
+import math
+
 import numpy as np
 
-from fishai.ingestion.physics.features import cayula_cornillon_fronts, eke_from_sla, sst_gradient
+from fishai.ingestion.physics.features import (
+    PILOT_COAST_ANGLE_RAD,
+    cayula_cornillon_fronts,
+    compute_upwelling,
+    eke_from_sla,
+    sst_gradient,
+)
 
 
 def test_sst_gradient_constant_is_zero() -> None:
@@ -30,6 +38,16 @@ def test_eke_from_sla_quadratic() -> None:
     sla = 0.01 * (la - 33.5) ** 2
     _, _, eke = eke_from_sla(sla, lat, lon, lat0=33.5)
     assert np.nanmean(eke) > 0
+
+
+def test_compute_upwelling_equatorward_alongshore_positive() -> None:
+    speed = 10.0
+    sc, sn = math.cos(PILOT_COAST_ANGLE_RAD), math.sin(PILOT_COAST_ANGLE_RAD)
+    u10 = np.full((4, 5), -speed * sc)
+    v10 = np.full((4, 5), -speed * sn)
+    lat = np.linspace(33.0, 33.5, 4)
+    ui = compute_upwelling(u10, v10, lat)
+    assert float(np.nanmin(ui)) > 0.0
 
 
 def test_cayula_cornillon_detects_edge() -> None:

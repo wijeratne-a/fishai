@@ -1,0 +1,780 @@
+"""Build CUFES training covariates from Copernicus GLORYS (event_id join only)."""
+
+from __future__ import annotations
+
+import datetime as dt
+import hashlib
+import json
+from collections import defaultdict
+from collections.abc import Callable, Iterable, Sequence
+from concurrent.futures import ThreadPoolExecutor, as_completed
+from dataclasses import dataclass, field
+from pathlib import Path
+from typing import Any
+
+import numpy as np
+import pandas as pd
+
+from fishai.ingestion.copernicus_compliance import (
+    GLORYS_CREDIT_TEXT,
+    GLORYS_DOI,
+    append_pull_log,
+    build_pull_record,
+    require_glorys_attribution,
+)
+from fishai.ingestion.physics.bathymetry import (
+    WCOFS_BOTTOM_DEPTH_SOURCE,
+    WCOFS_BOTTOM_DEPTH_VARIABLE,
+    glorys_pilot_depth_grid,
+    normalize_lon_for_axis,
+    sample_wcofs_h_bottom_depth_m,
+)
+from fishai.ingestion.physics.covariates import (
+    COL_EVENT_ID,
+    COL_START_LAT,
+    COL_START_LON,
+    COL_STOP_LAT,
+    COL_STOP_LON,
+    CUFES_COVARIATE_FIELDS,
+    DEFAULT_GRID_CELL_KM,
+    DROP_REASON_OUTSIDE_WCOFS_DOMAIN,
+    DROP_REASON_WCOFS_LOW_WET_FRACTION,
+    DROP_TABLE_COLUMNS,
+    endpoints_present,
+    event_mid_time,
+    event_midpoint_lat_lon,
+    great_circle_sample_points,
+    join_covariates_to_events,
+    normalize_cufes_events_for_physics,
+)
+from fishai.ingestion.physics.features import (
+    front_distance_km,
+    sst_gradient,
+    upwelling_covariate_metadata,
+)
+from fishai.ingestion.physics.glorys_cufes_subset import (
+    TRAINING_SUBSET_DEPTH_MAX_M,
+    TRAINING_SUBSET_DEPTH_MIN_M,
+    TRAINING_SUBSET_VARIABLES,
+    cache_byte_total,
+    enforce_subset_request_budget,
+    populate_store_days_from_cache,
+    product_date_coverage,
+    subset_nc_path,
+)
+from fishai.ingestion.physics.glorys_training_build import (
+    GlorysTrainingBuildError,
+    REASON_WCOFS_BATHYMETRY_ARTIFACT_MISSING,
+    assert_copernicus_env_credentials,
+    assert_may_write_glorys_training_parquet,
+    assert_store_ready_for_copernicus_export,
+    assert_wcofs_bathymetry_hmin_source,
+    assert_wcofs_h_array_not_placeholder,
+    classify_copernicus_subset_error,
+)
+from fishai.ingestion.physics.glorys_catalog import guard_glorys_version_before_fetch
+from fishai.ingestion.physics.sources.glorys import (
+    glorys_column_features,
+    glorys_dataset_id_for_date,
+    glorys_product_for_date,
+)
+from fishai.ingestion.physics.wcofs_glorys_overlap import (
+    coarsen_min_wet_fraction,
+    load_overlap_config,
+)
+from fishai.ingestion.physics.wind_pull_log import (
+    append_wind_pull_log,
+    build_upwelling_wind_status_record,
+)
+from fishai.ingestion.physics.wind_shared_forcing import (
+    UPWELLING_STATUS_NO_CONSISTENT_WIND,
+    UPWELLING_WIND_FORCING_ENABLED,
+    wind_product_audit_summary,
+)
+from fishai.ingestion.physics.wcofs_h_glorys_store import (
+    DEFAULT_MANIFEST_REL,
+    MODEL_FLOOR_TOLERANCE_M,
+    WcofsHGlorysGrid,
+    depth_at_model_floor,
+    load_wcofs_h_glorys_grid,
+    load_wcofs_h_manifest,
+)
+from fishai.ingestion.sources import REPO_ROOT, attribution_for, require_approved
+
+DEFAULT_EVENTS_PATH = REPO_ROOT / "data" / "processed" / "calcofi_cufes" / "cufes_events.parquet"
+DEFAULT_OUTPUT_PATH = (
+    REPO_ROOT / "data" / "processed" / "calcofi_cufes" / "cufes_training_covariates.parquet"
+)
+DEFAULT_DROPS_NAME = "cufes_training_covariate_drops.parquet"
+DEFAULT_DROP_SUMMARY_NAME = "cufes_training_covariate_drop_summary.json"
+
+PILOT_BBOX = (32.0, 35.0, -121.0, -117.0)
+
+TRAINING_OUTPUT_COLUMNS: tuple[str, ...] = (
+    COL_EVENT_ID,
+    *CUFES_COVARIATE_FIELDS,
+    "upwelling_status",
+    "bottom_depth_m",
+    "depth_at_model_floor",
+    "source",
+    "provenance",
+    "excluded",
+    "source_product",
+    "excluded_reason",
+)
+
+
+def bottom_depth_metadata(
+    config: dict[str, Any],
+    *,
+    store: GlorysFieldStore | None = None,
+) -> dict[str, Any]:
+    bathy = config.get("bathymetry") or {}
+    manifest_doc: dict[str, Any] = {}
+    try:
+        manifest_doc = load_wcofs_h_manifest()
+    except (FileNotFoundError, json.JSONDecodeError):
+        manifest_doc = {"manifest_path": DEFAULT_MANIFEST_REL, "build_status": "manifest_only"}
+    block: dict[str, Any] = {
+        "source": WCOFS_BOTTOM_DEPTH_SOURCE,
+        "variable": WCOFS_BOTTOM_DEPTH_VARIABLE,
+        "grid": bathy.get("grid", "glorys_1_12deg"),
+        "coarsen": bathy.get("coarsen", "area_weighted_wet_masked"),
+        "min_wet_fraction": coarsen_min_wet_fraction(config),
+        "artifact_manifest": DEFAULT_MANIFEST_REL,
+        "model_floor_tolerance_m": MODEL_FLOOR_TOLERANCE_M,
+    }
+    if store is not None:
+        block["roms_hmin_m"] = store.roms_hmin_m
+        block["hmin_source"] = store.hmin_source
+    elif manifest_doc.get("roms_hmin_m") is not None:
+        block["roms_hmin_m"] = manifest_doc["roms_hmin_m"]
+        block["hmin_source"] = manifest_doc.get("hmin_source")
+    if manifest_doc.get("sha256"):
+        block["artifact_sha256"] = manifest_doc["sha256"]
+        block["artifact_path"] = manifest_doc.get("artifact_path")
+    return {"bottom_depth_m": block}
+
+
+@dataclass(frozen=True)
+class GlorysSubsetBatch:
+    dataset_id: str
+    date_start: dt.date
+    date_end: dt.date
+    variables: tuple[str, ...]
+    bbox: tuple[float, float, float, float]
+
+
+@dataclass
+class GlorysDayFields:
+    """One day of GLORYS fields on the pilot 1/12° grid."""
+
+    day: dt.date
+    dataset_id: str
+    lat: np.ndarray
+    lon: np.ndarray
+    depth_levels: np.ndarray
+    thetao: np.ndarray
+    so: np.ndarray
+    mlotst: np.ndarray
+    u10: np.ndarray
+    v10: np.ndarray
+    sst_grad: np.ndarray
+    front_distance_km: np.ndarray
+    upwelling: np.ndarray
+
+
+@dataclass
+class GlorysFieldStore:
+    """In-memory GLORYS grids keyed by calendar day plus static WCOFS ``h`` on the GLORYS grid."""
+
+    wcofs_h_m: np.ndarray
+    has_source: np.ndarray
+    wet_fraction: np.ndarray
+    min_wet_fraction: float
+    roms_hmin_m: float
+    hmin_source: str
+    lat: np.ndarray
+    lon: np.ndarray
+    wind_source_id: str = "ccmp_winds"
+    covariate_data_source: str = ""
+    days: dict[dt.date, GlorysDayFields] = field(default_factory=dict)
+
+    @classmethod
+    def from_wcofs_h_grid(cls, grid: WcofsHGlorysGrid) -> GlorysFieldStore:
+        return cls(
+            wcofs_h_m=grid.h_m,
+            has_source=grid.has_source,
+            wet_fraction=grid.wet_fraction,
+            min_wet_fraction=grid.min_wet_fraction,
+            roms_hmin_m=grid.roms_hmin_m,
+            hmin_source=grid.hmin_source,
+            lat=grid.lat,
+            lon=grid.lon,
+            covariate_data_source="",
+        )
+
+    def field_sampler(self, lat: float, lon: float, when: pd.Timestamp) -> dict[str, Any]:
+        if pd.isna(when):
+            return {f: float("nan") for f in CUFES_COVARIATE_FIELDS}
+        day = when.date()
+        fields = self.days.get(day)
+        if fields is None:
+            return {f: float("nan") for f in CUFES_COVARIATE_FIELDS}
+        j, i = _nearest_cell(lat, lon, fields.lat, fields.lon)
+        depth = fields.depth_levels
+        feats = glorys_column_features(
+            depth,
+            fields.thetao[:, j, i],
+            fields.so[:, j, i],
+            float(fields.mlotst[j, i]),
+        )
+        out = {k: feats[k] for k in CUFES_COVARIATE_FIELDS if k in feats}
+        out["sst_grad"] = float(fields.sst_grad[j, i])
+        out["front_distance_km"] = float(fields.front_distance_km[j, i])
+        # No consistent wind product: leave null. Do not copy or impute grid upwelling.
+        out["upwelling"] = float("nan")
+        return out
+
+    def sample_bottom_depth_with_reason(self, lat: float, lon: float) -> tuple[float, str | None]:
+        return sample_wcofs_h_bottom_depth_m(
+            lat,
+            lon,
+            self.wcofs_h_m,
+            self.lat,
+            self.lon,
+            has_source=self.has_source,
+            wet_fraction=self.wet_fraction,
+            min_wet_fraction=self.min_wet_fraction,
+        )
+
+
+def _nearest_cell(lat: float, lon: float, lat_axis: np.ndarray, lon_axis: np.ndarray) -> tuple[int, int]:
+    lon = normalize_lon_for_axis(lon, lon_axis)
+    j = int(np.argmin(np.abs(lat_axis - lat)))
+    i = int(np.argmin(np.abs(lon_axis - lon)))
+    return j, i
+
+
+def mean_bottom_depth_m_along_segment(
+    event: pd.Series,
+    store: GlorysFieldStore,
+    *,
+    grid_cell_km: float = DEFAULT_GRID_CELL_KM,
+) -> tuple[float, list[str]]:
+    """Segment mean of WCOFS ``h`` on the GLORYS grid (same track sampling as GLORYS covariates)."""
+    if not endpoints_present(event):
+        return float("nan"), []
+    lat0, lon0 = float(event[COL_START_LAT]), float(event[COL_START_LON])
+    lat1, lon1 = float(event[COL_STOP_LAT]), float(event[COL_STOP_LON])
+    points = great_circle_sample_points(lat0, lon0, lat1, lon1, grid_cell_km=grid_cell_km)
+    depths: list[float] = []
+    reasons: list[str] = []
+    for lat, lon in points:
+        val, reason = store.sample_bottom_depth_with_reason(lat, lon)
+        if reason is not None:
+            reasons.append(reason)
+            continue
+        if np.isfinite(val):
+            depths.append(float(val))
+    if not depths:
+        return float("nan"), sorted(set(reasons)) if reasons else [DROP_REASON_WCOFS_LOW_WET_FRACTION]
+    return float(np.mean(depths)), []
+
+
+def unique_event_days(events: pd.DataFrame) -> list[dt.date]:
+    days: set[dt.date] = set()
+    for _, row in events.iterrows():
+        mid = event_mid_time(row)
+        if pd.isna(mid):
+            continue
+        days.add(mid.date())
+    return sorted(days)
+
+
+def plan_glorys_subset_batches(
+    days: Sequence[dt.date],
+    *,
+    bbox: tuple[float, float, float, float] = PILOT_BBOX,
+    variables: tuple[str, ...] = TRAINING_SUBSET_VARIABLES,
+) -> list[GlorysSubsetBatch]:
+    """Group unique event days into monthly Copernicus subset requests per dataset id.
+
+    Every day, including every day after 2021, is resolved with PR #24
+    ``guard_glorys_version_before_fetch`` (live catalogue id + pinned version).
+    """
+    by_key: dict[tuple[str, int, int], list[dt.date]] = defaultdict(list)
+    for day in days:
+        resolution = guard_glorys_version_before_fetch(day, log_path=None)
+        product_id = glorys_product_for_date(day)
+        if product_id != resolution.dataset_id:
+            raise ValueError(
+                f"glorys_product_for_date({day.isoformat()})={product_id!r} "
+                f"does not match catalogue resolution {resolution.dataset_id!r}"
+            )
+        by_key[(product_id, day.year, day.month)].append(day)
+    batches: list[GlorysSubsetBatch] = []
+    for (product_id, _year, _month), month_days in sorted(by_key.items()):
+        month_days = sorted(month_days)
+        glorys_dataset_id_for_date(month_days[0], product_id)
+        batches.append(
+            GlorysSubsetBatch(
+                dataset_id=product_id,
+                date_start=month_days[0],
+                date_end=month_days[-1],
+                variables=variables,
+                bbox=bbox,
+            )
+        )
+    return batches
+
+
+def _compute_day_surface_fields(
+    day: dt.date,
+    dataset_id: str,
+    lat: np.ndarray,
+    lon: np.ndarray,
+    depth_levels: np.ndarray,
+    thetao: np.ndarray,
+    so: np.ndarray,
+    mlotst: np.ndarray,
+) -> GlorysDayFields:
+    sst = thetao[0]
+    grad = sst_gradient(sst, lat, lon)
+    lat2d, lon2d = np.meshgrid(lat, lon, indexing="ij")
+    front_km = front_distance_km(grad, lat2d, lon2d)
+    nj, ni = lat.size, lon.size
+    upwelling = np.full((nj, ni), np.nan, dtype=float)
+    return GlorysDayFields(
+        day=day,
+        dataset_id=dataset_id,
+        lat=lat,
+        lon=lon,
+        depth_levels=depth_levels,
+        thetao=thetao,
+        so=so,
+        mlotst=mlotst,
+        u10=np.full((nj, ni), np.nan, dtype=float),
+        v10=np.full((nj, ni), np.nan, dtype=float),
+        sst_grad=grad,
+        front_distance_km=front_km,
+        upwelling=upwelling,
+    )
+
+
+def _excluded_reason_map(drops: pd.DataFrame) -> dict[Any, str]:
+    if drops.empty:
+        return {}
+    out: dict[Any, str] = {}
+    for eid, grp in drops.groupby("event_id"):
+        reasons = sorted(set(grp["reason"].astype(str)))
+        out[eid] = ";".join(reasons)
+    return out
+
+
+def _apply_exclusion_state(out: pd.DataFrame, drops: pd.DataFrame) -> pd.DataFrame:
+    excluded_ids: set[Any] = set(drops["event_id"].unique()) if not drops.empty else set()
+    out = out.copy()
+    out["excluded"] = out[COL_EVENT_ID].isin(excluded_ids)
+    if excluded_ids:
+        for col in CUFES_COVARIATE_FIELDS:
+            out.loc[out["excluded"], col] = np.nan
+        out.loc[out["excluded"], "bottom_depth_m"] = np.nan
+        if "depth_at_model_floor" in out.columns:
+            out.loc[out["excluded"], "depth_at_model_floor"] = False
+    return out
+
+
+def attach_bottom_depth_and_reasons(
+    events: pd.DataFrame,
+    covariates: pd.DataFrame,
+    drops: pd.DataFrame,
+    store: GlorysFieldStore,
+) -> tuple[pd.DataFrame, pd.DataFrame]:
+    """Add ``bottom_depth_m``, ``source_product``, ``excluded_reason``; extend drops if needed."""
+    drop_rows = drops.to_dict(orient="records")
+    bottom_depth: list[float] = []
+    at_floor: list[bool] = []
+    source_products: list[str] = []
+    for _, event in events.iterrows():
+        eid = event[COL_EVENT_ID]
+        mid_lat, mid_lon = event_midpoint_lat_lon(event)
+        mid_t = event_mid_time(event)
+        if pd.isna(mid_t):
+            product_id = ""
+            depth_val = float("nan")
+            depth_reasons: list[str] = []
+            floor_flag = False
+        else:
+            product_id = glorys_product_for_date(mid_t.date())
+            depth_val, depth_reasons = mean_bottom_depth_m_along_segment(event, store)
+            floor_flag = depth_at_model_floor(depth_val, store.roms_hmin_m)
+        source_products.append(product_id)
+        bottom_depth.append(depth_val)
+        at_floor.append(floor_flag)
+        if not np.isfinite(depth_val) or depth_val <= 0.0:
+            reasons = depth_reasons or [DROP_REASON_WCOFS_LOW_WET_FRACTION]
+            for reason in sorted(set(reasons)):
+                drop_rows.append(
+                    {
+                        "event_id": eid,
+                        "reason": reason,
+                        "covariate": "bottom_depth_m",
+                        "latitude": mid_lat,
+                        "longitude": mid_lon,
+                    }
+                )
+    out = covariates.copy()
+    out["bottom_depth_m"] = bottom_depth
+    out["depth_at_model_floor"] = at_floor
+    out["source_product"] = source_products
+    drops_out = pd.DataFrame(drop_rows, columns=list(DROP_TABLE_COLUMNS))
+    out = _apply_exclusion_state(out, drops_out)
+    reasons = _excluded_reason_map(drops_out)
+    out["excluded_reason"] = out[COL_EVENT_ID].map(lambda e: reasons.get(e, ""))
+    out.loc[~out["excluded"], "excluded_reason"] = ""
+    return out, drops_out
+
+
+def write_training_covariates_parquet(
+    df: pd.DataFrame,
+    path: Path,
+    *,
+    entry: dict[str, Any],
+    config: dict[str, Any] | None = None,
+    store: GlorysFieldStore | None = None,
+) -> Path:
+    import pyarrow as pa
+    import pyarrow.parquet as pq
+
+    path = Path(path)
+    path.parent.mkdir(parents=True, exist_ok=True)
+    cfg = config or load_overlap_config()
+    metadata = {
+        "attribution": attribution_for("glorys"),
+        "glorys_derived": True,
+        "copernicus_doi": GLORYS_DOI,
+        "copernicus_credit": GLORYS_CREDIT_TEXT,
+        **bottom_depth_metadata(cfg, store=store),
+        **upwelling_covariate_metadata(store.wind_source_id if store else "ccmp_winds"),
+    }
+    assert_may_write_glorys_training_parquet(store)
+    require_glorys_attribution(metadata)
+    metadata["covariate_data_source"] = store.covariate_data_source  # type: ignore[union-attr]
+    meta_json = json.dumps(metadata, sort_keys=True)
+    table = pa.Table.from_pandas(df, preserve_index=False)
+    custom = dict(table.schema.metadata or {})
+    custom["glorys"] = meta_json.encode()
+    table = table.replace_schema_metadata(custom)
+    pq.write_table(table, path)
+    return path
+
+
+def apply_upwelling_wind_policy(out: pd.DataFrame) -> pd.DataFrame:
+    """NaN ``upwelling`` with status metadata when no consistent wind product is wired."""
+    out = out.copy()
+    if UPWELLING_WIND_FORCING_ENABLED:
+        if "upwelling_status" not in out.columns:
+            out["upwelling_status"] = ""
+        return out
+    out["upwelling"] = np.nan
+    out["upwelling_status"] = UPWELLING_STATUS_NO_CONSISTENT_WIND
+    return out
+
+
+def record_upwelling_wind_status_pull_log(
+    *,
+    log_path: Path | None = None,
+) -> Path:
+    cfg = load_overlap_config()
+    path = log_path or REPO_ROOT / str(
+        cfg["pull_logs"].get("winds", "data/provenance/wind_pull_log.jsonl")
+    )
+    return append_wind_pull_log(
+        build_upwelling_wind_status_record(
+            upwelling_status=UPWELLING_STATUS_NO_CONSISTENT_WIND,
+            audit=wind_product_audit_summary(),
+            wind_fetch_performed=False,
+        ),
+        log_path=path,
+    )
+
+
+def build_cufes_training_covariates_table(
+    events: pd.DataFrame,
+    store: GlorysFieldStore,
+    *,
+    source: str = "glorys",
+    provenance: str = "",
+    drops_parquet_path: Path | None = None,
+    drop_summary_json_path: Path | None = None,
+    wind_status_log_path: Path | None = None,
+) -> tuple[pd.DataFrame, dict[str, Any], pd.DataFrame, dict[str, Any]]:
+    """Join GLORYS covariates to QC-kept CUFES events (one row per ``event_id``)."""
+    cov, qc, drops = join_covariates_to_events(
+        events,
+        field_sampler=store.field_sampler,
+        source=source,
+        provenance=provenance,
+        drops_parquet_path=drops_parquet_path,
+        drop_summary_json_path=drop_summary_json_path,
+    )
+    out, drops = attach_bottom_depth_and_reasons(events, cov, drops, store)
+    out = apply_upwelling_wind_policy(out)
+    if not UPWELLING_WIND_FORCING_ENABLED:
+        record_upwelling_wind_status_pull_log(log_path=wind_status_log_path)
+    for col in TRAINING_OUTPUT_COLUMNS:
+        if col not in out.columns:
+            raise ValueError(f"missing output column: {col}")
+    out = out[list(TRAINING_OUTPUT_COLUMNS)]
+    floor_qc = {
+        "depth_at_model_floor_count": int(out["depth_at_model_floor"].sum()),
+        "depth_at_model_floor_computed_at_run_time": True,
+        "roms_hmin_m": store.roms_hmin_m,
+        "hmin_source": store.hmin_source,
+    }
+    return out, qc, drops, floor_qc
+
+
+def _sha256_file(path: Path) -> str:
+    digest = hashlib.sha256()
+    with path.open("rb") as handle:
+        for chunk in iter(lambda: handle.read(1024 * 1024), b""):
+            digest.update(chunk)
+    return digest.hexdigest()
+
+
+def catalogue_resolution_for_subset_batch(
+    batch: GlorysSubsetBatch,
+    *,
+    log_path: Path | None,
+) -> Any:
+    """Resolve every calendar day in ``batch`` through the PR #24 catalogue guard.
+
+    Days after 2021 use the same resolver as earlier days (pinned catalogue version
+    before any Copernicus subset). A batch may not mix dataset ids or versions.
+    """
+    resolution: Any = None
+    day = batch.date_start
+    while day <= batch.date_end:
+        day_resolution = guard_glorys_version_before_fetch(day, log_path=log_path)
+        glorys_dataset_id_for_date(day, batch.dataset_id)
+        if day_resolution.dataset_id != batch.dataset_id:
+            raise ValueError(
+                f"batch dataset_id {batch.dataset_id!r} does not match catalogue "
+                f"resolution {day_resolution.dataset_id!r} on {day.isoformat()}"
+            )
+        if resolution is not None and (
+            day_resolution.dataset_version != resolution.dataset_version
+            or day_resolution.dataset_id != resolution.dataset_id
+        ):
+            raise ValueError(
+                f"catalogue resolution changed within batch on {day.isoformat()}: "
+                f"{day_resolution.dataset_id}@{day_resolution.dataset_version}"
+            )
+        resolution = day_resolution
+        day += dt.timedelta(days=1)
+    if resolution is None:
+        raise ValueError("empty GLORYS subset batch")
+    return resolution
+
+
+def _subset_batch_live(
+    batch: GlorysSubsetBatch,
+    output_dir: Path,
+    *,
+    log_path: Path,
+) -> Path:
+    try:
+        import copernicusmarine  # type: ignore[import-not-found]
+    except ImportError as exc:  # pragma: no cover - runtime host only
+        raise RuntimeError("copernicusmarine package required for live GLORYS subset") from exc
+
+    output_dir.mkdir(parents=True, exist_ok=True)
+    out_file = subset_nc_path(output_dir, batch)
+    resolution = catalogue_resolution_for_subset_batch(batch, log_path=log_path)
+    la0, la1, lo0, lo1 = batch.bbox
+    copernicusmarine.subset(
+        dataset_id=resolution.dataset_id,
+        variables=list(batch.variables),
+        minimum_latitude=la0,
+        maximum_latitude=la1,
+        minimum_longitude=lo0,
+        maximum_longitude=lo1,
+        minimum_depth=TRAINING_SUBSET_DEPTH_MIN_M,
+        maximum_depth=TRAINING_SUBSET_DEPTH_MAX_M,
+        start_datetime=f"{batch.date_start.isoformat()}T00:00:00",
+        end_datetime=f"{batch.date_end.isoformat()}T23:59:59",
+        output_filename=str(out_file),
+    )
+    pull_record = build_pull_record(
+        dataset_id=resolution.dataset_id,
+        date_start=batch.date_start.isoformat(),
+        date_end=batch.date_end.isoformat(),
+        variables=batch.variables,
+        bbox=batch.bbox,
+        dataset_version=resolution.dataset_version,
+        file_sha256=_sha256_file(out_file),
+    )
+    pull_record.update(resolution.pull_log_fields())
+    append_pull_log(pull_record, log_path=log_path)
+    return out_file
+
+
+def load_events_parquet(path: Path | None = None) -> pd.DataFrame:
+    path = path or DEFAULT_EVENTS_PATH
+    return normalize_cufes_events_for_physics(pd.read_parquet(path))
+
+
+def new_glorys_field_store_for_live_build(
+    config: dict[str, Any] | None = None,
+    *,
+    manifest_path: Path | None = None,
+    artifact_path: Path | None = None,
+) -> GlorysFieldStore:
+    """
+    GLORYS day cache empty until Copernicus subsets load; bathymetry from WCOFS ``h`` artifact.
+    """
+    cfg = config or load_overlap_config()
+    try:
+        grid = load_wcofs_h_glorys_grid(
+            manifest_path=manifest_path,
+            artifact_path=artifact_path,
+        )
+    except FileNotFoundError as exc:
+        raise GlorysTrainingBuildError(
+            REASON_WCOFS_BATHYMETRY_ARTIFACT_MISSING,
+            str(exc),
+        ) from exc
+    assert_wcofs_bathymetry_hmin_source(grid.hmin_source)
+    assert_wcofs_h_array_not_placeholder(grid.h_m)
+    store = GlorysFieldStore.from_wcofs_h_grid(grid)
+    store.covariate_data_source = ""
+    store.days = {}
+    return store
+
+
+def run_build_cufes_training_covariates(
+    *,
+    events_path: Path | None = None,
+    output_path: Path | None = None,
+    dry_run: bool = False,
+    subset_fn: Callable[[GlorysSubsetBatch, Path], Path] | None = None,
+    max_concurrent: int = 2,
+) -> dict[str, Any]:
+    """
+    Load QC-kept CUFES events, plan GLORYS subsets, build training covariates table.
+
+    Live path requires Copernicus subsets (or injected ``subset_fn`` writing real cache
+    NetCDFs). Use ``dry_run`` to plan only. Never writes output on failure.
+    """
+    require_approved("glorys", purpose="training")
+    if not dry_run and subset_fn is None:
+        # Fail closed before catalogue I/O or downloads. Credential files on the
+        # operator HOME are irrelevant: this gate reads the process environment only.
+        assert_copernicus_env_credentials()
+    events = load_events_parquet(events_path)
+    days = unique_event_days(events)
+    batches = plan_glorys_subset_batches(days)
+    out_path = output_path or DEFAULT_OUTPUT_PATH
+    result: dict[str, Any] = {
+        "input_event_count": int(len(events)),
+        "unique_days": len(days),
+        "subset_batch_count": len(batches),
+        "batches": [
+            {
+                "dataset_id": b.dataset_id,
+                "date_start": b.date_start.isoformat(),
+                "date_end": b.date_end.isoformat(),
+                "variables": list(b.variables),
+            }
+            for b in batches
+        ],
+    }
+    if dry_run:
+        result["glorys_product_coverage"] = product_date_coverage(days)
+        return result
+
+    enforce_subset_request_budget(batches)
+    cfg = load_overlap_config()
+    cfg_logs = cfg
+    log_path = REPO_ROOT / str(cfg_logs["pull_logs"]["glorys"])
+
+    if subset_fn is None:
+
+        def subset_fn(batch: GlorysSubsetBatch, cache_dir: Path) -> Path:
+            try:
+                return _subset_batch_live(batch, cache_dir, log_path=log_path)
+            except ImportError as exc:
+                raise GlorysTrainingBuildError(
+                    classify_copernicus_subset_error(exc),
+                    "copernicusmarine package required for live GLORYS subset",
+                ) from exc
+            except Exception as exc:
+                code = classify_copernicus_subset_error(exc)
+                raise GlorysTrainingBuildError(code, str(exc)) from exc
+
+    store = new_glorys_field_store_for_live_build(cfg)
+    cache_dir = REPO_ROOT / "data" / "cache" / "glorys_cufes"
+    cache_dir.mkdir(parents=True, exist_ok=True)
+
+    try:
+        with ThreadPoolExecutor(max_workers=max(1, min(max_concurrent, 2))) as pool:
+            futures = {
+                pool.submit(subset_fn, batch, cache_dir): batch for batch in batches
+            }
+            for fut in as_completed(futures):
+                try:
+                    fut.result()
+                except GlorysTrainingBuildError:
+                    raise
+                except Exception as exc:
+                    raise GlorysTrainingBuildError(
+                        classify_copernicus_subset_error(exc),
+                        str(exc),
+                    ) from exc
+
+        populate_store_days_from_cache(store, days, batches, cache_dir)
+        assert_store_ready_for_copernicus_export(store, days)
+    except GlorysTrainingBuildError:
+        raise
+    except Exception as exc:
+        raise GlorysTrainingBuildError(
+            classify_copernicus_subset_error(exc),
+            str(exc),
+        ) from exc
+    result["subset_request_count"] = len(batches)
+    result["subset_bytes_downloaded"] = cache_byte_total(cache_dir, batches)
+    result["glorys_product_coverage"] = product_date_coverage(days)
+    result["glorys_cache_dir"] = str(cache_dir)
+
+    drops_path = out_path.parent / DEFAULT_DROPS_NAME
+    summary_path = out_path.parent / DEFAULT_DROP_SUMMARY_NAME
+    table, qc, _drops, floor_qc = build_cufes_training_covariates_table(
+        events,
+        store,
+        provenance=str(events_path or DEFAULT_EVENTS_PATH),
+        drops_parquet_path=drops_path,
+        drop_summary_json_path=summary_path,
+    )
+    write_training_covariates_parquet(
+        table,
+        out_path,
+        entry=require_approved("glorys", purpose="training"),
+        config=cfg,
+        store=store,
+    )
+    result["output_path"] = str(out_path)
+    result["drops_path"] = str(drops_path)
+    result["qc"] = qc
+    result["bottom_depth_qc"] = floor_qc
+    excluded = table[table["excluded"]]
+    result["excluded_row_count"] = int(len(excluded))
+    if not excluded.empty:
+        result["excluded_reasons"] = (
+            excluded.groupby("excluded_reason")["event_id"]
+            .count()
+            .astype(int)
+            .to_dict()
+        )
+    return result

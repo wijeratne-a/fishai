@@ -14,6 +14,13 @@ GRAVITY = 9.81
 RHO0 = 1025.0
 RHO_AIR = 1.22
 
+# Southern California Bight mainland shoreline tangent (CCW from east), pilot box 32–35°N / 117–121°W.
+# Derived from the mean orientation of the mainland coast between Point Conception and the US–Mexico
+# border (~145°), consistent with qualitative Bakun upwelling geometry for this bight.
+PILOT_COAST_ANGLE_DEG = 145.0
+PILOT_COAST_ANGLE_RAD = math.radians(PILOT_COAST_ANGLE_DEG)
+UPWELLING_FORMULA_ID = "ekman_coastal_ui_v1"
+
 
 def _fill_nan_mean(field: np.ndarray) -> np.ndarray:
     f = np.where(np.isfinite(field), field, np.nan)
@@ -167,6 +174,54 @@ def _wind_stress(u10: np.ndarray, v10: np.ndarray) -> tuple[np.ndarray, np.ndarr
     return tau_x, tau_y
 
 
+def compute_upwelling(
+    u10: np.ndarray,
+    v10: np.ndarray,
+    lat: np.ndarray,
+    *,
+    coast_angle_rad: float | None = None,
+) -> np.ndarray:
+    """
+    Coastal upwelling index (m²/s per m of coast) from 10 m winds.
+
+    Uses ``ekman_upwelling`` with :data:`PILOT_COAST_ANGLE_RAD` as the mainland-shore
+    **tangent** (CCW from east). The returned index is negated so that **positive**
+    values match offshore Ekman transport under equatorward alongshore winds on the
+    US west coast (upwelling-favourable in the Southern California Bight).
+    """
+    angle = coast_angle_rad if coast_angle_rad is not None else PILOT_COAST_ANGLE_RAD
+    ui = ekman_upwelling(u10, v10, lat, coast_angle_rad=angle)["coastal_upwelling_index"]
+    return -ui
+
+
+def upwelling_covariate_metadata(wind_source_id: str) -> dict[str, float | str | bool]:
+    from fishai.ingestion.physics.wind_shared_forcing import (
+        CCMP_NRT_ERDDAP_ID,
+        CCMP_NRT_PRODUCT_VERSION,
+        UPWELLING_SHARED_FORCING_QUALIFIED,
+        wind_product_audit_summary,
+    )
+
+    from fishai.ingestion.physics.wind_shared_forcing import (
+        UPWELLING_STATUS_NO_CONSISTENT_WIND,
+        UPWELLING_WIND_FORCING_ENABLED,
+    )
+
+    audit = wind_product_audit_summary()
+    meta: dict[str, float | str | bool] = {
+        "upwelling_formula": UPWELLING_FORMULA_ID,
+        "upwelling_wind_source": wind_source_id,
+        "upwelling_coast_angle_deg": PILOT_COAST_ANGLE_DEG,
+        "upwelling_shared_forcing": UPWELLING_SHARED_FORCING_QUALIFIED,
+        "upwelling_wind_dataset_id": CCMP_NRT_ERDDAP_ID,
+        "upwelling_wind_product_version": CCMP_NRT_PRODUCT_VERSION,
+        "upwelling_wind_audit": audit,
+    }
+    if not UPWELLING_WIND_FORCING_ENABLED:
+        meta["upwelling_status"] = UPWELLING_STATUS_NO_CONSISTENT_WIND
+    return meta
+
+
 def ekman_upwelling(
     u10: np.ndarray,
     v10: np.ndarray,
@@ -190,7 +245,8 @@ def ekman_upwelling(
     tau_x, tau_y = _wind_stress(u10, v10)
     mx = tau_y / (RHO0 * f)
     my = -tau_x / (RHO0 * f)
-    dlon = np.gradient(np.arange(u10.shape[1]), axis=1)
+    lon_idx = np.arange(u10.shape[1], dtype=float)
+    dlon = np.broadcast_to(np.gradient(lon_idx), u10.shape)
     dlat = np.gradient(lat2d, axis=0)
     dx = np.radians(dlon) * EARTH_RADIUS_M * np.cos(phi)
     dy = np.radians(dlat) * EARTH_RADIUS_M
