@@ -1,5 +1,14 @@
 {
-  "status": "step_1_cufes_sync_started",
-  "head_sha": "96fbaba1d3efc5610db28d9618f5343b98daf5c2",
-  "note": "Fresh fishai-bio sync cufes 1996-01-01..2022-04-19 after deleting stale raw/processed artifacts."
+  "status": "step_2_build_cufes_training_covariates_started",
+  "head_sha": "ae9a085",
+  "cufes_sync": {
+    "window": "1996-01-01..2022-04-19",
+    "qc_report_path": "data/processed/calcofi_cufes/cufes_qc_report.json",
+    "events_read": 15969,
+    "events_kept": 14592,
+    "n_short_event": 1266,
+    "n_long_event": 13326,
+    "event_count_guard_updated": false
+  },
+  "note": "Guard matches evidence (14592 / 1266 / 13326). Starting live GLORYS training covariates build."
 }
