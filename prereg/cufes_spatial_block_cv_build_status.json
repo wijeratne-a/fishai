@@ -1,19 +1,19 @@
 {
-  "status": "step_3_renv_bootstrap_for_cv_scores",
-  "head_sha": "9880957",
+  "status": "step_3_spatial_block_cv_scores_running",
+  "head_sha": "150c4bd",
   "cufes_sync": {
     "events_kept": 14592,
     "n_short_event": 1266,
     "n_long_event": 13326,
-    "event_count_guard_updated": false
+    "event_count_guard_updated": false,
+    "qc_report": "data/processed/calcofi_cufes/cufes_qc_report.json"
   },
   "training_table_build": {
     "input_event_count": 14592,
     "kept_count": 12085,
     "excluded_count": 2507,
     "upwelling_null_all_rows": true,
-    "upwelling_status": "no_consistent_wind_product",
-    "subset_request_count": 97
+    "upwelling_status": "no_consistent_wind_product"
   },
-  "note": "Training parquets built on runner (gitignored). Bootstrapping renv for R CV script."
+  "note": "Restarted CV with FISHAI_GLORYS_PINNED_CATALOG_JSON for source_product validation (prior run lacked fixture in Rscript process)."
 }
