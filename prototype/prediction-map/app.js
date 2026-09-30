@@ -42,12 +42,12 @@ function renderLegend(container) {
   container.innerHTML = `
     <h2>Spawning-habitat egg-encounter map (internal prototype)</h2>
     <p class="watermark" data-testid="watermark"></p>
-    <section aria-label="Schema evidence_state enum">
-      <h3>Schema evidence_state (data contract)</h3>
+    <section aria-label="Egg-encounter schema evidence_state enum">
+      <h3>Egg-encounter schema evidence_state (data contract)</h3>
       <ul>${SCHEMA_EVIDENCE_STATES.map((s) => `<li><code>${s}</code></li>`).join("")}</ul>
     </section>
-    <section aria-label="Display doctrine vocabulary">
-      <h3>Display doctrine (README Evidence-state vocabulary)</h3>
+    <section aria-label="Spawning-habitat egg display doctrine vocabulary">
+      <h3>Spawning egg evidence display doctrine (README Evidence-state vocabulary)</h3>
       <ul>${DISPLAY_DOCTRINE.map((d) => `<li>${d}</li>`).join("")}</ul>
     </section>
     <p class="hint">Each cell shows both the schema enum and the display doctrine line. UNKNOWN cells show egg evidence state only — no probability fill.</p>
@@ -149,8 +149,8 @@ function renderCellList(container, rows, species) {
           : "";
       return `<article class="cell-card" data-cell-id="${row.cell_id}">
         <h4>${row.cell_id}</h4>
-        <p><strong>Schema evidence_state:</strong> <code>${row.evidence_state}</code></p>
-        <p><strong>Display doctrine:</strong> ${doctrine}</p>
+        <p><strong>Egg-encounter schema evidence_state:</strong> <code>${row.evidence_state}</code></p>
+        <p><strong>Spawning egg display doctrine:</strong> ${doctrine}</p>
         <p>${prob}</p>
         ${unknownLine}
       </article>`;
