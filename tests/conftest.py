@@ -79,6 +79,7 @@ def _block_live_network(monkeypatch: pytest.MonkeyPatch) -> None:
     real_connect = socket.socket.connect
     real_connect_ex = socket.socket.connect_ex
     real_getaddrinfo = socket.getaddrinfo
+    real_create_connection = socket.create_connection
 
     def _refuse(target: object) -> LiveNetworkBlocked:
         return LiveNetworkBlocked(f"live network access blocked in unit tests: {target!r}")
@@ -101,9 +102,16 @@ def _block_live_network(monkeypatch: pytest.MonkeyPatch) -> None:
             raise _refuse(host)
         return real_getaddrinfo(host, *args, **kwargs)
 
+    def guarded_create_connection(address: object, *args: object, **kwargs: object):
+        host = _addr_host(address)
+        if not _is_loopback_host(host):
+            raise _refuse(address)
+        return real_create_connection(address, *args, **kwargs)
+
     monkeypatch.setattr(socket.socket, "connect", guarded_connect)
     monkeypatch.setattr(socket.socket, "connect_ex", guarded_connect_ex)
     monkeypatch.setattr(socket, "getaddrinfo", guarded_getaddrinfo)
+    monkeypatch.setattr(socket, "create_connection", guarded_create_connection)
 
 
 @pytest.fixture(scope="session", autouse=True)

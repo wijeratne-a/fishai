@@ -32,9 +32,10 @@ BOT2_BRANCH = "origin/cursor/cufes-glorys-training-covariates-faff"
 
 
 @pytest.fixture(scope="module", autouse=True)
-def _fetch_bot2_branch_for_schema_tests() -> None:
+def _bot2_branch_ref_local_only() -> None:
+    """Hermetic: never ``git fetch`` over the network; schema tests skip when the ref is absent."""
     subprocess.run(
-        ["git", "fetch", "origin", "cursor/cufes-glorys-training-covariates-faff"],
+        ["git", "rev-parse", "--verify", BOT2_BRANCH],
         cwd=REPO,
         check=False,
         capture_output=True,
@@ -156,15 +157,15 @@ def test_optional_bot2_worktree_build_sample(tmp_path: Path) -> None:
     if os.environ.get("CI"):
         pytest.skip("read-only bot2 worktree build not run on CI workers")
     wt = tmp_path / "bot2_wt"
-    fetch = subprocess.run(
-        ["git", "fetch", "origin", "cursor/cufes-glorys-training-covariates-faff"],
+    verify = subprocess.run(
+        ["git", "rev-parse", "--verify", BOT2_BRANCH],
         cwd=REPO,
         capture_output=True,
         text=True,
         check=False,
     )
-    if fetch.returncode != 0:
-        pytest.skip("could not fetch bot2 branch")
+    if verify.returncode != 0:
+        pytest.skip("bot2 branch ref not available locally (hermetic: no git fetch)")
     add = subprocess.run(
         [
             "git",
