@@ -1,16 +1,11 @@
 {
-  "status": "step_3_spatial_block_cv_scores_running_v4",
-  "head_sha": "bb267b1",
+  "status": "step_3_spatial_block_cv_scores_running_v6",
+  "head_sha": "67fee2d",
   "cufes_sync": {
     "events_kept": 14592,
     "n_short_event": 1266,
     "n_long_event": 13326,
     "event_count_guard_updated": false
   },
-  "training_table_build": {
-    "kept_count": 12085,
-    "upwelling_null_all_rows": true,
-    "upwelling_status": "no_consistent_wind_product"
-  },
-  "note": "Built data/reference/mesh/scb_pilot_land_sf.rds on runner from ne_10m_land_pilot_clip.json; CV restarted after prior land_sf_rds missing error."
+  "note": "Prior CV run OOM at ~15GB RSS (20k-vertex barrier mesh). Added 32G swap on runner; land_sf from shoreline clip with 500m inward buffer for check_barrier."
 }
