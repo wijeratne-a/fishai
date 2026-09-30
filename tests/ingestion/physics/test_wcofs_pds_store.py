@@ -78,6 +78,40 @@ def test_avg_nowcast_resolution() -> None:
     assert resolve_avg_nowcast_key(day, _listing_map({prefix: [key]})) == key
 
 
+def test_avg_nowcast_prefers_new_name_when_both_exist() -> None:
+    from fishai.ingestion.physics.wcofs_pds_store import avg_nowcast_basename_candidates
+
+    day = dt.date(2024, 9, 2)
+    new_base, old_base = avg_nowcast_basename_candidates(day)
+    prefix = f"wcofs/netcdf/{day:%Y%m}/"
+    new_key = f"{prefix}{new_base}"
+    old_key = f"{prefix}{old_base}"
+    assert (
+        resolve_avg_nowcast_key(day, _listing_map({prefix: [old_key, new_key]}))
+        == new_key
+    )
+
+
+def test_avg_nowcast_uses_first_layout_when_basename_is_duplicated() -> None:
+    day = dt.date(2024, 11, 20)
+    base = avg_nowcast_basename(day)
+    first = f"wcofs/netcdf/{day:%Y/%m}/20/{base}"
+    second = f"wcofs/netcdf/{day:%Y%m}/{base}"
+    prefixes = layout_prefixes(day)
+    listing = {prefixes[0]: [first], prefixes[1]: [second]}
+    assert resolve_avg_nowcast_key(day, _listing_map(listing)) == first
+
+
+def test_avg_nowcast_legacy_name_when_new_style_absent() -> None:
+    from fishai.ingestion.physics.wcofs_pds_store import avg_nowcast_basename_candidates
+
+    day = dt.date(2024, 9, 5)
+    _new_base, old_base = avg_nowcast_basename_candidates(day)
+    prefix = f"wcofs/netcdf/{day:%Y%m}/"
+    old_key = f"{prefix}{old_base}"
+    assert resolve_avg_nowcast_key(day, _listing_map({prefix: [old_key]})) == old_key
+
+
 def _mini_nc_bytes(parallel_mode: bool = False) -> bytes:
     import tempfile
     from pathlib import Path

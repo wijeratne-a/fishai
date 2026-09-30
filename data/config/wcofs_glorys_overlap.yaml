@@ -52,6 +52,9 @@ glorys:
 wcofs:
   product: avg.nowcast
   cycle: t03z
+  # GLORYS calendar day D uses the next day's t03z avg.nowcast (D+1).
+  # Same-day pairing is 21 h early: cycle D ocean_time is 15:00 UTC on D-1.
+  cycle_offset_days: 1
 
 depth_grid_m:
   start: 0

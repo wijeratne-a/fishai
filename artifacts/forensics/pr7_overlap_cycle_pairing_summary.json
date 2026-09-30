@@ -1,0 +1,33 @@
+{
+  "glorys_clocks": {
+    "00:00:00": 661
+  },
+  "n_glorys_days": 661,
+  "n_wcofs_cycles_read": 662,
+  "next_cycle_minus_glorys_time_hours": {
+    "15.0": 661
+  },
+  "next_cycle_minus_noon_hours": {
+    "3.0": 661
+  },
+  "provenance": {
+    "config": "data/config/wcofs_glorys_overlap.yaml wcofs.cycle_offset_days=1",
+    "glorys_reader": "copernicusmarine.subset dataset_id=cmems_mod_glo_phy_my_0.083deg_P1D-m dataset_version=202311 variable=thetao single point; time coordinate only",
+    "glorys_rows_file": "artifacts/forensics/glorys_daily_time.jsonl",
+    "pairing_code": "fishai.ingestion.physics.wcofs_glorys_overlap.wcofs_cycle_date_for_glorys_day",
+    "wcofs_reader": "scripts/inspect_overlap_ocean_times.py HTTP Range on noaa-nos-ofs-pds; HDF5 via pyfive, CDF-2 via classic header",
+    "wcofs_rows_file": "artifacts/forensics/wcofs_avg_nowcast_ocean_time.jsonl"
+  },
+  "same_day_clocks": {
+    "15:00:00": 661
+  },
+  "same_day_minus_glorys_time_hours": {
+    "-9.0": 661
+  },
+  "same_day_minus_noon_hours": {
+    "-21.0": 661
+  },
+  "wcofs_clocks": {
+    "15:00:00": 661
+  }
+}
