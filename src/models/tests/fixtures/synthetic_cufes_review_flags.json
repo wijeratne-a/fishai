@@ -1,0 +1,9 @@
+{
+  "cruise_taxon_review_flags": [
+    {
+      "cruise": "209901",
+      "taxon": "hake",
+      "reason": "all_zero_on_cruise_while_not_sampled_on_other_cruises"
+    }
+  ]
+}

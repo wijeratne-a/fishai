@@ -3,10 +3,13 @@
 from __future__ import annotations
 
 import datetime as dt
+from pathlib import Path
 
 import pytest
+import requests
 
 from fishai.ingestion.physics.glorys_catalog import (
+    PINNED_CATALOG_ENV,
     GLORYS_CANDIDATE_DATASET_IDS,
     GLORYS_DATASET_ID,
     GlorysCatalogEntry,
@@ -98,6 +101,48 @@ def test_catalog_failure_returns_reason_code() -> None:
     with pytest.raises(GlorysCatalogError) as exc:
         resolve_glorys_dataset_for_date(dt.date(2020, 1, 1))
     assert exc.value.reason_code == "catalog_unreachable"
+
+
+def _refuse_network(*_args: object, **_kwargs: object) -> None:
+    raise requests.ConnectionError("Remote end closed connection without response")
+
+
+def test_live_catalogue_connection_error_is_fail_closed(monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.delenv(PINNED_CATALOG_ENV, raising=False)
+    clear_glorys_catalog_cache()
+    set_catalog_fetch_hook(None)
+    monkeypatch.setattr(requests.Session, "get", _refuse_network)
+    with pytest.raises(GlorysCatalogError) as exc:
+        resolve_glorys_dataset_for_date(dt.date(2020, 6, 1))
+    assert exc.value.reason_code == "catalog_unreachable"
+
+
+def test_fixture_env_does_not_call_the_network(monkeypatch: pytest.MonkeyPatch) -> None:
+    fixture = (
+        Path(__file__).resolve().parents[3]
+        / "src"
+        / "models"
+        / "tests"
+        / "fixtures"
+        / "glorys_pinned_catalog.json"
+    )
+    monkeypatch.setenv(PINNED_CATALOG_ENV, str(fixture))
+    clear_glorys_catalog_cache()
+    set_catalog_fetch_hook(None)
+    monkeypatch.setattr(requests.Session, "get", _refuse_network)
+    resolved = resolve_glorys_dataset_for_date(dt.date(2020, 6, 1))
+    assert resolved.dataset_id == PRODUCT_ID_MY
+    assert resolved.dataset_version == "202311"
+
+
+def test_missing_fixture_file_is_fail_closed(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> None:
+    monkeypatch.setenv(PINNED_CATALOG_ENV, str(tmp_path / "missing-catalog.json"))
+    clear_glorys_catalog_cache()
+    set_catalog_fetch_hook(None)
+    monkeypatch.setattr(requests.Session, "get", _refuse_network)
+    with pytest.raises(GlorysCatalogError) as exc:
+        resolve_glorys_dataset_for_date(dt.date(2020, 6, 1))
+    assert exc.value.reason_code == "glorys_dataset_not_in_catalog"
 
 
 def test_missing_candidates_raise_not_in_catalog() -> None:

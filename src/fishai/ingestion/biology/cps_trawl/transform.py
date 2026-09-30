@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import logging
 import math
 from dataclasses import dataclass, field
 from datetime import datetime, timezone
@@ -9,10 +10,13 @@ from typing import Any, Iterable, Mapping
 
 from fishai.ingestion.biology.cps_trawl.catch import (
     catch_row_invalid,
+    catch_row_unparseable,
     catch_values_to_record,
     merge_catch_values,
     parse_catch_row,
 )
+
+logger = logging.getLogger(__name__)
 from fishai.ingestion.biology.cps_trawl.constants import (
     MAX_TOW_DURATION_MIN,
     MIN_TOW_DURATION_MIN,
@@ -205,6 +209,7 @@ def _empty_qc_report() -> dict[str, Any]:
         "catch_rows_kept": 0,
         "dropped_by_rule": {label: 0 for label, _ in QC_RULE_LABELS},
         "units_rows_skipped": 0,
+        "unparseable_catch_rows_dropped": 0,
         "zero_frame_evidence_path": "config/cps_trawl_zero_frame_evidence.yaml",
         "zero_frame_investigation": {
             "empty_haul_metadata_dataset_on_erddap": False,
@@ -274,11 +279,24 @@ def transform_rows(
             continue
 
         by_species: dict[str, list] = {}
+        unparseable_rows = 0
         for catch_row in haul_rows:
+            if catch_row_unparseable(catch_row):
+                unparseable_rows += 1
+                continue
             parsed = parse_catch_row(catch_row)
             if parsed is None:
+                unparseable_rows += 1
                 continue
             by_species.setdefault(parsed.species, []).append(parsed)
+
+        if unparseable_rows:
+            report["unparseable_catch_rows_dropped"] += unparseable_rows
+            logger.warning(
+                "haul %s: dropped %s unparseable catch row(s) (missing scientific_name)",
+                haul_id,
+                unparseable_rows,
+            )
 
         species_seen: set[str] = set()
         for species, parsed_rows in sorted(by_species.items()):
@@ -292,9 +310,12 @@ def transform_rows(
             animalia_only += 1
         event = haul_row_to_event(row, duration)
         event["animalia_only_haul"] = animalia_only_haul
+        event["unparseable_catch_rows"] = unparseable_rows
         event["zero_frame_exclude_reason"] = (
             "animalia_only_undocumented" if animalia_only_haul else None
         )
+        if unparseable_rows:
+            event["zero_frame_exclude_reason"] = "unparseable_catch_row"
         result.hauls.append(event)
 
     report["hauls_kept"] = len(result.hauls)

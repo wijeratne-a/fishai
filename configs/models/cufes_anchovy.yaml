@@ -1,0 +1,98 @@
+fishai_engine_config:
+  version: "1.0"
+  species:
+    code: ANCH
+    name: Northern anchovy
+    taxon: anchovy
+  domain:
+    lat_min: 32.0
+    lat_max: 35.0
+    lon_min: -121.0
+    lon_max: -117.0
+  egg_split:
+    fit_end: "2017-12-31"
+    test_start: "2018-01-01"
+    test_end: "2022-04-27"
+    glorys_product_boundary: "2021-06-30"
+    test_score_include_post_boundary: true
+  training:
+    observation_source_id: calcofi_cufes
+    covariate_forcing_source_id: glorys
+  data:
+    events_path: data/processed/calcofi_cufes/cufes_events.parquet
+    counts_path: data/processed/calcofi_cufes/cufes_counts.parquet
+    covariates_path: data/processed/cufes/cufes_physics_covariates.parquet
+    covariate_drops_path: data/processed/cufes/cufes_physics_covariate_drops.parquet
+    covariate_drop_summary_path: data/processed/cufes/cufes_physics_covariate_drop_summary.json
+    nearshore_max_km: 20
+    time_idx_origin: "1990-01-01"
+    source_id: calcofi_cufes
+    spatial_block_cv:
+      n_folds: 4
+    fold_assignment_path: artifacts/sensitivity/fold_assignment.csv
+  covariates:
+    forcing_source_id: glorys
+    depth_sample_m: 3
+    dynamic:
+      - temp_3m
+      - sal_3m
+      - mld
+      - sst_grad
+      - dist_front
+    static:
+      - log_depth
+    excluded:
+      - bottomT
+    upstream_fields:
+      temp_3m: T3m
+      sal_3m: S3m
+      mld: MLD_m
+      sst_grad: sst_grad
+      dist_front: front_distance_km
+      log_depth: log_depth_z
+  response:
+    type: density_delta
+    column: egg_count
+    effort_column: volume_m3
+  model:
+    engine: sdmTMB
+    family: delta_gamma
+    delta_type: poisson-link
+    # Prereg/config amendment (Upwelling path B): the CUFES evidence table has
+    # upwelling null on all 14,592 rows and no consistent, publicly licensed wind
+    # product spans training and nowcast. Upwelling is removed from the pilot
+    # covariates and formula; it is never imputed. Reintroduction needs a later
+    # prereg amendment plus publicly licensed, consistent data
+    # (prereg/pilot_model_upwelling_amendment.md).
+    formula_shared: >-
+      ~ s(temp_3m_z, k = 3) + s(sal_3m_z, k = 3) + s(mld_z, k = 3)
+      + s(sst_grad_z, k = 3) + s(dist_front_z, k = 3)
+      + s(log_depth_z, k = 3)
+    spatial: [on, on]
+    spatiotemporal: [iid, off]
+    share_range: [true, true]
+    time_varying:
+      formula: "~ 1"
+      type: rw0
+    priors:
+      pc_matern:
+        range_gt_mult_max_edge: 2
+        sigma_lt: 2
+  mesh:
+    cutoff_km: 9
+    range_guess_km: 60
+    barrier:
+      enabled: true
+      range_fraction: 0.1
+      land_sf_rds: data/reference/mesh/scb_pilot_land_sf.rds
+  prediction:
+    nsim: 50
+    seed: 20260928
+    grid_table: src/models/tests/fixtures/synthetic_grid.csv
+    inference_forcing_source_id: glorys
+  ood:
+    mess_mask_below: -20
+    hull_pairs:
+      - [temp_3m_z, sal_3m_z]
+  output:
+    dir: artifacts/models/anchovy

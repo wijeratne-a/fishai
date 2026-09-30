@@ -1,0 +1,51 @@
+# Pre-registered short-sample sensitivity protocol (see docs/prereg/short_sample_refit.md).
+# All pass/fail thresholds for the runner live here — do not hard-code in R.
+
+short_sample_sensitivity:
+  prereg_doc: docs/prereg/short_sample_refit.md
+  prereg_doc_git_path: docs/prereg/short_sample_refit.md
+
+  reduced_fit_min_duration_min: 10
+  # Full fit: upstream CUFES duration QC floor only (2 = second-precision timestamps; 5 = minute-precision).
+  full_fit_min_duration_min: 2
+
+  cv_eval_min_duration_min: 10
+
+  coefficient_check:
+    wald_confidence: 0.95
+    # Fixed effects plus Matérn range and sigma for delta components 1 and 2.
+    parameter_groups:
+      - fixed_effects
+      - spatial_range
+      - spatial_sigma
+
+  cv_check:
+    margin_se_fold_diff: 1.0
+    metrics:
+      - mean_log_score
+      - boyce_index
+    designs:
+      - spatial_block
+      - lfo
+
+  revert_on_fail:
+    duration_minutes: 10
+
+  reduced_fit_exclude_short_events: true
+
+  species:
+    - label: sardine
+      model_config: configs/models/cufes_sardine.yaml
+    - label: anchovy
+      model_config: configs/models/cufes_anchovy.yaml
+
+  output:
+    report_json: artifacts/sensitivity/short_sample_refit_report.json
+    pass_fail_csv: artifacts/sensitivity/short_sample_pass_fail.csv
+    fold_assignment_csv: artifacts/sensitivity/fold_assignment.csv
+
+  # Pre-join guard on bot1 cufes_events (same table for sardine and anchovy models).
+  event_count_guard:
+    n_events: 14592
+    n_short_event: 1266
+    n_long_event: 13326

@@ -38,10 +38,10 @@ copernicus = [
 fishai-bio = "fishai.cli:main_bio"
 fishai-physics = "fishai.cli:main_physics"
 fishai-sensors = "fishai.cli:main_sensors"
-fishai-models = "fishai.cli:main_models"
+fishai-models = "fishai_models.cli:main"
 
 [tool.setuptools.packages.find]
-where = ["src"]
+where = ["src", "python"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
