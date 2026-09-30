@@ -35,8 +35,9 @@ WORKSPACE_ROOT = Path(__file__).resolve().parents[4]
 MANIFEST_NAME = "cufes_glorys_rebuild_manifest.json"
 CODE_PATHS_MANIFEST = WORKSPACE_ROOT / "scripts" / "ci" / "cufes_glorys_rebuild_code_paths.txt"
 
-CUFES_REBUILD_START = date(1996, 3, 15)
-CUFES_REBUILD_END = date(2022, 4, 27)
+# Measured pilot ERDDAP sync for the 14,592 QC-kept table (15,969 read; 2022-04-19 max event day).
+CUFES_REBUILD_START = date(1996, 1, 1)
+CUFES_REBUILD_END = date(2022, 4, 19)
 GLORYS_TRAINING_DATASET_ID = "cmems_mod_glo_phy_my_0.083deg_P1D-m"
 
 PROCESSED_ARTIFACTS: tuple[str, ...] = (
