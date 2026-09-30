@@ -47,9 +47,9 @@ def test_bot2_schema_mismatch_report_is_stable() -> None:
         pytest.skip("bot2 branch schema not available in this checkout")
     mismatches = mismatches_as_dicts(result)
     kinds = {m["kind"] for m in mismatches}
-    assert "depth_column_name" in kinds
-    assert "production_covariate_path" in kinds
-    assert "upstream_depth_mapping" in kinds
+    # Production YAML on this branch already points at calcofi_cufes training parquets
+    # and maps log_depth to bottom_depth_m; bot2 vs sdmTMB diff is depth naming only.
+    assert kinds == {"depth_column_name"}
 
 
 def test_bot2_branch_training_columns_include_source_product() -> None:
