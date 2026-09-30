@@ -1,6 +1,6 @@
 {
   "status": "blocked",
-  "code_sha": null,
+  "code_sha": "d632254262f5894ebc32e4bed502f2f1b9b4b621",
   "evidence_manifest": "prereg/cufes_glorys_training_evidence_build_manifest.json",
   "training_table_builder_code_sha": "88083dedb099482d2f149d264a1e12f0f337f13e",
   "protocol_config": "configs/spatial_block_cv_scores.yaml",
