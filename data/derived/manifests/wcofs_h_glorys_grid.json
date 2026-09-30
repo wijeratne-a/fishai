@@ -1,14 +1,13 @@
 {
   "artifact_path": "data/derived/physics/wcofs_h_glorys_pilot.zarr",
-  "build_status": "awaiting_local_wcofs_export",
-  "hmin_source": null,
+  "hmin_source": "wet_cell_minimum_h",
   "min_wet_fraction": 0.5,
   "model_floor_tolerance_m": 0.5,
   "regridding_rule": "area_weighted_wet_masked",
-  "roms_hmin_m": null,
+  "roms_hmin_m": 15.0,
   "schema_version": 1,
-  "sha256": null,
+  "sha256": "d5c936303f80be39a3f78dcb9257197150d29c7f079358cacc3ac4cf7edf49e9",
   "source": "wcofs_roms",
-  "source_file": null,
+  "source_file": "wcofs/netcdf/2026/09/28/wcofs.t03z.20260928.fields.n003.nc",
   "source_variable": "h"
 }

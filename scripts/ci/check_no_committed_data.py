@@ -10,6 +10,8 @@ from pathlib import Path
 REPO = Path(__file__).resolve().parents[2]
 FORBIDDEN_PREFIXES = ("data/raw/", "data/processed/")
 FORBIDDEN_DATA_CSV_PREFIX = "data/"
+# Blessed WCOFS h grid. sha256 d5c936303f80be39a3f78dcb9257197150d29c7f079358cacc3ac4cf7edf49e9
+ALLOWED_ZARR_PREFIX = "data/derived/physics/wcofs_h_glorys_pilot.zarr/"
 BINARY_SUFFIXES = (
     ".nc",
     ".parquet",
@@ -48,6 +50,8 @@ def main() -> int:
         if rel.startswith(FORBIDDEN_PREFIXES):
             errors.append(f"forbidden_path:{rel}")
         lower = rel.lower()
+        if lower.startswith(ALLOWED_ZARR_PREFIX):
+            continue
         if lower.startswith(FORBIDDEN_DATA_CSV_PREFIX) and lower.endswith(".csv"):
             errors.append(f"forbidden_data_csv:{rel}")
         for suffix in BINARY_SUFFIXES:

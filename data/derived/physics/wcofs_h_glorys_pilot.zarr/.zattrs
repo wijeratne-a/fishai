@@ -1,0 +1,10 @@
+{
+    "grid": "glorys_1_12deg",
+    "hmin_source": "wet_cell_minimum_h",
+    "min_wet_fraction": 0.5,
+    "regridding_rule": "area_weighted_wet_masked",
+    "roms_hmin_m": 15.0,
+    "source": "wcofs_roms",
+    "source_file": "wcofs/netcdf/2026/09/28/wcofs.t03z.20260928.fields.n003.nc",
+    "source_variable": "h"
+}
