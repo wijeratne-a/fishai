@@ -1,0 +1,22 @@
+# Real-table spatial-block CV scores (CUFES × GLORYS training table from merged #28 builder).
+# Thresholds and paths only — scoring logic lives in src/models/R/spatial_block_cv_scores.R.
+
+spatial_block_cv_scores:
+  evidence_manifest: prereg/cufes_glorys_training_evidence_build_manifest.json
+  wcofs_h_artifact: data/derived/physics/wcofs_h_glorys_pilot.zarr
+  min_duration_min: 2
+
+  event_count_guard:
+    n_events: 14592
+    n_short_event: 1266
+    n_long_event: 13326
+
+  species:
+    - label: sardine
+      model_config: configs/models/cufes_sardine.yaml
+    - label: anchovy
+      model_config: configs/models/cufes_anchovy.yaml
+
+  output:
+    scores_json: prereg/cufes_spatial_block_cv_scores.json
+    fold_assignment_csv: artifacts/spatial_block_cv/fold_assignment.csv

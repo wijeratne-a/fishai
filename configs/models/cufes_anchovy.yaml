@@ -21,9 +21,9 @@ fishai_engine_config:
   data:
     events_path: data/processed/calcofi_cufes/cufes_events.parquet
     counts_path: data/processed/calcofi_cufes/cufes_counts.parquet
-    covariates_path: data/processed/cufes/cufes_physics_covariates.parquet
-    covariate_drops_path: data/processed/cufes/cufes_physics_covariate_drops.parquet
-    covariate_drop_summary_path: data/processed/cufes/cufes_physics_covariate_drop_summary.json
+    covariates_path: data/processed/calcofi_cufes/cufes_training_covariates.parquet
+    covariate_drops_path: data/processed/calcofi_cufes/cufes_training_covariate_drops.parquet
+    covariate_drop_summary_path: data/processed/calcofi_cufes/cufes_training_covariate_drop_summary.json
     nearshore_max_km: 20
     time_idx_origin: "1990-01-01"
     source_id: calcofi_cufes
@@ -49,7 +49,7 @@ fishai_engine_config:
       mld: MLD_m
       sst_grad: sst_grad
       dist_front: front_distance_km
-      log_depth: log_depth_z
+      log_depth: bottom_depth_m
   response:
     type: density_delta
     column: egg_count

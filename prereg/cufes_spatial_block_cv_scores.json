@@ -1,0 +1,58 @@
+{
+  "status": "blocked",
+  "code_sha": null,
+  "evidence_manifest": "prereg/cufes_glorys_training_evidence_build_manifest.json",
+  "training_table_builder_code_sha": "88083dedb099482d2f149d264a1e12f0f337f13e",
+  "protocol_config": "configs/spatial_block_cv_scores.yaml",
+  "wcofs_h_artifact": "data/derived/physics/wcofs_h_glorys_pilot.zarr",
+  "missing_inputs": [
+    "data/processed/calcofi_cufes/cufes_events.parquet",
+    "data/processed/calcofi_cufes/cufes_counts.parquet",
+    "data/processed/calcofi_cufes/cufes_training_covariates.parquet",
+    "data/processed/calcofi_cufes/cufes_training_covariate_drops.parquet",
+    "data/processed/calcofi_cufes/cufes_training_covariate_drop_summary.json",
+    "data/derived/physics/wcofs_h_glorys_pilot.zarr"
+  ],
+  "species": [
+    {
+      "label": "sardine",
+      "taxon": "sardine",
+      "model_config": "configs/models/cufes_sardine.yaml",
+      "status": "blocked",
+      "missing_inputs": [
+        "data/processed/calcofi_cufes/cufes_events.parquet",
+        "data/processed/calcofi_cufes/cufes_counts.parquet",
+        "data/processed/calcofi_cufes/cufes_training_covariates.parquet",
+        "data/processed/calcofi_cufes/cufes_training_covariate_drops.parquet",
+        "data/processed/calcofi_cufes/cufes_training_covariate_drop_summary.json",
+        "data/derived/physics/wcofs_h_glorys_pilot.zarr"
+      ],
+      "elpd": null,
+      "elpd_eligible": false,
+      "elpd_ineligible_reason": "missing_real_table_inputs",
+      "boyce": null,
+      "auc": null,
+      "tss": null
+    },
+    {
+      "label": "anchovy",
+      "taxon": "anchovy",
+      "model_config": "configs/models/cufes_anchovy.yaml",
+      "status": "blocked",
+      "missing_inputs": [
+        "data/processed/calcofi_cufes/cufes_events.parquet",
+        "data/processed/calcofi_cufes/cufes_counts.parquet",
+        "data/processed/calcofi_cufes/cufes_training_covariates.parquet",
+        "data/processed/calcofi_cufes/cufes_training_covariate_drops.parquet",
+        "data/processed/calcofi_cufes/cufes_training_covariate_drop_summary.json",
+        "data/derived/physics/wcofs_h_glorys_pilot.zarr"
+      ],
+      "elpd": null,
+      "elpd_eligible": false,
+      "elpd_ineligible_reason": "missing_real_table_inputs",
+      "boyce": null,
+      "auc": null,
+      "tss": null
+    }
+  ]
+}
