@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Southern California Bight — egg-encounter map prototype</title>
+    <link rel="stylesheet" href="./styles.css" />
+  </head>
+  <body>
+    <header>
+      <p class="banner">Internal UX spike — egg-stage CUFES spawning-habitat visualization</p>
+      <h1 id="map-title">Spawning-habitat egg-encounter map</h1>
+      <div id="species-toggle" aria-label="Species egg-encounter layer"></div>
+    </header>
+    <main class="layout">
+      <div class="map-panel">
+        <canvas id="map-canvas" width="640" height="480" aria-label="Pilot domain egg-encounter grid 32–35°N 121–117°W"></canvas>
+      </div>
+      <aside id="legend"></aside>
+      <section id="cell-list" aria-label="Per-cell egg evidence state"></section>
+    </main>
+    <script type="module" src="./app.js"></script>
+  </body>
+</html>
