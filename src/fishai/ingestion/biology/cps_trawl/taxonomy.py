@@ -127,6 +127,40 @@ def _has_uncertain_id_qualifier(scientific_name: str) -> bool:
     return any(token in _UNCERTAIN_ID_TOKENS for token in scientific_name.lower().split())
 
 
+def _meaningful_taxon_tokens(scientific_name: str) -> list[str]:
+    """Strip uncertain-id qualifier tokens and attached ``?`` markers from name tokens."""
+    out: list[str] = []
+    for raw in scientific_name.split():
+        token = raw.strip().strip("?")
+        if not token:
+            continue
+        if token.casefold() in _UNCERTAIN_ID_TOKENS:
+            continue
+        out.append(token)
+    return out
+
+
+def _unresolved_base_name_could_include_genus(base_name: str, tgt_genus: str) -> bool:
+    """True when a placeholder or qualifier base taxon may subsume ``tgt_genus``."""
+    base = base_name.strip()
+    if not base:
+        return False
+    lower = base.casefold()
+    if lower in _COARSE_FISH_TAXON_NAMES:
+        return True
+    fam_genera = _genera_for_family_or_order(base)
+    if fam_genera is not None:
+        return tgt_genus in fam_genera
+    if is_genus_only_taxon(base):
+        catch_genus = lower
+        if catch_genus == tgt_genus.casefold():
+            return True
+        if catch_genus not in _PILOT_TARGET_GENERA:
+            return True
+        return False
+    return False
+
+
 def is_genus_only_taxon(scientific_name: str) -> bool:
     """True for a single-word genus name (e.g. ``Sardinops``), not family/order ranks."""
     name = scientific_name.strip()
@@ -251,11 +285,22 @@ def unresolved_taxon_blocks_target(
     if _has_ambiguous_name_token(name):
         return True
     if _has_uncertain_id_qualifier(name):
-        catch_genus = name.split()[0]
-        return catch_genus.lower() == tgt_genus.lower()
+        tokens = _meaningful_taxon_tokens(name)
+        if any(tok.casefold() == tgt_genus.casefold() for tok in tokens):
+            return True
+        primary = tokens[0] if tokens else ""
+        if primary and _unresolved_base_name_could_include_genus(primary, tgt_genus):
+            return True
+        if catch_itis_tsn is None:
+            return True
+        return False
     sp_genus = _genus_from_sp_spp_placeholder(name)
     if sp_genus is not None:
-        return sp_genus.casefold() == tgt_genus.casefold()
+        if _unresolved_base_name_could_include_genus(sp_genus, tgt_genus):
+            return True
+        if catch_itis_tsn is None:
+            return True
+        return False
     genera = _genera_for_family_or_order(name)
     if genera is not None:
         return tgt_genus in genera

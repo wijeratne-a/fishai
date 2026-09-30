@@ -35,6 +35,7 @@ from fishai.ingestion.biology.cps_trawl import pipeline as cps_pipeline
 from fishai.ingestion.biology.cps_trawl.fetch import read_cps_trawl_csv
 from fishai.ingestion.biology.cps_trawl.pipeline import sync_cps_trawl_haul_catch
 from fishai.ingestion.biology.cps_trawl.matrix import ZeroFrameUnverifiedError, expand_haul_species_matrix
+from fishai.ingestion.biology.cps_trawl.taxonomy import unresolved_taxon_blocks_target
 from fishai.ingestion.biology.cps_trawl.transform import (
     make_haul_id,
     tow_distance_nm,
@@ -908,6 +909,85 @@ class CpsTrawlSyncFalseZeroTaxonomyTests(unittest.TestCase):
         sard = next(m for m in matrix if m["species"] == "Sardinops sagax")
         self.assertTrue(sard["is_implied_zero"])
         self.assertEqual(sard["fill_reason"], "verified_zero_frame")
+
+    def test_unresolved_taxon_blocks_target_coarse_qualifier_and_sp_rows(self) -> None:
+        """Regression: fail-open coarse / family / order qualifiers and sp. placeholders."""
+        pilot_targets = (
+            ("Sardinops sagax", ITIS_TSN_SARDINOPS_SAGAX),
+            ("Engraulis mordax", ITIS_TSN_ENGRAULIS_MORDAX),
+        )
+        cases: tuple[tuple[str, int | None], ...] = (
+            ("Osteichthyes?", ITIS_TSN_OSTEICHTHYES),
+            ("cf. Osteichthyes", ITIS_TSN_OSTEICHTHYES),
+            ("Osteichthyes sp.", ITIS_TSN_OSTEICHTHYES),
+            ("Osteichthyes spp.", None),
+            ("Clupeidae sp.", ITIS_TSN_OSTEICHTHYES),
+            ("Clupeidae?", None),
+            ("Clupeidae cf.", None),
+            ("Clupeiformes sp.", None),
+            ("Teleostei?", None),
+            ("cf Sardinops sagax", None),
+        )
+        for scientific_name, catch_tsn in cases:
+            for target_species, target_tsn in pilot_targets:
+                with self.subTest(name=scientific_name, target=target_species):
+                    self.assertTrue(
+                        unresolved_taxon_blocks_target(
+                            scientific_name,
+                            catch_tsn,
+                            target_species,
+                            target_tsn,
+                        )
+                    )
+
+    def test_expand_matrix_coarse_qualifier_and_sp_rows_block_pilot_zeros(self) -> None:
+        cases: tuple[tuple[str, int | None], ...] = (
+            ("Osteichthyes?", ITIS_TSN_OSTEICHTHYES),
+            ("cf. Osteichthyes", ITIS_TSN_OSTEICHTHYES),
+            ("Osteichthyes sp.", ITIS_TSN_OSTEICHTHYES),
+            ("Osteichthyes spp.", None),
+            ("Clupeidae sp.", ITIS_TSN_OSTEICHTHYES),
+            ("Clupeidae?", None),
+            ("Clupeidae cf.", None),
+            ("Clupeiformes sp.", None),
+            ("Teleostei?", None),
+            ("cf Sardinops sagax", None),
+        )
+        rows: list[dict[str, object]] = []
+        haul_ids: list[int] = []
+        for haul, (scientific_name, catch_tsn) in enumerate(cases, start=1):
+            haul_ids.append(haul)
+            rows.append(
+                {
+                    "haul_id": f"CPSTrawl:209901:SY:{haul}",
+                    "species": scientific_name,
+                    "itis_tsn": catch_tsn,
+                    "subsample_count": 1,
+                    "weight_kg": None,
+                    "presence_only": False,
+                }
+            )
+        with tempfile.TemporaryDirectory() as tmp:
+            evidence = _evidence_yaml_tmp(Path(tmp), hauls=haul_ids)
+            matrix = expand_haul_species_matrix(
+                rows,
+                [f"CPSTrawl:209901:SY:{h}" for h in haul_ids],
+                ["Sardinops sagax", "Engraulis mordax"],
+                species_itis_tsn=SPECIES_TSN,
+                evidence_path=evidence,
+                haul_meta=[
+                    {"haul_id": f"CPSTrawl:209901:SY:{h}", "animalia_only_haul": False}
+                    for h in haul_ids
+                ],
+                on_unverified="na",
+            )
+        for haul, (scientific_name, _) in enumerate(cases, start=1):
+            haul_matrix = [m for m in matrix if m["haul_id"].endswith(f":{haul}")]
+            for species in ("Sardinops sagax", "Engraulis mordax"):
+                row = next(m for m in haul_matrix if m["species"] == species)
+                with self.subTest(name=scientific_name, species=species):
+                    self.assertEqual(row["fill_reason"], UNRESOLVED_HIGHER_TAXON_REASON)
+                    self.assertFalse(row["is_implied_zero"])
 
 
 class CpsTrawlMergeSpeciesTests(unittest.TestCase):
