@@ -1,0 +1,14 @@
+{
+  "artifact_path": "data/derived/physics/wcofs_h_glorys_pilot.zarr",
+  "build_status": "awaiting_local_wcofs_export",
+  "hmin_source": null,
+  "min_wet_fraction": 0.5,
+  "model_floor_tolerance_m": 0.5,
+  "regridding_rule": "area_weighted_wet_masked",
+  "roms_hmin_m": null,
+  "schema_version": 1,
+  "sha256": null,
+  "source": "wcofs_roms",
+  "source_file": null,
+  "source_variable": "h"
+}

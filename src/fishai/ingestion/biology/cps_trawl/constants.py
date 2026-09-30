@@ -35,7 +35,34 @@ ERDDAP_FIELDS: Final = (
 # Zero-catch expansion gate (per-cruise evidence in config/cps_trawl_zero_frame_evidence.yaml).
 ZERO_FRAME_UNVERIFIED_REASON: Final = "zero_frame_unverified"
 ANIMALIA_ONLY_ZERO_FRAME_REASON: Final = "animalia_only_undocumented"
+HAUL_META_MISSING_REASON: Final = "haul_meta_missing"
+UNRESOLVED_HIGHER_TAXON_REASON: Final = "unresolved_higher_taxon"
+UNPARSEABLE_CATCH_ROW_REASON: Final = "unparseable_catch_row"
 WEIGHT_FLAG_PARTIAL: Final = "weight_partial"
+
+# ITIS https://www.itis.gov/ITISWebService/jsonservice/getFullRecordFromTSN?tsn=161729
+# Sardinops sagax; taxonUsageRating=valid (accepted name).
+ITIS_TSN_SARDINOPS_SAGAX: Final = 161729
+# ITIS https://www.itis.gov/ITISWebService/jsonservice/getFullRecordFromTSN?tsn=161828
+# Engraulis mordax; taxonUsageRating=valid (accepted name).
+ITIS_TSN_ENGRAULIS_MORDAX: Final = 161828
+# ITIS https://www.itis.gov/ITISWebService/jsonservice/getFullRecordFromTSN?tsn=161730
+# Sardinops caeruleus; taxonUsageRating=invalid, unacceptReason=junior synonym;
+# acceptedName Sardinops sagax TSN 161729 (getAcceptedNamesFromTSN?tsn=161730).
+ITIS_TSN_SARDINOPS_CAERULEUS: Final = 161730
+# ITIS https://www.itis.gov/ITISWebService/jsonservice/getFullRecordFromTSN?tsn=161836
+# Engraulis nanus; taxonUsageRating=invalid, unacceptReason=junior synonym;
+# acceptedName Engraulis mordax TSN 161828.
+ITIS_TSN_ENGRAULIS_NANUS: Final = 161836
+# ITIS https://www.itis.gov/ITISWebService/jsonservice/getFullRecordFromTSN?tsn=161030
+# Osteichthyes (superclass); coarse container for bony fishes including pilot targets.
+ITIS_TSN_OSTEICHTHYES: Final = 161030
+PILOT_MATRIX_SPECIES: Final = ("Sardinops sagax", "Engraulis mordax")
+PILOT_SPECIES_ITIS_TSN: Final = {
+    "Sardinops sagax": ITIS_TSN_SARDINOPS_SAGAX,
+    "Engraulis mordax": ITIS_TSN_ENGRAULIS_MORDAX,
+}
+HAUL_SPECIES_MATRIX_FILENAME: Final = "cps_trawl_haul_species_matrix.parquet"
 
 # Effort fields not present in FRDCPSTrawlLHHaulCatch.
 NET_MOUTH_AREA_NULL_REASON: Final = "not_in_source_dataset"

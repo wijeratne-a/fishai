@@ -1,5 +1,5 @@
 cruise,ship,haul,collection,latitude,longitude,stop_latitude,stop_longitude,time,haulback_time,surface_temp,surface_temp_method,ship_spd_through_water,itis_tsn,scientific_name,subsample_count,subsample_weight,remaining_weight,presence_only
 ,,,,,,,,UTC,UTC,,,,,,,kg,kg,
-209901,SY,1,1,33.0,-120.0,33.02,-119.98,2099-06-01T12:00:00Z,2099-06-01T12:30:00Z,18.0,CTD,2.5,161996,Sardinops sagax,10,1.0,2.0,N
-209901,SY,1,1,33.0,-120.0,33.02,-119.98,2099-06-01T12:00:00Z,2099-06-01T12:30:00Z,18.0,CTD,2.5,161997,Engraulis mordax,5,0.5,0.5,N
-209901,SY,2,1,33.5,-119.5,33.5,-119.5,2099-06-02T08:00:00Z,2099-06-02T08:15:00Z,17.5,CTD,2.0,161997,Engraulis mordax,1,NaN,NaN,Y
+209901,SY,1,1,33.0,-120.0,33.02,-119.98,2099-06-01T12:00:00Z,2099-06-01T12:30:00Z,18.0,CTD,2.5,161729,Sardinops sagax,10,1.0,2.0,N
+209901,SY,1,1,33.0,-120.0,33.02,-119.98,2099-06-01T12:00:00Z,2099-06-01T12:30:00Z,18.0,CTD,2.5,161828,Engraulis mordax,5,0.5,0.5,N
+209901,SY,2,1,33.5,-119.5,33.5,-119.5,2099-06-02T08:00:00Z,2099-06-02T08:15:00Z,17.5,CTD,2.0,161828,Engraulis mordax,1,NaN,NaN,Y

@@ -167,6 +167,11 @@ def glorys_column_features(
     z = -np.asarray(z_levels_m, dtype=float)
     temp = np.asarray(temp_profile, dtype=float)
     salt = np.asarray(salt_profile, dtype=float)
+    # GLORYS ``depth`` is positive down, shallow-first; ``mld`` expects deep-first ROMS ``z``.
+    if z.size >= 2 and z[0] > z[-1]:
+        z = z[::-1]
+        temp = temp[::-1]
+        salt = salt[::-1]
     z3d = z[:, None, None]
     t3d = temp[:, None, None]
     mld_m = float(mld(z3d, t3d)[0, 0])

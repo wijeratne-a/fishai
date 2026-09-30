@@ -14,6 +14,11 @@ def _list_keys_for_day(day: dt.date, lead: str = "n024") -> list[str]:
     return [f"wcofs/netcdf/{day:%Y/%m/%d}/wcofs.t03z.{ymd}.fields.{lead}.nc"]
 
 
+def _list_keys_for_day(day: dt.date, lead: str = "n024") -> list[str]:
+    ymd = day.strftime("%Y%m%d")
+    return [f"wcofs/netcdf/{day:%Y/%m/%d}/wcofs.t03z.{ymd}.fields.{lead}.nc"]
+
+
 def test_cycle_available_uses_injected_head() -> None:
     day = dt.date(2026, 9, 1)
 

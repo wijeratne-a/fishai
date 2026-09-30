@@ -1,0 +1,22 @@
+Package: fishaisdm
+Title: FishAI sdmTMB Delta Modeling Core
+Version: 0.1.0
+Authors@R: person("FishAI", "Engineering", email = "engineering@fishai.example", role = c("aut", "cre"))
+Description: Spatiotemporal delta GLMMs for CUFES egg-stage nowcasting (sdmTMB).
+License: Proprietary
+Encoding: UTF-8
+Depends: R (>= 4.4.0)
+Imports:
+    sdmTMB (>= 1.1.0),
+    fmesher (>= 0.8.0),
+    sdmTMBextra,
+    sf,
+    yaml,
+    jsonlite,
+    stats,
+    utils,
+    tools
+Suggests:
+    testthat (>= 3.0.0),
+    withr
+Config/testthat/edition: 3

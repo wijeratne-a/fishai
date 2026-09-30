@@ -22,6 +22,25 @@ def test_area_weighted_regrid_mean() -> None:
     assert np.isfinite(wf).any()
 
 
+def test_area_weighted_regrid_min_wet_fraction_leaves_land_heavy_cells_nan() -> None:
+    lat_s = np.array([[33.0, 33.0, 33.0], [33.0, 33.0, 33.0]])
+    lon_s = np.array([[-120.0, -120.0, -119.5], [-120.0, -120.0, -119.5]])
+    field = np.array([[10.0, 10.0, 30.0], [10.0, 10.0, 30.0]])
+    wet = np.array([[True, False, True], [True, False, True]])
+    lats = np.array([33.0])
+    lons = np.array([-120.0])
+    out, _wf = area_weighted_regrid(
+        field,
+        lat_s,
+        lon_s,
+        lats,
+        lons,
+        wet_mask=wet,
+        min_wet_fraction=0.6,
+    )
+    assert np.isnan(out[0, 0])
+
+
 def test_parquet_writers_no_lat_lon_columns() -> None:
     with tempfile.TemporaryDirectory() as tmp:
         tpath = Path(tmp) / "events.parquet"
