@@ -1,0 +1,12 @@
+# Sorted list of repo paths that define the cached R modeling base image.
+# Used by compute_r_base_image_ref.sh (paths hashed in this order).
+docker/Dockerfile.r-base
+scripts/ci/build_r_base_image.sh
+scripts/ci/compute_r_base_image_ref.sh
+scripts/ci/r_base_image_input_paths.txt
+pyproject.toml
+.Rprofile
+renv.lock
+renv/.gitignore
+renv/activate.R
+renv/settings.json
