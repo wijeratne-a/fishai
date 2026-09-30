@@ -1,0 +1,88 @@
+:root {
+  color-scheme: dark;
+  font-family: system-ui, sans-serif;
+  background: #060d14;
+  color: #e6edf3;
+}
+
+.banner {
+  background: #5c3d00;
+  color: #ffe8a3;
+  padding: 0.5rem 1rem;
+  margin: 0;
+  font-weight: 600;
+}
+
+.watermark {
+  border: 2px dashed #e8a838;
+  padding: 0.75rem;
+  background: #1a1200;
+  color: #ffd666;
+}
+
+header {
+  padding: 1rem;
+}
+
+.layout {
+  display: grid;
+  grid-template-columns: minmax(320px, 640px) 1fr;
+  gap: 1rem;
+  padding: 0 1rem 2rem;
+}
+
+.map-panel {
+  border: 1px solid #334155;
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+#map-canvas {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+
+#cell-list {
+  grid-column: 1 / -1;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  gap: 0.75rem;
+}
+
+.cell-card {
+  border: 1px solid #334155;
+  border-radius: 6px;
+  padding: 0.75rem;
+  background: #0f172a;
+}
+
+.species-btn {
+  margin-right: 0.5rem;
+  padding: 0.35rem 0.75rem;
+  cursor: pointer;
+  border-radius: 4px;
+  border: 1px solid #475569;
+  background: #1e293b;
+  color: inherit;
+}
+
+.species-btn.active {
+  border-color: #38bdf8;
+  background: #0c4a6e;
+}
+
+.hint {
+  font-size: 0.9rem;
+  color: #94a3b8;
+}
+
+code {
+  font-size: 0.85em;
+}
+
+@media (max-width: 900px) {
+  .layout {
+    grid-template-columns: 1fr;
+  }
+}
