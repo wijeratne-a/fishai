@@ -211,10 +211,13 @@ run_spatial_block_cv_scores <- function(protocol_path = NULL, output_override = 
     protocol$output <- utils::modifyList(protocol$output, output_override)
   }
   root <- Sys.getenv("FISHAI_ROOT", unset = normalizePath(getwd()))
+  .resolve_model_config <- function(p) {
+    if (is.null(p) || grepl("^/", p)) p else file.path(root, p)
+  }
   wcofs_rel <- protocol$wcofs_h_artifact %||% "data/derived/physics/wcofs_h_glorys_pilot.zarr"
   min_dur <- protocol$min_duration_min %||% 2L
 
-  cfg_ref <- load_config_yaml(protocol$species[[1L]]$model_config)
+  cfg_ref <- load_config_yaml(.resolve_model_config(protocol$species[[1L]]$model_config))
   missing_global <- missing_real_table_cv_inputs(cfg_ref, wcofs_rel)
   fold_csv <- protocol$output$fold_assignment_csv
   if (is.null(fold_csv) || !nzchar(fold_csv)) {
@@ -240,7 +243,7 @@ run_spatial_block_cv_scores <- function(protocol_path = NULL, output_override = 
   }
 
   species_out <- lapply(protocol$species, function(sp) {
-    cfg <- load_config_yaml(sp$model_config)
+    cfg <- load_config_yaml(.resolve_model_config(sp$model_config))
     if (!length(missing_global)) {
       cfg$data$fold_assignment_path <- fold_csv
     }
