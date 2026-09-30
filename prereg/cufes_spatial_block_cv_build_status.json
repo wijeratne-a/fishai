@@ -1,0 +1,5 @@
+{
+  "status": "step_1_cufes_sync_started",
+  "head_sha": "96fbaba1d3efc5610db28d9618f5343b98daf5c2",
+  "note": "Fresh fishai-bio sync cufes 1996-01-01..2022-04-19 after deleting stale raw/processed artifacts."
+}
