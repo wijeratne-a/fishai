@@ -182,20 +182,35 @@ test_that("run_cv_spatial refuses fold ids that are not the assignment", {
 })
 
 .capture_cv_fold_meshes <- function(cfg, dat) {
-  meshes <- list()
+  mesh_dir <- tempfile("cv-fold-meshes-")
+  dir.create(mesh_dir)
   real_fit <- get("fit_delta_engine", envir = globalenv())
   assign(
     "fit_delta_engine",
     function(dat, mesh, cfg) {
-      meshes[[length(meshes) + 1L]] <<- mesh
+      saveRDS(mesh, tempfile(pattern = "mesh-", tmpdir = mesh_dir, fileext = ".rds"))
       real_fit(dat, mesh, cfg)
     },
     envir = globalenv()
   )
-  on.exit(assign("fit_delta_engine", real_fit, envir = globalenv()), add = TRUE)
+  on.exit(
+    {
+      assign("fit_delta_engine", real_fit, envir = globalenv())
+      unlink(mesh_dir, recursive = TRUE)
+    },
+    add = TRUE
+  )
   cv <- run_cv_spatial(dat, NULL, cfg, dat$fold_id)
-  list(cv = cv, meshes = meshes)
+  files <- list.files(mesh_dir, pattern = "\\.rds$", full.names = TRUE)
+  list(cv = cv, meshes = lapply(files, readRDS))
 }
+
+test_that("spatial CV worker count is min(cores, 4) and not above the fold count", {
+  expect_equal(.cv_spatial_n_workers(4L, cores = 8L), 4L)
+  expect_equal(.cv_spatial_n_workers(4L, cores = 2L), 2L)
+  expect_equal(.cv_spatial_n_workers(1L, cores = 8L), 1L)
+  expect_equal(.cv_spatial_n_workers(3L, cores = NA_integer_), 1L)
+})
 
 test_that("spatial CV fold meshes use the production Bakka barrier and range", {
   cfg <- load_sardine_test_cfg(intercept_only = TRUE)
