@@ -145,7 +145,7 @@ function renderCellList(container, rows, species) {
           : `Egg-encounter p = ${(row.p_encounter * 100).toFixed(1)}% · 90% interval ${(row.p_lo90 * 100).toFixed(1)}–${(row.p_hi90 * 100).toFixed(1)}%`;
       const unknownLine =
         row.unknown_reason != null
-          ? `<p class="unknown-reason">Unknown reason: <code>${row.unknown_reason}</code></p>`
+          ? `<p class="unknown-reason">Egg-encounter unknown reason: <code>${row.unknown_reason}</code></p>`
           : "";
       return `<article class="cell-card" data-cell-id="${row.cell_id}">
         <h4>${row.cell_id}</h4>

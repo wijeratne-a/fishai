@@ -108,20 +108,21 @@ def test_prototype_ui_labels_use_egg_or_spawning_and_avoid_fish_tracking_copy() 
     for phrase in FORBIDDEN_UI_PHRASES:
         assert phrase not in combined, f"forbidden phrase: {phrase}"
 
-    doctrine_or_schema = re.compile(
-        r"schema|evidence_state|display doctrine|direct observation|historical pattern|"
-        r"current nowcast|forecast|unknown|hindcast_glorys|nowcast_unvalidated|degraded",
-        re.IGNORECASE,
-    )
     for path in ui_sources:
         for snippet in _user_visible_strings(path):
             snippet = snippet.strip()
             if not snippet:
                 continue
-            if doctrine_or_schema.search(snippet):
-                continue
             assert EGG_OR_SPAWNING.search(snippet), (
                 f"user-facing text missing egg/spawning in {path.name}: {snippet!r}"
+            )
+        text = path.read_text(encoding="utf-8")
+        for label in re.findall(r"<strong>([^<]+)</strong>", text):
+            label = label.strip()
+            if not label:
+                continue
+            assert EGG_OR_SPAWNING.search(label), (
+                f"field label missing egg/spawning in {path.name}: {label!r}"
             )
 
     watermark = load_fixture()["meta"]["watermark"]
