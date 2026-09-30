@@ -1,0 +1,3 @@
+"event_id","reason","covariate","latitude","longitude"
+"CUFES:TEST:AK:s001","missing_covariate","T3m","32.5","-120.5"
+"CUFES:TEST:AK:s003","land_mask",,"33.0","-119.9"

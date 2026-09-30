@@ -77,7 +77,11 @@ def glorys_store_from_synthetic_days(
         lat, lon = glorys_pilot_depth_grid(bbox)
     nj, ni = lat.size, lon.size
     if wcofs_h_m is None:
-        wcofs_h_m = np.full((nj, ni), 500.0)
+        # Spatially varying test depths. The retired live placeholder was a flat 500 m field.
+        lat2 = np.asarray(lat, dtype=float)[:, None]
+        lon2 = np.asarray(lon, dtype=float)[None, :]
+        wcofs_h_m = 160.0 + 80.0 * (lat2 - float(lat.min())) + 40.0 * (lon2 - float(lon.min()))
+        wcofs_h_m = np.broadcast_to(wcofs_h_m, (nj, ni)).copy()
     if has_source is None:
         has_source = np.ones((nj, ni), dtype=bool)
     if roms_hmin_m is None:

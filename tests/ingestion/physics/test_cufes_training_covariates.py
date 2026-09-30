@@ -35,10 +35,7 @@ from fishai.ingestion.physics.cufes_training_covariates import (
 )
 from fishai.ingestion.physics.glorys_training_build import GLORYS_COVARIATE_SOURCE_COPERNICUS
 from cufes_glorys_synthetic_fixture import glorys_store_from_synthetic_days
-from fishai.ingestion.physics.sources.glorys import (
-    PRODUCT_ID_MY,
-    glorys_product_for_date,
-)
+from fishai.ingestion.physics.sources.glorys import PRODUCT_ID_MY, glorys_product_for_date
 from fishai.ingestion.sources import require_approved
 
 
@@ -76,8 +73,8 @@ def _synthetic_events() -> pd.DataFrame:
     )
 
 
-def test_glorys_product_is_my_for_pre_and_post_legacy_myint_dates() -> None:
-    """Live catalogue exposes only ``my`` (``myint`` removed in PR #24)."""
+def test_glorys_product_id_from_live_catalogue_at_boundary() -> None:
+    """PR #24: finished reanalysis id from catalogue for pre- and post-2021-07 dates."""
     assert glorys_product_for_date(dt.date(2021, 6, 30)) == PRODUCT_ID_MY
     assert glorys_product_for_date(dt.date(2021, 7, 1)) == PRODUCT_ID_MY
 
@@ -123,7 +120,7 @@ def test_training_glorys_product_ids_track_glorys_product_for_date(tmp_path: Pat
         assert out.loc[out["event_id"] == ev["event_id"], "source_product"].iloc[0] == expected
 
 
-def test_plan_batches_one_batch_per_month_same_dataset_id() -> None:
+def test_plan_batches_splits_calendar_months_same_catalogue_product() -> None:
     days = [
         dt.date(2021, 6, 15),
         dt.date(2021, 6, 30),
@@ -263,6 +260,9 @@ def test_training_parquet_write_read_round_trip(tmp_path: Path) -> None:
     assert not bool(row["excluded"])
     assert np.isfinite(row["T3m"])
     assert np.isfinite(row["bottom_depth_m"])
+    assert row["bottom_depth_m"] != 500.0
+    assert pd.isna(row["upwelling"])
+    assert row["upwelling_status"] == "no_consistent_wind_product"
     meta = pq.read_metadata(path).metadata
     raw = meta.get(b"glorys")
     assert raw is not None
@@ -317,6 +317,83 @@ def test_covariates_not_zero_when_present() -> None:
             continue
         if np.isfinite(out.iloc[0][field]):
             assert out.iloc[0][field] != 0.0
+
+
+def test_every_day_after_2021_resolves_through_catalogue(monkeypatch: pytest.MonkeyPatch) -> None:
+    """Each post-2021 day goes through the PR #24 guard (dataset id + pinned 202311)."""
+    from fishai.ingestion.physics import cufes_training_covariates as ctc
+    from fishai.ingestion.physics.glorys_catalog import pinned_glorys_catalog_version
+
+    seen: list[dt.date] = []
+    real = ctc.guard_glorys_version_before_fetch
+
+    def _spy(day: dt.date, *, log_path: Path | None) -> object:
+        seen.append(day)
+        return real(day, log_path=log_path)
+
+    monkeypatch.setattr(ctc, "guard_glorys_version_before_fetch", _spy)
+    days: list[dt.date] = []
+    cur = dt.date(2021, 7, 1)
+    end = dt.date(2022, 12, 31)
+    while cur <= end:
+        days.append(cur)
+        cur += dt.timedelta(days=1)
+    days.extend([dt.date(2023, 6, 15), dt.date(2024, 1, 1), dt.date(2025, 9, 1), dt.date(2026, 6, 23)])
+    batches = plan_glorys_subset_batches(days)
+    assert set(seen) == set(days)
+    assert pinned_glorys_catalog_version() == "202311"
+    assert batches
+    assert {b.dataset_id for b in batches} == {PRODUCT_ID_MY}
+    for batch in batches:
+        if batch.date_start > dt.date(2021, 6, 30):
+            resolution = ctc.catalogue_resolution_for_subset_batch(batch, log_path=None)
+            assert resolution.dataset_id == PRODUCT_ID_MY
+            assert resolution.dataset_version == "202311"
+
+
+def test_upwelling_null_on_all_rows_not_imputed(tmp_path: Path) -> None:
+    """Upwelling stays null on kept and excluded rows. The test does not fill a value."""
+    from fishai.ingestion.physics.wind_shared_forcing import UPWELLING_STATUS_NO_CONSISTENT_WIND
+    from cufes_training_test_helpers import live_store_with_wcofs_h_and_glorys_days
+
+    events = _synthetic_events()
+    days = unique_event_days(events)
+    store = live_store_with_wcofs_h_and_glorys_days(tmp_path, days)
+    for fields in store.days.values():
+        fields.upwelling[:] = 4.2
+        fields.u10[:] = 5.0
+        fields.v10[:] = -3.0
+    dropped_day = days[-1]
+    kept_day = days[0]
+    probed = store.field_sampler(33.1, -120.1, pd.Timestamp(kept_day.isoformat() + "T12:00:00Z"))
+    assert pd.isna(probed["upwelling"])
+    del store.days[dropped_day]
+    out, _qc, drops, _floor = build_cufes_training_covariates_table(events, store)
+    assert len(out) == len(events)
+    assert out["upwelling"].isna().all()
+    assert not out["upwelling"].notna().any()
+    assert (out["upwelling_status"] == UPWELLING_STATUS_NO_CONSISTENT_WIND).all()
+    assert bool(out["excluded"].any())
+    assert bool((~out["excluded"]).any())
+    assert out.loc[out["excluded"], "upwelling"].isna().all()
+    assert out.loc[~out["excluded"], "upwelling"].isna().all()
+    path = tmp_path / "cufes_training_covariates.parquet"
+    write_training_covariates_parquet(
+        out,
+        path,
+        entry=require_approved("glorys", purpose="training"),
+        store=store,
+    )
+    round_trip = pd.read_parquet(path)
+    assert len(round_trip) == len(events)
+    assert round_trip["upwelling"].isna().all()
+    assert set(round_trip["upwelling_status"]) == {UPWELLING_STATUS_NO_CONSISTENT_WIND}
+    from fishai.ingestion.physics.covariates import DROP_REASON_MISSING_COVARIATE
+
+    upwelling_drops = drops[
+        (drops["reason"] == DROP_REASON_MISSING_COVARIATE) & (drops["covariate"] == "upwelling")
+    ]
+    assert upwelling_drops.empty
 
 
 def test_upwelling_nan_without_excluding_events(tmp_path: Path) -> None:

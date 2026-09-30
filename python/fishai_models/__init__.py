@@ -1,0 +1,1 @@
+"""FishAI modeling CLI package."""

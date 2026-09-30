@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+import datetime as dt
+from pathlib import Path
 from typing import Any
 
 import xarray as xr
@@ -15,6 +17,16 @@ from fishai.ingestion.physics.wcofs_glorys_grid import (
     min_wet_fraction_from_config,
 )
 from fishai.ingestion.physics.wcofs_glorys_overlap import depth_grid_m, load_overlap_config
+from fishai.physics.store import open_wcofs_cycle_for_operational_day
+
+
+def load_wcofs_dataset_for_operational_nowcast(
+    cycle_date: dt.date | None = None,
+    *,
+    store_root: Path | None = None,
+) -> xr.Dataset:
+    """Load processed WCOFS for ``cycle_date`` (default UTC today); never an older cycle."""
+    return open_wcofs_cycle_for_operational_day(cycle_date, store_root=store_root)
 
 
 def build_wcofs_nowcast_covariates_for_inference(

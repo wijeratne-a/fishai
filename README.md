@@ -1,6 +1,6 @@
 # FishAI — Southern California Bight pilot
 
-FishAI is a **50-mile nowcast skeleton** for the Southern California Bight pilot domain (**32–35°N, 121–117°W**). The active program ingests **CalCOFI CUFES sardine/anchovy egg-stage evidence**, **WCOFS/GLORYS-class physics**, and **SCCOOS HF radar / NDBC / IOOS glider consistency checks**, then fits **sdmTMB delta-lognormal** models in R. This branch provides installable layout, CI, and contracts—not live ingestion or published nowcasts.
+FishAI is a **50-mile nowcast skeleton** for the Southern California Bight pilot domain (**32–35°N, 121–117°W**). The active program ingests **CalCOFI CUFES sardine/anchovy egg-stage evidence**, **WCOFS/GLORYS-class physics**, and **SCCOOS HF radar / NDBC / IOOS glider consistency checks**, then fits **sdmTMB Poisson-link delta** egg models in R (see [`docs/CUFES_DELTA_MODEL_SPEC.md`](docs/CUFES_DELTA_MODEL_SPEC.md)). This branch provides installable layout, CI, and contracts—not live ingestion or published nowcasts.
 
 ## Evidence-state vocabulary
 
@@ -25,12 +25,15 @@ src/fishai/
   physics/store.py       Read-only ``open_wcofs_cycle`` / ``list_wcofs_cycles`` (Bot4 sensors)
   ingestion/sensors/     SCCOOS HF radar, NDBC, IOOS glider stubs
   models/                Python experiment config, baselines, run manifest
-  models/R/              sdmTMB R code (bootstrap via renv)
+  models/R/              legacy bootstrap note (see src/models/)
   evaluation/            Metrics and numeric support mask (reusable)
   validation/            Survey file eligibility gate
   api/                   Future nowcast API stub
   schemas/               JSON schemas for observations and provenance
 data/SOURCES.yaml        License manifest (CI-enforced for ingestion modules)
+src/models/              fishaisdm R package (sdmTMB delta core) + testthat suite
+python/fishai_models/    fishai-models CLI (Rscript wrapper)
+configs/models/          CUFES sardine/anchovy pilot YAML configs
 labels/                  Label validation rules (YAML/JSON)
 science/                 Measurement and temporal integrity rules
 security/                Sensitive-data pre-commit scanner
@@ -110,6 +113,6 @@ Do not commit raw coordinates, telemetry, or grid binaries (see `.gitignore`). T
 
 **Catch semantics:** `subsample_count` is the source subsample count (not a raised haul total). Optional `count_raised_est` is computed only when both weight fields are present and `subsample_weight > 0`. If exactly one of `subsample_weight` / `remaining_weight` is present, `weight_kg` is null and `weight_flag=weight_partial` (partial values kept in separate columns).
 
-**Zero-catch gate:** Implied zeros require a per-cruise+ship entry in `config/cps_trawl_zero_frame_evidence.yaml` (shipped empty). A cruise is VERIFIED only when the entry lists `expected_hauls` equal to `report_haul_log` minus `aborted_tows`. `expand_haul_species_matrix()` refuses zeros otherwise (`zero_frame_unverified`, `haul_not_in_verified_frame`, etc.). Hauls whose only catch is `Animalia` are always excluded (`animalia_only_undocumented`). `presence_only=Y` never receives weight; missing weights are never zero.
+**Zero-catch gate:** Implied zeros require a per-cruise+ship entry in `config/cps_trawl_zero_frame_evidence.yaml` (shipped empty). A cruise is VERIFIED only when the entry lists `expected_hauls` equal to `report_haul_log` minus `aborted_tows`. `expand_haul_species_matrix()` refuses zeros otherwise (`zero_frame_unverified`, `haul_not_in_verified_frame`, `haul_meta_missing`, `unresolved_higher_taxon`, `unparseable_catch_row`, etc.). Matching uses ITIS TSN (with explicit subspecies→species mapping in code), not scientific-name text alone. Hauls whose only catch is `Animalia` are always excluded (`animalia_only_undocumented`). `presence_only=Y` never receives weight; missing weights are never zero.
 
 **CLI:** `fishai-bio sync cps-trawl --start YYYY-MM-DD --end YYYY-MM-DD` (batched yearly ERDDAP CSV → raw cache → parquet).

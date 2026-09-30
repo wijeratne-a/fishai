@@ -63,7 +63,6 @@ from fishai.ingestion.physics.glorys_cufes_subset import (
     product_date_coverage,
     subset_nc_path,
 )
-from fishai.ingestion.physics.glorys_catalog import guard_glorys_version_before_fetch
 from fishai.ingestion.physics.glorys_training_build import (
     GlorysTrainingBuildError,
     REASON_WCOFS_BATHYMETRY_ARTIFACT_MISSING,
@@ -71,8 +70,10 @@ from fishai.ingestion.physics.glorys_training_build import (
     assert_may_write_glorys_training_parquet,
     assert_store_ready_for_copernicus_export,
     assert_wcofs_bathymetry_hmin_source,
+    assert_wcofs_h_array_not_placeholder,
     classify_copernicus_subset_error,
 )
+from fishai.ingestion.physics.glorys_catalog import guard_glorys_version_before_fetch
 from fishai.ingestion.physics.sources.glorys import (
     glorys_column_features,
     glorys_dataset_id_for_date,
@@ -233,6 +234,7 @@ class GlorysFieldStore:
         out = {k: feats[k] for k in CUFES_COVARIATE_FIELDS if k in feats}
         out["sst_grad"] = float(fields.sst_grad[j, i])
         out["front_distance_km"] = float(fields.front_distance_km[j, i])
+        # No consistent wind product: leave null. Do not copy or impute grid upwelling.
         out["upwelling"] = float("nan")
         return out
 
@@ -309,10 +311,20 @@ def plan_glorys_subset_batches(
     bbox: tuple[float, float, float, float] = PILOT_BBOX,
     variables: tuple[str, ...] = TRAINING_SUBSET_VARIABLES,
 ) -> list[GlorysSubsetBatch]:
-    """Group unique event days into monthly Copernicus subset requests per dataset id."""
+    """Group unique event days into monthly Copernicus subset requests per dataset id.
+
+    Every day, including every day after 2021, is resolved with PR #24
+    ``guard_glorys_version_before_fetch`` (live catalogue id + pinned version).
+    """
     by_key: dict[tuple[str, int, int], list[dt.date]] = defaultdict(list)
     for day in days:
+        resolution = guard_glorys_version_before_fetch(day, log_path=None)
         product_id = glorys_product_for_date(day)
+        if product_id != resolution.dataset_id:
+            raise ValueError(
+                f"glorys_product_for_date({day.isoformat()})={product_id!r} "
+                f"does not match catalogue resolution {resolution.dataset_id!r}"
+            )
         by_key[(product_id, day.year, day.month)].append(day)
     batches: list[GlorysSubsetBatch] = []
     for (product_id, _year, _month), month_days in sorted(by_key.items()):
@@ -549,6 +561,41 @@ def _sha256_file(path: Path) -> str:
     return digest.hexdigest()
 
 
+def catalogue_resolution_for_subset_batch(
+    batch: GlorysSubsetBatch,
+    *,
+    log_path: Path | None,
+) -> Any:
+    """Resolve every calendar day in ``batch`` through the PR #24 catalogue guard.
+
+    Days after 2021 use the same resolver as earlier days (pinned catalogue version
+    before any Copernicus subset). A batch may not mix dataset ids or versions.
+    """
+    resolution: Any = None
+    day = batch.date_start
+    while day <= batch.date_end:
+        day_resolution = guard_glorys_version_before_fetch(day, log_path=log_path)
+        glorys_dataset_id_for_date(day, batch.dataset_id)
+        if day_resolution.dataset_id != batch.dataset_id:
+            raise ValueError(
+                f"batch dataset_id {batch.dataset_id!r} does not match catalogue "
+                f"resolution {day_resolution.dataset_id!r} on {day.isoformat()}"
+            )
+        if resolution is not None and (
+            day_resolution.dataset_version != resolution.dataset_version
+            or day_resolution.dataset_id != resolution.dataset_id
+        ):
+            raise ValueError(
+                f"catalogue resolution changed within batch on {day.isoformat()}: "
+                f"{day_resolution.dataset_id}@{day_resolution.dataset_version}"
+            )
+        resolution = day_resolution
+        day += dt.timedelta(days=1)
+    if resolution is None:
+        raise ValueError("empty GLORYS subset batch")
+    return resolution
+
+
 def _subset_batch_live(
     batch: GlorysSubsetBatch,
     output_dir: Path,
@@ -564,11 +611,10 @@ def _subset_batch_live(
     out_file = subset_nc_path(output_dir, batch)
     if out_file.is_file() and out_file.stat().st_size > 0:
         return out_file
-    glorys_dataset_id_for_date(batch.date_start, batch.dataset_id)
-    guard_glorys_version_before_fetch(batch.date_start, log_path=log_path)
+    resolution = catalogue_resolution_for_subset_batch(batch, log_path=log_path)
     la0, la1, lo0, lo1 = batch.bbox
     copernicusmarine.subset(
-        dataset_id=batch.dataset_id,
+        dataset_id=resolution.dataset_id,
         variables=list(batch.variables),
         minimum_latitude=la0,
         maximum_latitude=la1,
@@ -580,26 +626,17 @@ def _subset_batch_live(
         end_datetime=f"{batch.date_end.isoformat()}T23:59:59",
         output_filename=str(out_file),
     )
-    version = ""
-    try:
-        import xarray as xr
-
-        with xr.open_dataset(out_file) as ds:
-            version = str(ds.attrs.get("product_version") or ds.attrs.get("version") or "")
-    except Exception:
-        version = ""
-    append_pull_log(
-        build_pull_record(
-            dataset_id=batch.dataset_id,
-            date_start=batch.date_start.isoformat(),
-            date_end=batch.date_end.isoformat(),
-            variables=batch.variables,
-            bbox=batch.bbox,
-            dataset_version=version or None,
-            file_sha256=_sha256_file(out_file),
-        ),
-        log_path=log_path,
+    pull_record = build_pull_record(
+        dataset_id=resolution.dataset_id,
+        date_start=batch.date_start.isoformat(),
+        date_end=batch.date_end.isoformat(),
+        variables=batch.variables,
+        bbox=batch.bbox,
+        dataset_version=resolution.dataset_version,
+        file_sha256=_sha256_file(out_file),
     )
+    pull_record.update(resolution.pull_log_fields())
+    append_pull_log(pull_record, log_path=log_path)
     return out_file
 
 
@@ -629,6 +666,7 @@ def new_glorys_field_store_for_live_build(
             str(exc),
         ) from exc
     assert_wcofs_bathymetry_hmin_source(grid.hmin_source)
+    assert_wcofs_h_array_not_placeholder(grid.h_m)
     store = GlorysFieldStore.from_wcofs_h_grid(grid)
     store.covariate_data_source = ""
     store.days = {}
@@ -650,6 +688,10 @@ def run_build_cufes_training_covariates(
     NetCDFs). Use ``dry_run`` to plan only. Never writes output on failure.
     """
     require_approved("glorys", purpose="training")
+    if not dry_run and subset_fn is None:
+        # Fail closed before catalogue I/O or downloads. Credential files on the
+        # operator HOME are irrelevant: this gate reads the process environment only.
+        assert_copernicus_env_credentials()
     events = load_events_parquet(events_path)
     days = unique_event_days(events)
     batches = plan_glorys_subset_batches(days)
@@ -678,7 +720,6 @@ def run_build_cufes_training_covariates(
     log_path = REPO_ROOT / str(cfg_logs["pull_logs"]["glorys"])
 
     if subset_fn is None:
-        assert_copernicus_env_credentials()
 
         def subset_fn(batch: GlorysSubsetBatch, cache_dir: Path) -> Path:
             try:

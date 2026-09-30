@@ -40,6 +40,7 @@ SKIP_PREFIXES = (
     "data/restricted/",
     "data/quarantine/",
     "data/processed/",
+    "src/models/tests/fixtures/",
 )
 
 # Published Natural Earth reference shoreline (public domain); not vessel/survey coordinates.
