@@ -31,17 +31,6 @@ DRY_RUN_R = REPO / "scripts" / "models" / "cufes_pipeline_dry_run.R"
 BOT2_BRANCH = "origin/cursor/cufes-glorys-training-covariates-faff"
 
 
-@pytest.fixture(scope="module", autouse=True)
-def _bot2_branch_ref_local_only() -> None:
-    """Hermetic: never ``git fetch`` over the network; schema tests skip when the ref is absent."""
-    subprocess.run(
-        ["git", "rev-parse", "--verify", BOT2_BRANCH],
-        cwd=REPO,
-        check=False,
-        capture_output=True,
-    )
-
-
 def test_bot2_schema_mismatch_report_is_stable() -> None:
     result = compare_bot2_to_sdmtmb(ref=BOT2_BRANCH)
     if not result.bot2_columns:
