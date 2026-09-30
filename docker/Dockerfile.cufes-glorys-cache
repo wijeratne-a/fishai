@@ -1,0 +1,7 @@
+FROM alpine:3.20
+
+ARG FISHAI_CUFES_GLORYS_CACHE_KEY
+LABEL org.opencontainers.image.source="https://github.com/wijeratne-a/fishai"
+LABEL fishai.cufes_glorys.cache_key="${FISHAI_CUFES_GLORYS_CACHE_KEY}"
+
+COPY artifact.tar.gz /artifact.tar.gz
