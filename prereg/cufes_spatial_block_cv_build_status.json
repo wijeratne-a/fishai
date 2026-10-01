@@ -1,13 +1,12 @@
 {
   "status": "spatial_block_cv_running",
-  "head_code_sha": "a3cdbbd09e5b9eb869c121c442216c70878f546e",
+  "head_code_sha": "50de0cbc5987d67fd82e27d408676715f28d0b6c",
   "prior_process_alive": false,
-  "process_alive": true,
+  "restarted": true,
   "swap_gib": 32,
   "n_folds": 4,
   "workers": "min(cores, 4)",
   "tmb_threads_per_fit": 1,
-  "species_concurrent": true,
   "species": {
     "sardine": {
       "folds_completed": 0,
@@ -20,5 +19,5 @@
       "failures": []
     }
   },
-  "note": "The earlier score process was dead. One full CV is running again. No fold has finished. ELPD, Boyce, AUC, and TSS are not computed."
+  "note": "The previous score process was not alive. One full CV is running. Both species are in the fold fits. No fold has finished, so completed stays 0/4 for sardine and 0/4 for anchovy. No fold failure has been recorded. ELPD, Boyce, AUC, and TSS are not computed."
 }
