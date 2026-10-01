@@ -1,0 +1,13 @@
+src/fishai/ingestion/biology/calcofi_cufes.py
+src/fishai/ingestion/biology/cufes/constants.py
+src/fishai/ingestion/biology/cufes/eggs.py
+src/fishai/ingestion/biology/cufes/erddap_rows.py
+src/fishai/ingestion/biology/cufes/fetch.py
+src/fishai/ingestion/biology/cufes/pipeline.py
+src/fishai/ingestion/biology/cufes/transform.py
+src/fishai/ingestion/physics/covariates.py
+src/fishai/ingestion/physics/cufes_training_covariates.py
+src/fishai/ingestion/physics/glorys_catalog.py
+src/fishai/ingestion/physics/glorys_cufes_subset.py
+src/fishai/ingestion/physics/glorys_training_build.py
+src/fishai/ingestion/physics/wcofs_h_glorys_store.py

@@ -31,16 +31,6 @@ DRY_RUN_R = REPO / "scripts" / "models" / "cufes_pipeline_dry_run.R"
 BOT2_BRANCH = "origin/cursor/cufes-glorys-training-covariates-faff"
 
 
-@pytest.fixture(scope="module", autouse=True)
-def _fetch_bot2_branch_for_schema_tests() -> None:
-    subprocess.run(
-        ["git", "fetch", "origin", "cursor/cufes-glorys-training-covariates-faff"],
-        cwd=REPO,
-        check=False,
-        capture_output=True,
-    )
-
-
 def test_bot2_schema_mismatch_report_is_stable() -> None:
     result = compare_bot2_to_sdmtmb(ref=BOT2_BRANCH)
     if not result.bot2_columns:
@@ -156,15 +146,15 @@ def test_optional_bot2_worktree_build_sample(tmp_path: Path) -> None:
     if os.environ.get("CI"):
         pytest.skip("read-only bot2 worktree build not run on CI workers")
     wt = tmp_path / "bot2_wt"
-    fetch = subprocess.run(
-        ["git", "fetch", "origin", "cursor/cufes-glorys-training-covariates-faff"],
+    verify = subprocess.run(
+        ["git", "rev-parse", "--verify", BOT2_BRANCH],
         cwd=REPO,
         capture_output=True,
         text=True,
         check=False,
     )
-    if fetch.returncode != 0:
-        pytest.skip("could not fetch bot2 branch")
+    if verify.returncode != 0:
+        pytest.skip("bot2 branch ref not available locally (hermetic: no git fetch)")
     add = subprocess.run(
         [
             "git",

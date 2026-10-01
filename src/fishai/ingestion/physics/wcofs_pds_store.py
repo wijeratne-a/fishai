@@ -63,6 +63,12 @@ def avg_nowcast_basename(day: dt.date) -> str:
     return f"wcofs.t03z.{day:%Y%m%d}.avg.nowcast.nc"
 
 
+def avg_nowcast_basename_candidates(day: dt.date) -> tuple[str, str]:
+    """Return (new_style, legacy) basenames for ``avg.nowcast``."""
+    ymd = day.strftime("%Y%m%d")
+    return avg_nowcast_basename(day), f"nos.wcofs.avg.nowcast.{ymd}.t03z.nc"
+
+
 def _basename_style(name: str) -> Literal["new", "old", "avg", "other"]:
     if _NEW_FIELDS_RE.match(name) or _AVG_NOWCAST_RE.match(name):
         return "new" if _NEW_FIELDS_RE.match(name) else "avg"
@@ -105,19 +111,42 @@ def resolve_fields_key(
     return unique[0]
 
 
-def resolve_avg_nowcast_key(day: dt.date, list_keys: ListKeysFn) -> str:
-    if day < dt.date(2024, 9, 1):
-        raise CycleNotAvailable(f"avg.nowcast not published before 2024-09-01 ({day})")
-    target = avg_nowcast_basename(day)
-    matches: list[str] = []
-    for prefix in layout_prefixes(day):
-        for key in list_keys(prefix):
-            if key.rsplit("/", 1)[-1] == target:
-                matches.append(key)
-    unique = sorted(set(matches))
+def _choose_avg_nowcast_key(
+    day: dt.date,
+    matches: list[tuple[str, Literal["new", "old"]]],
+) -> str:
+    """Pick one key from matches inside a single prefix."""
+    styles = {style for _, style in matches}
+    # 2024-09-01..09 publish both names; prefer SCN 24-77 when it exists.
+    # 2024-09-05 and 2024-09-06 have only the legacy name.
+    if NEW_STYLE_PREFER_START <= day <= NEW_STYLE_PREFER_END and "new" in styles:
+        chosen = [key for key, style in matches if style == "new"]
+    else:
+        chosen = [key for key, _style in matches]
+    unique = sorted(set(chosen))
     if len(unique) != 1:
         raise CycleNotAvailable(f"no unique avg.nowcast for {day.isoformat()}")
     return unique[0]
+
+
+def resolve_avg_nowcast_key(day: dt.date, list_keys: ListKeysFn) -> str:
+    if day < dt.date(2024, 9, 1):
+        raise CycleNotAvailable(f"avg.nowcast not published before 2024-09-01 ({day})")
+    new_base, old_base = avg_nowcast_basename_candidates(day)
+    # layout_prefixes is most-specific first. A basename copied into a later
+    # folder (2024-11 YYYY/MM and YYYYMM) must not be treated as ambiguous.
+    for prefix in layout_prefixes(day):
+        matches: list[tuple[str, Literal["new", "old"]]] = []
+        for key in list_keys(prefix):
+            base = key.rsplit("/", 1)[-1]
+            if base == new_base:
+                matches.append((key, "new"))
+            elif base == old_base:
+                matches.append((key, "old"))
+        if not matches:
+            continue
+        return _choose_avg_nowcast_key(day, matches)
+    raise CycleNotAvailable(f"no unique avg.nowcast for {day.isoformat()}")
 
 
 def _reject_parallel_mode_test_run(ds: xr.Dataset, day: dt.date) -> None:

@@ -41,6 +41,11 @@ from fishai.ingestion.physics.wcofs_pull_log import append_wcofs_pull_log, build
 from fishai.ingestion.physics.wcofs_pds_store import open_wcofs_cycle
 from fishai.ingestion.sources import REPO_ROOT, attribution_for
 
+# Same-calendar-day pairing puts WCOFS avg.nowcast ~21 h before the GLORYS day.
+# The next t03z cycle is the rebuild rule (audit verdict NO on the old table).
+DEFAULT_WCOFS_CYCLE_OFFSET_DAYS = 1
+OCEAN_TIME_LOG_NAME = "wcofs_glorys_ocean_time.jsonl"
+
 DEFAULT_CONFIG = REPO_ROOT / "data" / "config" / "wcofs_glorys_overlap.yaml"
 
 
@@ -73,6 +78,44 @@ def _config_date(value: Any) -> dt.date:
     if isinstance(value, dt.date):
         return value
     return dt.date.fromisoformat(str(value))
+
+
+def wcofs_cycle_offset_days(config: dict[str, Any]) -> int:
+    """Days added to a GLORYS calendar day to choose the WCOFS t03z cycle."""
+    wcofs_cfg = config.get("wcofs") or {}
+    if "cycle_offset_days" not in wcofs_cfg:
+        return DEFAULT_WCOFS_CYCLE_OFFSET_DAYS
+    return int(wcofs_cfg["cycle_offset_days"])
+
+
+def wcofs_cycle_date_for_glorys_day(glorys_day: dt.date, config: dict[str, Any]) -> dt.date:
+    """WCOFS cycle date paired to one GLORYS calendar day.
+
+    ``avg.nowcast`` for cycle date C is the daily mean ending at C 03:00 UTC.
+    Its ``ocean_time`` is 15:00 UTC on C-1, which is 21 h before noon on C.
+    The configured offset (1) selects cycle C = glorys_day + 1 day.
+    """
+    return glorys_day + dt.timedelta(days=wcofs_cycle_offset_days(config))
+
+
+def ocean_time_log_path(wcofs_log: Path) -> Path:
+    return Path(wcofs_log).with_name(OCEAN_TIME_LOG_NAME)
+
+
+def read_dataset_ocean_time_utc(ds: xr.Dataset) -> dt.datetime | None:
+    """Return ``ocean_time`` when the dataset stores it; otherwise None."""
+    if "ocean_time" not in ds.variables:
+        return None
+    from fishai.ingestion.physics.wcofs_daily import read_ocean_time_utc
+
+    return read_ocean_time_utc(ds)
+
+
+def append_ocean_time_record(record: dict[str, Any], log_path: Path) -> None:
+    log_path.parent.mkdir(parents=True, exist_ok=True)
+    line = json.dumps(record, sort_keys=True) + "\n"
+    with log_path.open("a", encoding="utf-8") as handle:
+        handle.write(line)
 
 
 def overlap_dates(config: dict[str, Any]) -> list[dt.date]:
@@ -216,6 +259,8 @@ def build_overlap_metadata(config: dict[str, Any]) -> dict[str, Any]:
         "natural_earth_version": shore.get("natural_earth_version"),
         "wcofs_attribution": attribution_for("wcofs"),
         "glorys_attribution": attribution_for("glorys"),
+        "wcofs_cycle_offset_days": wcofs_cycle_offset_days(config),
+        "wcofs_cycle_rule": "glorys_calendar_day_plus_offset",
     }
 
 
@@ -340,21 +385,36 @@ def run_overlap_pairing(
     budget = budget or DailyRequestBudget(int(rate.get("max_requests_per_day", 200)))
     wcofs_log = wcofs_log or REPO_ROOT / str(config["pull_logs"]["wcofs"])
     glorys_log = glorys_log or REPO_ROOT / str(config["pull_logs"]["glorys"])
+    time_log = ocean_time_log_path(wcofs_log)
     all_rows: list[dict[str, Any]] = []
     for day in days:
+        cycle = wcofs_cycle_date_for_glorys_day(day, config)
         if wcofs_open is None:
             budget.charge(day, 1)
-            ds = open_wcofs_cycle(day, product="avg_nowcast")
+            ds = open_wcofs_cycle(cycle, product="avg_nowcast")
         else:
-            ds = wcofs_open(day)
+            ds = wcofs_open(cycle)
         key = str(ds.attrs.get("wcofs_s3_key", ""))
+        ocean_time = read_dataset_ocean_time_utc(ds)
+        ocean_iso = ocean_time.isoformat() if ocean_time is not None else None
         append_wcofs_pull_log(
             build_wcofs_pull_record(
-                cycle_date=day.isoformat(),
+                cycle_date=cycle.isoformat(),
                 s3_key=key,
                 attribution=attribution_for("wcofs"),
             ),
             log_path=wcofs_log,
+        )
+        append_ocean_time_record(
+            {
+                "record_type": "overlap_ocean_time",
+                "glorys_day": day.isoformat(),
+                "wcofs_cycle_date": cycle.isoformat(),
+                "wcofs_cycle_offset_days": wcofs_cycle_offset_days(config),
+                "wcofs_ocean_time_utc": ocean_iso,
+                "wcofs_s3_key": key,
+            },
+            time_log,
         )
         if glorys_fetch is None:
             raise RuntimeError("glorys_fetch is required for live overlap pairing")
@@ -391,10 +451,17 @@ def run_overlap_pairing(
             nearshore,
             config=config,
         )
+        frame["wcofs_cycle_date"] = cycle.isoformat()
+        frame["wcofs_ocean_time_utc"] = ocean_iso
+        glorys_time = glorys_payload.get("time_utc")
+        if glorys_time is not None:
+            frame["glorys_time_utc"] = str(glorys_time)
         all_rows.extend(frame.to_dict(orient="records"))
     df = pd.DataFrame(all_rows)
     metadata = build_overlap_metadata(config)
     metadata["glorys_production_status"] = str(config["glorys"]["production_status"])
+    metadata["ocean_time_log"] = str(time_log)
+    metadata["ocean_time_rows"] = len(days)
     cov_paths = coverage_paths_from_config(config)
     kept_n, reduced_n = expected_cufes_counts(config)
     try:
