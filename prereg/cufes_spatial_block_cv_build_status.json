@@ -1,9 +1,9 @@
 {
   "status": "spatial_block_cv_running",
-  "head_code_sha": "40f83918b67c4baceaabb26e02f2a27003b309ee",
+  "head_code_sha": "a3cdbbd09e5b9eb869c121c442216c70878f546e",
   "prior_process_alive": true,
   "restarted": false,
-  "checked_at": "2026-10-01T06:23:28Z",
+  "checked_at": "2026-10-01T06:53:54Z",
   "swap_gib": 32,
   "n_folds": 4,
   "workers": "min(cores, 4)",
@@ -20,5 +20,5 @@
       "failures": []
     }
   },
-  "note": "Checked 2026-10-01T06:23:28Z. The score process is still alive (R pid 48526). One species child (pid 48829) has one fold fit still running (pid 52422, about 9.5 GB RSS, one thread, elapsed about 13 min). The other species child (pid 48828) is gone. The kernel OOM-killed seven R processes between 06:19:00Z and 06:22:16Z (pids 54108, 54109, 54116, 54115, 54107, 54114, 54106). The log has no CV fold completion line and no R error, so no fold id or R failure reason is available. Completed stays 0/4 for sardine and 0/4 for anchovy. ELPD, Boyce, AUC, and TSS are not computed."
+  "note": "Checked 2026-10-01T06:53:54Z. The score process is still alive (R pid 48526, elapsed about 61 min). One species child (pid 48829) has one fold fit still running (pid 52422, about 11 GB RSS, one thread, elapsed about 44 min). The other species child (pid 48828) is gone. The kernel OOM-killed seven R processes between 06:19:00Z and 06:22:16Z (pids 54108, 54109, 54116, 54115, 54107, 54114, 54106). The log has eight sdmTMB fit starts and no CV fold completion or failure line, so no fold id or R failure reason is available. Completed stays 0/4 for sardine and 0/4 for anchovy. ELPD, Boyce, AUC, and TSS are not computed."
 }
