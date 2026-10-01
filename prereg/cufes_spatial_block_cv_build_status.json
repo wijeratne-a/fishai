@@ -1,9 +1,9 @@
 {
-  "status": "spatial_block_cv_running",
+  "status": "spatial_block_cv_exited",
   "head_code_sha": "a3cdbbd09e5b9eb869c121c442216c70878f546e",
-  "prior_process_alive": true,
+  "prior_process_alive": false,
   "restarted": false,
-  "checked_at": "2026-10-01T16:11:12Z",
+  "checked_at": "2026-10-01T16:38:50Z",
   "swap_gib": 32,
   "n_folds": 4,
   "workers": "min(cores, 4)",
@@ -20,5 +20,5 @@
       "failures": []
     }
   },
-  "note": "Checked 2026-10-01T16:11:12Z. The score process is still alive (R pid 81890, elapsed about 59 min). One species child (pid 82133) has one fold fit still running (pid 84516, about 13.7 GB RSS, one thread, elapsed about 41 min). The other species child was already absent at 15:27Z, and the other fold fit under 82133 is gone. The kernel OOM-killed R pids 86326 and 86325 at 15:34:48Z and 15:35:39Z, and R pid 86324 at 15:45:02Z (anon-rss about 8.4GB). The log has four sdmTMB fit starts and no CV fold completion or failure line, so no fold id or R failure reason is available. Completed stays 0/4 for sardine and 0/4 for anchovy. ELPD, Boyce, AUC, and TSS are not computed."
+  "note": "Checked 2026-10-01T16:38:50Z. No score process is alive. The run that was alive at 16:11Z (R pid 81890, species child 82133, fold fit 84516) exited after the kernel OOM-killed R pid 86327 at 16:31:02Z (anon-rss about 14.4GB). The log ended with Error in x$status : $ operator is invalid for atomic vectors (run_spatial_block_cv_scores -> vapply) and EXIT:1. No CV_FOLD_DONE line and no fold id, so no fold is counted complete or failed. Completed stays 0/4 for sardine and 0/4 for anchovy. ELPD, Boyce, AUC, and TSS are not computed. ELPD stays ineligible."
 }
