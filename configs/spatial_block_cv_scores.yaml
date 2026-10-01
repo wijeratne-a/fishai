@@ -20,3 +20,4 @@ spatial_block_cv_scores:
   output:
     scores_json: prereg/cufes_spatial_block_cv_scores.json
     fold_assignment_csv: artifacts/spatial_block_cv/fold_assignment.csv
+    checkpoint_dir: prereg/cv_checkpoints

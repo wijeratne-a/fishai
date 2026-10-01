@@ -17,32 +17,10 @@ Sys.setenv(FISHAI_ROOT = root)
 source(file.path(root, "src", "models", "tests", "testthat", "helper.R"))
 load_fishaisdm(root)
 
-# Sardine and anchovy are the protocol species list. Score them in
-# concurrent processes. Each process parallelizes its own folds.
-lapply <- function(X, FUN, ...) {
-  is_species <- is.list(X) &&
-    length(X) > 1L &&
-    is.list(X[[1L]]) &&
-    is.null(X[[1L]]$status) &&
-    !is.null(X[[1L]]$model_config)
-  if (!is_species) {
-    return(base::lapply(X, FUN, ...))
-  }
-  .cv_limit_tmb_threads()
-  jobs <- base::lapply(X, function(sp) {
-    force(sp)
-    parallel::mcparallel(FUN(sp), silent = FALSE)
-  })
-  collected <- parallel::mccollect(jobs)
-  if (length(collected) != length(X) || any(vapply(collected, is.null, logical(1L)))) {
-    stop("concurrent species CV did not return one result per species", call. = FALSE)
-  }
-  unname(collected)
-}
-
-# Holdout predictions use the same worker cap and one TMB thread per fit.
-.spatial_block_oof_predictions <- .spatial_block_oof_predictions_parallel
-
+# Production spatial-block CV is deliberately sequential: one species at a
+# time, one fold at a time, one TMB thread per fit. Each completed fold is
+# checkpointed under prereg/cv_checkpoints by run_cv_spatial(), so a killed
+# or restarted run resumes from the last completed fold instead of 0/4.
 args <- commandArgs(trailingOnly = TRUE)
 protocol_path <- if (length(args)) args[[1L]] else NULL
 report <- run_spatial_block_cv_scores(protocol_path)

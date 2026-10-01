@@ -174,13 +174,116 @@ cv_elpd_ineligible_reason <- function(cv_obj) {
   as.integer(min(as.integer(cores), 4L, n_tasks))
 }
 
+.cv_empty_oof_predictions <- function() {
+  data.frame(
+    event_id = character(),
+    fold_id = integer(),
+    z = integer(),
+    p = numeric(),
+    stringsAsFactors = FALSE
+  )
+}
+
+.cv_valid_oof_predictions <- function(oof, fold_id = NULL) {
+  if (is.null(oof) || !is.data.frame(oof)) {
+    return(FALSE)
+  }
+  if (!all(c("event_id", "fold_id", "z", "p") %in% names(oof))) {
+    return(FALSE)
+  }
+  if (!nrow(oof)) {
+    return(TRUE)
+  }
+  p <- suppressWarnings(as.numeric(oof$p))
+  if (length(p) != nrow(oof) || any(!is.finite(p)) || any(p < 0) || any(p > 1)) {
+    return(FALSE)
+  }
+  if (!is.null(fold_id) && any(as.character(oof$fold_id) != as.character(fold_id))) {
+    return(FALSE)
+  }
+  TRUE
+}
+
+#' A fold result is usable only when it is the structured list produced by
+#' .cv_spatial_one_fold(). Forked workers killed by the OOM killer can hand
+#' back atomic or otherwise malformed values; dereferencing fields on those
+#' values used to crash the collector with "$ operator is invalid for atomic
+#' vectors" and lose every completed fold.
+.cv_valid_fold_result <- function(res, fold_id) {
+  if (is.null(res) || !is.list(res) || inherits(res, "try-error")) {
+    return(FALSE)
+  }
+  if (!all(c("fold_id", "failure", "loglik", "barrier_stop") %in% names(res))) {
+    return(FALSE)
+  }
+  if (!identical(as.character(res$fold_id)[1L], as.character(fold_id)[1L])) {
+    return(FALSE)
+  }
+  if (!is.null(res$barrier_stop)) {
+    return(TRUE)
+  }
+  if (!is.null(res$failure)) {
+    return(length(res$loglik) == 1L && is.na(res$loglik))
+  }
+  length(res$loglik) == 1L &&
+    is.finite(suppressWarnings(as.numeric(res$loglik))) &&
+    (is.null(res$oof) || .cv_valid_oof_predictions(res$oof, fold_id))
+}
+
+.cv_sanitize_checkpoint_label <- function(label) {
+  label <- as.character(label %||% "species")[1L]
+  if (is.na(label) || !nzchar(label)) {
+    label <- "species"
+  }
+  gsub("[^A-Za-z0-9_-]+", "_", label)
+}
+
+.cv_fold_checkpoint_path <- function(checkpoint_dir, label, fold_id) {
+  file.path(
+    checkpoint_dir,
+    sprintf(
+      "%s_fold_%s.rds",
+      .cv_sanitize_checkpoint_label(label),
+      gsub("[^A-Za-z0-9_-]+", "_", as.character(fold_id)[1L])
+    )
+  )
+}
+
+.cv_save_fold_checkpoint <- function(path, res) {
+  dir.create(dirname(path), recursive = TRUE, showWarnings = FALSE)
+  tmp <- tempfile(pattern = ".cv-fold-", tmpdir = dirname(path), fileext = ".tmp")
+  on.exit(unlink(tmp), add = TRUE)
+  saveRDS(res, tmp)
+  if (!file.rename(tmp, path)) {
+    stop("could not write CV fold checkpoint: ", path, call. = FALSE)
+  }
+  invisible(path)
+}
+
+.cv_read_fold_checkpoint <- function(path, fold_id) {
+  res <- tryCatch(readRDS(path), error = function(e) e)
+  if (inherits(res, "error") || !.cv_valid_fold_result(res, fold_id) || !is.null(res$failure) || !is.null(res$barrier_stop)) {
+    stop(
+      sprintf("CV_WORKER_INVALID fold=%s: invalid checkpoint %s", as.character(fold_id)[1L], path),
+      call. = FALSE
+    )
+  }
+  res
+}
+
 .cv_spatial_one_fold <- function(fold_id, dat, cfg) {
   .cv_limit_tmb_threads()
   train <- dat[as.character(dat$fold_id) != fold_id, , drop = FALSE]
   test <- dat[as.character(dat$fold_id) == fold_id, , drop = FALSE]
   pre <- .cv_spatial_preflight(train, test, fold_id)
   if (!is.null(pre)) {
-    return(list(fold_id = fold_id, failure = pre, loglik = NA_real_, barrier_stop = NULL))
+    return(list(
+      fold_id = fold_id,
+      failure = pre,
+      loglik = NA_real_,
+      barrier_stop = NULL,
+      oof = .cv_empty_oof_predictions()
+    ))
   }
   train_mesh <- tryCatch(
     build_fishai_production_mesh(train, cfg$mesh),
@@ -196,7 +299,8 @@ cv_elpd_ineligible_reason <- function(cv_obj) {
       fold_id = fold_id,
       failure = NULL,
       loglik = NA_real_,
-      barrier_stop = train_mesh$message
+      barrier_stop = train_mesh$message,
+      oof = .cv_empty_oof_predictions()
     ))
   }
   fit_res <- tryCatch(
@@ -210,7 +314,8 @@ cv_elpd_ineligible_reason <- function(cv_obj) {
       fold_id = fold_id,
       failure = fit_res$message,
       loglik = NA_real_,
-      barrier_stop = NULL
+      barrier_stop = NULL,
+      oof = .cv_empty_oof_predictions()
     ))
   }
   fit_reason <- .cv_fit_failure_reason(fit_res)
@@ -219,7 +324,8 @@ cv_elpd_ineligible_reason <- function(cv_obj) {
       fold_id = fold_id,
       failure = fit_reason,
       loglik = NA_real_,
-      barrier_stop = NULL
+      barrier_stop = NULL,
+      oof = .cv_empty_oof_predictions()
     ))
   }
   ll <- tryCatch(
@@ -227,22 +333,60 @@ cv_elpd_ineligible_reason <- function(cv_obj) {
     error = function(e) conditionMessage(e)
   )
   if (is.character(ll) && length(ll) == 1L) {
-    return(list(fold_id = fold_id, failure = ll, loglik = NA_real_, barrier_stop = NULL))
+    return(list(
+      fold_id = fold_id,
+      failure = ll,
+      loglik = NA_real_,
+      barrier_stop = NULL,
+      oof = .cv_empty_oof_predictions()
+    ))
   }
   if (!is.finite(ll)) {
     return(list(
       fold_id = fold_id,
       failure = "non-finite fold log-likelihood",
       loglik = NA_real_,
-      barrier_stop = NULL
+      barrier_stop = NULL,
+      oof = .cv_empty_oof_predictions()
     ))
   }
-  list(fold_id = fold_id, failure = NULL, loglik = ll, barrier_stop = NULL)
+  p <- tryCatch(
+    score_encounter_on_events(fit_res$fit, test, cfg),
+    error = function(e) conditionMessage(e)
+  )
+  if (is.character(p) && length(p) == 1L) {
+    return(list(
+      fold_id = fold_id,
+      failure = p,
+      loglik = NA_real_,
+      barrier_stop = NULL,
+      oof = .cv_empty_oof_predictions()
+    ))
+  }
+  p <- suppressWarnings(as.numeric(p))
+  if (length(p) != nrow(test) || any(!is.finite(p)) || any(p < 0) || any(p > 1)) {
+    return(list(
+      fold_id = fold_id,
+      failure = "invalid out-of-fold encounter probabilities",
+      loglik = NA_real_,
+      barrier_stop = NULL,
+      oof = .cv_empty_oof_predictions()
+    ))
+  }
+  oof <- data.frame(
+    event_id = as.character(test$event_id),
+    fold_id = as.integer(test$fold_id),
+    z = as.integer(test$y > 0),
+    p = p,
+    stringsAsFactors = FALSE
+  )
+  list(fold_id = fold_id, failure = NULL, loglik = ll, barrier_stop = NULL, oof = oof)
 }
 
-#' Parallel out-of-fold encounter probabilities. Same folds and skips as the
-#' serial scorer; successful holdouts are bound in fold-id order.
-.spatial_block_oof_predictions_parallel <- function(dat, cfg, fold_ids) {
+#' Out-of-fold encounter probabilities. Same folds and skips as the serial
+#' scorer; successful holdouts are bound in fold-id order. Worker count is
+#' explicit so production callers can force the memory-safe sequential path.
+.spatial_block_oof_predictions_parallel <- function(dat, cfg, fold_ids, n_workers = NULL) {
   .cv_limit_tmb_threads()
   fold_assignment <- .assert_supplied_folds_match_assignment(dat, fold_ids, cfg)
   dat$fold_id <- fold_assignment$fold_id
@@ -296,7 +440,11 @@ cv_elpd_ineligible_reason <- function(cv_obj) {
       stringsAsFactors = FALSE
     )
   }
-  n_workers <- .cv_spatial_n_workers(length(folds))
+  n_workers <- if (is.null(n_workers)) {
+    .cv_spatial_n_workers(length(folds))
+  } else {
+    max(1L, min(as.integer(n_workers)[1L], length(folds)))
+  }
   pred_chunks <- if (n_workers <= 1L) {
     lapply(folds, one)
   } else {
@@ -307,6 +455,15 @@ cv_elpd_ineligible_reason <- function(cv_obj) {
       mc.preschedule = FALSE,
       mc.allow.recursive = TRUE
     )
+  }
+  for (idx in seq_along(pred_chunks)) {
+    chunk <- pred_chunks[[idx]]
+    if (inherits(chunk, "try-error") || (!is.null(chunk) && !.cv_valid_oof_predictions(chunk, folds[[idx]]))) {
+      stop(
+        sprintf("CV_WORKER_INVALID fold=%s: invalid out-of-fold prediction result", folds[[idx]]),
+        call. = FALSE
+      )
+    }
   }
   pred_chunks <- pred_chunks[!vapply(pred_chunks, is.null, logical(1))]
   if (!length(pred_chunks)) {
@@ -325,9 +482,20 @@ cv_elpd_ineligible_reason <- function(cv_obj) {
 
 #' Spatial-block cross-validation with explicit fold IDs.
 #' Failed folds are recorded (not fatal); see ``n_failed_folds`` and ``fold_failures``.
-#' Folds run in parallel with ``min(cores, 4)`` workers and one TMB thread each.
+#' By default folds may run with ``min(cores, 4)`` workers and one TMB thread
+#' each. Production callers can force ``n_workers = 1`` and supply
+#' ``checkpoint_dir`` so each completed fold is persisted immediately and a
+#' restarted run skips folds whose checkpoints validate.
 #' @export
-run_cv_spatial <- function(dat, mesh, cfg, fold_ids) {
+run_cv_spatial <- function(
+  dat,
+  mesh,
+  cfg,
+  fold_ids,
+  n_workers = NULL,
+  checkpoint_dir = NULL,
+  checkpoint_label = NULL
+) {
   .refuse_random_cv(fold_ids)
   fold_assignment <- .assert_supplied_folds_match_assignment(dat, fold_ids, cfg)
   dat$fold_id <- fold_assignment$fold_id
@@ -337,26 +505,75 @@ run_cv_spatial <- function(dat, mesh, cfg, fold_ids) {
   folds <- sort(unique(as.character(fold_assignment$fold_id)))
   fold_loglik <- stats::setNames(rep(NA_real_, length(folds)), folds)
   fold_failures <- list()
+  oof_chunks <- list()
   if (isTRUE(cfg$mesh$barrier$enabled)) {
     .read_barrier_land(cfg$mesh)
   }
 
   .cv_limit_tmb_threads()
-  n_workers <- .cv_spatial_n_workers(length(folds))
+  checkpoint_label <- checkpoint_label %||% cfg$species$taxon %||% "species"
+  n_workers <- if (!is.null(checkpoint_dir)) {
+    1L
+  } else if (is.null(n_workers)) {
+    .cv_spatial_n_workers(length(folds))
+  } else {
+    max(1L, min(as.integer(n_workers)[1L], length(folds)))
+  }
+
+  run_one_fold <- function(fold_id) {
+    if (!is.null(checkpoint_dir)) {
+      checkpoint_path <- .cv_fold_checkpoint_path(checkpoint_dir, checkpoint_label, fold_id)
+      if (file.exists(checkpoint_path)) {
+        res <- .cv_read_fold_checkpoint(checkpoint_path, fold_id)
+        message(sprintf(
+          "CV_FOLD_SKIPPED species=%s fold=%s checkpoint=%s",
+          .cv_sanitize_checkpoint_label(checkpoint_label),
+          fold_id,
+          checkpoint_path
+        ))
+        return(res)
+      }
+    }
+    res <- .cv_spatial_one_fold(fold_id, dat, cfg)
+    if (!.cv_valid_fold_result(res, fold_id)) {
+      stop(
+        sprintf("CV_WORKER_INVALID fold=%s: invalid fold result", fold_id),
+        call. = FALSE
+      )
+    }
+    if (!is.null(checkpoint_dir) && is.null(res$failure) && is.null(res$barrier_stop)) {
+      checkpoint_path <- .cv_fold_checkpoint_path(checkpoint_dir, checkpoint_label, fold_id)
+      .cv_save_fold_checkpoint(checkpoint_path, res)
+      message(sprintf(
+        "CV_FOLD_DONE species=%s fold=%s loglik=%.6f checkpoint=%s",
+        .cv_sanitize_checkpoint_label(checkpoint_label),
+        fold_id,
+        as.numeric(res$loglik),
+        checkpoint_path
+      ))
+    }
+    res
+  }
+
   results <- if (n_workers <= 1L) {
-    lapply(folds, function(fold_id) .cv_spatial_one_fold(fold_id, dat, cfg))
+    lapply(folds, run_one_fold)
   } else {
     parallel::mclapply(
       folds,
-      function(fold_id) .cv_spatial_one_fold(fold_id, dat, cfg),
+      run_one_fold,
       mc.cores = n_workers,
       mc.preschedule = FALSE,
       mc.allow.recursive = TRUE
     )
   }
-  for (res in results) {
-    if (inherits(res, "try-error")) {
-      stop(as.character(res), call. = FALSE)
+  for (idx in seq_along(results)) {
+    res <- results[[idx]]
+    fold_id <- folds[[idx]]
+    if (!.cv_valid_fold_result(res, fold_id)) {
+      stop(
+        sprintf("CV_WORKER_INVALID fold=%s: invalid fold result", fold_id),
+        call. = FALSE
+      )
     }
     if (!is.null(res$barrier_stop)) {
       stop(res$barrier_stop, call. = FALSE)
@@ -366,7 +583,17 @@ run_cv_spatial <- function(dat, mesh, cfg, fold_ids) {
       message("CV fold ", res$fold_id, " failed: ", res$failure)
     } else {
       fold_loglik[[res$fold_id]] <- res$loglik
+      if (!is.null(res$oof) && nrow(res$oof)) {
+        oof_chunks[[res$fold_id]] <- res$oof
+      }
     }
+  }
+  oof_predictions <- if (length(oof_chunks)) {
+    out <- do.call(rbind, oof_chunks)
+    rownames(out) <- NULL
+    out
+  } else {
+    .cv_empty_oof_predictions()
   }
 
   n_failed <- length(fold_failures)
@@ -389,6 +616,7 @@ run_cv_spatial <- function(dat, mesh, cfg, fold_ids) {
       fold_failures = fold_failures,
       fold_assignment = fold_assignment,
       spatial_block_cv = spatial_meta,
+      oof_predictions = oof_predictions,
       elpd_eligible = is.null(inel),
       elpd_ineligible_reason = inel
     ),

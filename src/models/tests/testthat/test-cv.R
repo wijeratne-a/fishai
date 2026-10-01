@@ -212,6 +212,60 @@ test_that("spatial CV worker count is min(cores, 4) and not above the fold count
   expect_equal(.cv_spatial_n_workers(3L, cores = NA_integer_), 1L)
 })
 
+test_that("spatial CV fold-result validation rejects killed-worker values", {
+  expect_false(.cv_valid_fold_result("killed", "1"))
+  expect_false(.cv_valid_fold_result(structure("boom", class = "try-error"), "1"))
+  expect_false(.cv_valid_fold_result(list(fold_id = "2", failure = NULL, loglik = -1, barrier_stop = NULL), "1"))
+  expect_true(.cv_valid_fold_result(
+    list(fold_id = "1", failure = NULL, loglik = -1, barrier_stop = NULL, oof = .cv_empty_oof_predictions()),
+    "1"
+  ))
+})
+
+test_that("sequential spatial CV returns complete out-of-fold predictions", {
+  cfg <- load_sardine_test_cfg(intercept_only = TRUE)
+  dat <- load_model_data(cfg = cfg)
+  mesh <- build_fishai_mesh(dat, cfg$mesh)
+  cv <- run_cv_spatial(dat, mesh, cfg, dat$fold_id, n_workers = 1L)
+  expect_equal(cv$n_failed_folds, 0L)
+  expect_equal(nrow(cv$oof_predictions), nrow(dat))
+  expect_true(all(c("event_id", "fold_id", "z", "p") %in% names(cv$oof_predictions)))
+  expect_false(anyDuplicated(cv$oof_predictions$event_id))
+  expect_true(all(cv$oof_predictions$p >= 0 & cv$oof_predictions$p <= 1))
+})
+
+test_that("checkpointed spatial CV writes and reuses per-fold checkpoints", {
+  cfg <- load_sardine_test_cfg(intercept_only = TRUE)
+  dat <- load_model_data(cfg = cfg)
+  mesh <- build_fishai_mesh(dat, cfg$mesh)
+  checkpoint_dir <- tempfile("cv-checkpoints-")
+  on.exit(unlink(checkpoint_dir, recursive = TRUE), add = TRUE)
+
+  cv <- run_cv_spatial(
+    dat,
+    mesh,
+    cfg,
+    dat$fold_id,
+    checkpoint_dir = checkpoint_dir,
+    checkpoint_label = "sardine"
+  )
+  checkpoints <- list.files(checkpoint_dir, pattern = "^sardine_fold_.*\\.rds$", full.names = TRUE)
+  expect_equal(length(checkpoints), length(unique(dat$fold_id)))
+  expect_equal(cv$n_failed_folds, 0L)
+  expect_equal(nrow(cv$oof_predictions), nrow(dat))
+
+  cv_cached <- run_cv_spatial(
+    dat,
+    mesh,
+    cfg,
+    dat$fold_id,
+    checkpoint_dir = checkpoint_dir,
+    checkpoint_label = "sardine"
+  )
+  expect_equal(cv_cached$sum_loglik, cv$sum_loglik)
+  expect_equal(cv_cached$oof_predictions, cv$oof_predictions)
+})
+
 test_that("spatial CV fold meshes use the production Bakka barrier and range", {
   cfg <- load_sardine_test_cfg(intercept_only = TRUE)
   expect_true(isTRUE(cfg$mesh$barrier$enabled))

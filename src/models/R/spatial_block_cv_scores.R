@@ -121,7 +121,10 @@ missing_real_table_cv_inputs <- function(cfg, wcofs_artifact_rel = "data/derived
 compute_spatial_block_cv_scores <- function(
   cfg,
   min_duration_min = 2L,
-  wcofs_artifact_rel = "data/derived/physics/wcofs_h_glorys_pilot.zarr"
+  wcofs_artifact_rel = "data/derived/physics/wcofs_h_glorys_pilot.zarr",
+  checkpoint_dir = NULL,
+  checkpoint_label = NULL,
+  n_workers = 1L
 ) {
   missing <- missing_real_table_cv_inputs(cfg, wcofs_artifact_rel)
   if (length(missing)) {
@@ -146,13 +149,30 @@ compute_spatial_block_cv_scores <- function(
       mesh <- add_barrier_land(mesh, land_sf, range_fraction = cfg$mesh$barrier$range_fraction %||% 0.1)
     }
   }
-  cv <- run_cv_spatial(dat, mesh, cfg, fold_ids = dat$fold_id)
-  oof <- .spatial_block_oof_predictions(dat, cfg, dat$fold_id)
+  cv <- run_cv_spatial(
+    dat,
+    mesh,
+    cfg,
+    fold_ids = dat$fold_id,
+    n_workers = n_workers,
+    checkpoint_dir = checkpoint_dir,
+    checkpoint_label = checkpoint_label %||% cfg$species$taxon %||% "species"
+  )
+  oof <- if (!is.null(cv$oof_predictions)) {
+    cv$oof_predictions
+  } else {
+    .spatial_block_oof_predictions(dat, cfg, dat$fold_id)
+  }
 
   boyce <- NA_real_
   auc <- NA_real_
   tss <- NA_real_
-  if (nrow(oof)) {
+  expected_folds <- sort(unique(as.integer(cv$fold_assignment$fold_id)))
+  oof_complete <- isTRUE(cv$n_failed_folds == 0L) &&
+    nrow(oof) == nrow(dat) &&
+    setequal(unique(as.integer(oof$fold_id)), expected_folds) &&
+    !anyDuplicated(as.character(oof$event_id))
+  if (oof_complete) {
     z <- oof$z
     p <- oof$p
     if (any(z == 1L) && any(z == 0L)) {
@@ -242,6 +262,11 @@ run_spatial_block_cv_scores <- function(protocol_path = NULL, output_override = 
     fold_sha <- file_sha256(fold_csv)
   }
 
+  checkpoint_dir <- protocol$output$checkpoint_dir %||% file.path(root, "prereg", "cv_checkpoints")
+  if (!grepl("^/", checkpoint_dir)) {
+    checkpoint_dir <- file.path(root, checkpoint_dir)
+  }
+
   species_out <- lapply(protocol$species, function(sp) {
     cfg <- load_config_yaml(.resolve_model_config(sp$model_config))
     if (!length(missing_global)) {
@@ -250,7 +275,14 @@ run_spatial_block_cv_scores <- function(protocol_path = NULL, output_override = 
     if (!is.null(protocol$event_count_guard)) {
       cfg$data$event_count_guard <- protocol$event_count_guard
     }
-    scores <- compute_spatial_block_cv_scores(cfg, min_duration_min = min_dur, wcofs_artifact_rel = wcofs_rel)
+    scores <- compute_spatial_block_cv_scores(
+      cfg,
+      min_duration_min = min_dur,
+      wcofs_artifact_rel = wcofs_rel,
+      checkpoint_dir = checkpoint_dir,
+      checkpoint_label = sp$label %||% sp$taxon %||% cfg$species$taxon,
+      n_workers = 1L
+    )
     c(
       list(
         label = sp$label %||% sp$taxon,
@@ -261,7 +293,11 @@ run_spatial_block_cv_scores <- function(protocol_path = NULL, output_override = 
     )
   })
 
-  blocked <- any(vapply(species_out, function(x) identical(x$status, "blocked"), logical(1)))
+  blocked <- any(vapply(
+    species_out,
+    function(x) is.list(x) && identical(x$status, "blocked"),
+    logical(1)
+  ))
   out_json <- protocol$output$scores_json
   if (!grepl("^/", out_json)) {
     out_json <- file.path(root, out_json)
@@ -279,6 +315,7 @@ run_spatial_block_cv_scores <- function(protocol_path = NULL, output_override = 
     fold_assignment_sha256 = fold_sha,
     min_duration_min = min_dur,
     wcofs_h_artifact = wcofs_rel,
+    cv_checkpoint_dir = checkpoint_dir,
     species = species_out
   )
   if (blocked) {
