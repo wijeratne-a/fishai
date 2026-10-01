@@ -3,7 +3,7 @@
   "head_code_sha": "a3cdbbd09e5b9eb869c121c442216c70878f546e",
   "prior_process_alive": true,
   "restarted": false,
-  "checked_at": "2026-10-01T15:41:25Z",
+  "checked_at": "2026-10-01T16:11:12Z",
   "swap_gib": 32,
   "n_folds": 4,
   "workers": "min(cores, 4)",
@@ -20,5 +20,5 @@
       "failures": []
     }
   },
-  "note": "Checked 2026-10-01T15:41:25Z. The score process is still alive (R pid 81890, elapsed about 29 min). One species child (pid 82133) has two fold fits still running (pids 84513 and 84516, about 8.5 GB and 5.0 GB RSS, one thread each, elapsed about 12 min). The other species child was not present at 15:27Z or at this check. The kernel OOM-killed two R processes at 15:34:48Z and 15:35:39Z (pids 86326 and 86325). The log has four sdmTMB fit starts and no CV fold completion or failure line, so no fold id or R failure reason is available. Completed stays 0/4 for sardine and 0/4 for anchovy. ELPD, Boyce, AUC, and TSS are not computed."
+  "note": "Checked 2026-10-01T16:11:12Z. The score process is still alive (R pid 81890, elapsed about 59 min). One species child (pid 82133) has one fold fit still running (pid 84516, about 13.7 GB RSS, one thread, elapsed about 41 min). The other species child was already absent at 15:27Z, and the other fold fit under 82133 is gone. The kernel OOM-killed R pids 86326 and 86325 at 15:34:48Z and 15:35:39Z, and R pid 86324 at 15:45:02Z (anon-rss about 8.4GB). The log has four sdmTMB fit starts and no CV fold completion or failure line, so no fold id or R failure reason is available. Completed stays 0/4 for sardine and 0/4 for anchovy. ELPD, Boyce, AUC, and TSS are not computed."
 }
