@@ -230,7 +230,7 @@ test_that("sequential spatial CV returns complete out-of-fold predictions", {
   expect_equal(cv$n_failed_folds, 0L)
   expect_equal(nrow(cv$oof_predictions), nrow(dat))
   expect_true(all(c("event_id", "fold_id", "z", "p") %in% names(cv$oof_predictions)))
-  expect_false(anyDuplicated(cv$oof_predictions$event_id))
+  expect_equal(anyDuplicated(cv$oof_predictions$event_id), 0L)
   expect_true(all(cv$oof_predictions$p >= 0 & cv$oof_predictions$p <= 1))
 })
 
