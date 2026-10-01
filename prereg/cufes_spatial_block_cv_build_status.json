@@ -1,11 +1,23 @@
 {
-  "status": "step_3_spatial_block_cv_scores_running_v6",
-  "head_sha": "67fee2d",
-  "cufes_sync": {
-    "events_kept": 14592,
-    "n_short_event": 1266,
-    "n_long_event": 13326,
-    "event_count_guard_updated": false
+  "status": "spatial_block_cv_running",
+  "head_code_sha": "a3cdbbd09e5b9eb869c121c442216c70878f546e",
+  "prior_process_alive": false,
+  "restarted": true,
+  "swap_gib": 32,
+  "n_folds": 4,
+  "workers": "min(cores, 4)",
+  "tmb_threads_per_fit": 1,
+  "species": {
+    "sardine": {
+      "folds_completed": 0,
+      "folds_total": 4,
+      "failures": []
+    },
+    "anchovy": {
+      "folds_completed": 0,
+      "folds_total": 4,
+      "failures": []
+    }
   },
-  "note": "Prior CV run OOM at ~15GB RSS (20k-vertex barrier mesh). Added 32G swap on runner; land_sf from shoreline clip with 500m inward buffer for check_barrier."
+  "note": "Previous score process was dead after the session went idle. One full CV was restarted. No fold has finished. ELPD, Boyce, AUC, and TSS are not computed."
 }
