@@ -1,9 +1,9 @@
 {
   "status": "spatial_block_cv_running",
   "head_code_sha": "a3cdbbd09e5b9eb869c121c442216c70878f546e",
-  "prior_process_alive": true,
-  "restarted": false,
-  "checked_at": "2026-10-01T09:55:02Z",
+  "prior_process_alive": false,
+  "restarted": true,
+  "checked_at": "2026-10-01T10:26:01Z",
   "swap_gib": 32,
   "n_folds": 4,
   "workers": "min(cores, 4)",
@@ -20,5 +20,5 @@
       "failures": []
     }
   },
-  "note": "Checked 2026-10-01T09:55:02Z. The score process is still alive (R pid 59085, elapsed about 59 min). One species child (pid 59421) has one fold fit still running (pid 62736, about 11.2 GB RSS, one thread, state D, elapsed about 41 min). The other species child (pid 59420) is gone, and the second fold fit under 59421 is gone. The kernel OOM-killed three R processes between 09:19:09Z and 09:28:31Z (pids 64501, 64502, 64500). The log has four sdmTMB fit starts and no CV fold completion or failure line, so no fold id or R failure reason is available. Completed stays 0/4 for sardine and 0/4 for anchovy. ELPD, Boyce, AUC, and TSS are not computed."
+  "note": "Checked 2026-10-01T10:26:01Z. The score process that was alive at 09:55Z (R pid 59085, species child 59421, fold fit 62736) was dead by 10:25Z. At 10:23:12Z the kernel OOM-killed R pid 64499 (anon-rss about 15.4GB). The log then ended with Error in x$status : $ operator is invalid for atomic vectors (run_spatial_block_cv_scores -> vapply) and EXIT:1. No CV fold completion or failure line, so no fold id is available. Completed stays 0/4 for sardine and 0/4 for anchovy. One replacement full CV is running (R pid 64385, started 10:25:26Z, same K=4, both species, workers min(cores, 4), one TMB thread). ELPD, Boyce, AUC, and TSS are not computed."
 }
