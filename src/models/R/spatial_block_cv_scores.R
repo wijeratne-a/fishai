@@ -141,17 +141,12 @@ compute_spatial_block_cv_scores <- function(
   }
 
   dat <- load_model_data(cfg = cfg, min_duration_min = min_duration_min, egg_split_scope = "fit")
-  mesh <- build_fishai_mesh(dat, cfg$mesh)
-  if (isTRUE(cfg$mesh$barrier$enabled)) {
-    land_path <- cfg$mesh$barrier$land_sf_rds
-    if (!is.null(land_path) && nzchar(land_path) && file.exists(land_path)) {
-      land_sf <- readRDS(land_path)
-      mesh <- add_barrier_land(mesh, land_sf, range_fraction = cfg$mesh$barrier$range_fraction %||% 0.1)
-    }
-  }
+  # NOTE: run_cv_spatial() builds one mesh per training fold internally and
+  # ignores the `mesh` argument, so building a full-data mesh here only costs
+  # time and peak RAM for nothing. Pass NULL (supported: tests already do).
   cv <- run_cv_spatial(
     dat,
-    mesh,
+    NULL,
     cfg,
     fold_ids = dat$fold_id,
     n_workers = n_workers,

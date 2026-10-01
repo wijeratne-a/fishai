@@ -552,6 +552,10 @@ run_cv_spatial <- function(
         checkpoint_path
       ))
     }
+    # Release the fold's fit/mesh/data copies back to the OS before the next
+    # fold. On RAM-constrained runners the peak of one fold must not bleed
+    # into the next.
+    gc(verbose = FALSE)
     res
   }
 
