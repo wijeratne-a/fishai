@@ -1,0 +1,64 @@
+{
+  "status": "blocked",
+  "code_sha": "230bd46955b32b92642af4d849aa20c653a3de66",
+  "evidence_manifest": "prereg/cufes_glorys_training_evidence_build_manifest.json",
+  "training_table_builder_code_sha": "88083dedb099482d2f149d264a1e12f0f337f13e",
+  "protocol_config": "configs/spatial_block_cv_scores.yaml",
+  "wcofs_h_artifact": "data/derived/physics/wcofs_h_glorys_pilot.zarr",
+  "wcofs_h_verification": {
+    "manifest_path": "data/derived/manifests/wcofs_h_glorys_grid.json",
+    "manifest_sha256": "d5c936303f80be39a3f78dcb9257197150d29c7f079358cacc3ac4cf7edf49e9",
+    "_sha256_path_artifact": "d5c936303f80be39a3f78dcb9257197150d29c7f079358cacc3ac4cf7edf49e9",
+    "load_wcofs_h_glorys_grid": "ok",
+    "h_shape": [37, 49],
+    "hmin_source": "wet_cell_minimum_h",
+    "roms_hmin_m": 15.0
+  },
+  "missing_inputs": [
+    "data/processed/calcofi_cufes/cufes_events.parquet",
+    "data/processed/calcofi_cufes/cufes_counts.parquet",
+    "data/processed/calcofi_cufes/cufes_training_covariates.parquet",
+    "data/processed/calcofi_cufes/cufes_training_covariate_drops.parquet",
+    "data/processed/calcofi_cufes/cufes_training_covariate_drop_summary.json"
+  ],
+  "species": [
+    {
+      "label": "sardine",
+      "taxon": "sardine",
+      "model_config": "configs/models/cufes_sardine.yaml",
+      "status": "blocked",
+      "missing_inputs": [
+        "data/processed/calcofi_cufes/cufes_events.parquet",
+        "data/processed/calcofi_cufes/cufes_counts.parquet",
+        "data/processed/calcofi_cufes/cufes_training_covariates.parquet",
+        "data/processed/calcofi_cufes/cufes_training_covariate_drops.parquet",
+        "data/processed/calcofi_cufes/cufes_training_covariate_drop_summary.json"
+      ],
+      "elpd": null,
+      "elpd_eligible": false,
+      "elpd_ineligible_reason": "missing_real_table_inputs",
+      "boyce": null,
+      "auc": null,
+      "tss": null
+    },
+    {
+      "label": "anchovy",
+      "taxon": "anchovy",
+      "model_config": "configs/models/cufes_anchovy.yaml",
+      "status": "blocked",
+      "missing_inputs": [
+        "data/processed/calcofi_cufes/cufes_events.parquet",
+        "data/processed/calcofi_cufes/cufes_counts.parquet",
+        "data/processed/calcofi_cufes/cufes_training_covariates.parquet",
+        "data/processed/calcofi_cufes/cufes_training_covariate_drops.parquet",
+        "data/processed/calcofi_cufes/cufes_training_covariate_drop_summary.json"
+      ],
+      "elpd": null,
+      "elpd_eligible": false,
+      "elpd_ineligible_reason": "missing_real_table_inputs",
+      "boyce": null,
+      "auc": null,
+      "tss": null
+    }
+  ]
+}

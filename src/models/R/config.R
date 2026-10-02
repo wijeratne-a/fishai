@@ -15,7 +15,7 @@ load_config_yaml <- function(path) {
     if (is.null(p) || grepl("^/", p)) {
       return(p)
     }
-    normalizePath(file.path(root, p), mustWork = TRUE)
+    normalizePath(file.path(root, p), mustWork = FALSE)
   }
   if (!is.null(cfg$data$table_path)) {
     cfg$data$table_path <- .abs(cfg$data$table_path)
