@@ -313,8 +313,12 @@ run_spatial_block_cv_scores <- function(protocol_path = NULL, output_override = 
 
   species_out <- lapply(protocol$species, function(sp) {
     cfg <- load_config_yaml(.resolve_model_config(sp$model_config))
-    .ensure_barrier_land_rds(cfg, root)
     if (!length(missing_global)) {
+      # Only needed when inputs are present: with missing inputs the run
+      # reports "blocked" before any mesh work, and building here would make
+      # the blocked-path test depend on the vendored shoreline clip (which is
+      # not in the docker-r image).
+      .ensure_barrier_land_rds(cfg, root)
       cfg$data$fold_assignment_path <- fold_csv
     }
     if (!is.null(protocol$event_count_guard)) {
