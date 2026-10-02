@@ -69,7 +69,14 @@ fishai_engine_config:
       + s(sst_grad_z, k = 3) + s(dist_front_z, k = 3)
       + s(log_depth_z, k = 3)
     spatial: [on, on]
-    spatiotemporal: [iid, off]
+    # 2026-10-01: spatiotemporal iid disabled (was [iid, off]). One iid spatial
+    # field per daily time_idx produced on the order of 1e6 random effects and
+    # OOM-killed a single CV fold at ~47 GB (15 GiB RAM + 32 GB swap
+    # exhausted); sequential folds, gc() and swap could not help because one
+    # fold alone exceeds the machine. Static spatial fields plus the daily
+    # intercept random walk (time_varying ~1 rw0) are retained. This matches
+    # the configuration the test suite exercises (helper.R forces off/off).
+    spatiotemporal: [off, off]
     share_range: [true, true]
     time_varying:
       formula: "~ 1"

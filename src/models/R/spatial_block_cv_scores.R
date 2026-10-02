@@ -218,6 +218,55 @@ load_spatial_block_cv_scores_protocol <- function(path = NULL) {
   proto
 }
 
+#' Ensure the Bakka barrier land polygon RDS exists, building it from the
+#' vendored public-domain Natural Earth clip when missing.
+#'
+#' The RDS is not committed (scripts/ci/check_no_committed_data.py forbids
+#' .rds); without this, a fresh VM dies in build_fishai_production_mesh()
+#' before the first fold -- exactly what stopped the replacement writer.
+#' Building is deterministic from vendored data, so auto-building cannot mask a
+#' real data problem: a missing vendored source still errors loudly, and the
+#' library-level fail-closed check in build_fishai_production_mesh() is
+#' unchanged.
+#' @keywords internal
+.ensure_barrier_land_rds <- function(cfg, root) {
+  if (!isTRUE(cfg$mesh$barrier$enabled)) {
+    return(invisible(FALSE))
+  }
+  rel <- cfg$mesh$barrier$land_sf_rds
+  if (is.null(rel) || !nzchar(rel)) {
+    return(invisible(FALSE))
+  }
+  dest <- if (grepl("^/", rel)) rel else file.path(root, rel)
+  if (file.exists(dest)) {
+    return(invisible(FALSE))
+  }
+  builder <- file.path(root, "scripts", "models", "build_barrier_land_sf.R")
+  if (!file.exists(builder)) {
+    stop("barrier land RDS missing and builder not found: ", builder, call. = FALSE)
+  }
+  message("barrier land RDS missing at ", dest, "; building from vendored Natural Earth clip")
+  old_fishai_root <- Sys.getenv("FISHAI_ROOT", unset = NA_character_)
+  Sys.setenv(FISHAI_ROOT = root)
+  on.exit(
+    {
+      if (is.na(old_fishai_root)) {
+        Sys.unsetenv("FISHAI_ROOT")
+      } else {
+        Sys.setenv(FISHAI_ROOT = old_fishai_root)
+      }
+    },
+    add = TRUE
+  )
+  env <- new.env(parent = globalenv())
+  env$BARRIER_LAND_DEST <- dest
+  sys.source(builder, envir = env)
+  if (!file.exists(dest)) {
+    stop("barrier land builder did not produce: ", dest, call. = FALSE)
+  }
+  invisible(TRUE)
+}
+
 #' Run spatial-block CV for all configured species; write JSON report.
 #' @export
 run_spatial_block_cv_scores <- function(protocol_path = NULL, output_override = NULL) {
@@ -264,6 +313,7 @@ run_spatial_block_cv_scores <- function(protocol_path = NULL, output_override = 
 
   species_out <- lapply(protocol$species, function(sp) {
     cfg <- load_config_yaml(.resolve_model_config(sp$model_config))
+    .ensure_barrier_land_rds(cfg, root)
     if (!length(missing_global)) {
       cfg$data$fold_assignment_path <- fold_csv
     }
