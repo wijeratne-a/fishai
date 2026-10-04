@@ -23,6 +23,8 @@ RUN pip3 install --no-cache-dir --break-system-packages -e ".[dev]"
 
 RUN Rscript -e 'install.packages("renv", repos = "https://cloud.r-project.org"); source("renv/activate.R"); renv::restore(prompt = FALSE)'
 
+COPY data/reference/shoreline/ne_10m_land_pilot_clip.json ./data/reference/shoreline/ne_10m_land_pilot_clip.json
+
 ENV RENV_PATHS_LIBRARY=/app/renv/library
 ENV FISHAI_ROOT=/app
 
