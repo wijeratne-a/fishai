@@ -35,6 +35,7 @@ load_model_data <- function(
     excluded_no_count_row = 0L,
     dropped_short_duration = 0L,
     dropped_short_event = 0L,
+    dropped_mesh_midpoint_on_barrier_land = character(),
     dropped_unavailable_covariates = character(),
     taxon = NA_character_,
     join_drop_event_ids = character()
@@ -153,6 +154,16 @@ load_model_data <- function(
   dat <- prep$dat
   if (!is.null(prep$dropped_missing_endpoint)) {
     qc$dropped_missing_endpoint <- prep$dropped_missing_endpoint
+  }
+
+  # Kept tows only: covariate exclusions are already removed. The mesh locates
+  # each tow at the straight start→stop midpoint, and check_barrier refuses a
+  # midpoint that lies inside the barrier land polygon.
+  land_drop <- .apply_mesh_midpoint_barrier_land_qc(dat, cfg)
+  dat <- land_drop$dat
+  qc$dropped_mesh_midpoint_on_barrier_land <- land_drop$dropped_event_ids
+  if (nrow(dat) == 0L) {
+    stop("no events remain after dropping mesh midpoints on barrier land", call. = FALSE)
   }
 
   cov_prep <- .map_and_drop_covariates(dat, cfg)
@@ -1027,6 +1038,59 @@ fishai_data_prep_qc <- function(dat) {
     y_km[[i]] <- m[1, "Y"] / 1000
   }
   list(X = x_km, Y = y_km)
+}
+
+#' Drop kept tows whose mesh midpoint falls inside the barrier land polygon.
+#'
+#' The mesh location is the straight start-to-stop midpoint (`X`, `Y` in km,
+#' EPSG:32611). A midpoint inside the land polygon is on land, so the tow is
+#' not a water observation. This applies to every kept tow; it is not an
+#' event-id allowlist.
+#' @param dat Data with `event_id`, `X`, and `Y`.
+#' @param land_sf Land polygon in the model CRS (metres).
+#' @return List with `dat` (rows removed) and `dropped_event_ids`.
+#' @export
+qc_drop_mesh_midpoint_on_barrier_land <- function(dat, land_sf) {
+  if (is.null(dat) || !nrow(dat)) {
+    return(list(dat = dat, dropped_event_ids = character()))
+  }
+  if (is.null(land_sf) || !inherits(land_sf, c("sf", "sfc"))) {
+    stop("qc_drop_mesh_midpoint_on_barrier_land requires a land polygon", call. = FALSE)
+  }
+  if (!all(c("event_id", "X", "Y") %in% names(dat))) {
+    stop(
+      "qc_drop_mesh_midpoint_on_barrier_land requires event_id, X, and Y",
+      call. = FALSE
+    )
+  }
+  if (!requireNamespace("sf", quietly = TRUE)) {
+    stop("sf is required to test mesh midpoints against barrier land", call. = FALSE)
+  }
+  pts <- sf::st_as_sf(
+    data.frame(X = as.numeric(dat$X) * 1000, Y = as.numeric(dat$Y) * 1000),
+    coords = c("X", "Y"),
+    crs = sf::st_crs(land_sf)
+  )
+  inside <- lengths(sf::st_within(pts, land_sf)) > 0
+  list(
+    dat = dat[!inside, , drop = FALSE],
+    dropped_event_ids = as.character(dat$event_id[inside])
+  )
+}
+
+.apply_mesh_midpoint_barrier_land_qc <- function(dat, cfg) {
+  empty <- list(dat = dat, dropped_event_ids = character())
+  if (!isTRUE(cfg$mesh$barrier$enabled)) {
+    return(empty)
+  }
+  path <- cfg$mesh$barrier$land_sf_rds
+  if (is.null(path) || length(path) != 1L || is.na(path) || !nzchar(path)) {
+    return(empty)
+  }
+  if (!file.exists(path)) {
+    return(empty)
+  }
+  qc_drop_mesh_midpoint_on_barrier_land(dat, readRDS(path))
 }
 
 .default_upstream_covariate_map <- function() {
