@@ -26,21 +26,41 @@ header {
 
 .layout {
   display: grid;
-  grid-template-columns: minmax(320px, 640px) 1fr;
+  grid-template-columns: minmax(480px, 1.4fr) minmax(280px, 0.8fr);
   gap: 1rem;
   padding: 0 1rem 2rem;
 }
 
 .map-panel {
+  position: relative;
   border: 1px solid #334155;
   border-radius: 8px;
   overflow: hidden;
+  min-height: 640px;
 }
 
-#map-canvas {
-  display: block;
+#globe {
   width: 100%;
-  height: auto;
+  height: 640px;
+}
+
+.globe-watermark {
+  position: absolute;
+  left: 12px;
+  bottom: 36px;
+  z-index: 2;
+  margin: 0;
+  max-width: 70%;
+  padding: 0.4rem 0.6rem;
+  border: 1px dashed #e8a838;
+  background: rgba(26, 18, 0, 0.82);
+  color: #ffd666;
+  font-size: 0.85rem;
+  pointer-events: none;
+}
+
+.cesium-viewer-bottom {
+  display: none;
 }
 
 #cell-list {

@@ -11,7 +11,9 @@ cd prototype/prediction-map
 python -m http.server 8765
 ```
 
-Open `http://127.0.0.1:8765/` in a browser. No build step; ES modules load from disk. Toggle sardine or anchovy egg-encounter. Each cell shows its evidence state. Out-of-domain egg conditions (`ood_level` ≥ 2) draw as **UNKNOWN** with no probability fill. The spawning-habitat view states a **10 km** public floor; fixture cells are about **50 km** apart.
+Open `http://127.0.0.1:8765/` in a browser. CesiumJS loads from the Cesium CDN (satellite imagery from Esri World Imagery). No install step. Drag to rotate the egg-encounter globe; scroll to zoom. Toggle sardine or anchovy egg-encounter.
+
+Likelihood is a **dot-density** layer on a **10 km** lattice: more dots where egg-encounter probability is higher. Zero probability and out-of-domain egg conditions (`ood_level` ≥ 2, **UNKNOWN**) render **no dots**. Distant camera heights keep fewer dots so the spawning-habitat globe stays smooth. Fixture cells are about **50 km** apart.
 
 ## Fixture
 
@@ -26,4 +28,4 @@ User-facing strings use **egg-encounter** / **spawning-habitat** wording. The UI
 1. **Schema `evidence_state`** enum (data contract) on every egg cell.
 2. **README display doctrine** labels (Direct Observation, Historical Pattern, Current Nowcast, Forecast, Unknown) — see repo root `README.md` § Evidence-state vocabulary.
 
-Those lists are not merged into a single invented scale. `UNKNOWN` cells never receive a probability fill. The page does not give harvest advice and does not describe live animals.
+Those lists are not merged into a single invented scale. `UNKNOWN` egg cells render nothing on the globe. The page does not give harvest advice and does not describe live animals.
