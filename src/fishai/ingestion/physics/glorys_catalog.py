@@ -131,23 +131,30 @@ _CATALOG_RETRY_BACKOFF_S = 1.0
 
 
 def _fetch_json(session: requests.Session, url: str) -> dict[str, Any]:
-    """GET a catalogue JSON object. Retry 502/503/504 with exponential backoff."""
-    last_exc: requests.HTTPError | None = None
+    """GET a catalogue JSON object.
+
+    Retry 502/503/504 and transport failures (connection, SSL, timeout)
+    with the same exponential backoff.
+    """
+    last_exc: Exception | None = None
     for attempt in range(_CATALOG_RETRY_ATTEMPTS):
-        response = session.get(url, timeout=30)
-        if response.status_code in _CATALOG_RETRY_STATUS:
-            last_exc = requests.HTTPError(
-                f"{response.status_code} Server Error for url: {response.url}",
-                response=response,
-            )
-            if attempt + 1 < _CATALOG_RETRY_ATTEMPTS:
-                time.sleep(_CATALOG_RETRY_BACKOFF_S * (2**attempt))
-            continue
-        response.raise_for_status()
-        payload = response.json()
-        if not isinstance(payload, dict):
-            raise TypeError(f"expected JSON object from {url}")
-        return payload
+        try:
+            response = session.get(url, timeout=30)
+            if response.status_code in _CATALOG_RETRY_STATUS:
+                last_exc = requests.HTTPError(
+                    f"{response.status_code} Server Error for url: {response.url}",
+                    response=response,
+                )
+            else:
+                response.raise_for_status()
+                payload = response.json()
+                if not isinstance(payload, dict):
+                    raise TypeError(f"expected JSON object from {url}")
+                return payload
+        except (requests.ConnectionError, requests.Timeout) as exc:
+            last_exc = exc
+        if attempt + 1 < _CATALOG_RETRY_ATTEMPTS:
+            time.sleep(_CATALOG_RETRY_BACKOFF_S * (2**attempt))
     assert last_exc is not None
     raise last_exc
 
