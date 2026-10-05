@@ -12,34 +12,63 @@ auc_mw <- function(z, p) {
   (sum(r[z == 1L]) - n1 * (n1 + 1) / 2) / (n1 * n0)
 }
 
-#' Continuous Boyce index (Spearman of moving ratios).
+#' Continuous Boyce index (Hirzel et al. 2006).
+#'
+#' Spearman correlation between window midpoints and the predicted/expected
+#' ratio inside a moving window. The default window is one tenth of the
+#' suitability range, evaluated at `n_windows` positions. Both ends of each
+#' window are closed, so the maximum suitability is included. Windows with no
+#' availability, and successive duplicate ratios, are dropped.
+#' @param p_avail Predicted suitability at evaluation locations.
+#' @param p_pres Predicted suitability at presence locations.
+#' @param n_windows Number of window positions along the suitability range.
 #' @export
-cbi_continuous <- function(p_avail, p_pres, n_bins = 10L) {
+cbi_continuous <- function(p_avail, p_pres, n_windows = 100L) {
   p_avail <- as.numeric(p_avail)
   p_pres <- as.numeric(p_pres)
+  p_avail <- p_avail[is.finite(p_avail)]
+  p_pres <- p_pres[is.finite(p_pres)]
   if (!length(p_avail) || !length(p_pres)) {
     return(NA_real_)
   }
-  rng <- range(p_avail, na.rm = TRUE)
-  if (diff(rng) == 0) {
+  mini <- min(p_avail)
+  maxi <- max(p_avail)
+  if (maxi == mini) {
     return(NA_real_)
   }
-  w <- diff(rng) / n_bins
-  mids <- seq(rng[1] + w / 2, rng[2] - w / 2, length.out = n_bins)
-  fk <- numeric(n_bins)
-  ek <- numeric(n_bins)
-  for (i in seq_len(n_bins)) {
-    lo <- rng[1] + (i - 1) * w
-    hi <- lo + w
-    in_w <- p_avail >= lo & p_avail < hi
-    ek[i] <- mean(in_w)
-    fk[i] <- mean(p_pres >= lo & p_pres < hi) / max(ek[i], .Machine$double.eps)
-  }
-  keep <- ek > 0
-  if (sum(keep) < 3) {
+  n_windows <- as.integer(n_windows)[1L]
+  if (!is.finite(n_windows) || n_windows < 3L) {
     return(NA_real_)
   }
-  stats::cor(fk[keep], mids[keep], method = "spearman")
+  window_w <- (maxi - mini) / 10
+  starts <- seq(mini, maxi - window_w, length.out = n_windows)
+  fi <- numeric(n_windows)
+  mids <- numeric(n_windows)
+  n_avail <- length(p_avail)
+  n_pres <- length(p_pres)
+  for (i in seq_len(n_windows)) {
+    lo <- starts[[i]]
+    hi <- lo + window_w
+    if (i == n_windows) {
+      hi <- maxi
+    }
+    n_f <- sum(p_avail >= lo & p_avail <= hi)
+    n_o <- sum(p_pres >= lo & p_pres <= hi)
+    mids[[i]] <- (lo + hi) / 2
+    fi[[i]] <- if (n_f > 0L) (n_o / n_pres) / (n_f / n_avail) else NA_real_
+  }
+  ok <- is.finite(fi)
+  if (sum(ok) < 2L) {
+    return(NA_real_)
+  }
+  vals <- fi[ok]
+  keep_dup <- vals != c(vals[-1], TRUE)
+  keep_dup[length(keep_dup)] <- TRUE
+  idx <- which(ok)[keep_dup]
+  if (length(idx) < 3L) {
+    return(NA_real_)
+  }
+  stats::cor(fi[idx], mids[idx], method = "spearman")
 }
 
 #' True skill statistic at threshold.

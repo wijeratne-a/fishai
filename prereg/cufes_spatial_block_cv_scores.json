@@ -40,7 +40,7 @@
         -3923.9419
       ],
       "n_oof_rows": 10928,
-      "boyce": 1,
+      "boyce": 0.9694,
       "auc": 0.7658,
       "tss": 0.313,
       "spatial_block_cv": {
