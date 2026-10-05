@@ -3,7 +3,14 @@
     "product": "synthetic_egg_encounter_fixture",
     "domain": "32-35N_121-117W",
     "watermark": "Synthetic fixture data — not a nowcast. Egg-encounter dry run only.",
-    "valid_day": "2020-06-15"
+    "valid_day": "2020-06-15",
+    "cell_spacing_km": 50,
+    "public_resolution_floor_km": 10,
+    "model_configs": [
+      "configs/models/cufes_sardine_synthetic.yaml",
+      "configs/models/cufes_anchovy_synthetic.yaml"
+    ],
+    "note": "Watermarked synthetic egg-encounter rows only. Not wired to a live prediction engine."
   },
   "rows": [
     {
@@ -121,7 +128,7 @@
       "p_encounter": 0.09,
       "p_lo90": 0.02,
       "p_hi90": 0.2,
-      "ood_level": 2,
+      "ood_level": 1,
       "evidence_state": "DEGRADED",
       "unknown_reason": null,
       "lead_days": 0,
@@ -139,7 +146,7 @@
       "p_encounter": 0.07,
       "p_lo90": 0.01,
       "p_hi90": 0.17,
-      "ood_level": 2,
+      "ood_level": 1,
       "evidence_state": "DEGRADED",
       "unknown_reason": null,
       "lead_days": 0,

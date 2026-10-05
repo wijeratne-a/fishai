@@ -2,6 +2,7 @@ import {
   SCHEMA_EVIDENCE_STATES,
   DISPLAY_DOCTRINE,
   displayDoctrineForSchema,
+  effectiveEvidenceState,
   isUnknownRow,
 } from "./evidence_display.js";
 
@@ -50,7 +51,7 @@ function renderLegend(container) {
       <h3>Spawning egg evidence display doctrine (README Evidence-state vocabulary)</h3>
       <ul>${DISPLAY_DOCTRINE.map((d) => `<li>${d}</li>`).join("")}</ul>
     </section>
-    <p class="hint">Each cell shows both the schema enum and the display doctrine line. UNKNOWN cells show egg evidence state only — no probability fill.</p>
+    <p class="hint">Each egg cell shows the schema evidence_state and the spawning display-doctrine line. Out-of-domain egg conditions (ood_level 2 or higher) render as UNKNOWN with no probability fill. This spawning-habitat view never draws finer than 10 km.</p>
   `;
 }
 
@@ -70,7 +71,7 @@ function drawMap(canvas, rows, species, meta) {
   const ctx = canvas.getContext("2d");
   const w = canvas.width;
   const h = canvas.height;
-  const pad = 36;
+  const pad = 64;
   ctx.clearRect(0, 0, w, h);
 
   ctx.fillStyle = "#0a1628";
@@ -97,17 +98,22 @@ function drawMap(canvas, rows, species, meta) {
   ctx.font = "12px system-ui, sans-serif";
   ctx.fillText("32°N", pad, h - 8);
   ctx.fillText("35°N", pad, pad - 8);
-  ctx.fillText("121°W", pad, h - 22);
+    ctx.fillText("121°W", pad, h - 22);
   ctx.fillText("117°W", w - pad - 36, h - 22);
+  ctx.fillStyle = "#ffd666";
+  ctx.font = "11px system-ui, sans-serif";
+  ctx.fillText(meta.watermark, pad, 16);
 
   const filtered = rows.filter((r) => r.species === species);
-  const cellSize = 44;
+  const cellSize = 72;
 
   filtered.forEach((row) => {
     const ll = parseCellId(row.cell_id);
     if (!ll) return;
     const { x, y } = latLonToCanvas(ll.lat, ll.lon, w, h, pad);
     const unknown = isUnknownRow(row);
+    const state = effectiveEvidenceState(row);
+    const doctrine = displayDoctrineForSchema(state);
 
     if (!unknown && row.p_encounter != null) {
       ctx.fillStyle = eggEncounterColor(row.p_encounter);
@@ -118,14 +124,19 @@ function drawMap(canvas, rows, species, meta) {
       ctx.lineWidth = 2;
       ctx.strokeRect(x - cellSize / 2, y - cellSize / 2, cellSize, cellSize);
       ctx.setLineDash([]);
-      ctx.fillStyle = "#e8a838";
-      ctx.font = "10px system-ui, sans-serif";
-      ctx.fillText("?", x - 3, y + 4);
     }
 
     ctx.strokeStyle = "#ffffff88";
     ctx.lineWidth = 1;
     ctx.strokeRect(x - cellSize / 2, y - cellSize / 2, cellSize, cellSize);
+
+    ctx.fillStyle = unknown ? "#ffd666" : "#041018";
+    ctx.font = "9px system-ui, sans-serif";
+    ctx.textAlign = "center";
+    const label = unknown ? "egg UNKNOWN" : "egg " + doctrine;
+    wrapCellLabel(ctx, label, x, y - 16, cellSize - 10);
+    wrapCellLabel(ctx, state, x, y + 10, cellSize - 10);
+    ctx.textAlign = "start";
   });
 
   const title = document.getElementById("map-title");
@@ -134,11 +145,29 @@ function drawMap(canvas, rows, species, meta) {
   }
 }
 
+function wrapCellLabel(ctx, text, x, y, maxWidth) {
+  const words = text.split(" ");
+  let line = "";
+  let dy = 0;
+  words.forEach((word) => {
+    const trial = line ? line + " " + word : word;
+    if (ctx.measureText(trial).width > maxWidth && line) {
+      ctx.fillText(line, x, y + dy);
+      line = word;
+      dy += 11;
+    } else {
+      line = trial;
+    }
+  });
+  ctx.fillText(line, x, y + dy);
+}
+
 function renderCellList(container, rows, species) {
   const filtered = rows.filter((r) => r.species === species);
   container.innerHTML = filtered
     .map((row) => {
-      const doctrine = displayDoctrineForSchema(row.evidence_state);
+      const state = effectiveEvidenceState(row);
+      const doctrine = displayDoctrineForSchema(state);
       const prob =
         isUnknownRow(row) || row.p_encounter == null
           ? `<em>No egg-encounter probability (UNKNOWN)</em>`
@@ -149,7 +178,7 @@ function renderCellList(container, rows, species) {
           : "";
       return `<article class="cell-card" data-cell-id="${row.cell_id}">
         <h4>${row.cell_id}</h4>
-        <p><strong>Egg-encounter schema evidence_state:</strong> <code>${row.evidence_state}</code></p>
+        <p><strong>Egg-encounter schema evidence_state:</strong> <code>${state}</code></p>
         <p><strong>Spawning egg display doctrine:</strong> ${doctrine}</p>
         <p>${prob}</p>
         ${unknownLine}

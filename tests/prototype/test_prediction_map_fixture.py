@@ -68,6 +68,27 @@ def test_fixture_dry_run_and_species_coverage() -> None:
     assert states == SCHEMA_STATES
 
 
+def test_ood_level_at_least_2_is_unknown() -> None:
+    payload = load_fixture()
+    ood = [r for r in payload["rows"] if r["ood_level"] >= 2]
+    assert len(ood) >= 1
+    for row in ood:
+        assert row["evidence_state"] == "UNKNOWN"
+        assert row["p_encounter"] is None
+        assert row["unknown_reason"]
+
+
+def test_public_resolution_floor() -> None:
+    payload = load_fixture()
+    assert payload["meta"]["public_resolution_floor_km"] >= 10
+    assert payload["meta"]["cell_spacing_km"] >= 10
+    readme = (PROTOTYPE_DIR / "README.md").read_text(encoding="utf-8")
+    assert "10 km" in readme
+    app = (PROTOTYPE_DIR / "app.js").read_text(encoding="utf-8")
+    assert "finer than 10 km" in app
+    assert "ood_level" in app or "isUnknownRow" in app
+
+
 def test_unknown_rows_have_reason_and_null_probability() -> None:
     payload = load_fixture()
     unknown_rows = [r for r in payload["rows"] if r["evidence_state"] == "UNKNOWN"]
@@ -152,3 +173,6 @@ def test_unknown_not_drawn_as_probability() -> None:
     assert "isUnknownRow" in app_js
     assert "No egg-encounter probability (UNKNOWN)" in app_js
     assert "if (!unknown && row.p_encounter != null)" in app_js
+    assert "effectiveEvidenceState" in app_js
+    display = (PROTOTYPE_DIR / "evidence_display.js").read_text(encoding="utf-8")
+    assert "ood_level" in display

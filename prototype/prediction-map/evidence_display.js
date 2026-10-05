@@ -29,6 +29,11 @@ export function displayDoctrineForSchema(schemaEnum) {
   return SCHEMA_TO_DISPLAY[schemaEnum] ?? "Unknown";
 }
 
+/** Contract: ood_level >= 2 is out of domain and must render as UNKNOWN. */
 export function isUnknownRow(row) {
-  return row.evidence_state === "UNKNOWN";
+  return row.evidence_state === "UNKNOWN" || Number(row.ood_level) >= 2;
+}
+
+export function effectiveEvidenceState(row) {
+  return isUnknownRow(row) ? "UNKNOWN" : row.evidence_state;
 }
