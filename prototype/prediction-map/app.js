@@ -4,6 +4,7 @@ import {
   displayDoctrineForSchema,
   effectiveEvidenceState,
   isUnknownRow,
+  plainEvidence,
 } from "./evidence_display.js";
 
 const DOMAIN = {
@@ -18,6 +19,7 @@ const FLOOR_KM = 10;
 const MAX_DOTS = 25;
 
 const Cesium = window.Cesium;
+let dotAlpha = 0;
 
 function parseCellId(cellId) {
   const m = /^pilot_([0-9.]+)_(-[0-9.]+)$/.exec(cellId);
@@ -95,19 +97,30 @@ function dotsToKeep(cameraHeight) {
   return MAX_DOTS;
 }
 
+const SPECIES_EGG_NAME = {
+  sardine: "Sardine eggs",
+  anchovy: "Anchovy eggs",
+};
+
 function renderLegend(container) {
+  const plainStates = SCHEMA_EVIDENCE_STATES.map(
+    (s) => "<li>" + plainEvidence(s) + " <code>" + s + "</code></li>",
+  ).join("");
+  const doctrineItems = DISPLAY_DOCTRINE.map(
+    (d) => "<li>" + d + " — egg evidence label</li>",
+  ).join("");
   container.innerHTML = `
-    <h2>Spawning-habitat egg-encounter globe (internal prototype)</h2>
+    <h2>How to read this spawning-habitat egg globe</h2>
     <p class="watermark" data-testid="watermark"></p>
-    <section aria-label="Egg-encounter schema evidence_state enum">
-      <h3>Egg-encounter schema evidence_state (data contract)</h3>
-      <ul>${SCHEMA_EVIDENCE_STATES.map((s) => `<li><code>${s}</code></li>`).join("")}</ul>
+    <p class="hint">Denser gold dots mean you are more likely to find eggs in that spawning patch. Empty water means eggs are unlikely there, or the egg evidence is unknown. Dots stay on a 10 km grid. This spawning-habitat globe never draws finer than 10 km.</p>
+    <section aria-label="Egg-encounter evidence in plain words">
+      <h3>What the egg evidence means</h3>
+      <ul>${plainStates}</ul>
     </section>
     <section aria-label="Spawning-habitat egg display doctrine vocabulary">
-      <h3>Spawning egg evidence display doctrine (README Evidence-state vocabulary)</h3>
-      <ul>${DISPLAY_DOCTRINE.map((d) => `<li>${d}</li>`).join("")}</ul>
+      <h3>Spawning egg evidence names</h3>
+      <ul>${doctrineItems}</ul>
     </section>
-    <p class="hint">Egg-encounter likelihood is discrete dots on a 10 km lattice: denser where the spawning probability is higher. Zero-probability and UNKNOWN egg cells render nothing. This spawning-habitat globe never draws finer than 10 km.</p>
   `;
 }
 
@@ -115,7 +128,7 @@ function renderSpeciesToggle(container, speciesList, active, onChange) {
   container.innerHTML = speciesList
     .map(
       (sp) =>
-        `<button type="button" class="species-btn ${sp === active ? "active" : ""}" data-species="${sp}">${sp} egg-encounter</button>`,
+        `<button type="button" class="species-btn ${sp === active ? "active" : ""}" data-species="${sp}">${SPECIES_EGG_NAME[sp] || sp} — egg-encounter</button>`,
     )
     .join("");
   container.querySelectorAll(".species-btn").forEach((btn) => {
@@ -144,6 +157,7 @@ function renderCellList(container, rows, species) {
         <h4>${row.cell_id}</h4>
         <p><strong>Egg-encounter schema evidence_state:</strong> <code>${state}</code></p>
         <p><strong>Spawning egg display doctrine:</strong> ${doctrine}</p>
+        <p>${plainEvidence(state)}</p>
         <p>${prob}</p>
         ${dotLine}
         ${unknownLine}
@@ -206,14 +220,69 @@ function paintDots(viewer, collection, rows, species, meta) {
       const primitive = collection.add({
         position: Cesium.Cartesian3.fromDegrees(dot.lon, dot.lat, 0),
         pixelSize: 7,
-        color: Cesium.Color.fromCssColorString("#ffe08a"),
+        color: Cesium.Color.fromCssColorString("#ffe08a").withAlpha(dotAlpha),
         outlineColor: Cesium.Color.fromCssColorString("#3a2a00"),
         outlineWidth: 1,
         disableDepthTestDistance: Number.POSITIVE_INFINITY,
       });
       primitive._eggRank = dot.rank;
+      primitive._eggCellId = row.cell_id;
     });
   });
+}
+
+function setDotAlpha(collection, alpha) {
+  dotAlpha = alpha;
+  for (let i = 0; i < collection.length; i += 1) {
+    const dot = collection.get(i);
+    const color = dot.color;
+    dot.color = new Cesium.Color(color.red, color.green, color.blue, alpha);
+  }
+}
+
+function fadeEggDots(collection, viewer) {
+  const start = performance.now();
+  const step = (now) => {
+    const alpha = Math.min(1, (now - start) / 1400);
+    setDotAlpha(collection, alpha);
+    viewer.scene.requestRender();
+    if (alpha < 1) requestAnimationFrame(step);
+  };
+  requestAnimationFrame(step);
+}
+
+function playEggFlyIn(viewer, collection) {
+  setDotAlpha(collection, 0);
+  viewer.camera.setView({
+    destination: Cesium.Cartesian3.fromDegrees(-125, 8, 20_000_000),
+  });
+  viewer.camera.flyTo({
+    destination: Cesium.Cartesian3.fromDegrees(-119.2, 33.6, 1_450_000),
+    duration: new URLSearchParams(location.search).get("shot") === "1" ? 0.3 : 6.2,
+    easingFunction: Cesium.EasingFunction.CUBIC_IN_OUT,
+    complete: () => fadeEggDots(collection, viewer),
+    cancel: () => fadeEggDots(collection, viewer),
+  });
+}
+
+function eggReadoutText(row) {
+  const state = effectiveEvidenceState(row);
+  const name = SPECIES_EGG_NAME[row.species] || row.species;
+  if (isUnknownRow(row) || row.p_encounter == null || row.p_encounter <= 0) {
+    return (
+      name +
+      ": no egg dots in this spawning patch. Empty means eggs are unlikely, or the egg evidence is unknown. " +
+      plainEvidence(state)
+    );
+  }
+  const pct = (row.p_encounter * 100).toFixed(0);
+  return (
+    name +
+    ": about " +
+    pct +
+    "% chance of finding eggs in this 10 km spawning patch. Denser dots mean eggs are more likely. " +
+    plainEvidence(state)
+  );
 }
 
 function applyDotLod(viewer, collection) {
@@ -240,7 +309,9 @@ async function main() {
   const wm = legend.querySelector(".watermark");
   if (wm) wm.textContent = meta.watermark;
   const globeWm = document.querySelector("[data-testid=globe-watermark]");
-  if (globeWm) globeWm.textContent = meta.watermark;
+  const demoMark = meta.watermark + " Demo data.";
+  if (globeWm) globeWm.textContent = demoMark;
+  if (wm) wm.textContent = demoMark;
 
   const speciesSet = [...new Set(rows.map((r) => r.species))].sort();
   let activeSpecies = speciesSet[0] ?? "sardine";
@@ -269,11 +340,36 @@ async function main() {
   refresh();
 
   viewer.camera.moveEnd.addEventListener(() => applyDotLod(viewer, dots));
-  viewer.camera.flyTo({
-    destination: Cesium.Cartesian3.fromDegrees(-119, 33.5, 1_800_000),
-    duration: 0,
-  });
-  applyDotLod(viewer, dots);
+
+  const readout = document.getElementById("egg-readout");
+  const showReadout = (row) => {
+    if (!readout) return;
+    readout.textContent = row
+      ? eggReadoutText(row)
+      : "No egg dots here. Empty water means eggs are unlikely, or the egg evidence is unknown.";
+  };
+  const rowAt = (windowPosition) => {
+    const picked = viewer.scene.pick(windowPosition);
+    const cellId = picked && picked.primitive && picked.primitive._eggCellId;
+    if (!cellId) return null;
+    return rows.find((r) => r.species === activeSpecies && r.cell_id === cellId) || null;
+  };
+  const handler = new Cesium.ScreenSpaceEventHandler(viewer.scene.canvas);
+  handler.setInputAction((movement) => {
+    showReadout(rowAt(movement.endPosition));
+  }, Cesium.ScreenSpaceEventType.MOUSE_MOVE);
+  handler.setInputAction((click) => {
+    const row = rowAt(click.position);
+    showReadout(row);
+    if (row) {
+      const card = list.querySelector(`[data-cell-id="${row.cell_id}"]`);
+      if (card) card.scrollIntoView({ behavior: "smooth", block: "nearest" });
+    }
+  }, Cesium.ScreenSpaceEventType.LEFT_CLICK);
+
+  const replay = document.getElementById("replay-flyin");
+  if (replay) replay.addEventListener("click", () => playEggFlyIn(viewer, dots));
+  playEggFlyIn(viewer, dots);
   document.body.dataset.eggGlobe = "ready";
 }
 

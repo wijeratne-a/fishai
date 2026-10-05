@@ -11,7 +11,7 @@ cd prototype/prediction-map
 python -m http.server 8765
 ```
 
-Open `http://127.0.0.1:8765/` in a browser. CesiumJS loads from the Cesium CDN (satellite imagery from Esri World Imagery). No install step. Drag to rotate the egg-encounter globe; scroll to zoom. Toggle sardine or anchovy egg-encounter.
+Open `http://127.0.0.1:8765/` in a browser. CesiumJS loads from the Cesium CDN (satellite imagery from Esri World Imagery). No install step. On open, the egg globe flies in from space and the dots fade in. Drag to rotate, scroll to zoom, click a gold cluster for a plain egg readout, and use the sardine or anchovy egg toggle. Replay the fly-in from the button on the globe.
 
 Likelihood is a **dot-density** layer on a **10 km** lattice: more dots where egg-encounter probability is higher. Zero probability and out-of-domain egg conditions (`ood_level` ≥ 2, **UNKNOWN**) render **no dots**. Distant camera heights keep fewer dots so the spawning-habitat globe stays smooth. Fixture cells are about **50 km** apart.
 

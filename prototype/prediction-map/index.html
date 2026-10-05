@@ -20,6 +20,9 @@
     <header>
       <p class="banner">Internal UX spike — egg-stage CUFES spawning-habitat visualization</p>
       <h1 id="map-title">Spawning-habitat egg-encounter globe</h1>
+      <p id="egg-onboarding" class="onboarding">
+        Demo data. Drag to turn the egg globe, scroll to zoom, and click a gold cluster for a plain spawning-habitat readout.
+      </p>
       <div id="species-toggle" aria-label="Species egg-encounter layer"></div>
     </header>
     <main class="layout">
@@ -28,6 +31,15 @@
           id="globe"
           aria-label="Pilot domain egg-encounter globe 32–35°N 121–117°W"
         ></div>
+        <div class="egg-controls" aria-label="Egg globe controls">
+          <p>Drag to rotate the egg globe</p>
+          <p>Scroll to zoom the spawning view</p>
+          <p>Click dots for an egg readout</p>
+          <button id="replay-flyin" type="button">Replay egg-globe fly-in</button>
+        </div>
+        <aside id="egg-readout" class="egg-readout" aria-live="polite">
+          Click a gold cluster to read the egg evidence for that spawning patch.
+        </aside>
         <p class="globe-watermark" data-testid="globe-watermark"></p>
       </div>
       <aside id="legend"></aside>
