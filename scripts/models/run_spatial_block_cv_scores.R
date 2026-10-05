@@ -30,6 +30,7 @@ if (identical(report$status, "blocked")) {
   cat(paste0("  - ", report$missing_inputs, collapse = "\n"), "\n")
   quit(status = 2)
 }
+any_failed <- FALSE
 for (sp in report$species) {
   cat(
     sp$label,
@@ -46,4 +47,14 @@ for (sp in report$species) {
     "\n",
     sep = ""
   )
+  n_failed <- sp$n_failed_folds
+  if (is.null(n_failed) || length(n_failed) != 1L || is.na(n_failed)) {
+    n_failed <- 0L
+  }
+  if (as.numeric(n_failed) > 0 || !isTRUE(sp$elpd_eligible)) {
+    any_failed <- TRUE
+  }
+}
+if (any_failed) {
+  quit(status = 1L)
 }

@@ -303,8 +303,12 @@ cv_elpd_ineligible_reason <- function(cv_obj) {
       oof = .cv_empty_oof_predictions()
     ))
   }
+  # Holdout days absent from this fold's training rows are new time levels.
+  # sdmTMB scores them only when those levels were supplied as extra_time.
+  fold_cfg <- cfg
+  fold_cfg$model$extra_time_slices <- sort(unique(test$time_idx))
   fit_res <- tryCatch(
-    fit_delta_engine(train, train_mesh, cfg),
+    fit_delta_engine(train, train_mesh, fold_cfg),
     error = function(e) {
       structure(list(message = conditionMessage(e)), class = "cv_fold_error")
     }

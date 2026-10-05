@@ -6,6 +6,7 @@ import datetime as dt
 import json
 import os
 import re
+import time
 from dataclasses import dataclass
 from datetime import datetime, timezone
 from functools import lru_cache
@@ -124,13 +125,31 @@ def _stac_item_time_extent(item: dict[str, Any]) -> tuple[dt.date, dt.date]:
     return _parse_iso_date(str(start_raw)), _parse_iso_date(str(end_raw))
 
 
+_CATALOG_RETRY_STATUS = frozenset({502, 503, 504})
+_CATALOG_RETRY_ATTEMPTS = 5
+_CATALOG_RETRY_BACKOFF_S = 1.0
+
+
 def _fetch_json(session: requests.Session, url: str) -> dict[str, Any]:
-    response = session.get(url, timeout=30)
-    response.raise_for_status()
-    payload = response.json()
-    if not isinstance(payload, dict):
-        raise TypeError(f"expected JSON object from {url}")
-    return payload
+    """GET a catalogue JSON object. Retry 502/503/504 with exponential backoff."""
+    last_exc: requests.HTTPError | None = None
+    for attempt in range(_CATALOG_RETRY_ATTEMPTS):
+        response = session.get(url, timeout=30)
+        if response.status_code in _CATALOG_RETRY_STATUS:
+            last_exc = requests.HTTPError(
+                f"{response.status_code} Server Error for url: {response.url}",
+                response=response,
+            )
+            if attempt + 1 < _CATALOG_RETRY_ATTEMPTS:
+                time.sleep(_CATALOG_RETRY_BACKOFF_S * (2**attempt))
+            continue
+        response.raise_for_status()
+        payload = response.json()
+        if not isinstance(payload, dict):
+            raise TypeError(f"expected JSON object from {url}")
+        return payload
+    assert last_exc is not None
+    raise last_exc
 
 
 def _load_clients_config(session: requests.Session) -> dict[str, Any]:
