@@ -72,8 +72,13 @@
   }
   days <- format(tt, "%Y-%m-%d")
   got <- trimws(as.character(events$source_product))
+  uniq_days <- unique(days)
+  expected_by_day <- stats::setNames(
+    vapply(uniq_days, .expected_glorys_product_for_iso_date, character(1)),
+    uniq_days
+  )
   for (i in seq_len(nrow(events))) {
-    expected <- .expected_glorys_product_for_iso_date(days[[i]])
+    expected <- expected_by_day[[days[[i]]]]
     if (!identical(got[[i]], expected)) {
       stop(
         "source_product mismatch for event_id=",

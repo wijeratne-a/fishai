@@ -42,7 +42,16 @@
   "training_table": {
     "output_parquet_local_only": "data/processed/calcofi_cufes/cufes_training_covariates.parquet",
     "row_count": 14592,
-    "kept_count": 12085,
+    "kept_count": 12083,
+    "kept_count_before_mesh_midpoint_land_qc": 12085,
+    "fit_scope_sardine_rows": 10928,
+    "mesh_midpoint_on_barrier_land_qc": {
+      "rule": "qc_drop_mesh_midpoint_on_barrier_land",
+      "dropped_event_ids": [
+        "CUFES:201307:SH:97",
+        "CUFES:201501:NH:160"
+      ]
+    },
     "excluded_count": 2507,
     "excluded_reason_counts": {
       "missing_covariate": 2407,

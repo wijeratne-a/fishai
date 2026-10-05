@@ -1,0 +1,152 @@
+{
+    "metadata": {
+        ".zattrs": {
+            "grid": "glorys_1_12deg",
+            "hmin_source": "wet_cell_minimum_h",
+            "min_wet_fraction": 0.5,
+            "regridding_rule": "area_weighted_wet_masked",
+            "roms_hmin_m": 15.0,
+            "source": "wcofs_roms",
+            "source_file": "wcofs/netcdf/2026/09/28/wcofs.t03z.20260928.fields.n003.nc",
+            "source_variable": "h"
+        },
+        ".zgroup": {
+            "zarr_format": 2
+        },
+        "h/.zarray": {
+            "chunks": [
+                37,
+                49
+            ],
+            "compressor": {
+                "blocksize": 0,
+                "clevel": 5,
+                "cname": "lz4",
+                "id": "blosc",
+                "shuffle": 1
+            },
+            "dtype": "<f8",
+            "fill_value": "NaN",
+            "filters": null,
+            "order": "C",
+            "shape": [
+                37,
+                49
+            ],
+            "zarr_format": 2
+        },
+        "h/.zattrs": {
+            "_ARRAY_DIMENSIONS": [
+                "lat",
+                "lon"
+            ]
+        },
+        "has_source/.zarray": {
+            "chunks": [
+                37,
+                49
+            ],
+            "compressor": {
+                "blocksize": 0,
+                "clevel": 5,
+                "cname": "lz4",
+                "id": "blosc",
+                "shuffle": 1
+            },
+            "dtype": "|u1",
+            "fill_value": null,
+            "filters": null,
+            "order": "C",
+            "shape": [
+                37,
+                49
+            ],
+            "zarr_format": 2
+        },
+        "has_source/.zattrs": {
+            "_ARRAY_DIMENSIONS": [
+                "lat",
+                "lon"
+            ]
+        },
+        "lat/.zarray": {
+            "chunks": [
+                37
+            ],
+            "compressor": {
+                "blocksize": 0,
+                "clevel": 5,
+                "cname": "lz4",
+                "id": "blosc",
+                "shuffle": 1
+            },
+            "dtype": "<f8",
+            "fill_value": "NaN",
+            "filters": null,
+            "order": "C",
+            "shape": [
+                37
+            ],
+            "zarr_format": 2
+        },
+        "lat/.zattrs": {
+            "_ARRAY_DIMENSIONS": [
+                "lat"
+            ]
+        },
+        "lon/.zarray": {
+            "chunks": [
+                49
+            ],
+            "compressor": {
+                "blocksize": 0,
+                "clevel": 5,
+                "cname": "lz4",
+                "id": "blosc",
+                "shuffle": 1
+            },
+            "dtype": "<f8",
+            "fill_value": "NaN",
+            "filters": null,
+            "order": "C",
+            "shape": [
+                49
+            ],
+            "zarr_format": 2
+        },
+        "lon/.zattrs": {
+            "_ARRAY_DIMENSIONS": [
+                "lon"
+            ]
+        },
+        "wet_fraction/.zarray": {
+            "chunks": [
+                37,
+                49
+            ],
+            "compressor": {
+                "blocksize": 0,
+                "clevel": 5,
+                "cname": "lz4",
+                "id": "blosc",
+                "shuffle": 1
+            },
+            "dtype": "<f8",
+            "fill_value": "NaN",
+            "filters": null,
+            "order": "C",
+            "shape": [
+                37,
+                49
+            ],
+            "zarr_format": 2
+        },
+        "wet_fraction/.zattrs": {
+            "_ARRAY_DIMENSIONS": [
+                "lat",
+                "lon"
+            ]
+        }
+    },
+    "zarr_consolidated_format": 1
+}

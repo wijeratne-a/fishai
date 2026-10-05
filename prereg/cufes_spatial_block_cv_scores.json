@@ -1,0 +1,127 @@
+{
+  "status": "ok",
+  "code_sha": null,
+  "evidence_manifest": "prereg/cufes_glorys_training_evidence_build_manifest.json",
+  "training_table_builder_code_sha": "88083dedb099482d2f149d264a1e12f0f337f13e",
+  "protocol_config": "/app/configs/spatial_block_cv_scores.yaml",
+  "spatial_block_cv": {
+    "block_size_km": 60,
+    "mesh_cutoff_km": 9,
+    "spatial_range_km": 60,
+    "seed": 20260928,
+    "n_folds": 4,
+    "epsg": 32611,
+    "block_size_source": "max(mesh.cutoff_km, mesh.range_guess_km)",
+    "spatial_range_source": "mesh.range_guess_km",
+    "seed_source": "prediction.seed",
+    "n_folds_source": "data.spatial_block_cv.n_folds"
+  },
+  "fold_assignment_csv": "artifacts/spatial_block_cv/fold_assignment.csv",
+  "fold_assignment_sha256": "8fdda1d932dc66240e47e1bb0cdcb59618741009f659751ebb7bfb193bf1401d",
+  "min_duration_min": 2,
+  "wcofs_h_artifact": "data/derived/physics/wcofs_h_glorys_pilot.zarr",
+  "cv_checkpoint_dir": "/app/prereg/cv_checkpoints",
+  "species": [
+    {
+      "label": "sardine",
+      "taxon": "sardine",
+      "model_config": "configs/models/cufes_sardine.yaml",
+      "status": "ok",
+      "missing_inputs": [],
+      "n_fit_rows": 10928,
+      "elpd": -20714.7404,
+      "elpd_eligible": true,
+      "elpd_ineligible_reason": null,
+      "n_failed_folds": 0,
+      "fold_loglik": [
+        -4131.2168,
+        -6532.6602,
+        -6126.9216,
+        -3923.9419
+      ],
+      "n_oof_rows": 10928,
+      "boyce": 1,
+      "auc": 0.7658,
+      "tss": 0.313,
+      "spatial_block_cv": {
+        "block_size_km": 60,
+        "mesh_cutoff_km": 9,
+        "spatial_range_km": 60,
+        "seed": 20260928,
+        "n_folds": 4,
+        "epsg": 32611,
+        "block_size_source": "max(mesh.cutoff_km, mesh.range_guess_km)",
+        "spatial_range_source": "mesh.range_guess_km",
+        "seed_source": "prediction.seed",
+        "n_folds_source": "data.spatial_block_cv.n_folds"
+      }
+    },
+    {
+      "label": "anchovy",
+      "taxon": "anchovy",
+      "model_config": "configs/models/cufes_anchovy.yaml",
+      "status": "ok",
+      "missing_inputs": [],
+      "n_fit_rows": 10928,
+      "elpd": -8459.34514968303,
+      "elpd_eligible": false,
+      "elpd_ineligible_reason": "cv_fold_nonconverged",
+      "n_failed_folds": 1,
+      "fold_loglik": [
+        -738.436282,
+        -3503.829368,
+        null,
+        -4217.0795
+      ],
+      "n_oof_rows": 7771,
+      "boyce": 0.987878787878788,
+      "auc": 0.848925942980862,
+      "tss": 0.407964879399164,
+      "spatial_block_cv": {
+        "block_size_km": 60,
+        "mesh_cutoff_km": 9,
+        "spatial_range_km": 60,
+        "seed": 20260928,
+        "n_folds": 4,
+        "epsg": 32611,
+        "block_size_source": "max(mesh.cutoff_km, mesh.range_guess_km)",
+        "spatial_range_source": "mesh.range_guess_km",
+        "seed_source": "prediction.seed",
+        "n_folds_source": "data.spatial_block_cv.n_folds"
+      },
+      "metrics_scope": "eligible_folds_1_2_4",
+      "ineligible_folds": [
+        {
+          "fold_id": 3,
+          "reason": "non-positive-definite Hessian",
+          "retry": {
+            "attempts": 1,
+            "seed": 20261005,
+            "start_rule": "sdmTMBcontrol(start=list(b_j=default b_j + N(0, 0.1)))",
+            "start_b_j": [
+              -0.006855
+            ],
+            "converged": false,
+            "pos_def_hessian": false,
+            "outcome": "ineligible"
+          }
+        }
+      ]
+    }
+  ],
+  "anchovy_fold_3_retry": {
+    "fold_id": 3,
+    "reason": "non-positive-definite Hessian",
+    "retry": {
+      "attempts": 1,
+      "seed": 20261005,
+      "start_rule": "sdmTMBcontrol(start=list(b_j=default b_j + N(0, 0.1)))",
+      "start_b_j": [
+        -0.006855
+      ],
+      "converged": false,
+      "pos_def_hessian": false,
+      "outcome": "ineligible"
+    }
+  }
+}
