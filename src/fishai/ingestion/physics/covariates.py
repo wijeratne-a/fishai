@@ -225,12 +225,22 @@ def mean_covariates_along_segment(
     lat1, lon1 = float(event[COL_STOP_LAT]), float(event[COL_STOP_LON])
     segment_reasons: list[str] = []
     dist_km = haversine_km(lat0, lon0, lat1, lon1)
-    if dist_km < MIN_TRACK_LENGTH_KM:
-        segment_reasons.append(DROP_REASON_TOO_FEW_TRACK_POINTS)
     mid_t = event_mid_time(event)
-    points = great_circle_sample_points(lat0, lon0, lat1, lon1, grid_cell_km=grid_cell_km)
-    if len(points) < 3:
-        segment_reasons.append(DROP_REASON_TOO_FEW_TRACK_POINTS)
+    if dist_km == 0.0:
+        start = pd.to_datetime(event[COL_START_TIME], utc=True, errors="coerce")
+        stop = pd.to_datetime(event[COL_STOP_TIME], utc=True, errors="coerce")
+        if pd.notna(start) and pd.notna(stop) and start == stop:
+            # Purse-seine sets and other intentional point events.
+            points = [(lat0, lon0)]
+        else:
+            segment_reasons.append(DROP_REASON_TOO_FEW_TRACK_POINTS)
+            points = [(lat0, lon0)]
+    else:
+        if dist_km < MIN_TRACK_LENGTH_KM:
+            segment_reasons.append(DROP_REASON_TOO_FEW_TRACK_POINTS)
+        points = great_circle_sample_points(lat0, lon0, lat1, lon1, grid_cell_km=grid_cell_km)
+        if len(points) < 3:
+            segment_reasons.append(DROP_REASON_TOO_FEW_TRACK_POINTS)
     stacks: dict[str, list[float]] = {f: [] for f in CUFES_COVARIATE_FIELDS}
     land_at_point: list[bool] = []
     for lat, lon in points:
