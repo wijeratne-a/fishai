@@ -31,6 +31,7 @@ from fishai.ingestion.adult.events import (
     trawl_hauls_to_physics_events,
 )
 from fishai.ingestion.adult.observations import (
+    append_implied_absence_observations,
     build_nearshore_observations,
     build_trawl_observations,
     observations_for_training_events,
@@ -103,9 +104,15 @@ def assemble_adult_observations(
     trawl_obs, trawl_stats = build_trawl_observations(trawl_catch, medians=medians)
     near_obs, near_stats = build_nearshore_observations(near_catch, medians=medians)
     obs = pd.concat([trawl_obs, near_obs], ignore_index=True)
+    obs, implied_stats = append_implied_absence_observations(
+        obs,
+        trawl_catch=trawl_catch,
+        nearshore_catch=near_catch,
+    )
     summary = {
         "trawl_catch": trawl_stats,
         "nearshore_catch": near_stats,
+        "implied_absences": implied_stats,
         "observation_rows_total": int(len(obs)),
         "presence_only_excluded_total": int(
             trawl_stats["presence_only_excluded"]
@@ -245,13 +252,39 @@ def run_build_adult_cps_training_table(
             if not observations.empty
             else {}
         )
+        if not observations.empty:
+            result["encounter_counts"] = (
+                observations.groupby(["species", "observation_source", "encounter"])
+                .size()
+                .astype(int)
+                .to_dict()
+            )
         return result
-
-    if store is None:
-        raise ValueError("store is required when dry_run is False")
 
     out_events.parent.mkdir(parents=True, exist_ok=True)
     events.to_parquet(out_events, index=False)
+
+    if store is None:
+        obs_kept = observations_for_training_events(
+            observations,
+            set(events[COL_EVENT_ID].astype(str)),
+        )
+        out_table.parent.mkdir(parents=True, exist_ok=True)
+        obs_kept.to_parquet(out_table, index=False)
+        result["glorys_join"] = "blocked_no_store"
+        result["observation_rows_written"] = int(len(obs_kept))
+        result["encounter_counts"] = (
+            obs_kept.groupby(["species", "observation_source", "encounter"])
+            .size()
+            .astype(int)
+            .to_dict()
+            if not obs_kept.empty
+            else {}
+        )
+        summary_file = out_table.parent / DEFAULT_BUILD_SUMMARY_PATH.name
+        summary_file.write_text(json.dumps({**result}, indent=2, sort_keys=True) + "\n", encoding="utf-8")
+        result["build_summary_path"] = str(summary_file)
+        return result
 
     drops_path = out_table.parent / DEFAULT_DROPS_PATH.name
     summary_path = out_table.parent / DEFAULT_DROP_SUMMARY_PATH.name

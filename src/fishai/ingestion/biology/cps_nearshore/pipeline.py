@@ -118,10 +118,13 @@ def write_metadata(metadata: dict[str, Any], dest: Path) -> Path:
 def load_raw_rows_for_window(t0: date, t1: date, raw: Path) -> tuple[list[dict[str, Any]], int]:
     rows: list[dict[str, Any]] = []
     files = 0
-    for win_start, _ in iter_yearly_windows(t0, t1):
-        path = raw / f"cps_nearshore_set_catch_{win_start.year}.csv"
-        if not path.exists():
-            continue
+    paths = sorted(raw.glob("cps_nearshore_set_catch_*.csv"))
+    if not paths:
+        for win_start, _ in iter_yearly_windows(t0, t1):
+            legacy = raw / f"cps_nearshore_set_catch_{win_start.year}.csv"
+            if legacy.is_file():
+                paths.append(legacy)
+    for path in paths:
         files += 1
         window_rows, _ = read_cps_nearshore_csv(path)
         rows.extend(window_rows)

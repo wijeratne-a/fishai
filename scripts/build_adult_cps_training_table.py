@@ -52,6 +52,16 @@ def main(argv: list[str] | None = None) -> int:
     )
     args = parser.parse_args(argv)
 
+    import os
+
+    from fishai.ingestion.physics.glorys_training_build import GlorysTrainingBuildError
+
+    def _glorys_credentials_present() -> bool:
+        return bool(
+            os.environ.get("COPERNICUSMARINE_SERVICE_USERNAME")
+            and os.environ.get("COPERNICUSMARINE_SERVICE_PASSWORD")
+        )
+
     if args.dry_run:
         result = run_build_adult_cps_training_table(
             trawl_hauls_path=args.trawl_hauls,
@@ -83,7 +93,43 @@ def main(argv: list[str] | None = None) -> int:
         print(json.dumps({"error": "no adult physics events after QC"}, indent=2))
         return 1
 
-    assert_copernicus_env_credentials()
+    if not _glorys_credentials_present():
+        result = run_build_adult_cps_training_table(
+            trawl_hauls_path=args.trawl_hauls,
+            trawl_catch_path=args.trawl_catch,
+            trawl_specimens_path=args.trawl_specimens,
+            nearshore_sets_path=args.nearshore_sets,
+            nearshore_catch_path=args.nearshore_catch,
+            nearshore_specimens_path=args.nearshore_specimens,
+            events_path=args.events,
+            output_path=args.output,
+            store=None,
+            dry_run=False,
+        )
+        result["glorys_join"] = "blocked_credentials_missing"
+        print(json.dumps(result, indent=2, sort_keys=True))
+        return 0
+
+    try:
+        assert_copernicus_env_credentials()
+    except GlorysTrainingBuildError as exc:
+        result = run_build_adult_cps_training_table(
+            trawl_hauls_path=args.trawl_hauls,
+            trawl_catch_path=args.trawl_catch,
+            trawl_specimens_path=args.trawl_specimens,
+            nearshore_sets_path=args.nearshore_sets,
+            nearshore_catch_path=args.nearshore_catch,
+            nearshore_specimens_path=args.nearshore_specimens,
+            events_path=args.events,
+            output_path=args.output,
+            store=None,
+            dry_run=False,
+        )
+        result["glorys_join"] = "blocked_credentials_missing"
+        result["glorys_block_reason"] = exc.reason_code
+        print(json.dumps(result, indent=2, sort_keys=True))
+        return 0
+
     days = unique_event_days(events)
     batches = plan_glorys_subset_batches(days)
     enforce_subset_request_budget(batches)

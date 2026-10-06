@@ -56,12 +56,13 @@ NEARSHORE_SPECIMENS_PATH: Final = (
 OBSERVATION_SOURCE_TRAWL: Final = "swfsc_cps_trawl_haul_catch"
 OBSERVATION_SOURCE_NEARSHORE: Final = "swfsc_cps_nearshore_set_catch"
 
-# Median adult sizes in validation (sardine 160 mm, anchovy 106 mm). Cutoffs exclude
-# juveniles while retaining adult-dominated catches (median length must meet cutoff).
+# L50 standard-length cutoffs (science-reviewed; see docs/adult-training-table-validation.md).
 ADULT_MIN_LENGTH_MM: Final = {
-    "Sardinops sagax": 120.0,
-    "Engraulis mordax": 70.0,
+    "Sardinops sagax": 160.0,
+    "Engraulis mordax": 98.0,
 }
+
+EVIDENCE_IMPLIED_ZERO: Final = "implied_zero_enumerated_frame"
 
 PILOT_SPECIES: Final = tuple(PILOT_MATRIX_SPECIES)
 
@@ -81,4 +82,5 @@ TRAINING_TABLE_EXTRA_COLUMNS: Final = (
     "adult_median_length_mm",
     "biology_excluded",
     "biology_excluded_reason",
+    "absence_evidence",
 )

@@ -14,6 +14,7 @@ from fishai.ingestion.adult.constants import (
     OBSERVATION_SOURCE_TRAWL,
 )
 from fishai.ingestion.adult.observations import (
+    append_implied_absence_observations,
     build_nearshore_observations,
     build_trawl_observations,
 )
@@ -140,6 +141,42 @@ def test_juvenile_median_length_excluded() -> None:
     assert obs.empty
 
 
+def test_implied_absence_for_enumerated_haul_without_target_row() -> None:
+    medians = median_length_by_event_species(
+        pd.DataFrame(
+            [
+                {
+                    "event_id": "CPSTrawl:209901:SY:3",
+                    "species": "Engraulis mordax",
+                    "length_mm": 110.0,
+                }
+            ]
+        )
+    )
+    catch = pd.DataFrame(
+        [
+            {
+                "haul_id": "CPSTrawl:209901:SY:3",
+                "species": "Engraulis mordax",
+                "presence_only": False,
+                "weight_kg": 1.0,
+                "count_raised_est": 10,
+                "subsample_count": 10,
+            }
+        ]
+    )
+    obs, _ = build_trawl_observations(catch, medians=medians)
+    full, stats = append_implied_absence_observations(
+        obs,
+        trawl_catch=catch,
+        nearshore_catch=pd.DataFrame(),
+    )
+    assert stats["implied_absences_trawl"] == 1
+    sardine = full[full["species"] == "Sardinops sagax"]
+    assert len(sardine) == 1
+    assert int(sardine.iloc[0]["encounter"]) == 0
+
+
 def test_adult_trawl_and_nearshore_observations(tmp_path: Path) -> None:
     trawl_spec = tmp_path / "trawl_spec.parquet"
     near_spec = tmp_path / "near_spec.parquet"
@@ -151,12 +188,12 @@ def test_adult_trawl_and_nearshore_observations(tmp_path: Path) -> None:
             {
                 "event_id": "CPSTrawl:209901:SY:1",
                 "species": "Sardinops sagax",
-                "length_mm": 155.0,
+                "length_mm": 165.0,
             },
             {
                 "event_id": "CPSNearshore:209901:SY:1",
                 "species": "Engraulis mordax",
-                "length_mm": 95.0,
+                "length_mm": 100.0,
             },
         ]
     ).to_parquet(trawl_spec, index=False)
@@ -165,7 +202,7 @@ def test_adult_trawl_and_nearshore_observations(tmp_path: Path) -> None:
             {
                 "event_id": "CPSNearshore:209901:SY:1",
                 "species": "Engraulis mordax",
-                "length_mm": 95.0,
+                "length_mm": 100.0,
             }
         ]
     ).to_parquet(near_spec, index=False)
@@ -235,7 +272,7 @@ def test_build_adult_training_table_joins_glorys(tmp_path: Path) -> None:
                 "encounter": 1,
                 "weight_kg": 10.0,
                 "count_observed": 100,
-                "adult_median_length_mm": 150.0,
+                "adult_median_length_mm": 165.0,
                 "biology_excluded": False,
                 "biology_excluded_reason": "",
             },
@@ -246,7 +283,7 @@ def test_build_adult_training_table_joins_glorys(tmp_path: Path) -> None:
                 "encounter": 1,
                 "weight_kg": 5.0,
                 "count_observed": 50,
-                "adult_median_length_mm": 90.0,
+                "adult_median_length_mm": 100.0,
                 "biology_excluded": False,
                 "biology_excluded_reason": "",
             },
@@ -271,5 +308,5 @@ def test_build_adult_training_table_joins_glorys(tmp_path: Path) -> None:
 
 
 def test_adult_cutoffs_documented() -> None:
-    assert ADULT_MIN_LENGTH_MM["Sardinops sagax"] == 120.0
-    assert ADULT_MIN_LENGTH_MM["Engraulis mordax"] == 70.0
+    assert ADULT_MIN_LENGTH_MM["Sardinops sagax"] == 160.0
+    assert ADULT_MIN_LENGTH_MM["Engraulis mordax"] == 98.0

@@ -8,6 +8,7 @@ import pandas as pd
 
 from fishai.ingestion.adult.constants import (
     ADULT_MIN_LENGTH_MM,
+    EVIDENCE_IMPLIED_ZERO,
     EXCLUDE_REASON_JUVENILE,
     EXCLUDE_REASON_NO_SPECIMEN,
     EXCLUDE_REASON_PRESENCE_ONLY,
@@ -16,6 +17,7 @@ from fishai.ingestion.adult.constants import (
     PILOT_SPECIES,
 )
 from fishai.ingestion.adult.specimens import median_length_by_event_species
+from fishai.ingestion.biology.cps_trawl.catch import is_presence_only
 
 
 def _encounter_from_measurements(
@@ -161,3 +163,156 @@ def observations_for_training_events(
     if observations.empty:
         return observations
     return observations[observations["event_id"].astype(str).isin(event_ids)].reset_index(drop=True)
+
+
+def _trawl_catch_row_species(row: pd.Series) -> str:
+    return str(row.get("species") or "").strip()
+
+
+def _nearshore_catch_row_species(row: pd.Series) -> str:
+    return str(row.get("scientific_name") or row.get("species") or "").strip()
+
+
+def _trawl_row_is_enumerated(row: pd.Series) -> bool:
+    if is_presence_only(row.get("presence_only")):
+        return False
+    count_raw = row.get("subsample_count")
+    return count_raw is not None and pd.notna(count_raw)
+
+
+def _nearshore_row_is_enumerated(row: pd.Series) -> bool:
+    count_raw = row.get("total_number")
+    return count_raw is not None and pd.notna(count_raw)
+
+
+def _trawl_row_has_species_catch(row: pd.Series) -> bool:
+    return not is_presence_only(row.get("presence_only"))
+
+
+def _nearshore_row_has_species_catch(_row: pd.Series) -> bool:
+    return True
+
+
+def _enumerated_events_and_species(
+    catch: pd.DataFrame,
+    *,
+    event_id_col: str,
+    species_fn,
+    enumerated_fn,
+    species_catch_fn,
+) -> tuple[set[str], dict[str, set[str]]]:
+    enumerated_events: set[str] = set()
+    species_by_event: dict[str, set[str]] = {}
+    if catch.empty:
+        return enumerated_events, species_by_event
+    for _, row in catch.iterrows():
+        event_id = str(row[event_id_col])
+        if enumerated_fn(row):
+            enumerated_events.add(event_id)
+        species = species_fn(row)
+        if not species:
+            continue
+        if species_catch_fn(row):
+            species_by_event.setdefault(event_id, set()).add(species)
+    return enumerated_events, species_by_event
+
+
+def append_implied_absence_observations(
+    observations: pd.DataFrame,
+    *,
+    trawl_catch: pd.DataFrame,
+    nearshore_catch: pd.DataFrame,
+) -> tuple[pd.DataFrame, dict[str, int]]:
+    """
+    For fully-enumerated hauls/sets, emit encounter=0 rows for pilot species with no catch row.
+
+    Enumeration evidence: at least one catch row with presence_only != Y (trawl) and a
+    non-null subsample_count (trawl) or total_number (nearshore).
+    """
+    stats = {"implied_absences_trawl": 0, "implied_absences_nearshore": 0}
+    extra_rows: list[dict[str, Any]] = []
+    existing: set[tuple[str, str, str]] = set()
+    if not observations.empty:
+        for _, row in observations.iterrows():
+            existing.add(
+                (
+                    str(row["event_id"]),
+                    str(row["species"]),
+                    str(row["observation_source"]),
+                )
+            )
+
+    trawl_enum, trawl_species = _enumerated_events_and_species(
+        trawl_catch,
+        event_id_col="haul_id",
+        species_fn=_trawl_catch_row_species,
+        enumerated_fn=_trawl_row_is_enumerated,
+        species_catch_fn=_trawl_row_has_species_catch,
+    )
+    for event_id in trawl_enum:
+        present = trawl_species.get(event_id, set())
+        for species in PILOT_SPECIES:
+            if species in present:
+                continue
+            key = (event_id, species, OBSERVATION_SOURCE_TRAWL)
+            if key in existing:
+                continue
+            extra_rows.append(
+                {
+                    "event_id": event_id,
+                    "species": species,
+                    "observation_source": OBSERVATION_SOURCE_TRAWL,
+                    "encounter": 0,
+                    "weight_kg": None,
+                    "count_observed": None,
+                    "adult_median_length_mm": None,
+                    "biology_excluded": False,
+                    "biology_excluded_reason": "",
+                    "absence_evidence": EVIDENCE_IMPLIED_ZERO,
+                }
+            )
+            stats["implied_absences_trawl"] += 1
+            existing.add(key)
+
+    near_enum, near_species = _enumerated_events_and_species(
+        nearshore_catch,
+        event_id_col="set_id",
+        species_fn=_nearshore_catch_row_species,
+        enumerated_fn=_nearshore_row_is_enumerated,
+        species_catch_fn=_nearshore_row_has_species_catch,
+    )
+    for event_id in near_enum:
+        present = near_species.get(event_id, set())
+        for species in PILOT_SPECIES:
+            if species in present:
+                continue
+            key = (event_id, species, OBSERVATION_SOURCE_NEARSHORE)
+            if key in existing:
+                continue
+            extra_rows.append(
+                {
+                    "event_id": event_id,
+                    "species": species,
+                    "observation_source": OBSERVATION_SOURCE_NEARSHORE,
+                    "encounter": 0,
+                    "weight_kg": None,
+                    "count_observed": None,
+                    "adult_median_length_mm": None,
+                    "biology_excluded": False,
+                    "biology_excluded_reason": "",
+                    "absence_evidence": EVIDENCE_IMPLIED_ZERO,
+                }
+            )
+            stats["implied_absences_nearshore"] += 1
+            existing.add(key)
+
+    if not extra_rows:
+        return observations, stats
+    extra = pd.DataFrame(extra_rows)
+    if observations.empty:
+        return extra, stats
+    if "absence_evidence" not in observations.columns:
+        observations = observations.copy()
+        observations["absence_evidence"] = ""
+    combined = pd.concat([observations, extra], ignore_index=True)
+    return combined, stats
