@@ -56,6 +56,25 @@ sources:
       Adult/juvenile trawl catch weights and counts (DEPM, ATM, SaKe). Implied zero-catch
       requires per-cruise evidence in config/cps_trawl_zero_frame_evidence.yaml.
 
+  nwfsc_fram_groundfish_trawl:
+    module: fishai.ingestion.biology.nwfsc_fram_groundfish_trawl
+    endpoint_family: NWFSC FRAM Data Warehouse REST (trips API)
+    provider: NOAA NWFSC FRAM — West Coast Groundfish Bottom Trawl Survey
+    license: U.S. Government Work
+    license_url: https://www.noaa.gov/information-technology/foia
+    license_text: >-
+      U.S. Federal public domain. NOAA Fisheries data as a work of the United States
+      Government are not subject to domestic copyright protection.
+    attribution: >-
+      NOAA Fisheries Northwest Fisheries Science Center FRAM Data Warehouse,
+      West Coast Groundfish Bottom Trawl Survey; API https://www.webapps.nwfsc.noaa.gov/trips/api/v1/source/
+    status: approved
+    enabled: true
+    notes: >-
+      Adult corroboration only: sardine/anchovy pelagic bycatch on bottom-trawl tows
+      (presence-only rows). Not primary presence-absence; do not train from presence-only.
+      Survey year derived from trawl_id when per-row dates are absent in catch_fact.
+
   wcofs:
     module: fishai.ingestion.physics.sources.wcofs
     endpoint_family: NOAA WCOFS public S3

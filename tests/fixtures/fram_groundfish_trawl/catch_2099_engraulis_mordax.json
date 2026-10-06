@@ -1,0 +1,28 @@
+[
+  {
+    "trawl_id": 209903008002,
+    "field_identified_taxonomy_dim$scientific_name": "Engraulis mordax",
+    "vessel": "Test Vessel",
+    "tow": 2,
+    "project": "Groundfish Slope and Shelf Combination Survey",
+    "performance": "Satisfactory",
+    "total_catch_wt_kg": 0.4,
+    "total_catch_numbers": 40,
+    "cpue_kg_per_ha_der": null,
+    "depth_m": 110.0,
+    "station_invalid": 0
+  },
+  {
+    "trawl_id": 209903008099,
+    "field_identified_taxonomy_dim$scientific_name": "Engraulis mordax",
+    "vessel": "Test Vessel",
+    "tow": 99,
+    "project": "Groundfish Slope and Shelf Combination Survey",
+    "performance": "Unusable",
+    "total_catch_wt_kg": 1.0,
+    "total_catch_numbers": 10,
+    "cpue_kg_per_ha_der": 0.5,
+    "depth_m": 80.0,
+    "station_invalid": 0
+  }
+]
