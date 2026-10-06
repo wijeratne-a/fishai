@@ -1,6 +1,6 @@
 # CUFES 72 h forecast skill: rolling-origin design
 
-**Status:** Design for review. No refits have been run. This file does not report skill and does not publish a forecast.
+**Status:** Approved. Cutoff dates are locked in `prereg/cufes_forecast_temporal_holdout_scores.json` (`status: cutoffs_locked`). Skill is not reported until the refits finish. This file does not publish a forecast.
 
 **Claim under test:** The sardine and anchovy egg-encounter models have skill at future times (24/48/72 h), not only on held-out areas. Spatial-block skill (PR #33; `prereg/cufes_spatial_block_cv_scores.json`) is a different claim and is not reused as evidence here.
 

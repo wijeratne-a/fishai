@@ -1,0 +1,35 @@
+{
+  "status": "cutoffs_locked",
+  "claim": "72h egg-encounter forecast skill",
+  "operational_claim": "NOT_ISSUED_FORECAST",
+  "physics_source": "damped_anomaly_proxy",
+  "tau_days": 3,
+  "lane_oracle": "retrospective",
+  "code_sha": null,
+  "design": "prereg/cufes_forecast_temporal_holdout_design.md",
+  "test_end": "2022-04-27",
+  "cutoff_calendar": "shared",
+  "cutoff_selection_status": "ok",
+  "cutoff_selection_reason": null,
+  "cutoff_notes": [
+    "moved MAM cutoff 1998-03-01 to 1998-04-07 to keep cutoffs 30 days apart"
+  ],
+  "cutoffs": ["1998-02-26", "1998-04-07", "1998-06-13", "2012-09-03", "2017-08-05", "2018-09-20", "2021-01-22", "2022-04-12"],
+  "cutoff_seasons": [
+    "DJF",
+    "MAM",
+    "JJA",
+    "SON",
+    "JJA",
+    "SON",
+    "DJF",
+    "MAM"
+  ],
+  "eligible_counts": {
+    "sardine": 174,
+    "anchovy": 174
+  },
+  "min_train_rows": 2000,
+  "min_train_days": 30,
+  "species": []
+}
