@@ -409,42 +409,57 @@ forecast_business_readout <- function(species_results) {
     clim <- h24$climatology
     ora <- h24$oracle
     pass <- isTRUE(sp$pass_24h)
-    verdict <- if (n_el < 6L) {
-      sprintf(
-        "%s: only %d of 8 cutoffs produced a usable fit, which is not enough to call a result (need 6). No pass is claimed.",
+    if (n_el < 6L) {
+      lines <- c(lines, sprintf(
+        "%s: only %d of 8 cutoffs produced a usable fit. Six are required, so this is not a result. The 72-hour forecast does not beat the baselines.",
         name, n_el
-      )
-    } else if (pass) {
+      ))
+      next
+    }
+    verdict <- if (pass) {
       sprintf(
-        "%s at 24 hours: the NOT_ISSUED_FORECAST proxy beats both baselines. AUC %s versus persistence %s and climatology %s (higher is better). TSS %s versus persistence %s and climatology %s.",
+        "%s at 24 hours: the NOT_ISSUED_FORECAST proxy beats both baselines. That comparison uses %s tows, %s of them with eggs. AUC %s versus persistence %s and climatology %s (higher is better). TSS %s versus persistence %s and climatology %s.",
         name,
+        .forecast_count(h24$n_common_support), .forecast_count(op$n_presence),
         .forecast_fmt(op$auc), .forecast_fmt(per$auc), .forecast_fmt(clim$auc),
         .forecast_fmt(op$tss), .forecast_fmt(per$tss), .forecast_fmt(clim$tss)
       )
     } else {
       sprintf(
-        "%s at 24 hours: the NOT_ISSUED_FORECAST proxy does not beat both baselines. AUC %s versus persistence %s and climatology %s. TSS %s versus persistence %s and climatology %s.",
+        "%s at 24 hours: the NOT_ISSUED_FORECAST proxy does not beat both baselines. That comparison uses %s tows, %s of them with eggs. AUC %s versus persistence %s and climatology %s. TSS %s versus persistence %s and climatology %s.",
         name,
+        .forecast_count(h24$n_common_support), .forecast_count(op$n_presence),
         .forecast_fmt(op$auc), .forecast_fmt(per$auc), .forecast_fmt(clim$auc),
         .forecast_fmt(op$tss), .forecast_fmt(per$tss), .forecast_fmt(clim$tss)
       )
     }
-    h48 <- pooled[["48"]]$operational_proxy
-    h72 <- pooled[["72"]]$operational_proxy
+    h48s <- pooled[["48"]]
+    h72s <- pooled[["72"]]
+    h48 <- h48s$operational_proxy
+    h72 <- h72s$operational_proxy
     deg <- sprintf(
-      "By 48 hours the proxy AUC changes by %s and TSS by %s versus 24 hours; by 72 hours AUC changes by %s and TSS by %s.",
-      .forecast_delta_fmt(h48$auc, op$auc),
-      .forecast_delta_fmt(h48$tss, op$tss),
-      .forecast_delta_fmt(h72$auc, op$auc),
-      .forecast_delta_fmt(h72$tss, op$tss)
+      "At 48 hours (%s tows, %s with eggs) the NOT_ISSUED_FORECAST proxy AUC is %s, a change of %s from 24 hours, and TSS is %s, a change of %s. At 72 hours (%s tows, %s with eggs) the proxy AUC is %s, a change of %s, and TSS is %s, a change of %s.",
+      .forecast_count(h48s$n_common_support), .forecast_count(h48$n_presence),
+      .forecast_fmt(h48$auc), .forecast_delta_fmt(h48$auc, op$auc),
+      .forecast_fmt(h48$tss), .forecast_delta_fmt(h48$tss, op$tss),
+      .forecast_count(h72s$n_common_support), .forecast_count(h72$n_presence),
+      .forecast_fmt(h72$auc), .forecast_delta_fmt(h72$auc, op$auc),
+      .forecast_fmt(h72$tss), .forecast_delta_fmt(h72$tss, op$tss)
     )
     oracle_line <- sprintf(
-      "If the analysed ocean state is treated as known (a retrospective ceiling, not the product), 24-hour AUC is %s and TSS is %s.",
+      "If the analysed ocean state is treated as known (a retrospective ceiling, not the product), 24-hour AUC is %s and TSS is %s. That ceiling is not the 72-hour product.",
       .forecast_fmt(ora$auc), .forecast_fmt(ora$tss)
     )
     lines <- c(lines, verdict, deg, oracle_line)
   }
   paste(lines, collapse = "\n\n")
+}
+
+.forecast_count <- function(x) {
+  if (is.null(x) || length(x) != 1L || !is.finite(as.numeric(x))) {
+    return("an unknown number of")
+  }
+  as.character(as.integer(x))
 }
 
 .forecast_daily_summary <- function(dat) {
