@@ -185,12 +185,18 @@ def build_adult_cps_training_table(
         return out, {**qc, "floor_qc": floor_qc, "observation_rows": 0}, drops
 
     merged = obs.merge(cov_table, on=COL_EVENT_ID, how="left", validate="many_to_one")
-    merged["biology_excluded"] = merged["biology_excluded"].fillna(False)
+    merged["biology_excluded"] = merged["biology_excluded"].fillna(False).astype(bool)
     merged["biology_excluded_reason"] = merged["biology_excluded_reason"].fillna("")
-    merged["excluded"] = merged["excluded"] | merged["biology_excluded"]
+    physics_excluded = merged["excluded"].eq(True)
+    row_excluded = (physics_excluded | merged["biology_excluded"]).to_numpy(dtype=bool, na_value=False)
+    merged["excluded"] = row_excluded
     for col in TRAINING_OUTPUT_COLUMNS:
-        if col in merged.columns and col != COL_EVENT_ID:
-            merged.loc[merged["excluded"], col] = pd.NA
+        if col in merged.columns and col not in (
+            COL_EVENT_ID,
+            "excluded",
+            "excluded_reason",
+        ):
+            merged.loc[row_excluded, col] = pd.NA
 
     effort = events[
         [
