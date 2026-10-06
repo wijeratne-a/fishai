@@ -237,7 +237,10 @@ def test_adult_trawl_and_nearshore_observations(tmp_path: Path) -> None:
         nearshore_specimens_path=near_spec,
     )
     assert summary["presence_only_excluded_total"] == 0
-    assert len(obs) == 2
+    assert len(obs) == 4
+    assert int(obs["encounter"].sum()) == 2
+    assert summary["implied_absences"]["implied_absences_trawl"] == 1
+    assert summary["implied_absences"]["implied_absences_nearshore"] == 1
     sources = set(obs["observation_source"])
     assert sources == {OBSERVATION_SOURCE_TRAWL, OBSERVATION_SOURCE_NEARSHORE}
 

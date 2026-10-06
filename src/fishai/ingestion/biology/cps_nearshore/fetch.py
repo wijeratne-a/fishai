@@ -116,9 +116,16 @@ def _download(url: str, *, timeout_sec: float, max_retries: int, backoff_sec: fl
             req = urllib.request.Request(url, headers={"User-Agent": "fishai-ingestion/1.0"})
             with urllib.request.urlopen(req, timeout=timeout_sec) as resp:
                 return resp.read().decode("utf-8", errors="replace")
+        except urllib.error.HTTPError as exc:
+            if exc.code == 404:
+                raise
+            last_error = exc
+            if attempt + 1 < max_retries:
+                time.sleep(backoff_sec * (2**attempt))
         except (urllib.error.URLError, TimeoutError, OSError) as exc:
             last_error = exc
-            time.sleep(backoff_sec * (2**attempt))
+            if attempt + 1 < max_retries:
+                time.sleep(backoff_sec * (2**attempt))
     raise RuntimeError(f"ERDDAP download failed after {max_retries} attempts: {url}") from last_error
 
 
@@ -165,7 +172,17 @@ def fetch_cps_nearshore_set_catch(
     written: list[Path] = []
     for win_start, win_end in window_fn(t0, t1):
         url = build_erddap_csv_url(win_start, win_end, bbox, erddap_base=erddap_base)
-        text = _download(url, timeout_sec=timeout_sec, max_retries=max_retries, backoff_sec=backoff_sec)
+        try:
+            text = _download(
+                url,
+                timeout_sec=timeout_sec,
+                max_retries=max_retries,
+                backoff_sec=backoff_sec,
+            )
+        except urllib.error.HTTPError as exc:
+            if exc.code == 404:
+                continue
+            raise
         out = dest / f"cps_nearshore_set_catch_{win_start.strftime('%Y%m%d')}.csv"
         out.write_text(text, encoding="utf-8")
         written.append(out)

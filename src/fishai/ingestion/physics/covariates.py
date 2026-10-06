@@ -227,8 +227,14 @@ def mean_covariates_along_segment(
     dist_km = haversine_km(lat0, lon0, lat1, lon1)
     mid_t = event_mid_time(event)
     if dist_km == 0.0:
-        # Purse-seine sets and other point events: sample the set location once.
-        points = [(lat0, lon0)]
+        start = pd.to_datetime(event[COL_START_TIME], utc=True, errors="coerce")
+        stop = pd.to_datetime(event[COL_STOP_TIME], utc=True, errors="coerce")
+        if pd.notna(start) and pd.notna(stop) and start == stop:
+            # Purse-seine sets and other intentional point events.
+            points = [(lat0, lon0)]
+        else:
+            segment_reasons.append(DROP_REASON_TOO_FEW_TRACK_POINTS)
+            points = [(lat0, lon0)]
     else:
         if dist_km < MIN_TRACK_LENGTH_KM:
             segment_reasons.append(DROP_REASON_TOO_FEW_TRACK_POINTS)

@@ -63,6 +63,15 @@ def _pilot_bbox() -> tuple[float, float, float, float]:
     )
 
 
+def _encounter_count_dict(observations: pd.DataFrame) -> dict[str, int]:
+    counts: dict[str, int] = {}
+    grouped = observations.groupby(["species", "observation_source", "encounter"]).size()
+    for (species, source, encounter), count in grouped.items():
+        key = f"{species}|{source}|encounter={int(encounter)}"
+        counts[key] = int(count)
+    return counts
+
+
 def _read_parquet(path: Path) -> pd.DataFrame:
     if not path.is_file():
         return pd.DataFrame()
@@ -253,12 +262,7 @@ def run_build_adult_cps_training_table(
             else {}
         )
         if not observations.empty:
-            result["encounter_counts"] = (
-                observations.groupby(["species", "observation_source", "encounter"])
-                .size()
-                .astype(int)
-                .to_dict()
-            )
+            result["encounter_counts"] = _encounter_count_dict(observations)
         return result
 
     out_events.parent.mkdir(parents=True, exist_ok=True)
@@ -273,14 +277,7 @@ def run_build_adult_cps_training_table(
         obs_kept.to_parquet(out_table, index=False)
         result["glorys_join"] = "blocked_no_store"
         result["observation_rows_written"] = int(len(obs_kept))
-        result["encounter_counts"] = (
-            obs_kept.groupby(["species", "observation_source", "encounter"])
-            .size()
-            .astype(int)
-            .to_dict()
-            if not obs_kept.empty
-            else {}
-        )
+        result["encounter_counts"] = _encounter_count_dict(obs_kept) if not obs_kept.empty else {}
         summary_file = out_table.parent / DEFAULT_BUILD_SUMMARY_PATH.name
         summary_file.write_text(json.dumps({**result}, indent=2, sort_keys=True) + "\n", encoding="utf-8")
         result["build_summary_path"] = str(summary_file)

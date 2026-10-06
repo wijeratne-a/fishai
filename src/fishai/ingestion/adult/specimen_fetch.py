@@ -72,6 +72,8 @@ def build_specimen_csv_url(
         enc_val = quote(str(value), safe="")
         if op == ">=":
             return f"{name}%3E={enc_val}"
+        if op == "<=":
+            return f"{name}%3C={enc_val}"
         if op == "<":
             return f"{name}%3C{enc_val}"
         raise ValueError(f"unsupported ERDDAP constraint operator: {op}")

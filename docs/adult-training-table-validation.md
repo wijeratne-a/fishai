@@ -74,3 +74,18 @@ table without Copernicus fields.
 Row counts by species, source, and encounter; effort completeness; pilot bbox; deduplication;
 ITIS TSN sanity — recorded in `data/processed/adult_cps/adult_cps_build_summary.json` after a
 local build (not committed).
+
+### Pilot build row counts (2026-10-06, public ERDDAP refresh)
+
+| Species | Source | encounter=1 | encounter=0 |
+|---|---|---:|---:|
+| *Engraulis mordax* | nearshore set catch | 28 | 131 |
+| *Engraulis mordax* | trawl haul catch | 168 | 234 |
+| *Sardinops sagax* | nearshore set catch | 49 | 35 |
+| *Sardinops sagax* | trawl haul catch | 62 | 434 |
+
+**Total presence rows:** 307. **Total training observation rows (presences + implied absences):**
+1,141 across 706 physics events in the pilot bbox. Trawl presence-only rows excluded: 1,378.
+
+GLORYS covariate join: attempted when Copernicus service credentials are present in the
+environment; otherwise biology-only outputs are written (see build script).
