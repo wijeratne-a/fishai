@@ -29,13 +29,13 @@ export function displayDoctrineForSchema(schemaEnum) {
   return SCHEMA_TO_DISPLAY[schemaEnum] ?? "Unknown";
 }
 
-/** Plain words for each schema evidence state. Every line names eggs. */
+/** Plain-language primary line for each schema evidence state (eggs/spawning context in surrounding UI). */
 export const PLAIN_EVIDENCE = {
-  HINDCAST_GLORYS: "Historical pattern of eggs from past ocean conditions",
-  NOWCAST_UNVALIDATED: "Egg estimate for the current day, not yet checked against new egg samples",
-  FORECAST: "Egg estimate for a coming day in this spawning habitat",
-  DEGRADED: "Egg estimate with a weaker ocean input, so the range is wider",
-  UNKNOWN: "Unknown egg evidence — not enough to say if eggs are likely",
+  HINDCAST_GLORYS: "Past ocean patterns",
+  NOWCAST_UNVALIDATED: "Today, not yet checked",
+  FORECAST: "Coming days (demo)",
+  DEGRADED: "Today with weaker ocean input (wider range)",
+  UNKNOWN: "Not enough data to estimate eggs here",
 };
 
 export function plainEvidence(schemaEnum) {

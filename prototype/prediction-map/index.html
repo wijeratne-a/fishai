@@ -3,9 +3,9 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>Southern California Bight — egg-encounter globe prototype</title>
+    <title>Southern California — anchovy &amp; sardine spawning activity (demo)</title>
     <script>
-      // egg-encounter globe asset root
+      // Spawning / egg map — Cesium asset root
       window.CESIUM_BASE_URL =
         "https://cesium.com/downloads/cesiumjs/releases/1.124/Build/Cesium/";
     </script>
@@ -18,32 +18,41 @@
   </head>
   <body>
     <header>
-      <p class="banner">Internal UX spike — egg-stage CUFES spawning-habitat visualization</p>
-      <h1 id="map-title">Spawning-habitat egg-encounter globe</h1>
-      <p id="egg-onboarding" class="onboarding">
-        Demo data. Drag to turn the egg globe, scroll to zoom, and click a gold cluster for a plain spawning-habitat readout.
+      <p class="banner">Internal UX spike — Southern California Bight spawning-habitat demo</p>
+      <h1 id="map-title">Spawning egg activity map</h1>
+      <p id="page-lede" class="page-lede">
+        This map shows where sardine and anchovy eggs are likely in the water (spawning activity),
+        patch by patch. It does not show adult sardine or anchovy locations, live tracking, or
+        harvest advice.
       </p>
-      <div id="species-toggle" aria-label="Species egg-encounter layer"></div>
+      <p id="summary-headline" class="summary-headline" data-testid="summary-headline"></p>
+      <div class="header-controls">
+        <div id="species-toggle" aria-label="Species spawning layer"></div>
+        <div id="day-control" class="day-control" aria-label="Spawning day and demo forecast"></div>
+      </div>
     </header>
     <main class="layout">
       <div class="map-panel">
         <div
           id="globe"
-          aria-label="Pilot domain egg-encounter globe 32–35°N 121–117°W"
+          aria-label="Southern California pilot domain 32–35°N 121–117°W — egg spawning likelihood"
         ></div>
-        <div class="egg-controls" aria-label="Egg globe controls">
-          <p>Drag to rotate the egg globe</p>
-          <p>Scroll to zoom the spawning view</p>
-          <p>Click dots for an egg readout</p>
-          <button id="replay-flyin" type="button">Replay egg-globe fly-in</button>
+        <div class="egg-controls" aria-label="Map controls">
+          <p>Drag to turn the spawning map</p>
+          <p>Scroll to zoom egg patches</p>
+          <p>Click gold dots for a spawning readout</p>
+          <button id="zoom-region" type="button">Zoom to spawning region (SoCal)</button>
+          <button id="replay-flyin" type="button">Replay spawning map fly-in</button>
         </div>
-        <aside id="egg-readout" class="egg-readout" aria-live="polite">
-          Click a gold cluster to read the egg evidence for that spawning patch.
-        </aside>
-        <p class="globe-watermark" data-testid="globe-watermark"></p>
+        <div class="map-footer">
+          <aside id="egg-readout" class="egg-readout" aria-live="polite">
+            Click a gold cluster for egg likelihood in that 10 km spawning patch.
+          </aside>
+          <p class="globe-watermark" data-testid="globe-watermark"></p>
+        </div>
       </div>
       <aside id="legend"></aside>
-      <section id="cell-list" aria-label="Per-cell egg evidence state"></section>
+      <section id="cell-list" aria-label="Spawning patches in this view"></section>
     </main>
     <script type="module" src="./app.js"></script>
   </body>

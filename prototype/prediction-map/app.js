@@ -1,6 +1,5 @@
 import {
   SCHEMA_EVIDENCE_STATES,
-  DISPLAY_DOCTRINE,
   displayDoctrineForSchema,
   effectiveEvidenceState,
   isUnknownRow,
@@ -17,6 +16,18 @@ const DOMAIN = {
 const FIXTURE_URL = "./fixtures/synthetic_cufes_grid.json";
 const FLOOR_KM = 10;
 const MAX_DOTS = 25;
+
+const PLACE_MARKERS = [
+  { name: "San Diego", lat: 32.7157, lon: -117.1611 },
+  { name: "Los Angeles", lat: 34.0522, lon: -118.2437 },
+  { name: "Channel Islands", lat: 33.45, lon: -119.55 },
+];
+
+const PLACE_ANCHORS = PLACE_MARKERS.map((p) => ({
+  ...p,
+  lat: p.lat,
+  lon: p.lon,
+}));
 
 const Cesium = window.Cesium;
 let dotAlpha = 0;
@@ -53,7 +64,6 @@ function kmToDegrees(lat, eastKm, northKm) {
   return { dLat, dLon };
 }
 
-/** 10 km lattice inside the cell. Count tracks egg-encounter probability. */
 function eggDotsForRow(row, spacingKm) {
   const unknown = isUnknownRow(row);
   if (!unknown && row.p_encounter != null) {
@@ -63,7 +73,7 @@ function eggDotsForRow(row, spacingKm) {
     const spanKm = Math.max(FLOOR_KM, spacingKm || 50);
     const slots = Math.max(1, Math.round(spanKm / FLOOR_KM));
     const count = Math.min(MAX_DOTS, Math.max(1, Math.round(row.p_encounter * slots * slots)));
-    const rng = mulberry32(hashString(row.cell_id + row.species));
+    const rng = mulberry32(hashString(row.cell_id + row.species + row.valid_day));
     const order = [];
     for (let i = 0; i < slots; i += 1) {
       for (let j = 0; j < slots; j += 1) order.push([i, j]);
@@ -97,43 +107,134 @@ function dotsToKeep(cameraHeight) {
   return MAX_DOTS;
 }
 
+const SPECIES_LABEL = {
+  sardine: "Sardine",
+  anchovy: "Anchovy",
+};
+
 const SPECIES_EGG_NAME = {
   sardine: "Sardine eggs",
   anchovy: "Anchovy eggs",
 };
 
+function formatShortDay(isoDay) {
+  const [y, m, d] = isoDay.split("-").map(Number);
+  const month = new Date(Date.UTC(y, m - 1, d)).toLocaleString("en-US", {
+    month: "short",
+    timeZone: "UTC",
+  });
+  return month + " " + d + ", " + y;
+}
+
+function titleCaseSpecies(species) {
+  return SPECIES_LABEL[species] || species;
+}
+
+function nearestPlaceName(lat, lon) {
+  let best = PLACE_ANCHORS[0].name;
+  let bestDist = Number.POSITIVE_INFINITY;
+  PLACE_ANCHORS.forEach((place) => {
+    const dLat = lat - place.lat;
+    const dLon = (lon - place.lon) * Math.cos((lat * Math.PI) / 180);
+    const dist = dLat * dLat + dLon * dLon;
+    if (dist < bestDist) {
+      bestDist = dist;
+      best = place.name;
+    }
+  });
+  return best;
+}
+
+function rowsForView(allRows, species, validDay) {
+  return allRows.filter((r) => r.species === species && r.valid_day === validDay);
+}
+
+function uniqueDays(allRows, meta) {
+  if (Array.isArray(meta.demo_days) && meta.demo_days.length) {
+    return [...meta.demo_days];
+  }
+  return [...new Set(allRows.map((r) => r.valid_day))].sort();
+}
+
+function dayControlLabel(day, rowsOnDay) {
+  const states = new Set(rowsOnDay.map((r) => effectiveEvidenceState(r)));
+  if (states.has("FORECAST") && !states.has("NOWCAST_UNVALIDATED")) {
+    return `${formatShortDay(day)} · coming days (demo)`;
+  }
+  if (states.has("NOWCAST_UNVALIDATED")) {
+    return `${formatShortDay(day)} · today, not yet checked`;
+  }
+  return `${formatShortDay(day)} · past ocean patterns`;
+}
+
+function computeSummaryHeadline(rows, species) {
+  const active = rows.filter(
+    (r) => r.species === species && !isUnknownRow(r) && r.p_encounter != null && r.p_encounter > 0,
+  );
+  if (!active.length) {
+    return `No spawning patches with egg likelihood for ${titleCaseSpecies(species).toLowerCase()} on this day.`;
+  }
+  let top = active[0];
+  active.forEach((row) => {
+    if (row.p_encounter > top.p_encounter) top = row;
+  });
+  const ll = parseCellId(top.cell_id);
+  const place = ll ? nearestPlaceName(ll.lat, ll.lon) : "this region";
+  const pct = Math.round(top.p_encounter * 100);
+  return `${active.length} patches with spawning activity · highest ${pct}% near ${place}`;
+}
+
 function renderLegend(container) {
   const plainStates = SCHEMA_EVIDENCE_STATES.map(
-    (s) => "<li>" + plainEvidence(s) + " <code>" + s + "</code></li>",
-  ).join("");
-  const doctrineItems = DISPLAY_DOCTRINE.map(
-    (d) => "<li>" + d + " — egg evidence label</li>",
+    (s) =>
+      `<li><span class="plain">${plainEvidence(s)}</span> <code class="muted">${s}</code> · ${displayDoctrineForSchema(s)}</li>`,
   ).join("");
   container.innerHTML = `
-    <h2>How to read this spawning-habitat egg globe</h2>
+    <h2>How to read spawning activity</h2>
     <p class="watermark" data-testid="watermark"></p>
-    <p class="hint">Denser gold dots mean you are more likely to find eggs in that spawning patch. Empty water means eggs are unlikely there, or the egg evidence is unknown. Dots stay on a 10 km grid. This spawning-habitat globe never draws finer than 10 km.</p>
-    <section aria-label="Egg-encounter evidence in plain words">
-      <h3>What the egg evidence means</h3>
-      <ul>${plainStates}</ul>
-    </section>
-    <section aria-label="Spawning-habitat egg display doctrine vocabulary">
-      <h3>Spawning egg evidence names</h3>
-      <ul>${doctrineItems}</ul>
+    <p class="hint">Gold dots mark 10 km patches where eggs are more likely. More dots = higher egg likelihood. Empty water means eggs are unlikely or unknown. This map never draws finer than 10 km.</p>
+    <section aria-label="Egg evidence in plain words">
+      <h3>Evidence behind each patch</h3>
+      <ul class="evidence-list">${plainStates}</ul>
     </section>
   `;
 }
 
 function renderSpeciesToggle(container, speciesList, active, onChange) {
   container.innerHTML = speciesList
-    .map(
-      (sp) =>
-        `<button type="button" class="species-btn ${sp === active ? "active" : ""}" data-species="${sp}">${SPECIES_EGG_NAME[sp] || sp} — egg-encounter</button>`,
-    )
+    .map((sp) => {
+      const label = titleCaseSpecies(sp);
+      return `<button type="button" class="species-btn ${sp === active ? "active" : ""}" data-species="${sp}" aria-label="${label} egg spawning layer">${label}</button>`;
+    })
     .join("");
   container.querySelectorAll(".species-btn").forEach((btn) => {
     btn.addEventListener("click", () => onChange(btn.dataset.species));
   });
+}
+
+function renderDayControl(container, days, allRows, activeDay, onChange) {
+  container.replaceChildren();
+  const label = document.createElement("label");
+  label.className = "day-label";
+  label.htmlFor = "day-select";
+  label.textContent = "Spawning day";
+  const select = document.createElement("select");
+  select.id = "day-select";
+  select.setAttribute("data-testid", "day-select");
+  days.forEach((day) => {
+    const rowsOnDay = allRows.filter((r) => r.valid_day === day);
+    const option = document.createElement("option");
+    option.value = day;
+    option.textContent = dayControlLabel(day, rowsOnDay);
+    option.selected = day === activeDay;
+    select.appendChild(option);
+  });
+  const hint = document.createElement("p");
+  hint.className = "day-hint";
+  hint.textContent =
+    "Demo / unvalidated egg spawning view — not a checked nowcast or forecast product.";
+  container.append(label, select, hint);
+  select.addEventListener("change", () => onChange(select.value));
 }
 
 function renderCellList(container, rows, species) {
@@ -141,25 +242,24 @@ function renderCellList(container, rows, species) {
   container.innerHTML = filtered
     .map((row) => {
       const state = effectiveEvidenceState(row);
-      const doctrine = displayDoctrineForSchema(state);
+      const eggName = SPECIES_EGG_NAME[row.species] || `${row.species} eggs`;
+      const ll = parseCellId(row.cell_id);
+      const place = ll ? nearestPlaceName(ll.lat, ll.lon) : "offshore";
       const hidden = isUnknownRow(row) || row.p_encounter == null || row.p_encounter <= 0;
-      const prob = hidden
-        ? `<em>No egg-encounter probability (UNKNOWN)</em>`
-        : `Egg-encounter p = ${(row.p_encounter * 100).toFixed(1)}% · 90% interval ${(row.p_lo90 * 100).toFixed(1)}–${(row.p_hi90 * 100).toFixed(1)}%`;
+      const headline = hidden
+        ? `${eggName}: no egg dots in this 10 km patch · ${plainEvidence(state)}`
+        : `${eggName}: ~${(row.p_encounter * 100).toFixed(0)}% chance in this 10 km patch · ${plainEvidence(state)}`;
+      const interval = hidden
+        ? `<p class="muted">No egg likelihood shown (unknown or out of domain).</p>`
+        : `<p class="muted">Range ${(row.p_lo90 * 100).toFixed(0)}–${(row.p_hi90 * 100).toFixed(0)}% · near ${place}</p>`;
       const unknownLine =
         row.unknown_reason != null
-          ? `<p class="unknown-reason">Egg-encounter unknown reason: <code>${row.unknown_reason}</code></p>`
+          ? `<p class="unknown-reason muted">Internal reason: <code>${row.unknown_reason}</code></p>`
           : "";
-      const dotLine = hidden
-        ? `<p>Egg-encounter globe: no dots (UNKNOWN or zero).</p>`
-        : `<p>Egg-encounter globe: dot density on a 10 km lattice.</p>`;
       return `<article class="cell-card" data-cell-id="${row.cell_id}">
-        <h4>${row.cell_id}</h4>
-        <p><strong>Egg-encounter schema evidence_state:</strong> <code>${state}</code></p>
-        <p><strong>Spawning egg display doctrine:</strong> ${doctrine}</p>
-        <p>${plainEvidence(state)}</p>
-        <p>${prob}</p>
-        ${dotLine}
+        <h4>${headline}</h4>
+        <p class="evidence-line"><span class="plain">${plainEvidence(state)}</span> <code class="muted">${state}</code></p>
+        ${interval}
         ${unknownLine}
       </article>`;
     })
@@ -169,6 +269,10 @@ function renderCellList(container, rows, species) {
 async function createGlobe(container) {
   const imagery = await Cesium.ArcGisMapServerImageryProvider.fromUrl(
     "https://services.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer",
+    { enablePickFeatures: false },
+  );
+  const labels = await Cesium.ArcGisMapServerImageryProvider.fromUrl(
+    "https://services.arcgisonline.com/ArcGIS/rest/services/Reference/World_Boundaries_and_Places/MapServer",
     { enablePickFeatures: false },
   );
   const viewer = new Cesium.Viewer(container, {
@@ -185,10 +289,57 @@ async function createGlobe(container) {
     baseLayer: new Cesium.ImageryLayer(imagery),
     terrainProvider: new Cesium.EllipsoidTerrainProvider(),
   });
+  viewer.imageryLayers.addImageryProvider(labels);
   viewer.scene.globe.enableLighting = false;
   viewer.scene.globe.baseColor = Cesium.Color.fromCssColorString("#16324f");
-  viewer.scene.screenSpaceCameraController.minimumZoomDistance = 80_000;
+  viewer.scene.screenSpaceCameraController.minimumZoomDistance = 25_000;
   return viewer;
+}
+
+function addGeographicContext(viewer) {
+  viewer.entities.add({
+    name: "pilot-domain",
+    rectangle: {
+      coordinates: Cesium.Rectangle.fromDegrees(
+        DOMAIN.lonMin,
+        DOMAIN.latMin,
+        DOMAIN.lonMax,
+        DOMAIN.latMax,
+      ),
+      material: Cesium.Color.fromCssColorString("#38bdf8").withAlpha(0.08),
+      outline: true,
+      outlineColor: Cesium.Color.fromCssColorString("#7dd3fc").withAlpha(0.75),
+      outlineWidth: 2,
+      height: 0,
+    },
+  });
+  PLACE_MARKERS.forEach((place) => {
+    viewer.entities.add({
+      position: Cesium.Cartesian3.fromDegrees(place.lon, place.lat, 0),
+      point: {
+        pixelSize: 8,
+        color: Cesium.Color.fromCssColorString("#e2e8f0"),
+        outlineColor: Cesium.Color.BLACK,
+        outlineWidth: 2,
+        disableDepthTestDistance: Number.POSITIVE_INFINITY,
+      },
+      label: {
+        text: place.name,
+        font: "13px system-ui, sans-serif",
+        fillColor: Cesium.Color.WHITE,
+        outlineColor: Cesium.Color.BLACK,
+        outlineWidth: 3,
+        style: Cesium.LabelStyle.FILL_AND_OUTLINE,
+        pixelOffset: new Cesium.Cartesian2(0, -20),
+        disableDepthTestDistance: Number.POSITIVE_INFINITY,
+        distanceDisplayCondition: new Cesium.DistanceDisplayCondition(0, 2_500_000),
+      },
+    });
+  });
+}
+
+function regionCameraDestination() {
+  return Cesium.Cartesian3.fromDegrees(-119.2, 33.55, 520_000);
 }
 
 function paintDots(viewer, collection, rows, species, meta) {
@@ -197,24 +348,24 @@ function paintDots(viewer, collection, rows, species, meta) {
   const filtered = rows.filter((r) => r.species === species);
   filtered.forEach((row) => {
     const state = effectiveEvidenceState(row);
-    const doctrine = displayDoctrineForSchema(state);
     const dots = eggDotsForRow(row, spacing);
     const ll = parseCellId(row.cell_id);
     if (ll && dots.length > 0) {
-      viewer.entities.add({
+      const labelEntity = viewer.entities.add({
         position: Cesium.Cartesian3.fromDegrees(ll.lon, ll.lat, 2000),
         label: {
-          text: "egg " + doctrine + "\n" + state,
+          text: `${SPECIES_EGG_NAME[row.species] || "Eggs"}\n${plainEvidence(state)}`,
           font: "12px system-ui, sans-serif",
           fillColor: Cesium.Color.fromCssColorString("#fff4cc"),
           outlineColor: Cesium.Color.BLACK,
           outlineWidth: 3,
           style: Cesium.LabelStyle.FILL_AND_OUTLINE,
           pixelOffset: new Cesium.Cartesian2(0, -18),
-          distanceDisplayCondition: new Cesium.DistanceDisplayCondition(0, 1_200_000),
+          distanceDisplayCondition: new Cesium.DistanceDisplayCondition(0, 900_000),
           disableDepthTestDistance: Number.POSITIVE_INFINITY,
         },
       });
+      labelEntity.eggLayer = true;
     }
     dots.forEach((dot) => {
       const primitive = collection.add({
@@ -257,7 +408,7 @@ function playEggFlyIn(viewer, collection) {
     destination: Cesium.Cartesian3.fromDegrees(-125, 8, 20_000_000),
   });
   viewer.camera.flyTo({
-    destination: Cesium.Cartesian3.fromDegrees(-119.2, 33.6, 1_450_000),
+    destination: regionCameraDestination(),
     duration: new URLSearchParams(location.search).get("shot") === "1" ? 0.3 : 6.2,
     easingFunction: Cesium.EasingFunction.CUBIC_IN_OUT,
     complete: () => fadeEggDots(collection, viewer),
@@ -265,24 +416,23 @@ function playEggFlyIn(viewer, collection) {
   });
 }
 
+function zoomToRegion(viewer, collection) {
+  setDotAlpha(collection, dotAlpha || 1);
+  viewer.camera.flyTo({
+    destination: regionCameraDestination(),
+    duration: 1.4,
+    easingFunction: Cesium.EasingFunction.CUBIC_IN_OUT,
+  });
+}
+
 function eggReadoutText(row) {
   const state = effectiveEvidenceState(row);
   const name = SPECIES_EGG_NAME[row.species] || row.species;
   if (isUnknownRow(row) || row.p_encounter == null || row.p_encounter <= 0) {
-    return (
-      name +
-      ": no egg dots in this spawning patch. Empty means eggs are unlikely, or the egg evidence is unknown. " +
-      plainEvidence(state)
-    );
+    return `${name}: no egg dots in this spawning patch. ${plainEvidence(state)} (${state}).`;
   }
   const pct = (row.p_encounter * 100).toFixed(0);
-  return (
-    name +
-    ": about " +
-    pct +
-    "% chance of finding eggs in this 10 km spawning patch. Denser dots mean eggs are more likely. " +
-    plainEvidence(state)
-  );
+  return `${name}: ~${pct}% chance of eggs in this 10 km spawning patch. ${plainEvidence(state)} (${state}).`;
 }
 
 function applyDotLod(viewer, collection) {
@@ -298,42 +448,54 @@ function applyDotLod(viewer, collection) {
 async function main() {
   const res = await fetch(FIXTURE_URL);
   const payload = await res.json();
-  const { rows, meta } = payload;
+  const { rows: allRows, meta } = payload;
 
   const legend = document.getElementById("legend");
   const toggles = document.getElementById("species-toggle");
+  const dayControl = document.getElementById("day-control");
   const list = document.getElementById("cell-list");
   const globeEl = document.getElementById("globe");
 
   renderLegend(legend);
   const wm = legend.querySelector(".watermark");
-  if (wm) wm.textContent = meta.watermark;
+  const demoMark = `${meta.watermark} Demo data.`;
   const globeWm = document.querySelector("[data-testid=globe-watermark]");
-  const demoMark = meta.watermark + " Demo data.";
   if (globeWm) globeWm.textContent = demoMark;
   if (wm) wm.textContent = demoMark;
 
-  const speciesSet = [...new Set(rows.map((r) => r.species))].sort();
-  let activeSpecies = speciesSet[0] ?? "sardine";
+  const speciesSet = [...new Set(allRows.map((r) => r.species))].sort();
+  let activeSpecies = speciesSet.includes("anchovy") ? "anchovy" : speciesSet[0] ?? "sardine";
+  const days = uniqueDays(allRows, meta);
+  let activeDay = meta.valid_day && days.includes(meta.valid_day) ? meta.valid_day : days[0];
 
   const viewer = await createGlobe(globeEl);
+  addGeographicContext(viewer);
   const dots = viewer.scene.primitives.add(new Cesium.PointPrimitiveCollection());
 
   const title = document.getElementById("map-title");
+  const summary = document.getElementById("summary-headline");
+
   const refresh = () => {
-    viewer.entities.removeAll();
+    const rows = rowsForView(allRows, activeSpecies, activeDay);
+    viewer.entities.values
+      .filter((e) => e.eggLayer)
+      .forEach((e) => viewer.entities.remove(e));
+
     paintDots(viewer, dots, rows, activeSpecies, meta);
     applyDotLod(viewer, dots);
     renderCellList(list, rows, activeSpecies);
     if (title) {
-      title.textContent =
-        activeSpecies +
-        " spawning-habitat egg-encounter globe — " +
-        meta.valid_day +
-        " (synthetic fixture)";
+      title.textContent = `${titleCaseSpecies(activeSpecies)} spawning activity — ${formatShortDay(activeDay)} · demo`;
+    }
+    if (summary) {
+      summary.textContent = computeSummaryHeadline(rows, activeSpecies);
     }
     renderSpeciesToggle(toggles, speciesSet, activeSpecies, (sp) => {
       activeSpecies = sp;
+      refresh();
+    });
+    renderDayControl(dayControl, days, allRows, activeDay, (day) => {
+      activeDay = day;
       refresh();
     });
   };
@@ -352,7 +514,8 @@ async function main() {
     const picked = viewer.scene.pick(windowPosition);
     const cellId = picked && picked.primitive && picked.primitive._eggCellId;
     if (!cellId) return null;
-    return rows.find((r) => r.species === activeSpecies && r.cell_id === cellId) || null;
+    const rows = rowsForView(allRows, activeSpecies, activeDay);
+    return rows.find((r) => r.cell_id === cellId) || null;
   };
   const handler = new Cesium.ScreenSpaceEventHandler(viewer.scene.canvas);
   handler.setInputAction((movement) => {
@@ -369,6 +532,8 @@ async function main() {
 
   const replay = document.getElementById("replay-flyin");
   if (replay) replay.addEventListener("click", () => playEggFlyIn(viewer, dots));
+  const zoomBtn = document.getElementById("zoom-region");
+  if (zoomBtn) zoomBtn.addEventListener("click", () => zoomToRegion(viewer, dots));
   playEggFlyIn(viewer, dots);
   document.body.dataset.eggGlobe = "ready";
 }
@@ -377,6 +542,6 @@ main().catch((err) => {
   console.error(err);
   document.body.insertAdjacentHTML(
     "beforeend",
-    `<p role="alert">Failed to load spawning-habitat egg globe: ${err.message}</p>`,
+    `<p role="alert">Failed to load spawning activity map: ${err.message}</p>`,
   );
 });

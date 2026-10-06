@@ -24,9 +24,58 @@ header {
   padding: 1rem;
 }
 
+.page-lede {
+  margin: 0.35rem 0 0.65rem;
+  max-width: 52rem;
+  line-height: 1.45;
+  color: #cbd5e1;
+}
+
+.summary-headline {
+  margin: 0 0 0.75rem;
+  font-size: 1.05rem;
+  font-weight: 600;
+  color: #f8fafc;
+}
+
+.header-controls {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem 1.25rem;
+  align-items: flex-end;
+}
+
+.day-control {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  min-width: min(100%, 320px);
+}
+
+.day-label {
+  font-size: 0.85rem;
+  color: #94a3b8;
+}
+
+.day-control select {
+  font: inherit;
+  padding: 0.45rem 0.55rem;
+  border-radius: 6px;
+  border: 1px solid #475569;
+  background: #1e293b;
+  color: inherit;
+  min-height: 44px;
+}
+
+.day-hint {
+  margin: 0;
+  font-size: 0.8rem;
+  color: #94a3b8;
+}
+
 .layout {
   display: grid;
-  grid-template-columns: minmax(480px, 1.4fr) minmax(280px, 0.8fr);
+  grid-template-columns: minmax(280px, 1.4fr) minmax(260px, 0.8fr);
   gap: 1rem;
   padding: 0 1rem 2rem;
 }
@@ -36,20 +85,13 @@ header {
   border: 1px solid #334155;
   border-radius: 8px;
   overflow: hidden;
-  min-height: 640px;
+  min-height: 420px;
 }
 
 #globe {
   width: 100%;
-  height: 640px;
-}
-
-.onboarding {
-  margin: 0.35rem 0 0.75rem;
-  padding: 0.55rem 0.75rem;
-  border-radius: 8px;
-  background: #12324a;
-  color: #e8f6ff;
+  height: min(640px, 62vh);
+  min-height: 320px;
 }
 
 .egg-controls {
@@ -60,7 +102,7 @@ header {
   display: flex;
   flex-direction: column;
   gap: 0.25rem;
-  max-width: 240px;
+  max-width: min(240px, calc(100% - 24px));
   padding: 0.55rem 0.7rem;
   border-radius: 8px;
   background: rgba(6, 13, 20, 0.82);
@@ -73,22 +115,36 @@ header {
 }
 
 .egg-controls button,
-#replay-flyin {
+#replay-flyin,
+#zoom-region {
   margin-top: 0.35rem;
   cursor: pointer;
   border-radius: 4px;
   border: 1px solid #38bdf8;
   background: #0c4a6e;
   color: inherit;
-  padding: 0.35rem 0.5rem;
+  padding: 0.45rem 0.55rem;
+  min-height: 44px;
+  font: inherit;
+}
+
+.map-footer {
+  position: absolute;
+  left: 12px;
+  right: 12px;
+  bottom: 12px;
+  z-index: 2;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  pointer-events: none;
+  max-width: calc(100% - 24px);
 }
 
 .egg-readout {
-  position: absolute;
-  right: 12px;
-  bottom: 36px;
-  z-index: 2;
-  max-width: 280px;
+  position: static;
+  pointer-events: auto;
+  max-width: 100%;
   margin: 0;
   padding: 0.65rem 0.75rem;
   border-radius: 8px;
@@ -98,12 +154,9 @@ header {
 }
 
 .globe-watermark {
-  position: absolute;
-  left: 12px;
-  bottom: 36px;
-  z-index: 2;
+  position: static;
   margin: 0;
-  max-width: 70%;
+  max-width: 100%;
   padding: 0.4rem 0.6rem;
   border: 1px dashed #e8a838;
   background: rgba(26, 18, 0, 0.82);
@@ -130,14 +183,28 @@ header {
   background: #0f172a;
 }
 
+.cell-card h4 {
+  margin: 0 0 0.5rem;
+  font-size: 0.95rem;
+  line-height: 1.35;
+  font-weight: 600;
+}
+
+.evidence-line {
+  margin: 0.35rem 0;
+}
+
 .species-btn {
   margin-right: 0.5rem;
-  padding: 0.35rem 0.75rem;
+  margin-bottom: 0.35rem;
+  padding: 0.45rem 0.85rem;
   cursor: pointer;
   border-radius: 4px;
   border: 1px solid #475569;
   background: #1e293b;
   color: inherit;
+  min-height: 44px;
+  font: inherit;
 }
 
 .species-btn.active {
@@ -150,12 +217,60 @@ header {
   color: #94a3b8;
 }
 
+.muted,
+code.muted {
+  color: #94a3b8;
+}
+
 code {
   font-size: 0.85em;
+}
+
+.evidence-list .plain {
+  color: #e2e8f0;
 }
 
 @media (max-width: 900px) {
   .layout {
     grid-template-columns: 1fr;
+    padding: 0 0.75rem 1.5rem;
+  }
+
+  .header-controls {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  #species-toggle {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.35rem;
+  }
+
+  .species-btn {
+    margin-right: 0;
+    flex: 1 1 calc(50% - 0.35rem);
+  }
+
+  .egg-controls {
+    position: static;
+    margin: 0.5rem;
+    max-width: none;
+  }
+
+  .map-panel {
+    display: flex;
+    flex-direction: column;
+  }
+
+  #globe {
+    height: 50vh;
+    min-height: 280px;
+  }
+
+  .map-footer {
+    position: static;
+    padding: 0 0.5rem 0.5rem;
+    max-width: none;
   }
 }
