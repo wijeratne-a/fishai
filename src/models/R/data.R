@@ -127,7 +127,12 @@ load_model_data <- function(
     dat <- .read_model_table(table_path)
     id_col <- .resolve_event_id_column(dat)
     dat$event_id <- dat[[id_col]]
-    .assert_unique_keys(dat$event_id, "event_id")
+    loader <- cfg$data$loader %||% ""
+    if (identical(as.character(loader)[1L], "adult_cps")) {
+      dat <- .load_adult_cps_training_frame(dat, cfg, qc)
+    } else {
+      .assert_unique_keys(dat$event_id, "event_id")
+    }
   }
 
   if (!effort_col %in% names(dat)) {
@@ -226,6 +231,104 @@ load_model_data <- function(
     "duration_min",
     "short_event"
   )
+}
+
+.load_adult_cps_training_frame <- function(dat, cfg, qc) {
+  sci <- cfg$species$scientific_name
+  if (is.null(sci) || !nzchar(sci)) {
+    stop("species.scientific_name is required for adult_cps loader", call. = FALSE)
+  }
+  if (!"species" %in% names(dat)) {
+    stop("adult CPS training table missing species column", call. = FALSE)
+  }
+  dat <- dat[dat$species == sci, , drop = FALSE]
+  if (nrow(dat) == 0L) {
+    stop("no adult CPS rows for species.scientific_name=", sci, call. = FALSE)
+  }
+  .assert_unique_keys(dat$event_id, paste0("event_id (species=", sci, ")"))
+  if ("biology_excluded" %in% names(dat)) {
+    bio_ex <- dat$biology_excluded %in% TRUE
+    if (any(bio_ex)) {
+      qc$dropped_biology_excluded <- as.integer(sum(bio_ex))
+      dat <- dat[!bio_ex, , drop = FALSE]
+    }
+  }
+  if ("excluded" %in% names(dat)) {
+    ex <- .parse_excluded_logical(dat$excluded)
+    if (any(ex %in% TRUE)) {
+      qc$dropped_covariate_excluded <- as.integer(sum(ex %in% TRUE))
+      dat <- dat[!(ex %in% TRUE), , drop = FALSE]
+    }
+    dat$excluded <- NULL
+  }
+  if (nrow(dat) == 0L) {
+    stop("no adult CPS rows remain after exclusion QC", call. = FALSE)
+  }
+  effort_col <- cfg$response$effort_column %||% "effort_duration_min"
+  if (effort_col %in% names(dat)) {
+    eff <- suppressWarnings(as.numeric(dat[[effort_col]]))
+    bad_eff <- is.na(eff) | eff <= 0
+    if (any(bad_eff)) {
+      qc$dropped_missing_effort <- as.integer(sum(bad_eff))
+      dat <- dat[!bad_eff, , drop = FALSE]
+    }
+  }
+  if (nrow(dat) == 0L) {
+    stop("no adult CPS rows remain after dropping missing effort", call. = FALSE)
+  }
+  resp_col <- cfg$response$column %||% "weight_kg"
+  if ("encounter" %in% names(dat) && resp_col %in% names(dat)) {
+    z <- as.integer(dat$encounter)
+    resp <- dat[[resp_col]]
+    na_resp <- is.na(resp)
+    if (any(na_resp & z == 0L)) {
+      resp[na_resp & z == 0L] <- 0
+    }
+    if ("count_observed" %in% names(dat)) {
+      cnt <- suppressWarnings(as.numeric(dat$count_observed))
+      fill_pos <- (z == 1L) & (is.na(resp) | resp <= 0) & !is.na(cnt) & cnt > 0
+      if (any(fill_pos)) {
+        resp[fill_pos] <- cnt[fill_pos]
+      }
+    }
+    if (any(z == 1L & (is.na(resp) | resp <= 0))) {
+      stop("positive adult encounter rows missing response weights/counts", call. = FALSE)
+    }
+    dat[[resp_col]] <- resp
+  }
+  events_path <- cfg$data$events_path
+  if (is.null(events_path) || !nzchar(events_path)) {
+    stop("data.events_path is required for adult_cps fold assignment", call. = FALSE)
+  }
+  events <- .read_model_table(events_path)
+  events <- .normalize_cufes_events_columns(events)
+  if (!"event_id" %in% names(events)) {
+    stop("adult_cps_events missing event_id", call. = FALSE)
+  }
+  .assert_unique_keys(events$event_id, "event_id in adult_cps_events")
+  events <- .attach_spatial_fold_ids(events, cfg)
+  ev_cols <- c("event_id", "time", "lat", "lon", "stop_lat", "stop_lon", "fold_id", "block_id")
+  ev_cols <- ev_cols[ev_cols %in% names(events)]
+  dat <- merge(
+    dat,
+    events[, ev_cols, drop = FALSE],
+    by = "event_id",
+    sort = FALSE,
+    all.x = TRUE
+  )
+  missing_ev <- is.na(dat$time) | is.na(dat$lat) | is.na(dat$lon)
+  if (any(missing_ev)) {
+    stop(
+      sum(missing_ev),
+      " adult CPS observation row(s) missing physics event join",
+      call. = FALSE
+    )
+  }
+  if (is.null(dat$fold_id)) {
+    stop("adult CPS frame missing fold_id after spatial-block assignment", call. = FALSE)
+  }
+  qc$taxon <- cfg$species$taxon %||% sci
+  dat
 }
 
 .normalize_cufes_events_columns <- function(events) {
@@ -1175,6 +1278,10 @@ qc_drop_mesh_midpoint_on_barrier_land <- function(dat, land_sf) {
         call. = FALSE
       )
     }
+  }
+  if (isTRUE(cfg$data$time_idx_dense_remap)) {
+    ord <- sort(unique(idx))
+    idx <- match(idx, ord)
   }
   dat$time_idx <- idx
   dat

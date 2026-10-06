@@ -1,0 +1,47 @@
+{
+  "species": "Pacific sardine (adult CPS encounter)",
+  "model_config": "configs/models/adult_cps_sardine.yaml",
+  "n_fit_rows": 456,
+  "n_presence_rows": 58,
+  "spatial_block_cv": {
+    "block_size_km": 60,
+    "mesh_cutoff_km": 9,
+    "spatial_range_km": 60,
+    "seed": 20260928,
+    "n_folds": 4,
+    "epsg": 32611,
+    "block_size_source": "max(mesh.cutoff_km, mesh.range_guess_km)",
+    "spatial_range_source": "mesh.range_guess_km",
+    "seed_source": "prediction.seed",
+    "n_folds_source": "data.spatial_block_cv.n_folds"
+  },
+  "elpd": null,
+  "elpd_eligible": false,
+  "elpd_ineligible_reason": "cv_fold_nonconverged",
+  "fold_loglik": {
+    "1": null,
+    "2": -120.242616,
+    "3": -234.317556,
+    "4": null
+  },
+  "fold_loglik_sum_completed_folds_only": -354.560172,
+  "fold_loglik_sum_note": "Not a protocol ELPD; folds 1 and 4 failed (non-PD Hessian).",
+  "n_failed_folds": 2,
+  "fold_failures": {
+    "1": "non-positive-definite Hessian",
+    "4": "non-positive-definite Hessian"
+  },
+  "oof_auc": null,
+  "oof_tss": null,
+  "oof_boyce": null,
+  "oof_boyce_method": "cbi_continuous_moving_window",
+  "partial_oof_from_successful_folds_only": {
+    "fold_ids": [2, 3],
+    "n_oof_rows": 290,
+    "auc": 0.6313906,
+    "tss": 0.1920723,
+    "boyce": 0.9,
+    "note": "Not full 4-fold OOF; folds 1 and 4 did not produce holdout predictions."
+  },
+  "product_label": "adult spawning encounter evidence (survey catch; not live fish tracking)"
+}
