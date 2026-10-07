@@ -52,11 +52,11 @@ fishai_engine_config:
   model:
     engine: sdmTMB
     family: binomial
+    # Simplified spec (sardine playbook): linear covariates, no spatial field —
+    # full smooth + spatial [on] failed fold 4 (non-PD Hessian) at 253 presences.
     formula_shared: >-
-      ~ s(temp_3m_z, k = 3) + s(sal_3m_z, k = 3) + s(mld_z, k = 3)
-      + s(sst_grad_z, k = 3) + s(dist_front_z, k = 3)
-      + s(log_depth_z, k = 3)
-    spatial: [on]
+      ~ temp_3m_z + sal_3m_z + mld_z + sst_grad_z + dist_front_z + log_depth_z
+    spatial: [off]
     spatiotemporal: [off]
     time_varying:
       formula: "~ 1"

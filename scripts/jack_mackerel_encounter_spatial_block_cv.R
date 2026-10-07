@@ -86,7 +86,8 @@ report <- list(
   oof_boyce = boyce,
   oof_boyce_method = "cbi_continuous_moving_window",
   product_label = product_label,
-  length_gate = "none (all sizes)"
+  length_gate = "none (all sizes)",
+  model_spec = "linear_covariates_spatial_off_rw0"
 )
 
 dir.create(dirname(scores_path), recursive = TRUE, showWarnings = FALSE)

@@ -16,23 +16,22 @@
     "seed_source": "prediction.seed",
     "n_folds_source": "data.spatial_block_cv.n_folds"
   },
-  "elpd": "NA",
-  "elpd_eligible": false,
-  "elpd_ineligible_reason": "cv_fold_nonconverged",
+  "elpd": -423.9642,
+  "elpd_eligible": true,
+  "elpd_ineligible_reason": {},
   "fold_loglik": [
-    -80.8305,
-    -76.3588,
-    -166.8665,
-    "NA"
+    -91.9523,
+    -87.9449,
+    -150.3332,
+    -93.7337
   ],
-  "n_failed_folds": 1,
-  "fold_failures": {
-    "4": "non-positive-definite Hessian"
-  },
-  "oof_auc": "NA",
-  "oof_tss": "NA",
-  "oof_boyce": "NA",
+  "n_failed_folds": 0,
+  "fold_failures": [],
+  "oof_auc": 0.7622,
+  "oof_tss": 0.4121,
+  "oof_boyce": 0.9565,
   "oof_boyce_method": "cbi_continuous_moving_window",
   "product_label": "jack mackerel encounter probability (all sizes)",
-  "length_gate": "none (all sizes)"
+  "length_gate": "none (all sizes)",
+  "model_spec": "linear_covariates_spatial_off_rw0"
 }
