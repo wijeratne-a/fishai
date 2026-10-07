@@ -49,7 +49,14 @@ Artifact: `prereg/cufes_squid_spatial_block_cv_scores.json` (`status: blocked`).
 
 **Model-ready export (encounter presences, unique events):** **275** total (**270** trawl + **5** nearshore) after GLORYS QC — see `data/processed/adult_cps/model_ready/adult_cps_model_export_market_squid_encounter.json`. Pilot-bbox presences before GLORYS drops: **310** unique events (**292** trawl + **18** nearshore). The **110 + 29 = 139** figure was **not** reproduced under this mirror + export rules; if that slice is required, specify the exact QC filter.
 
-**Encounter CV scores:** `prereg/market_squid_encounter_spatial_block_cv_scores.json` — run completed (2026-10-07); **4/4 folds failed** (non–positive-definite Hessian). **ELPD / AUC / TSS / Boyce:** not available (`elpd_eligible: false`, `n_failed_folds: 4`). **24 h forecast:** not run (CV not validated).
+**Encounter CV scores:** `prereg/market_squid_encounter_spatial_block_cv_scores.json`.
+
+| Run | Spec | Folds converged | ELPD | AUC | TSS | Boyce |
+| --- | --- | --- | --- | --- | --- | --- |
+| Full (smoothers + spatial on) | `cps_market_squid_encounter.yaml` (original) | **0/4** (non–PD Hessian) | — | — | — | — |
+| Simplified retry (playbook) | linear `_z` covariates; spatial/spatiotemporal **off**; daily **rw0** kept | **0/4** (non–PD Hessian) | — | — | — | — |
+
+Both runs: 60 km blocks, seed **20260928**, 4 folds, 572 fit rows; `elpd_eligible: false`, `n_oof_rows: 0`. No further spec changes per retry policy. **24 h forecast:** not run (CV not validated).
 
 ---
 
