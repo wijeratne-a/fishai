@@ -1,0 +1,54 @@
+{
+  "status": "blocked",
+  "protocol_config": "configs/market_squid_encounter_spatial_block_cv_scores.yaml",
+  "product_label": "market squid encounter probability (all sizes; maturity unfiltered)",
+  "not_adult_model": true,
+  "block_reason": "Spatial-block CV was started locally (Rscript scripts/models/run_spatial_block_cv_scores.R configs/market_squid_encounter_spatial_block_cv_scores.yaml) but had not finished writing scores before this commit; sequential sdmTMB delta Poisson-link fits exceed ~45+ minutes on this VM with no fold checkpoints yet. Re-run on GHCR r-env or wait for the in-flight job to complete and overwrite this file.",
+  "model_ready_export": {
+    "source": "data/processed/adult_cps/model_ready/adult_cps_model_export_market_squid_encounter.json",
+    "n_observation_rows": 572,
+    "n_presence_unique_events": 275,
+    "presence_by_source": {
+      "swfsc_cps_trawl_haul_catch": 270,
+      "swfsc_cps_nearshore_set_catch": 5
+    },
+    "note_on_presence_count": "Pilot-bbox physics events with encounter=1 before GLORYS QC: 310 unique events (292 trawl + 18 nearshore). After GLORYS covariate QC and export filters (!excluded, positive effort): 275 unique presence events. Stated 110+29=139 presences was not reproduced under current GCS mirror and pipeline rules; counts above are from export summary."
+  },
+  "spatial_block_cv": {
+    "block_size_km": 60,
+    "mesh_cutoff_km": 9,
+    "spatial_range_km": 60,
+    "seed": 20260928,
+    "n_folds": 4,
+    "epsg": 32611,
+    "block_size_source": "max(mesh.cutoff_km, mesh.range_guess_km)",
+    "n_folds_source": "data.spatial_block_cv.n_folds"
+  },
+  "fold_assignment_csv": "artifacts/spatial_block_cv/market_squid_encounter_fold_assignment.csv",
+  "species": [
+    {
+      "label": "market_squid_encounter",
+      "taxon": "market_squid_encounter",
+      "model_config": "configs/models/cps_market_squid_encounter.yaml",
+      "status": "blocked",
+      "elpd": null,
+      "elpd_eligible": false,
+      "elpd_ineligible_reason": "cv_run_incomplete",
+      "n_failed_folds": null,
+      "fold_loglik": [],
+      "n_oof_rows": null,
+      "boyce": null,
+      "auc": null,
+      "tss": null
+    }
+  ],
+  "egg_model_queued": {
+    "config": "configs/models/cufes_squid.yaml",
+    "blocked_scores": "prereg/cufes_squid_spatial_block_cv_scores.json",
+    "blocker": "CUFES ERDDAP ingest"
+  },
+  "forecast_24h": {
+    "status": "not_run",
+    "reason": "Encounter CV not validated (elpd_eligible + 4/4 folds)"
+  }
+}

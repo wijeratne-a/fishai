@@ -23,6 +23,8 @@ from fishai.ingestion.physics.cufes_training_covariates import TRAINING_OUTPUT_C
 
 SQUID_EVENTS = DEFAULT_PROCESSED_DIR / "market_squid_encounter_events.parquet"
 SQUID_TABLE = DEFAULT_PROCESSED_DIR / "market_squid_encounter_training_table.parquet"
+SQUID_DROPS = DEFAULT_PROCESSED_DIR / "market_squid_encounter_covariate_drops.parquet"
+SQUID_DROP_SUMMARY = DEFAULT_PROCESSED_DIR / "market_squid_encounter_covariate_drop_summary.json"
 MODEL_DIR = DEFAULT_PROCESSED_DIR / "model_ready"
 TAXON = "market_squid_encounter"
 NEARSHORE_REFERENCE_EFFORT_MIN = 2.0
@@ -107,11 +109,11 @@ def export_model_tables(
     drops_out = out_dir / f"adult_cps_covariate_drops_{TAXON}.parquet"
     drop_summary_out = out_dir / f"adult_cps_covariate_drop_summary_{TAXON}.json"
     drops_out.parent.mkdir(parents=True, exist_ok=True)
-    if DEFAULT_DROPS_PATH.is_file():
-        drop_cols = pd.read_parquet(DEFAULT_DROPS_PATH).columns
-    else:
-        drop_cols = pd.Index(["event_id", "reason"])
-    pd.DataFrame(columns=drop_cols).to_parquet(drops_out, index=False)
+    # Model-ready cov/counts are pre-filtered to !excluded; R requires an empty drop
+    # table when no cov rows carry excluded=TRUE (same contract as adult CPS export).
+    pd.DataFrame(
+        columns=["event_id", "reason", "covariate", "latitude", "longitude"]
+    ).to_parquet(drops_out, index=False)
     drop_summary_out.write_text(
         json.dumps(
             {

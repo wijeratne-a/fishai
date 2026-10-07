@@ -41,7 +41,19 @@ Artifact: `prereg/cufes_squid_spatial_block_cv_scores.json` (`status: blocked`).
 
 **Training table builder:** `scripts/build_market_squid_encounter_table.py` (GLORYS join when table build is run).
 
-**Spatial-block CV / 24 h forecast:** pending successful GLORYS training-table build + R `sdmTMB` stack (local `renv::restore` incomplete: `tmbstan` / `sdmTMB` install failure in this VM).
+**Spatial-block CV protocol:** `configs/market_squid_encounter_spatial_block_cv_scores.yaml` — 60 km blocks, seed **20260928**, **4** folds (same as adult/CUFES).
+
+**Model config:** `configs/models/cps_market_squid_encounter.yaml` — sdmTMB **delta Poisson-link** on **binary 0/1 encounter** (encounter-only; not biomass; **not an adult model**).
+
+**GLORYS training table:** built via `scripts/build_market_squid_encounter_table.py` (782 physics events in pilot bbox; 572 model-ready rows after covariate QC).
+
+**Model-ready export (encounter presences, unique events):** **275** total (**270** trawl + **5** nearshore) after GLORYS QC — see `data/processed/adult_cps/model_ready/adult_cps_model_export_market_squid_encounter.json`. Pilot-bbox presences before GLORYS drops: **310** unique events (**292** trawl + **18** nearshore). The **110 + 29 = 139** figure was **not** reproduced under this mirror + export rules; if that slice is required, specify the exact QC filter.
+
+**Encounter CV scores:** `prereg/market_squid_encounter_spatial_block_cv_scores.json` — **blocked / incomplete** in this run (CV started but sequential fits did not finish in time). Re-run:
+
+`Rscript scripts/models/run_spatial_block_cv_scores.R configs/market_squid_encounter_spatial_block_cv_scores.yaml`
+
+**24 h forecast:** not run (encounter CV not validated).
 
 ---
 

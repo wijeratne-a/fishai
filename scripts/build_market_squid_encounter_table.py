@@ -14,6 +14,10 @@ if str(REPO_ROOT / "src") not in sys.path:
 
 SQUID_EVENTS = REPO_ROOT / "data" / "processed" / "adult_cps" / "market_squid_encounter_events.parquet"
 SQUID_TABLE = REPO_ROOT / "data" / "processed" / "adult_cps" / "market_squid_encounter_training_table.parquet"
+SQUID_DROPS = REPO_ROOT / "data" / "processed" / "adult_cps" / "market_squid_encounter_covariate_drops.parquet"
+SQUID_DROP_SUMMARY = (
+    REPO_ROOT / "data" / "processed" / "adult_cps" / "market_squid_encounter_covariate_drop_summary.json"
+)
 SQUID_SUMMARY = REPO_ROOT / "data" / "processed" / "adult_cps" / "market_squid_encounter_build_summary.json"
 
 
@@ -94,10 +98,17 @@ def main(argv: list[str] | None = None) -> int:
     populate_store_days_from_cache(store, days, batches, cache_dir)
     assert_store_ready_for_copernicus_export(store, days)
 
-    table, qc, drops = build_adult_cps_training_table(events, observations, store)
+    table, qc, drops = build_adult_cps_training_table(
+        events,
+        observations,
+        store,
+        drops_parquet_path=SQUID_DROPS,
+        drop_summary_json_path=SQUID_DROP_SUMMARY,
+    )
     args.table_out.parent.mkdir(parents=True, exist_ok=True)
     table.to_parquet(args.table_out, index=False)
     summary["glorys_qc"] = qc
+    summary["covariate_drops_path"] = str(SQUID_DROPS)
     summary["training_rows"] = int(len(table))
     SQUID_SUMMARY.write_text(json.dumps(summary, indent=2, sort_keys=True) + "\n", encoding="utf-8")
     print(json.dumps(summary, indent=2, sort_keys=True))
