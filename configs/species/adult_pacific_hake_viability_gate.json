@@ -1,0 +1,58 @@
+{
+  "species_scientific": "Merluccius productus",
+  "common_name": "Pacific hake",
+  "pilot_bbox": {
+    "lat_min": 32.0,
+    "lat_max": 35.0,
+    "lon_min": -121.0,
+    "lon_max": -117.0
+  },
+  "gate_thresholds": {
+    "stop_below_presences": 100,
+    "marginal_upper_presences": 150
+  },
+  "data_provenance": "GCS nmfs_odp_swfsc FRD CPS CSV 2025-05-20; ERDDAP oceanview HTTP 504 on subset probes",
+  "public_sources": {
+    "trawl_haul_catch_gcs": "https://storage.googleapis.com/nmfs_odp_swfsc/Fisheries%20Resources%20Division/CPS_Trawl_LifeHistory_HaulCatch.csv",
+    "nearshore_set_catch_gcs": "https://storage.googleapis.com/nmfs_odp_swfsc/Fisheries%20Resources%20Division/CPS_Trawl_LifeHistory_Nearshore_SetCatch.csv",
+    "trawl_specimen_gcs": "https://storage.googleapis.com/nmfs_odp_swfsc/Fisheries%20Resources%20Division/CPS_Trawl_LifeHistory_Specimen.csv",
+    "nearshore_specimen_gcs": "https://storage.googleapis.com/nmfs_odp_swfsc/Fisheries%20Resources%20Division/CPS_Trawl_LifeHistory_Nearshore_Specimen.csv",
+    "erddap_trawl_catch": "https://oceanview.pfeg.noaa.gov/erddap/tabledap/FRDCPSTrawlLHHaulCatch.csv",
+    "erddap_nearshore_catch": "https://oceanview.pfeg.noaa.gov/erddap/tabledap/FRDCPSNearshoreSetCatch.csv"
+  },
+  "counts": {
+    "trawl": {
+      "catch_rows_total": 26417,
+      "species_rows_all_regions": 353,
+      "presence_only_rows_pilot": 4,
+      "non_presence_only_presences_pilot": 57,
+      "non_presence_only_presences_all_regions": 336
+    },
+    "nearshore": {
+      "catch_rows_total": 1496,
+      "species_rows_all_regions": 5,
+      "presences_pilot": 1,
+      "presences_all_regions": 5
+    },
+    "combined_non_presence_only_presences_pilot": 58
+  },
+  "verdict": "species_not_viable",
+  "specimen_length_availability": {
+    "trawl": {
+      "specimens_all_regions": 2492,
+      "specimens_pilot_bbox": 731,
+      "specimens_with_length_all_regions": 2490,
+      "length_mm_min": 35.0,
+      "length_mm_max": 740.0,
+      "length_mm_median": 108.0
+    },
+    "nearshore": {
+      "specimens_all_regions": 120,
+      "specimens_pilot_bbox": 1,
+      "specimens_with_length_all_regions": 19,
+      "length_mm_min": 50.0,
+      "length_mm_max": 302.0,
+      "length_mm_median": 283.0
+    }
+  }
+}
