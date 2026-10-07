@@ -1,5 +1,5 @@
 #!/usr/bin/env Rscript
-# Adult Pacific sardine encounter delta model: spatial-block CV (sequential folds).
+# Adult Pacific sardine encounter model: spatial-block CV (sequential folds).
 root <- normalizePath(file.path(dirname(sub("^--file=", "", commandArgs()[grep("^--file=", commandArgs())][1])), ".."))
 setwd(root)
 source(file.path(root, "src", "models", "tests", "testthat", "helper.R"))
@@ -9,12 +9,12 @@ args <- commandArgs(trailingOnly = TRUE)
 cfg_path <- if (length(args) >= 1L && nzchar(args[1L])) {
   args[1L]
 } else {
-  file.path(root, "configs", "models", "adult_cps_sardine.yaml")
+  file.path(root, "configs", "models", "adult_cps_sardine_encounter.yaml")
 }
 scores_path <- if (length(args) >= 2L && nzchar(args[2L])) {
   args[2L]
 } else {
-  file.path(root, "artifacts", "models", "adult_sardine", "spatial_block_cv_scores.json")
+  file.path(root, "artifacts", "models", "adult_sardine_encounter", "spatial_block_cv_scores.json")
 }
 
 cfg <- load_config_yaml(cfg_path)
@@ -45,8 +45,8 @@ cv <- run_cv_spatial(
   cfg,
   fold_ids = dat$fold_id,
   n_workers = 1L,
-  checkpoint_dir = file.path(root, "artifacts", "models", "adult_sardine", "cv_checkpoints"),
-  checkpoint_label = "adult_sardine"
+  checkpoint_dir = file.path(root, "artifacts", "models", "adult_sardine_encounter", "cv_checkpoints"),
+  checkpoint_label = "adult_sardine_encounter"
 )
 
 oof <- cv$oof_predictions
@@ -75,7 +75,8 @@ if (!eligible) {
 }
 
 report <- list(
-  species = "Pacific sardine (adult CPS encounter)",
+  model_family = cfg$model$family %||% "unknown",
+  species = "Pacific sardine (adult CPS encounter-only binomial)",
   model_config = cfg_path,
   n_fit_rows = nrow(dat),
   n_presence_rows = sum(as.integer(dat$y > 0)),
@@ -90,7 +91,7 @@ report <- list(
   oof_tss = tss,
   oof_boyce = boyce,
   oof_boyce_method = "cbi_continuous_moving_window",
-  product_label = "adult spawning encounter evidence (survey catch; not live fish tracking)"
+  product_label = "adult spawning encounter probability only (survey catch; not catch rate, density, live fish tracking, or harvest advice)"
 )
 
 dir.create(dirname(scores_path), recursive = TRUE, showWarnings = FALSE)

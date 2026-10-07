@@ -36,6 +36,69 @@ assert_shared_delta_formula <- function(formula_list) {
 #' linear predictors; egg encounter probability is ``1 - exp(-exp(eta))``. See
 #' ``docs/CUFES_DELTA_MODEL_SPEC.md``.
 #'
+.spatial_field_one <- function(x, default = "off") {
+  if (is.null(x)) {
+    return(default)
+  }
+  if (is.list(x)) {
+    return(as.character(x[[1L]] %||% default)[1L])
+  }
+  as.character(x)[1L]
+}
+
+#' Fit binomial GLMM (encounter presence/absence only).
+#' @export
+fit_binomial_engine <- function(dat, mesh, cfg) {
+  model <- cfg$model
+  rhs <- model$formula_shared %||% model$formula_encounter
+  if (!grepl("^~", rhs)) {
+    rhs <- paste("~", rhs)
+  }
+  frm <- stats::as.formula(paste("y", rhs))
+
+  extra <- NULL
+  if (!is.null(cfg$model$extra_time_slices)) {
+    extra <- cfg$model$extra_time_slices
+  }
+
+  fit_args <- list(
+    formula = frm,
+    data = dat,
+    mesh = mesh,
+    time = "time_idx",
+    family = stats::binomial(link = "logit"),
+    offset = "log_effort",
+    spatial = .spatial_field_one(model$spatial, "off"),
+    spatiotemporal = .spatial_field_one(model$spatiotemporal, "off"),
+    extra_time = extra,
+    control = do.call(
+      sdmTMB::sdmTMBcontrol,
+      c(list(newton_loops = 1L, multiphase = TRUE), model$control %||% list())
+    ),
+    silent = TRUE
+  )
+  if (!is.null(model$time_varying)) {
+    fit_args$time_varying <- stats::as.formula(model$time_varying$formula %||% "~ 1")
+    fit_args$time_varying_type <- model$time_varying$type %||% "rw0"
+  }
+  fit <- do.call(sdmTMB::sdmTMB, fit_args)
+
+  structure(
+    list(fit = fit, delta_type = NA_character_),
+    class = "fishai_fit"
+  )
+}
+
+#' Dispatch delta vs binomial fit from config family.
+#' @export
+fit_model_engine <- function(dat, mesh, cfg) {
+  if (is_binomial_model(cfg)) {
+    fit_binomial_engine(dat, mesh, cfg)
+  } else {
+    fit_delta_engine(dat, mesh, cfg)
+  }
+}
+
 #' @export
 fit_delta_engine <- function(dat, mesh, cfg) {
   model <- cfg$model
