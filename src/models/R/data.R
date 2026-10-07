@@ -1011,6 +1011,9 @@ fishai_data_prep_qc <- function(dat) {
 }
 
 #' Track midpoint in EPSG:32611 (WGS 84 / UTM 11N), returned in km.
+#'
+#' Mean of the projected start and stop, same definition as the per-tow loop.
+#' One transform for each endpoint set.
 .track_midpoint_km <- function(start_lon, start_lat, stop_lon, stop_lat, epsg = 32611L) {
   if (!requireNamespace("sf", quietly = TRUE)) {
     stop("sf is required to project CUFES track midpoints", call. = FALSE)
@@ -1020,24 +1023,19 @@ fishai_data_prep_qc <- function(dat) {
   stop_lon <- as.numeric(stop_lon)
   stop_lat <- as.numeric(stop_lat)
   n <- length(start_lon)
-  x_km <- numeric(n)
-  y_km <- numeric(n)
-  crs_wgs <- sf::st_crs(4326)
-  crs_utm <- sf::st_crs(epsg)
-  for (i in seq_len(n)) {
-    p1 <- sf::st_transform(
-      sf::st_sfc(sf::st_point(c(start_lon[[i]], start_lat[[i]])), crs = crs_wgs),
-      crs_utm
-    )
-    p2 <- sf::st_transform(
-      sf::st_sfc(sf::st_point(c(stop_lon[[i]], stop_lat[[i]])), crs = crs_wgs),
-      crs_utm
-    )
-    m <- (sf::st_coordinates(p1) + sf::st_coordinates(p2)) / 2
-    x_km[[i]] <- m[1, "X"] / 1000
-    y_km[[i]] <- m[1, "Y"] / 1000
+  if (length(start_lat) != n || length(stop_lon) != n || length(stop_lat) != n) {
+    stop("track endpoint vectors must have the same length", call. = FALSE)
   }
-  list(X = x_km, Y = y_km)
+  if (n == 0L) {
+    return(list(X = numeric(), Y = numeric()))
+  }
+  project_km <- function(lon, lat) {
+    pts <- sf::st_as_sf(data.frame(lon = lon, lat = lat), coords = c("lon", "lat"), crs = 4326)
+    sf::st_coordinates(sf::st_transform(pts, epsg)) / 1000
+  }
+  a <- project_km(start_lon, start_lat)
+  b <- project_km(stop_lon, stop_lat)
+  list(X = (a[, "X"] + b[, "X"]) / 2, Y = (a[, "Y"] + b[, "Y"]) / 2)
 }
 
 #' Drop kept tows whose mesh midpoint falls inside the barrier land polygon.
