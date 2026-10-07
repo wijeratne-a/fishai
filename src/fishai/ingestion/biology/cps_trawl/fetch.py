@@ -16,7 +16,7 @@ from fishai.ingestion.biology.cps_trawl.constants import ERDDAP_FIELDS, ERDDAP_T
 from fishai.ingestion.biology.cufes.erddap_rows import is_erddap_units_row
 from fishai.ingestion.sources import REPO_ROOT, require_approved
 
-DEFAULT_TIMEOUT_SEC = 120.0
+DEFAULT_TIMEOUT_SEC = 300.0
 DEFAULT_MAX_RETRIES = 5
 DEFAULT_BACKOFF_SEC = 2.0
 
@@ -84,6 +84,28 @@ def _erddap_time(dt: datetime) -> str:
     return dt.strftime("%Y-%m-%d")
 
 
+def iter_halfyear_windows(t0: date, t1: date) -> list[tuple[datetime, datetime]]:
+    """Six-month batches clipped to [t0, t1]."""
+    if t1 < t0:
+        return []
+    range_start = datetime.combine(t0, datetime.min.time(), tzinfo=timezone.utc)
+    range_end = datetime.combine(t1 + timedelta(days=1), datetime.min.time(), tzinfo=timezone.utc)
+    windows: list[tuple[datetime, datetime]] = []
+    for year in range(t0.year, t1.year + 1):
+        for month_start, month_end in ((1, 7), (7, 13)):
+            win_start = datetime(year, month_start, 1, tzinfo=timezone.utc)
+            win_end = (
+                datetime(year + 1, 1, 1, tzinfo=timezone.utc)
+                if month_end == 13
+                else datetime(year, month_end, 1, tzinfo=timezone.utc)
+            )
+            clip_start = max(win_start, range_start)
+            clip_end = min(win_end, range_end)
+            if clip_start < clip_end:
+                windows.append((clip_start, clip_end))
+    return windows
+
+
 def iter_yearly_windows(t0: date, t1: date) -> list[tuple[datetime, datetime]]:
     """Inclusive calendar-year batches clipped to [t0, t1]."""
     if t1 < t0:
@@ -137,17 +159,22 @@ def fetch_cps_trawl_haul_catch(
     """
     Download CPS trawl haul-catch rows into ``data/raw/swfsc_cps_trawl_haul_catch/``.
 
-    One HTTP request per calendar year (sequential). Skips years that return ERDDAP 404
-    (no rows in window). Requires ``swfsc_cps_trawl_haul_catch`` approved in ``data/SOURCES.yaml``.
+    One HTTP request per half-year when ``bbox`` is set, else per calendar year (sequential).
+    Skips windows that return ERDDAP 404 (no rows). Requires ``swfsc_cps_trawl_haul_catch``
+    approved in ``data/SOURCES.yaml``.
     """
     require_approved(SOURCE_ID, path=manifest_path)
     out_dir = dest_dir or raw_dir()
     out_dir.mkdir(parents=True, exist_ok=True)
     written: list[Path] = []
-    for win_start, win_end in iter_yearly_windows(t0, t1):
+    windows = iter_halfyear_windows(t0, t1) if bbox is not None else iter_yearly_windows(t0, t1)
+    for win_start, win_end in windows:
         url = build_erddap_csv_url(win_start, win_end, bbox)
-        year_label = win_start.year
-        dest = out_dir / f"FRDCPSTrawlLHHaulCatch_{year_label}.csv"
+        tag = win_start.strftime("%Y%m%d")
+        dest = out_dir / f"FRDCPSTrawlLHHaulCatch_{tag}.csv"
+        if dest.is_file() and dest.stat().st_size > 0:
+            written.append(dest)
+            continue
         try:
             body = _http_get(url, timeout=timeout, max_retries=max_retries, backoff=backoff)
         except urllib.error.HTTPError as exc:
