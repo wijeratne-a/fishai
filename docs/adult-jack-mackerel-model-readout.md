@@ -29,7 +29,9 @@ Scores: `artifacts/models/adult_jack_mackerel/spatial_block_cv_scores.json`
 |---------------|---------|---------|-----------|
 | **No** | NA | NA | NA |
 
-**Verdict:** Adult encounter model **did not validate** (sparse positives: 24 presences / 307 fit rows for *T. symmetricus*). **24 h forecast check not run** (requires validated model).
+**Superseded:** Product pivot to **all-sizes** encounter-only binomial — see `docs/jack-mackerel-encounter-all-sizes-readout.md` (never label as adult model).
+
+**Verdict (250 mm gate):** Adult encounter model **did not validate** (sparse positives: 24 presences / 307 fit rows for *T. symmetricus*). **24 h forecast check not run** (requires validated model).
 
 ## Egg (CUFES) model
 
