@@ -52,11 +52,11 @@ fishai_engine_config:
     engine: sdmTMB
     family: delta_gamma
     delta_type: poisson-link
+    # Simplified retry (sardine/jack-mackerel playbook): linear covariates only;
+    # spatial and spatiotemporal off; daily rw0 intercept retained.
     formula_shared: >-
-      ~ s(temp_3m_z, k = 3) + s(sal_3m_z, k = 3) + s(mld_z, k = 3)
-      + s(sst_grad_z, k = 3) + s(dist_front_z, k = 3)
-      + s(log_depth_z, k = 3)
-    spatial: [on, on]
+      ~ temp_3m_z + sal_3m_z + mld_z + sst_grad_z + dist_front_z + log_depth_z
+    spatial: [off, off]
     spatiotemporal: [off, off]
     share_range: [true, true]
     time_varying:
@@ -70,7 +70,7 @@ fishai_engine_config:
     cutoff_km: 9
     range_guess_km: 60
     barrier:
-      enabled: true
+      enabled: false
       range_fraction: 0.1
       land_sf_rds: data/reference/mesh/scb_pilot_land_sf.rds
   prediction:
