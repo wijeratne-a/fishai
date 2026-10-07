@@ -24,6 +24,12 @@ is_poisson_link_delta <- function(cfg) {
   identical(cfg$model$delta_type %||% "poisson-link", "poisson-link")
 }
 
+#' Binomial (single-component) encounter models use logit link without a delta pair.
+#' @export
+is_binomial_model <- function(cfg) {
+  identical(cfg$model$family %||% "delta_gamma", "binomial")
+}
+
 #' Egg encounter probability from delta component-1 linear predictor.
 #'
 #' Poisson-link (Thorson): \eqn{p = 1 - \exp(-\exp(\eta))} with \eqn{\eta} including

@@ -62,6 +62,10 @@ score_encounter_on_events <- function(fit, newdata, cfg) {
   if (!"log_effort" %in% names(newdata)) {
     stop("holdout data missing log_effort for per-event offsets", call. = FALSE)
   }
+  if (!is.null(cfg) && is_binomial_model(cfg)) {
+    pred <- stats::predict(fit, newdata = newdata, offset = newdata$log_effort)
+    return(stats::plogis(as.numeric(pred$est)))
+  }
   pred <- stats::predict(fit, newdata = newdata, model = 1L)
   eta <- pred$est1 + newdata$log_effort
   encounter_probability(eta, cfg = cfg)
