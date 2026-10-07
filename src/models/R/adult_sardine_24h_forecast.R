@@ -249,7 +249,13 @@ adult_forecast_lock_cutoffs <- function(dat, test_end, min_train_rows = ADULT_FO
   )
   status <- system(cmd)
   if (!identical(status, 0L)) {
-    stop("WCOFS operational covariate sampler failed (exit ", status, ")", call. = FALSE)
+    warning(
+      "WCOFS operational covariate sampler failed (exit ",
+      status,
+      "); operational rows will use damped-anomaly proxy only",
+      call. = FALSE
+    )
+    return(invisible(NULL))
   }
   invisible(out)
 }

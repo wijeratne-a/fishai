@@ -69,13 +69,11 @@ def _resolve_lead(cutoff: dt.date, h_days: int, cycle_exists) -> tuple[dt.date, 
 
 def _fetch_wcofs_fields(cycle: dt.date, lead: str, bbox: tuple[float, float, float, float]):
     from fishai.ingestion.physics.sources import wcofs as wcofs_src
-    from fishai.ingestion.physics.wcofs_pds_store import CycleNotAvailable, open_wcofs_cycle
 
     try:
-        ds = open_wcofs_cycle(cycle, product="fields", lead=lead)
-    except CycleNotAvailable:
+        ds = wcofs_src._fetch_one(cycle, lead, bbox, prefer_s3=True)
+    except Exception:
         return None, None
-    ds = wcofs_src.subset_bbox(ds, bbox)
     key = str(ds.attrs.get("wcofs_s3_key", wcofs_src.fields_s3_key(cycle, lead)))
     return ds, key
 
