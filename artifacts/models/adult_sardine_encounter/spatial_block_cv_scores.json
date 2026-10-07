@@ -1,0 +1,48 @@
+{
+  "species": "Pacific sardine (adult CPS encounter-only binomial)",
+  "model_config": "configs/models/adult_cps_sardine_encounter.yaml",
+  "model_family": "binomial",
+  "run_status": "blocked",
+  "blocked_reasons": [
+    "no_local_adult_cps_training_parquet",
+    "noaa_erddap_oceanview_unavailable_http_504_from_cloud_vm",
+    "r_renv_restore_incomplete_tmbstan_requires_r_ge_4_5_for_sdmTMBextra_barrier_mesh"
+  ],
+  "n_fit_rows": null,
+  "n_presence_rows": null,
+  "expected_n_fit_rows_from_prior_delta_run": 456,
+  "expected_n_presence_rows_from_prior_delta_run": 58,
+  "spatial_block_cv": {
+    "block_size_km": 60,
+    "mesh_cutoff_km": 9,
+    "spatial_range_km": 60,
+    "seed": 20260928,
+    "n_folds": 4,
+    "epsg": 32611,
+    "block_size_source": "max(mesh.cutoff_km, mesh.range_guess_km)",
+    "spatial_range_source": "mesh.range_guess_km",
+    "seed_source": "prediction.seed",
+    "n_folds_source": "data.spatial_block_cv.n_folds"
+  },
+  "elpd": null,
+  "elpd_eligible": false,
+  "elpd_ineligible_reason": "cv_not_run_blocked_inputs",
+  "fold_loglik": {
+    "1": null,
+    "2": null,
+    "3": null,
+    "4": null
+  },
+  "n_failed_folds": 4,
+  "fold_failures": {
+    "1": "cv_not_run",
+    "2": "cv_not_run",
+    "3": "cv_not_run",
+    "4": "cv_not_run"
+  },
+  "oof_auc": null,
+  "oof_tss": null,
+  "oof_boyce": null,
+  "oof_boyce_method": "cbi_continuous_moving_window",
+  "product_label": "adult spawning encounter probability only (survey catch; not catch rate, density, live fish tracking, or harvest advice)"
+}
