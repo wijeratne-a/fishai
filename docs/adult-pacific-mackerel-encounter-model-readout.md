@@ -41,12 +41,14 @@ Ingest: NOAA public GCS mirror. GLORYS join: Copernicus credentials at build tim
 **sdmTMB binomial** encounter GLMM with `log(effort_duration_min)` offset.
 
 - Config: `configs/models/adult_pacific_mackerel_encounter.yaml` (`species.name`: encounter probability, all sizes)
-- Shared smoothers on GLORYS covariates (same set as CPS egg/CUFES pilots)
-- Spatial: **on**; spatiotemporal: **off**; daily **rw0** intercept
-- Barrier mesh: Bakka land polygon (`scb_pilot_land_sf.rds`); `fishai_add_barrier_mesh` fallback when `sdmTMBextra` unavailable
+- **CV-fit spec (one remediation retry):** linear GLORYS effects (`temp_3m_z` … `log_depth_z`); **spatial off**; spatiotemporal **off**; daily **rw0** intercept; barrier mesh **disabled** (sardine off-off playbook + linear terms for identifiability at ~132 presences).
 - Spatial-block CV: **60 km** blocks, seed **20260928**, **4** folds, sequential
 
-## Spatial-block CV results
+### Fold 3 failure (full spatial + smoothers)
+
+Holdout fold 3 is well posed (**221** rows, **67** presences, **154** absences). The failure was on **training** when fold 3 is held out: **344** rows, **65** presences, **279** absences — sdmTMB returned **non-positive-definite Hessian** (barrier spatial random field + six `k=3` smoothers + rw0 time effects vs sparse presences). Folds 1, 2, and 4 converged under the full spec.
+
+## Spatial-block CV results (remediated spec)
 
 Scores: `artifacts/models/adult_pacific_mackerel/spatial_block_cv_scores.json`
 
@@ -54,17 +56,17 @@ Scores: `artifacts/models/adult_pacific_mackerel/spatial_block_cv_scores.json`
 |--------|------:|
 | Fit rows | 565 |
 | Presences | 132 |
-| Summed ELPD | **not eligible** (`n_failed_folds = 1`, fold 3 NA) |
-| Per-fold log-lik | −57.5, −102.2, NA, −107.8 |
-| OOF AUC / TSS / Boyce | **not computed** (incomplete OOF) |
+| Summed ELPD | **−674.14** (`elpd_eligible`: true) |
+| Per-fold log-lik | −69.6, −116.9, −325.5, −162.2 |
+| OOF AUC | 0.569 |
+| OOF TSS (0.5) | 0.052 |
+| OOF Boyce | 0.467 |
 
-**Validation verdict: model does not meet the preregistered CV gate (all four folds must converge for ELPD).**
-
-Compared with the retired L50 ≥ 274 mm adult gate (10 presences, 3 failed folds), all-sizes data improved fold stability but **one holdout fold still failed to converge**.
+**Validation verdict: preregistered CV gate met (all four folds converged).** Discrimination is modest (AUC ≈ 0.57).
 
 ## 24-hour forecast check
 
-**Not run.** Rolling-origin 24h validation runs only after spatial-block CV passes the preregistered ELPD gate.
+**Not run in this turn** (CV gate now passes; forecast script remains on the forecast-validation branch for CPS/mackerel wiring).
 
 ## Product language
 

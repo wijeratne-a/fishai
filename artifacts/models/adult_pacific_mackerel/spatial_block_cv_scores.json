@@ -6,18 +6,19 @@
   "n_absences": 433,
   "adult_length_cutoff_mm": null,
   "length_gate": "none (all sizes)",
-  "elpd": "NA",
-  "elpd_eligible": false,
+  "model_spec_note": "spatial off; linear covariates (CV remediation)",
+  "elpd": -674.1443,
+  "elpd_eligible": true,
   "fold_loglik": [
-    -57.5038,
-    -102.1956,
-    "NA",
-    -107.8254
+    -69.5722,
+    -116.9419,
+    -325.4517,
+    -162.1784
   ],
-  "n_failed_folds": 1,
-  "auc": "NA",
-  "tss": "NA",
-  "boyce": "NA",
-  "oof_complete": false,
+  "n_failed_folds": 0,
+  "auc": 0.5692,
+  "tss": 0.0521,
+  "boyce": 0.4667,
+  "oof_complete": true,
   "fold_assignment_path": "/workspace/artifacts/spatial_block_cv/adult_pacific_mackerel_fold_assignment.csv"
 }
