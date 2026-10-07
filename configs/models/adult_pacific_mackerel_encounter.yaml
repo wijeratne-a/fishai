@@ -2,8 +2,8 @@ fishai_engine_config:
   version: "1.0"
   species:
     code: PMAC
-    name: Pacific mackerel
-    taxon: pacific_mackerel
+    name: Pacific mackerel encounter probability (all sizes)
+    taxon: pacific_mackerel_all_sizes
     scientific_name: Scomber japonicus
   domain:
     lat_min: 32.0

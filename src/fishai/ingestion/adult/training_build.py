@@ -104,6 +104,7 @@ def assemble_adult_observations(
     trawl_specimens_path: Path | None = None,
     nearshore_specimens_path: Path | None = None,
     pilot_species: tuple[str, ...] | None = None,
+    apply_adult_length_gate: bool = True,
 ) -> tuple[pd.DataFrame, dict[str, Any]]:
     medians = load_specimen_medians(
         trawl_specimens_path=trawl_specimens_path,
@@ -115,10 +116,16 @@ def assemble_adult_observations(
 
     species_tuple = pilot_species if pilot_species is not None else PILOT_SPECIES
     trawl_obs, trawl_stats = build_trawl_observations(
-        trawl_catch, medians=medians, pilot_species=species_tuple
+        trawl_catch,
+        medians=medians,
+        pilot_species=species_tuple,
+        apply_adult_length_gate=apply_adult_length_gate,
     )
     near_obs, near_stats = build_nearshore_observations(
-        near_catch, medians=medians, pilot_species=species_tuple
+        near_catch,
+        medians=medians,
+        pilot_species=species_tuple,
+        apply_adult_length_gate=apply_adult_length_gate,
     )
     obs = pd.concat([trawl_obs, near_obs], ignore_index=True)
     obs, implied_stats = append_implied_absence_observations(
@@ -135,7 +142,8 @@ def assemble_adult_observations(
         "presence_only_excluded_total": int(
             trawl_stats["presence_only_excluded"]
         ),
-        "adult_min_length_mm": dict(ADULT_MIN_LENGTH_MM),
+        "apply_adult_length_gate": apply_adult_length_gate,
+        "adult_min_length_mm": dict(ADULT_MIN_LENGTH_MM) if apply_adult_length_gate else {},
     }
     return obs, summary
 
@@ -242,6 +250,7 @@ def run_build_adult_cps_training_table(
     store: GlorysFieldStore | None = None,
     dry_run: bool = False,
     pilot_species: tuple[str, ...] | None = None,
+    apply_adult_length_gate: bool = True,
 ) -> dict[str, Any]:
     """
     Load processed CPS tables, apply adult/species QC, join GLORYS covariates.
@@ -255,6 +264,7 @@ def run_build_adult_cps_training_table(
         trawl_specimens_path=trawl_specimens_path,
         nearshore_specimens_path=nearshore_specimens_path,
         pilot_species=pilot_species,
+        apply_adult_length_gate=apply_adult_length_gate,
     )
     event_ids = set(observations["event_id"].astype(str)) if not observations.empty else set()
     events, bbox_drops = assemble_adult_physics_events(

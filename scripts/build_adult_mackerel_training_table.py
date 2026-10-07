@@ -37,7 +37,14 @@ def main(argv: list[str] | None = None) -> int:
     from fishai.ingestion.physics.wcofs_glorys_overlap import load_overlap_config
     from fishai.ingestion.sources import REPO_ROOT as REPO
 
-    parser = argparse.ArgumentParser(description="Build adult Pacific mackerel training table")
+    parser = argparse.ArgumentParser(
+        description="Build Pacific mackerel CPS training table (encounter labels; optional all-sizes)"
+    )
+    parser.add_argument(
+        "--all-sizes",
+        action="store_true",
+        help="Include all length classes (no L50 length gate); still excludes presence-only hauls",
+    )
     parser.add_argument("--dry-run", action="store_true")
     parser.add_argument("--events", type=Path, default=MACKEREL_EVENTS_PATH)
     parser.add_argument("--output", type=Path, default=MACKEREL_TRAINING_TABLE_PATH)
@@ -46,6 +53,7 @@ def main(argv: list[str] | None = None) -> int:
     import os
 
     pilot = (MACKEREL_SCIENTIFIC_NAME,)
+    apply_gate = not args.all_sizes
     MACKEREL_PROCESSED_DIR.mkdir(parents=True, exist_ok=True)
 
     def _creds() -> bool:
@@ -61,6 +69,7 @@ def main(argv: list[str] | None = None) -> int:
             store=None,
             dry_run=args.dry_run,
             pilot_species=pilot,
+            apply_adult_length_gate=apply_gate,
         )
         if not _creds() and not args.dry_run:
             result["glorys_join"] = "blocked_credentials_missing"
@@ -76,6 +85,7 @@ def main(argv: list[str] | None = None) -> int:
             store=None,
             dry_run=False,
             pilot_species=pilot,
+            apply_adult_length_gate=apply_gate,
         )
         result["glorys_join"] = "blocked_credentials_missing"
         result["glorys_block_reason"] = exc.reason_code
@@ -84,7 +94,10 @@ def main(argv: list[str] | None = None) -> int:
 
     observations, _ = __import__(
         "fishai.ingestion.adult.training_build", fromlist=["assemble_adult_observations"]
-    ).assemble_adult_observations(pilot_species=pilot)
+    ).assemble_adult_observations(
+        pilot_species=pilot,
+        apply_adult_length_gate=apply_gate,
+    )
     event_ids = set(observations["event_id"].astype(str)) if not observations.empty else set()
     events, _ = __import__(
         "fishai.ingestion.adult.training_build", fromlist=["assemble_adult_physics_events"]
@@ -108,6 +121,7 @@ def main(argv: list[str] | None = None) -> int:
         store=store,
         dry_run=False,
         pilot_species=pilot,
+        apply_adult_length_gate=apply_gate,
     )
     print(json.dumps(result, indent=2, sort_keys=True))
     return 0

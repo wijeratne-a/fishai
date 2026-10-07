@@ -75,12 +75,13 @@ if (!eligible) {
 }
 
 report <- list(
-  species = "Pacific mackerel (adult CPS encounter, binomial)",
+  species = "Pacific mackerel encounter probability (all sizes)",
   model_config = cfg_path,
   n_fit_rows = nrow(dat),
   n_presences = sum(as.integer(dat$y) > 0L),
   n_absences = sum(as.integer(dat$y) == 0L),
-  adult_length_cutoff_mm = 274,
+  adult_length_cutoff_mm = NA,
+  length_gate = "none (all sizes)",
   elpd = elpd,
   elpd_eligible = eligible,
   fold_loglik = as.list(cv$fold_loglik),

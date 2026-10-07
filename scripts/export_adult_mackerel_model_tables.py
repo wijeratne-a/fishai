@@ -22,7 +22,7 @@ from fishai.ingestion.adult.constants import (  # noqa: E402
 )
 from fishai.ingestion.physics.cufes_training_covariates import TRAINING_OUTPUT_COLUMNS  # noqa: E402
 
-TAXON = "pacific_mackerel"
+TAXON = "pacific_mackerel_all_sizes"
 NEARSHORE_REFERENCE_EFFORT_MIN = 2.0
 NEARSHORE_SOURCE = "swfsc_cps_nearshore_set_catch"
 
