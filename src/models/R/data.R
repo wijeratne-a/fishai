@@ -327,6 +327,9 @@ load_model_data <- function(
   if (is.null(dat$fold_id)) {
     stop("adult CPS frame missing fold_id after spatial-block assignment", call. = FALSE)
   }
+  if (!"duration_min" %in% names(dat) && "effort_duration_min" %in% names(dat)) {
+    dat$duration_min <- dat$effort_duration_min
+  }
   qc$taxon <- cfg$species$taxon %||% sci
   dat
 }

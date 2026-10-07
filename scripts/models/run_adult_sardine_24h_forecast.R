@@ -14,6 +14,7 @@ root <- normalizePath(file.path(
 ))
 setwd(root)
 Sys.setenv(FISHAI_ROOT = root)
+Sys.unsetenv("RENV_PATHS_ROOT")
 source(file.path(root, "src", "models", "tests", "testthat", "helper.R"))
 load_fishaisdm(root)
 

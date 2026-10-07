@@ -6,6 +6,17 @@
 ADULT_FORECAST_MIN_TRAIN_ROWS <- 150L
 ADULT_FORECAST_MIN_TRAIN_DAYS <- 30L
 
+#' Calendar event days for adult CPS rolling-origin (not remapped time_idx).
+#' @export
+adult_forecast_prepare_frame <- function(dat, cfg) {
+  if (!"time" %in% names(dat)) {
+    stop("adult forecast frame missing event time", call. = FALSE)
+  }
+  dat$event_day <- as.Date(dat$time)
+  dat$doy <- forecast_doy(dat$event_day)
+  dat
+}
+
 #' Egg-protocol reference cutoffs (locked in egg scores JSON) for overlap reporting.
 #' @export
 adult_forecast_egg_reference_cutoffs <- function() {
@@ -360,7 +371,7 @@ run_adult_sardine_24h_forecast <- function(
   cfg <- load_config_yaml(file.path(root, model_config))
   .ensure_barrier_land_rds(cfg, root)
   dat <- load_model_data(cfg = cfg, min_duration_min = 2)
-  dat <- .forecast_prepare_frame(dat, cfg)
+  dat <- adult_forecast_prepare_frame(dat, cfg)
   test_end <- adult_forecast_test_end(dat)
   locked <- adult_forecast_lock_cutoffs(dat, test_end, min_train_rows = min_train_rows)
   manifest <- list(
