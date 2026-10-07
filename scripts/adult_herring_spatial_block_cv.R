@@ -1,5 +1,5 @@
 #!/usr/bin/env Rscript
-# Adult Pacific herring encounter delta model: spatial-block CV (sequential folds).
+# Pacific herring all-sizes encounter binomial: spatial-block CV (sequential folds).
 root <- normalizePath(file.path(dirname(sub("^--file=", "", commandArgs()[grep("^--file=", commandArgs())][1])), ".."))
 setwd(root)
 source(file.path(root, "src", "models", "tests", "testthat", "helper.R"))
@@ -75,7 +75,7 @@ if (!eligible) {
 }
 
 report <- list(
-  species = "Pacific herring (adult CPS encounter)",
+  species = "Pacific herring encounter probability (all sizes)",
   model_config = cfg_path,
   n_fit_rows = nrow(dat),
   n_presence_rows = sum(as.integer(dat$y > 0)),
@@ -90,7 +90,7 @@ report <- list(
   oof_tss = tss,
   oof_boyce = boyce,
   oof_boyce_method = "cbi_continuous_moving_window",
-  product_label = "adult spawning encounter evidence (survey catch; not live fish tracking)"
+  product_label = "Pacific herring encounter probability (all sizes; survey catch; not live fish tracking)"
 )
 
 dir.create(dirname(scores_path), recursive = TRUE, showWarnings = FALSE)

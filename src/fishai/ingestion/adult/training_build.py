@@ -104,6 +104,7 @@ def assemble_adult_observations(
     trawl_specimens_path: Path | None = None,
     nearshore_specimens_path: Path | None = None,
     target_species: tuple[str, ...] | None = None,
+    apply_length_gate: bool = True,
 ) -> tuple[pd.DataFrame, dict[str, Any]]:
     medians = load_specimen_medians(
         trawl_specimens_path=trawl_specimens_path,
@@ -112,10 +113,16 @@ def assemble_adult_observations(
     trawl_catch = _read_parquet(trawl_catch_path or TRAWL_CATCH_PATH)
     near_catch = _read_parquet(nearshore_catch_path or NEARSHORE_CATCH_PATH)
     trawl_obs, trawl_stats = build_trawl_observations(
-        trawl_catch, medians=medians, target_species=target_species
+        trawl_catch,
+        medians=medians,
+        target_species=target_species,
+        apply_length_gate=apply_length_gate,
     )
     near_obs, near_stats = build_nearshore_observations(
-        near_catch, medians=medians, target_species=target_species
+        near_catch,
+        medians=medians,
+        target_species=target_species,
+        apply_length_gate=apply_length_gate,
     )
     obs = pd.concat([trawl_obs, near_obs], ignore_index=True)
     obs, implied_stats = append_implied_absence_observations(
@@ -132,7 +139,8 @@ def assemble_adult_observations(
         "presence_only_excluded_total": int(
             trawl_stats["presence_only_excluded"]
         ),
-        "adult_min_length_mm": dict(ADULT_MIN_LENGTH_MM),
+        "adult_min_length_mm": dict(ADULT_MIN_LENGTH_MM) if apply_length_gate else {},
+        "apply_length_gate": apply_length_gate,
     }
     return obs, summary
 
@@ -246,6 +254,7 @@ def run_build_adult_cps_training_table(
     bbox: tuple[float, float, float, float] | None = None,
     events: pd.DataFrame | None = None,
     observations: pd.DataFrame | None = None,
+    apply_length_gate: bool = True,
 ) -> dict[str, Any]:
     """
     Load processed CPS tables, apply adult/species QC, join GLORYS covariates.
@@ -260,6 +269,7 @@ def run_build_adult_cps_training_table(
             trawl_specimens_path=trawl_specimens_path,
             nearshore_specimens_path=nearshore_specimens_path,
             target_species=target_species,
+            apply_length_gate=apply_length_gate,
         )
     else:
         obs_summary = {"preloaded_observations": int(len(observations))}

@@ -49,11 +49,23 @@ def _adult_gate(
     return True, None, median_len
 
 
+def _median_length_optional(
+    event_id: str,
+    species: str,
+    medians: pd.Series,
+) -> float | None:
+    key = (event_id, species)
+    if key not in medians.index:
+        return None
+    return float(medians.loc[key])
+
+
 def build_trawl_observations(
     catch: pd.DataFrame,
     *,
     medians: pd.Series,
     target_species: Sequence[str] | None = None,
+    apply_length_gate: bool = True,
 ) -> tuple[pd.DataFrame, dict[str, int]]:
     species_filter = tuple(target_species) if target_species is not None else PILOT_SPECIES
     stats = {
@@ -77,13 +89,16 @@ def build_trawl_observations(
             stats["non_pilot_species_skipped"] += 1
             continue
         event_id = str(row["haul_id"])
-        adult_ok, reason, median_len = _adult_gate(event_id, species, medians)
-        if not adult_ok:
-            if reason == EXCLUDE_REASON_JUVENILE:
-                stats["juvenile_excluded"] += 1
-            else:
-                stats["no_specimen_excluded"] += 1
-            continue
+        if apply_length_gate:
+            adult_ok, reason, median_len = _adult_gate(event_id, species, medians)
+            if not adult_ok:
+                if reason == EXCLUDE_REASON_JUVENILE:
+                    stats["juvenile_excluded"] += 1
+                else:
+                    stats["no_specimen_excluded"] += 1
+                continue
+        else:
+            median_len = _median_length_optional(event_id, species, medians)
         weight = row.get("weight_kg")
         weight_f = float(weight) if weight is not None and pd.notna(weight) else None
         count_raw = row.get("count_raised_est")
@@ -112,6 +127,7 @@ def build_nearshore_observations(
     *,
     medians: pd.Series,
     target_species: Sequence[str] | None = None,
+    apply_length_gate: bool = True,
 ) -> tuple[pd.DataFrame, dict[str, int]]:
     species_filter = tuple(target_species) if target_species is not None else PILOT_SPECIES
     stats = {
@@ -132,13 +148,16 @@ def build_nearshore_observations(
             stats["non_pilot_species_skipped"] += 1
             continue
         event_id = str(row["set_id"])
-        adult_ok, reason, median_len = _adult_gate(event_id, species, medians)
-        if not adult_ok:
-            if reason == EXCLUDE_REASON_JUVENILE:
-                stats["juvenile_excluded"] += 1
-            else:
-                stats["no_specimen_excluded"] += 1
-            continue
+        if apply_length_gate:
+            adult_ok, reason, median_len = _adult_gate(event_id, species, medians)
+            if not adult_ok:
+                if reason == EXCLUDE_REASON_JUVENILE:
+                    stats["juvenile_excluded"] += 1
+                else:
+                    stats["no_specimen_excluded"] += 1
+                continue
+        else:
+            median_len = _median_length_optional(event_id, species, medians)
         weight = row.get("total_weight_kg")
         weight_f = float(weight) if weight is not None and pd.notna(weight) else None
         count_raw = row.get("total_number")

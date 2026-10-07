@@ -1,16 +1,29 @@
 {
+  "product_label": "Pacific herring encounter probability (all sizes)",
+  "domain_bbox": {
+    "lat_min": 32.0,
+    "lat_max": 45.0,
+    "lon_min": -125.0,
+    "lon_max": -117.0
+  },
+  "length_gate": false,
   "as_of": "2026-10-07",
-  "domain_source": "config/adult_pacific_herring_domain.json",
-  "adult_standard_length_mm_min": 170.0,
-  "dry_run_encounter_counts": {
-    "Clupea pallasii|swfsc_cps_trawl_haul_catch|encounter=1": 31,
-    "Clupea pallasii|swfsc_cps_trawl_haul_catch|encounter=0": 1774,
-    "Clupea pallasii|swfsc_cps_nearshore_set_catch|encounter=1": 2,
+  "data_source": "NOAA GCS mirror (bbox-filtered at ingest) → processed parquets",
+  "encounter_counts_pipeline_dry_run": {
+    "Clupea pallasii|swfsc_cps_trawl_haul_catch|encounter=1": 81,
+    "Clupea pallasii|swfsc_cps_trawl_haul_catch|encounter=0": 1783,
+    "Clupea pallasii|swfsc_cps_nearshore_set_catch|encounter=1": 15,
     "Clupea pallasii|swfsc_cps_nearshore_set_catch|encounter=0": 271
   },
-  "total_adult_presences": 33,
-  "physics_events_in_domain": 2077,
-  "glorys_unique_event_days": 771,
-  "glorys_subset_batches": 75,
-  "model_path": "encounter_binomial (sdmTMB, skip delta hurdle)"
+  "presences_encounter_1_total": 96,
+  "presences_by_source": {
+    "trawl": 81,
+    "nearshore": 15
+  },
+  "reconciliation_note": "User planning figure 111 (83 trawl + 28 nearshore) differs from this mirror snapshot: ingest keeps haul/set locations inside 32–45N, 125–117W on catch rows; encounter=1 uses weight/count fields with trawl presence-only excluded. Re-count on synced parquets (lat/lon on hauls and nearshore sets) matches 81+15=96.",
+  "glorys_wcofs_join_after_build": {
+    "training_rows_kept": 756,
+    "presences_kept_encounter_1": 0,
+    "physics_footprint_note": "WCOFS h pilot grid supports covariates ~32–35N; all 96 presences are north of that band and drop as missing_covariate."
+  }
 }

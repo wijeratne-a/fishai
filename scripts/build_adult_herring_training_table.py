@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Build Pacific herring adult encounter training table (GCS ingest domain × GLORYS)."""
+"""Build Pacific herring all-sizes encounter training table (GCS domain × GLORYS)."""
 
 from __future__ import annotations
 
@@ -49,7 +49,9 @@ def main(argv: list[str] | None = None) -> int:
     from fishai.ingestion.physics.wcofs_glorys_overlap import load_overlap_config
     from fishai.ingestion.sources import REPO_ROOT as REPO  # noqa: N811
 
-    parser = argparse.ArgumentParser(description="Build adult Pacific herring training table")
+    parser = argparse.ArgumentParser(
+        description="Build Pacific herring all-sizes encounter training table"
+    )
     parser.add_argument("--dry-run", action="store_true")
     args = parser.parse_args(argv)
 
@@ -78,6 +80,7 @@ def main(argv: list[str] | None = None) -> int:
             target_species=HERRING_TARGET_SPECIES,
             bbox=bbox,
             build_summary_path=HERRING_BUILD_SUMMARY_PATH,
+            apply_length_gate=False,
         )
         print(json.dumps(result, indent=2, sort_keys=True))
         return 0
@@ -97,6 +100,7 @@ def main(argv: list[str] | None = None) -> int:
         trawl_specimens_path=HERRING_TRAWL_SPECIMENS_PATH,
         nearshore_specimens_path=HERRING_NEARSHORE_SPECIMENS_PATH,
         target_species=HERRING_TARGET_SPECIES,
+        apply_length_gate=False,
     )
     obs_ids = set(observations["event_id"].astype(str))
     events, _ = assemble_adult_physics_events(
@@ -143,6 +147,7 @@ def main(argv: list[str] | None = None) -> int:
         events=events,
         observations=observations,
         store=store,
+        apply_length_gate=False,
     )
     table = build_result.get("table")
     print(

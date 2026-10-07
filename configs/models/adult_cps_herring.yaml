@@ -2,9 +2,10 @@ fishai_engine_config:
   version: "1.0"
   species:
     code: HERR
-    name: Pacific herring
+    name: Pacific herring (all sizes)
     taxon: herring
     scientific_name: Clupea pallasii
+    product_label: Pacific herring encounter probability (all sizes)
   domain:
     lat_min: 32.0
     lat_max: 45.0
@@ -15,10 +16,10 @@ fishai_engine_config:
     covariate_forcing_source_id: glorys
   data:
     loader: adult_cps
-    table_path: data/processed/adult_cps_herring/adult_herring_training_table.parquet
-    events_path: data/processed/adult_cps_herring/adult_herring_events.parquet
-    covariate_drops_path: data/processed/adult_cps_herring/adult_herring_training_covariate_drops.parquet
-    covariate_drop_summary_path: data/processed/adult_cps_herring/adult_herring_training_covariate_drop_summary.json
+    table_path: data/processed/adult_cps_herring/herring_all_sizes_training_table.parquet
+    events_path: data/processed/adult_cps_herring/herring_all_sizes_events.parquet
+    covariate_drops_path: data/processed/adult_cps_herring/herring_all_sizes_covariate_drops.parquet
+    covariate_drop_summary_path: data/processed/adult_cps_herring/herring_all_sizes_covariate_drop_summary.json
     time_idx_origin: "1990-01-01"
     time_idx_dense_remap: true
     source_id: swfsc_cps_adult
