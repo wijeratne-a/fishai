@@ -196,7 +196,6 @@ compute_spatial_block_cv_scores <- function(
     boyce = boyce,
     auc = auc,
     tss = tss,
-    fold_assignment = cv$fold_assignment,
     spatial_block_cv = cv$spatial_block_cv
   )
 }
