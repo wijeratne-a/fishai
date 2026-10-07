@@ -36,7 +36,7 @@ Count **non–presence-only presences** in the pilot bbox:
 |---|---|---:|
 | Trawl haul catch (GCS) | Total catch rows in file | 26,417 |
 | Trawl | *M. productus* rows (all regions) | 353 |
-| Trawl | Presence-only *M. productus* rows in pilot | 0 |
+| Trawl | Presence-only *M. productus* rows in pilot | 4 |
 | Trawl | **Non–presence-only presences (pilot)** | **57** |
 | Nearshore set catch (GCS) | Total catch rows in file | 1,496 |
 | Nearshore | *M. productus* rows (all regions) | 5 |
