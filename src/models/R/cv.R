@@ -56,6 +56,16 @@
   NULL
 }
 
+.cv_holdout_loglik <- function(fishai_fit, test, cfg) {
+  if (is_encounter_binomial_cfg(cfg)) {
+    p <- score_encounter_on_events(fishai_fit$fit, test, cfg)
+    y <- as.integer(round(test$y))
+    sum(stats::dbinom(y, size = 1, prob = pmax(pmin(p, 1 - 1e-15), 1e-15), log = TRUE))
+  } else {
+    .cv_delta_holdout_loglik(fishai_fit, test, cfg)
+  }
+}
+
 .cv_delta_holdout_loglik <- function(fishai_fit, test, cfg) {
   fit <- fishai_fit$fit
   if (!"log_effort" %in% names(test)) {
@@ -308,7 +318,7 @@ cv_elpd_ineligible_reason <- function(cv_obj) {
   fold_cfg <- cfg
   fold_cfg$model$extra_time_slices <- sort(unique(test$time_idx))
   fit_res <- tryCatch(
-    fit_delta_engine(train, train_mesh, fold_cfg),
+    fit_model_engine(train, train_mesh, fold_cfg),
     error = function(e) {
       structure(list(message = conditionMessage(e)), class = "cv_fold_error")
     }
@@ -333,7 +343,7 @@ cv_elpd_ineligible_reason <- function(cv_obj) {
     ))
   }
   ll <- tryCatch(
-    .cv_delta_holdout_loglik(fit_res, test, cfg),
+    .cv_holdout_loglik(fit_res, test, cfg),
     error = function(e) conditionMessage(e)
   )
   if (is.character(ll) && length(ll) == 1L) {
@@ -419,7 +429,7 @@ cv_elpd_ineligible_reason <- function(cv_obj) {
             )
           }
         }
-        fit_delta_engine(train, mesh_fold, cfg)
+        fit_model_engine(train, mesh_fold, cfg)
       },
       error = function(e) {
         structure(list(message = conditionMessage(e)), class = "cv_fold_error")

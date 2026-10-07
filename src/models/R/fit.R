@@ -111,3 +111,73 @@ fit_uses_log_effort_offset <- function(fit_obj) {
   fit <- fit_obj$fit
   identical(as.character(fit$call$offset), "log_effort")
 }
+
+#' @export
+is_encounter_binomial_cfg <- function(cfg) {
+  identical(cfg$response$type, "encounter_binomial") ||
+    identical(cfg$model$family, "binomial")
+}
+
+#' Single-component binomial encounter model (no delta positive component).
+#' @export
+fit_encounter_binomial_engine <- function(dat, mesh, cfg) {
+  model <- cfg$model
+  rhs <- model$formula_shared %||% model$formula_encounter
+  if (!grepl("^~", rhs)) {
+    rhs <- paste("~", rhs)
+  }
+  frm <- stats::as.formula(paste("y", rhs))
+
+  pc <- model$priors$pc_matern %||% list()
+  range_gt <- (pc$range_gt_mult_max_edge %||% 2) * (cfg$mesh$cutoff_km %||% 9)
+  pri <- sdmTMB::sdmTMBpriors(
+    matern_s = sdmTMB::pc_matern(
+      range_gt = range_gt,
+      sigma_lt = pc$sigma_lt %||% 2
+    )
+  )
+
+  spatial <- model$spatial %||% "on"
+  if (length(spatial) > 1L) {
+    spatial <- spatial[[1L]]
+  }
+
+  extra <- cfg$model$extra_time_slices
+
+  fit_args <- list(
+    formula = frm,
+    data = dat,
+    mesh = mesh,
+    time = "time_idx",
+    family = stats::binomial(),
+    offset = "log_effort",
+    spatial = spatial,
+    spatiotemporal = model$spatiotemporal %||% "off",
+    extra_time = extra,
+    priors = pri,
+    control = do.call(
+      sdmTMB::sdmTMBcontrol,
+      c(list(newton_loops = 1L, multiphase = TRUE), model$control %||% list())
+    ),
+    silent = TRUE
+  )
+  if (!is.null(model$time_varying)) {
+    fit_args$time_varying <- stats::as.formula(model$time_varying$formula %||% "~ 1")
+    fit_args$time_varying_type <- model$time_varying$type %||% "rw0"
+  }
+  fit <- do.call(sdmTMB::sdmTMB, fit_args)
+
+  structure(
+    list(fit = fit, model_kind = "encounter_binomial"),
+    class = "fishai_fit"
+  )
+}
+
+#' @export
+fit_model_engine <- function(dat, mesh, cfg) {
+  if (is_encounter_binomial_cfg(cfg)) {
+    fit_encounter_binomial_engine(dat, mesh, cfg)
+  } else {
+    fit_delta_engine(dat, mesh, cfg)
+  }
+}

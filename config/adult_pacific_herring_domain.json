@@ -1,0 +1,11 @@
+{
+  "note": "SCB pilot (32-35N) contains zero Pacific herring presences in public CPS data; modeling uses CPS survey overlap where herring occur.",
+  "bbox": {
+    "lat_min": 32.0,
+    "lat_max": 45.0,
+    "lon_min": -125.0,
+    "lon_max": -117.0
+  },
+  "adult_standard_length_mm_min": 170.0,
+  "adult_length_disclosure": "Adult specimens were retained only if standard length >= 170 mm (Pacific herring, Clupea pallasii). This is the midpoint of the published maturity band of 16.5-17.8 cm at 2-3 years of age (Love 1996); it is a judgment call within that band, not a fitted L50."
+}

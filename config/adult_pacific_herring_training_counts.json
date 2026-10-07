@@ -1,0 +1,16 @@
+{
+  "as_of": "2026-10-07",
+  "domain_source": "config/adult_pacific_herring_domain.json",
+  "adult_standard_length_mm_min": 170.0,
+  "dry_run_encounter_counts": {
+    "Clupea pallasii|swfsc_cps_trawl_haul_catch|encounter=1": 31,
+    "Clupea pallasii|swfsc_cps_trawl_haul_catch|encounter=0": 1774,
+    "Clupea pallasii|swfsc_cps_nearshore_set_catch|encounter=1": 2,
+    "Clupea pallasii|swfsc_cps_nearshore_set_catch|encounter=0": 271
+  },
+  "total_adult_presences": 33,
+  "physics_events_in_domain": 2077,
+  "glorys_unique_event_days": 771,
+  "glorys_subset_batches": 75,
+  "model_path": "encounter_binomial (sdmTMB, skip delta hurdle)"
+}

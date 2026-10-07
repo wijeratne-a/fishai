@@ -19,5 +19,15 @@
   },
   "total_non_presence_only_presences": 0,
   "verdict": "species not viable",
-  "phase2_blocked": true
+  "phase2_blocked": true,
+  "redirect_domain": {
+    "bbox": {
+      "lat_min": 32.0,
+      "lat_max": 45.0,
+      "lon_min": -125.0,
+      "lon_max": -117.0
+    },
+    "adult_presences_encounter_1_at_170mm_sl": 33,
+    "note": "SCB pilot empty; extended CPS domain per user redirect"
+  }
 }

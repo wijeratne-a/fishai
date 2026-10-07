@@ -60,7 +60,39 @@ OBSERVATION_SOURCE_NEARSHORE: Final = "swfsc_cps_nearshore_set_catch"
 ADULT_MIN_LENGTH_MM: Final = {
     "Sardinops sagax": 160.0,
     "Engraulis mordax": 98.0,
+    "Clupea pallasii": 170.0,
 }
+
+HERRING_SCIENTIFIC_NAME: Final = "Clupea pallasii"
+HERRING_TARGET_SPECIES: Final = (HERRING_SCIENTIFIC_NAME,)
+
+HERRING_PROCESSED_DIR: Final = REPO_ROOT / "data" / "processed" / "adult_cps_herring"
+HERRING_EVENTS_PATH: Final = HERRING_PROCESSED_DIR / "adult_herring_events.parquet"
+HERRING_TRAINING_TABLE_PATH: Final = HERRING_PROCESSED_DIR / "adult_herring_training_table.parquet"
+HERRING_DROPS_PATH: Final = HERRING_PROCESSED_DIR / "adult_herring_training_covariate_drops.parquet"
+HERRING_DROP_SUMMARY_PATH: Final = (
+    HERRING_PROCESSED_DIR / "adult_herring_training_covariate_drop_summary.json"
+)
+HERRING_BUILD_SUMMARY_PATH: Final = HERRING_PROCESSED_DIR / "adult_herring_build_summary.json"
+
+HERRING_TRAWL_HAULS_PATH: Final = (
+    HERRING_PROCESSED_DIR / "swfsc_cps_trawl_haul_catch" / "cps_trawl_hauls.parquet"
+)
+HERRING_TRAWL_CATCH_PATH: Final = (
+    HERRING_PROCESSED_DIR / "swfsc_cps_trawl_haul_catch" / "cps_trawl_catch.parquet"
+)
+HERRING_TRAWL_SPECIMENS_PATH: Final = (
+    HERRING_PROCESSED_DIR / "swfsc_cps_trawl_haul_catch" / "cps_trawl_specimens.parquet"
+)
+HERRING_NEARSHORE_SETS_PATH: Final = (
+    HERRING_PROCESSED_DIR / "swfsc_cps_nearshore_set_catch" / "cps_nearshore_sets.parquet"
+)
+HERRING_NEARSHORE_CATCH_PATH: Final = (
+    HERRING_PROCESSED_DIR / "swfsc_cps_nearshore_set_catch" / "cps_nearshore_catch.parquet"
+)
+HERRING_NEARSHORE_SPECIMENS_PATH: Final = (
+    HERRING_PROCESSED_DIR / "swfsc_cps_nearshore_set_catch" / "cps_nearshore_specimens.parquet"
+)
 
 EVIDENCE_IMPLIED_ZERO: Final = "implied_zero_enumerated_frame"
 

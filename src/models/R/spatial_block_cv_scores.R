@@ -73,7 +73,7 @@ missing_real_table_cv_inputs <- function(cfg, wcofs_artifact_rel = "data/derived
             )
           }
         }
-        fit_delta_engine(train, mesh_fold, cfg)
+        fit_model_engine(train, mesh_fold, cfg)
       },
       error = function(e) {
         structure(list(message = conditionMessage(e)), class = "cv_fold_error")

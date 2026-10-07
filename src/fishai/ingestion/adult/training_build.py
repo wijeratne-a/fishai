@@ -103,6 +103,7 @@ def assemble_adult_observations(
     nearshore_catch_path: Path | None = None,
     trawl_specimens_path: Path | None = None,
     nearshore_specimens_path: Path | None = None,
+    target_species: tuple[str, ...] | None = None,
 ) -> tuple[pd.DataFrame, dict[str, Any]]:
     medians = load_specimen_medians(
         trawl_specimens_path=trawl_specimens_path,
@@ -110,13 +111,18 @@ def assemble_adult_observations(
     )
     trawl_catch = _read_parquet(trawl_catch_path or TRAWL_CATCH_PATH)
     near_catch = _read_parquet(nearshore_catch_path or NEARSHORE_CATCH_PATH)
-    trawl_obs, trawl_stats = build_trawl_observations(trawl_catch, medians=medians)
-    near_obs, near_stats = build_nearshore_observations(near_catch, medians=medians)
+    trawl_obs, trawl_stats = build_trawl_observations(
+        trawl_catch, medians=medians, target_species=target_species
+    )
+    near_obs, near_stats = build_nearshore_observations(
+        near_catch, medians=medians, target_species=target_species
+    )
     obs = pd.concat([trawl_obs, near_obs], ignore_index=True)
     obs, implied_stats = append_implied_absence_observations(
         obs,
         trawl_catch=trawl_catch,
         nearshore_catch=near_catch,
+        target_species=target_species,
     )
     summary = {
         "trawl_catch": trawl_stats,
@@ -136,13 +142,14 @@ def assemble_adult_physics_events(
     trawl_hauls_path: Path | None = None,
     nearshore_sets_path: Path | None = None,
     observation_event_ids: set[str] | None = None,
+    bbox: tuple[float, float, float, float] | None = None,
 ) -> tuple[pd.DataFrame, pd.DataFrame]:
     hauls = _read_parquet(trawl_hauls_path or TRAWL_HAULS_PATH)
     sets = _read_parquet(nearshore_sets_path or NEARSHORE_SETS_PATH)
     trawl_events = trawl_hauls_to_physics_events(hauls)
     near_events = nearshore_sets_to_physics_events(sets)
     merged = merge_adult_physics_events(trawl_events, near_events)
-    lat_min, lat_max, lon_min, lon_max = _pilot_bbox()
+    lat_min, lat_max, lon_min, lon_max = bbox if bbox is not None else _pilot_bbox()
     kept, bbox_drops = filter_events_to_pilot_bbox(
         merged,
         lat_min=lat_min,
@@ -230,8 +237,15 @@ def run_build_adult_cps_training_table(
     nearshore_specimens_path: Path | None = None,
     events_path: Path | None = None,
     output_path: Path | None = None,
+    drops_parquet_path: Path | None = None,
+    drop_summary_json_path: Path | None = None,
+    build_summary_path: Path | None = None,
     store: GlorysFieldStore | None = None,
     dry_run: bool = False,
+    target_species: tuple[str, ...] | None = None,
+    bbox: tuple[float, float, float, float] | None = None,
+    events: pd.DataFrame | None = None,
+    observations: pd.DataFrame | None = None,
 ) -> dict[str, Any]:
     """
     Load processed CPS tables, apply adult/species QC, join GLORYS covariates.
@@ -239,18 +253,26 @@ def run_build_adult_cps_training_table(
     ``dry_run`` skips Copernicus I/O and returns row-count summary only.
     """
     require_approved("glorys", purpose="training")
-    observations, obs_summary = assemble_adult_observations(
-        trawl_catch_path=trawl_catch_path,
-        nearshore_catch_path=nearshore_catch_path,
-        trawl_specimens_path=trawl_specimens_path,
-        nearshore_specimens_path=nearshore_specimens_path,
-    )
+    if observations is None:
+        observations, obs_summary = assemble_adult_observations(
+            trawl_catch_path=trawl_catch_path,
+            nearshore_catch_path=nearshore_catch_path,
+            trawl_specimens_path=trawl_specimens_path,
+            nearshore_specimens_path=nearshore_specimens_path,
+            target_species=target_species,
+        )
+    else:
+        obs_summary = {"preloaded_observations": int(len(observations))}
     event_ids = set(observations["event_id"].astype(str)) if not observations.empty else set()
-    events, bbox_drops = assemble_adult_physics_events(
-        trawl_hauls_path=trawl_hauls_path,
-        nearshore_sets_path=nearshore_sets_path,
-        observation_event_ids=event_ids,
-    )
+    if events is None:
+        events, bbox_drops = assemble_adult_physics_events(
+            trawl_hauls_path=trawl_hauls_path,
+            nearshore_sets_path=nearshore_sets_path,
+            observation_event_ids=event_ids,
+            bbox=bbox,
+        )
+    else:
+        bbox_drops = pd.DataFrame()
     out_events = events_path or DEFAULT_EVENTS_PATH
     out_table = output_path or DEFAULT_TRAINING_TABLE_PATH
     result: dict[str, Any] = {
@@ -284,13 +306,13 @@ def run_build_adult_cps_training_table(
         result["glorys_join"] = "blocked_no_store"
         result["observation_rows_written"] = int(len(obs_kept))
         result["encounter_counts"] = _encounter_count_dict(obs_kept) if not obs_kept.empty else {}
-        summary_file = out_table.parent / DEFAULT_BUILD_SUMMARY_PATH.name
+        summary_file = build_summary_path or (out_table.parent / DEFAULT_BUILD_SUMMARY_PATH.name)
         summary_file.write_text(json.dumps({**result}, indent=2, sort_keys=True) + "\n", encoding="utf-8")
         result["build_summary_path"] = str(summary_file)
         return result
 
-    drops_path = out_table.parent / DEFAULT_DROPS_PATH.name
-    summary_path = out_table.parent / DEFAULT_DROP_SUMMARY_PATH.name
+    drops_path = drops_parquet_path or (out_table.parent / DEFAULT_DROPS_PATH.name)
+    summary_path = drop_summary_json_path or (out_table.parent / DEFAULT_DROP_SUMMARY_PATH.name)
     table, qc, _drops = build_adult_cps_training_table(
         events,
         observations,
@@ -316,12 +338,13 @@ def run_build_adult_cps_training_table(
         "training_rows_kept": int((~table["excluded"]).sum()) if not table.empty else 0,
         "training_rows_excluded": int(table["excluded"].sum()) if not table.empty else 0,
     }
-    summary_file = out_table.parent / DEFAULT_BUILD_SUMMARY_PATH.name
+    summary_file = build_summary_path or (out_table.parent / DEFAULT_BUILD_SUMMARY_PATH.name)
     summary_file.parent.mkdir(parents=True, exist_ok=True)
     summary_file.write_text(json.dumps(build_summary, indent=2, sort_keys=True) + "\n", encoding="utf-8")
     result["build_summary_path"] = str(summary_file)
     result["drops_path"] = str(drops_path)
     result["qc"] = qc
+    result["table"] = table
     return result
 
 
