@@ -31,7 +31,16 @@ add_barrier_land <- function(mesh, land_sf, range_fraction = 0.1, proj_scaling =
   if (range_fraction <= 0 || range_fraction >= 1) {
     stop("range_fraction must be in (0, 1)", call. = FALSE)
   }
-  sdmTMBextra::add_barrier_mesh(
+  if (requireNamespace("sdmTMBextra", quietly = TRUE)) {
+    return(sdmTMBextra::add_barrier_mesh(
+      spde_obj = mesh,
+      barrier_sf = land_sf,
+      range_fraction = range_fraction,
+      proj_scaling = proj_scaling,
+      plot = FALSE
+    ))
+  }
+  fishai_add_barrier_mesh(
     spde_obj = mesh,
     barrier_sf = land_sf,
     range_fraction = range_fraction,

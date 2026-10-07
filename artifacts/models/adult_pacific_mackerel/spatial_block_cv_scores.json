@@ -1,0 +1,22 @@
+{
+  "species": "Pacific mackerel (adult CPS encounter, binomial)",
+  "model_config": "/workspace/configs/models/adult_pacific_mackerel_encounter.yaml",
+  "n_fit_rows": 443,
+  "n_presences": 10,
+  "n_absences": 433,
+  "adult_length_cutoff_mm": 274,
+  "elpd": "NA",
+  "elpd_eligible": false,
+  "fold_loglik": [
+    "NA",
+    -10.9962,
+    "NA",
+    "NA"
+  ],
+  "n_failed_folds": 3,
+  "auc": "NA",
+  "tss": "NA",
+  "boyce": "NA",
+  "oof_complete": false,
+  "fold_assignment_path": "/workspace/artifacts/spatial_block_cv/adult_pacific_mackerel_fold_assignment.csv"
+}

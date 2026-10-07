@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from typing import Any
+from typing import Any, Sequence
 
 import pandas as pd
 
@@ -53,6 +53,7 @@ def build_trawl_observations(
     catch: pd.DataFrame,
     *,
     medians: pd.Series,
+    pilot_species: Sequence[str] = PILOT_SPECIES,
 ) -> tuple[pd.DataFrame, dict[str, int]]:
     stats = {
         "input_rows": 0,
@@ -71,7 +72,7 @@ def build_trawl_observations(
             stats["presence_only_excluded"] += 1
             continue
         species = str(row.get("species") or "").strip()
-        if species not in PILOT_SPECIES:
+        if species not in pilot_species:
             stats["non_pilot_species_skipped"] += 1
             continue
         event_id = str(row["haul_id"])
@@ -109,6 +110,7 @@ def build_nearshore_observations(
     catch: pd.DataFrame,
     *,
     medians: pd.Series,
+    pilot_species: Sequence[str] = PILOT_SPECIES,
 ) -> tuple[pd.DataFrame, dict[str, int]]:
     stats = {
         "input_rows": 0,
@@ -124,7 +126,7 @@ def build_nearshore_observations(
     for _, row in catch.iterrows():
         stats["input_rows"] += 1
         species = str(row.get("scientific_name") or row.get("species") or "").strip()
-        if species not in PILOT_SPECIES:
+        if species not in pilot_species:
             stats["non_pilot_species_skipped"] += 1
             continue
         event_id = str(row["set_id"])
@@ -222,6 +224,7 @@ def append_implied_absence_observations(
     *,
     trawl_catch: pd.DataFrame,
     nearshore_catch: pd.DataFrame,
+    pilot_species: Sequence[str] = PILOT_SPECIES,
 ) -> tuple[pd.DataFrame, dict[str, int]]:
     """
     For fully-enumerated hauls/sets, emit encounter=0 rows for pilot species with no catch row.
@@ -251,7 +254,7 @@ def append_implied_absence_observations(
     )
     for event_id in trawl_enum:
         present = trawl_species.get(event_id, set())
-        for species in PILOT_SPECIES:
+        for species in pilot_species:
             if species in present:
                 continue
             key = (event_id, species, OBSERVATION_SOURCE_TRAWL)
@@ -283,7 +286,7 @@ def append_implied_absence_observations(
     )
     for event_id in near_enum:
         present = near_species.get(event_id, set())
-        for species in PILOT_SPECIES:
+        for species in pilot_species:
             if species in present:
                 continue
             key = (event_id, species, OBSERVATION_SOURCE_NEARSHORE)

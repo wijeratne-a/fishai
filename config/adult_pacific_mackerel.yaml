@@ -13,8 +13,15 @@ paths:
   artifacts_dir: artifacts/models/adult_pacific_mackerel
 
 training:
-  # Populated after L50 followup:
-  adult_min_length_mm: null
+  adult_min_length_mm: 274
+  maturity_disclosure: >-
+    Adult specimens were retained only if standard length >= 274 mm (Pacific
+    mackerel, Scomber japonicus). This cutoff is the length at 50% maturity
+    (L50 = 274 mm fork length) from the 2023 Pacific mackerel benchmark stock
+    assessment life-history report (histological staging, n = 911 females, SWFSC
+    trawl surveys 2010-2021). The published value is in fork length; applied to
+    standard length it is conservative.
+  model_family: binomial_encounter
 
 viability_gate:
   min_non_presence_only_presences: 100

@@ -1,0 +1,12 @@
+{
+  "species": "Scomber japonicus",
+  "model_family": "binomial_encounter",
+  "adult_min_length_mm": 274,
+  "spatial_block_km": 60,
+  "cv_seed": 20260928,
+  "n_folds": 4,
+  "scores_path": "artifacts/models/adult_pacific_mackerel/spatial_block_cv_scores.json",
+  "elpd_eligible": false,
+  "n_failed_folds": 3,
+  "validated_for_forecast": false
+}
