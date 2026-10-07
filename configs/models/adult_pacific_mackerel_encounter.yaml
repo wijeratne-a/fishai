@@ -1,0 +1,83 @@
+fishai_engine_config:
+  version: "1.0"
+  species:
+    code: PMAC
+    name: Pacific mackerel encounter probability (all sizes)
+    taxon: pacific_mackerel_all_sizes
+    scientific_name: Scomber japonicus
+  domain:
+    lat_min: 32.0
+    lat_max: 35.0
+    lon_min: -121.0
+    lon_max: -117.0
+  training:
+    observation_source_id: swfsc_cps_adult
+    covariate_forcing_source_id: glorys
+  data:
+    events_path: data/processed/adult_pacific_mackerel/model_ready/adult_mackerel_events.parquet
+    counts_path: data/processed/adult_pacific_mackerel/model_ready/adult_mackerel_counts.parquet
+    covariates_path: data/processed/adult_pacific_mackerel/model_ready/adult_mackerel_covariates.parquet
+    min_duration_min: 2
+    time_idx_origin: "1990-01-01"
+    time_idx_dense_remap: true
+    source_id: swfsc_cps_adult
+    spatial_block_cv:
+      n_folds: 4
+    fold_assignment_path: artifacts/spatial_block_cv/adult_pacific_mackerel_fold_assignment.csv
+  covariates:
+    forcing_source_id: glorys
+    depth_sample_m: 3
+    dynamic:
+      - temp_3m
+      - sal_3m
+      - mld
+      - sst_grad
+      - dist_front
+    static:
+      - log_depth
+    excluded:
+      - bottomT
+    upstream_fields:
+      temp_3m: T3m
+      sal_3m: S3m
+      mld: MLD_m
+      sst_grad: sst_grad
+      dist_front: front_distance_km
+      log_depth: bottom_depth_m
+  response:
+    type: encounter_binomial
+    column: encounter
+    effort_column: effort_duration_min
+  model:
+    engine: sdmTMB
+    family: binomial
+    # CV remediation (sardine playbook): no spatial field; linear env effects only.
+    formula_shared: >-
+      ~ temp_3m_z + sal_3m_z + mld_z + sst_grad_z + dist_front_z + log_depth_z
+    spatial: off
+    spatiotemporal: off
+    time_varying:
+      formula: "~ 1"
+      type: rw0
+    priors:
+      pc_matern:
+        range_gt_mult_max_edge: 2
+        sigma_lt: 2
+  mesh:
+    cutoff_km: 9
+    range_guess_km: 60
+    barrier:
+      enabled: false
+      range_fraction: 0.1
+      land_sf_rds: data/reference/mesh/scb_pilot_land_sf.rds
+  prediction:
+    nsim: 50
+    seed: 20260928
+    grid_table: src/models/tests/fixtures/synthetic_grid.csv
+    inference_forcing_source_id: glorys
+  ood:
+    mess_mask_below: -20
+    hull_pairs:
+      - [temp_3m_z, sal_3m_z]
+  output:
+    dir: artifacts/models/adult_pacific_mackerel

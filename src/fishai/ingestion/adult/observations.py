@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from typing import Any
+from typing import Any, Sequence
 
 import pandas as pd
 
@@ -49,10 +49,23 @@ def _adult_gate(
     return True, None, median_len
 
 
+def _optional_median_length(
+    event_id: str,
+    species: str,
+    medians: pd.Series,
+) -> float | None:
+    key = (event_id, species)
+    if key not in medians.index:
+        return None
+    return float(medians.loc[key])
+
+
 def build_trawl_observations(
     catch: pd.DataFrame,
     *,
     medians: pd.Series,
+    pilot_species: Sequence[str] = PILOT_SPECIES,
+    apply_adult_length_gate: bool = True,
 ) -> tuple[pd.DataFrame, dict[str, int]]:
     stats = {
         "input_rows": 0,
@@ -71,17 +84,20 @@ def build_trawl_observations(
             stats["presence_only_excluded"] += 1
             continue
         species = str(row.get("species") or "").strip()
-        if species not in PILOT_SPECIES:
+        if species not in pilot_species:
             stats["non_pilot_species_skipped"] += 1
             continue
         event_id = str(row["haul_id"])
-        adult_ok, reason, median_len = _adult_gate(event_id, species, medians)
-        if not adult_ok:
-            if reason == EXCLUDE_REASON_JUVENILE:
-                stats["juvenile_excluded"] += 1
-            else:
-                stats["no_specimen_excluded"] += 1
-            continue
+        if apply_adult_length_gate:
+            adult_ok, reason, median_len = _adult_gate(event_id, species, medians)
+            if not adult_ok:
+                if reason == EXCLUDE_REASON_JUVENILE:
+                    stats["juvenile_excluded"] += 1
+                else:
+                    stats["no_specimen_excluded"] += 1
+                continue
+        else:
+            median_len = _optional_median_length(event_id, species, medians)
         weight = row.get("weight_kg")
         weight_f = float(weight) if weight is not None and pd.notna(weight) else None
         count_raw = row.get("count_raised_est")
@@ -109,6 +125,8 @@ def build_nearshore_observations(
     catch: pd.DataFrame,
     *,
     medians: pd.Series,
+    pilot_species: Sequence[str] = PILOT_SPECIES,
+    apply_adult_length_gate: bool = True,
 ) -> tuple[pd.DataFrame, dict[str, int]]:
     stats = {
         "input_rows": 0,
@@ -124,17 +142,20 @@ def build_nearshore_observations(
     for _, row in catch.iterrows():
         stats["input_rows"] += 1
         species = str(row.get("scientific_name") or row.get("species") or "").strip()
-        if species not in PILOT_SPECIES:
+        if species not in pilot_species:
             stats["non_pilot_species_skipped"] += 1
             continue
         event_id = str(row["set_id"])
-        adult_ok, reason, median_len = _adult_gate(event_id, species, medians)
-        if not adult_ok:
-            if reason == EXCLUDE_REASON_JUVENILE:
-                stats["juvenile_excluded"] += 1
-            else:
-                stats["no_specimen_excluded"] += 1
-            continue
+        if apply_adult_length_gate:
+            adult_ok, reason, median_len = _adult_gate(event_id, species, medians)
+            if not adult_ok:
+                if reason == EXCLUDE_REASON_JUVENILE:
+                    stats["juvenile_excluded"] += 1
+                else:
+                    stats["no_specimen_excluded"] += 1
+                continue
+        else:
+            median_len = _optional_median_length(event_id, species, medians)
         weight = row.get("total_weight_kg")
         weight_f = float(weight) if weight is not None and pd.notna(weight) else None
         count_raw = row.get("total_number")
@@ -222,6 +243,7 @@ def append_implied_absence_observations(
     *,
     trawl_catch: pd.DataFrame,
     nearshore_catch: pd.DataFrame,
+    pilot_species: Sequence[str] = PILOT_SPECIES,
 ) -> tuple[pd.DataFrame, dict[str, int]]:
     """
     For fully-enumerated hauls/sets, emit encounter=0 rows for pilot species with no catch row.
@@ -251,7 +273,7 @@ def append_implied_absence_observations(
     )
     for event_id in trawl_enum:
         present = trawl_species.get(event_id, set())
-        for species in PILOT_SPECIES:
+        for species in pilot_species:
             if species in present:
                 continue
             key = (event_id, species, OBSERVATION_SOURCE_TRAWL)
@@ -283,7 +305,7 @@ def append_implied_absence_observations(
     )
     for event_id in near_enum:
         present = near_species.get(event_id, set())
-        for species in PILOT_SPECIES:
+        for species in pilot_species:
             if species in present:
                 continue
             key = (event_id, species, OBSERVATION_SOURCE_NEARSHORE)

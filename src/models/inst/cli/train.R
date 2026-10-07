@@ -8,7 +8,7 @@ parsed <- .parse_model_cli_args(commandArgs(trailingOnly = TRUE))
 cfg <- load_config_yaml(parsed$config)
 dat <- load_model_data(cfg = cfg)
 mesh <- build_fishai_production_mesh(dat, cfg$mesh)
-fit <- fit_delta_engine(dat, mesh, cfg)
+fit <- fit_engine(dat, mesh, cfg)
 out_dir <- cfg$output$dir %||% "artifacts/models"
 dir.create(out_dir, recursive = TRUE, showWarnings = FALSE)
 saveRDS(fit, file.path(out_dir, "fit.rds"))

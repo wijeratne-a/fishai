@@ -1,0 +1,28 @@
+# Adult Pacific mackerel (Scomber japonicus) — species pipeline config (Phase 1+).
+# L50 cutoff applied after science review (Phase 2 gate).
+
+species:
+  scientific_name: Scomber japonicus
+  common_name: Pacific mackerel
+  itis_tsn: 172409
+
+pilot_bbox_source: data/SOURCES.yaml#pilot
+
+paths:
+  processed_dir: data/processed/adult_pacific_mackerel
+  artifacts_dir: artifacts/models/adult_pacific_mackerel
+
+training:
+  adult_min_length_mm: 274
+  maturity_disclosure: >-
+    Adult specimens were retained only if standard length >= 274 mm (Pacific
+    mackerel, Scomber japonicus). This cutoff is the length at 50% maturity
+    (L50 = 274 mm fork length) from the 2023 Pacific mackerel benchmark stock
+    assessment life-history report (histological staging, n = 911 females, SWFSC
+    trawl surveys 2010-2021). The published value is in fork length; applied to
+    standard length it is conservative.
+  model_family: binomial_encounter
+
+viability_gate:
+  min_non_presence_only_presences: 100
+  marginal_max_exclusive: 150
