@@ -1,0 +1,23 @@
+{
+  "species": "Clupea pallasii",
+  "common_name": "Pacific herring",
+  "branch": "cursor/fishai-adult-pacific-herring",
+  "as_of": "2026-10-07",
+  "pilot_bbox_source": "data/SOURCES.yaml pilot.bbox",
+  "data_source": "NOAA GCS mirror nmfs_odp_swfsc (ERDDAP 504 on oceanview year windows)",
+  "trawl_haul_catch": {
+    "non_presence_only_presences_pilot_bbox": 0,
+    "presence_only_rows_pilot_bbox": 0,
+    "non_presence_only_zero_catch_rows_pilot_bbox": 0,
+    "species_rows_global_lat_range_deg": [36.9437, 54.3997],
+    "species_rows_global_lon_range_deg": [-132.7302, -122.3072]
+  },
+  "nearshore_set_catch": {
+    "presences_pilot_bbox": 0,
+    "zero_catch_rows_pilot_bbox": 0,
+    "family_clupeidae_rows_pilot_bbox": 2
+  },
+  "total_non_presence_only_presences": 0,
+  "verdict": "species not viable",
+  "phase2_blocked": true
+}
