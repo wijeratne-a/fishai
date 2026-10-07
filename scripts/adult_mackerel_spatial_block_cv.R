@@ -82,6 +82,7 @@ report <- list(
   n_absences = sum(as.integer(dat$y) == 0L),
   adult_length_cutoff_mm = NA,
   length_gate = "none (all sizes)",
+  model_spec_note = "spatial off; linear covariates (CV remediation)",
   elpd = elpd,
   elpd_eligible = eligible,
   fold_loglik = as.list(cv$fold_loglik),

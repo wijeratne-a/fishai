@@ -51,11 +51,10 @@ fishai_engine_config:
   model:
     engine: sdmTMB
     family: binomial
+    # CV remediation (sardine playbook): no spatial field; linear env effects only.
     formula_shared: >-
-      ~ s(temp_3m_z, k = 3) + s(sal_3m_z, k = 3) + s(mld_z, k = 3)
-      + s(sst_grad_z, k = 3) + s(dist_front_z, k = 3)
-      + s(log_depth_z, k = 3)
-    spatial: on
+      ~ temp_3m_z + sal_3m_z + mld_z + sst_grad_z + dist_front_z + log_depth_z
+    spatial: off
     spatiotemporal: off
     time_varying:
       formula: "~ 1"
@@ -68,7 +67,7 @@ fishai_engine_config:
     cutoff_km: 9
     range_guess_km: 60
     barrier:
-      enabled: true
+      enabled: false
       range_fraction: 0.1
       land_sf_rds: data/reference/mesh/scb_pilot_land_sf.rds
   prediction:
