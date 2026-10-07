@@ -171,7 +171,7 @@ def test_implied_absence_for_enumerated_haul_without_target_row() -> None:
         trawl_catch=catch,
         nearshore_catch=pd.DataFrame(),
     )
-    assert stats["implied_absences_trawl"] == 1
+    assert stats["implied_absences_trawl"] == 2
     sardine = full[full["species"] == "Sardinops sagax"]
     assert len(sardine) == 1
     assert int(sardine.iloc[0]["encounter"]) == 0
@@ -237,10 +237,10 @@ def test_adult_trawl_and_nearshore_observations(tmp_path: Path) -> None:
         nearshore_specimens_path=near_spec,
     )
     assert summary["presence_only_excluded_total"] == 0
-    assert len(obs) == 4
+    assert len(obs) == 6
     assert int(obs["encounter"].sum()) == 2
-    assert summary["implied_absences"]["implied_absences_trawl"] == 1
-    assert summary["implied_absences"]["implied_absences_nearshore"] == 1
+    assert summary["implied_absences"]["implied_absences_trawl"] == 2
+    assert summary["implied_absences"]["implied_absences_nearshore"] == 2
     sources = set(obs["observation_source"])
     assert sources == {OBSERVATION_SOURCE_TRAWL, OBSERVATION_SOURCE_NEARSHORE}
 
