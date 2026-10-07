@@ -1,19 +1,20 @@
 {
-  "species": "Pacific mackerel (adult CPS encounter, binomial)",
+  "species": "Pacific mackerel encounter probability (all sizes)",
   "model_config": "/workspace/configs/models/adult_pacific_mackerel_encounter.yaml",
-  "n_fit_rows": 443,
-  "n_presences": 10,
+  "n_fit_rows": 565,
+  "n_presences": 132,
   "n_absences": 433,
-  "adult_length_cutoff_mm": 274,
+  "adult_length_cutoff_mm": null,
+  "length_gate": "none (all sizes)",
   "elpd": "NA",
   "elpd_eligible": false,
   "fold_loglik": [
+    -57.5038,
+    -102.1956,
     "NA",
-    -10.9962,
-    "NA",
-    "NA"
+    -107.8254
   ],
-  "n_failed_folds": 3,
+  "n_failed_folds": 1,
   "auc": "NA",
   "tss": "NA",
   "boyce": "NA",

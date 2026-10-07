@@ -1,43 +1,47 @@
-# Adult Pacific mackerel encounter model readout
+# Pacific mackerel encounter probability (all sizes) — model readout
 
-Branch: `cursor/fishai-adult-pacific-mackerel`  
+Branch: `cursor/fishai-pacific-mackerel-pipeline-ef97`  
 Species: *Scomber japonicus* (Pacific mackerel)
 
-## Maturity cutoff (L50)
+**Product label:** Pacific mackerel **encounter probability (all sizes)** — not an adult or maturity-gated model.
 
-Adult specimens were retained only if standard length ≥ 274 mm (Pacific mackerel, *Scomber japonicus*). This cutoff is the length at 50% maturity (L50 = 274 mm fork length) from the 2023 Pacific mackerel benchmark stock assessment life-history report (histological staging, n = 911 females, SWFSC trawl surveys 2010–2021). The published value is in fork length; applied to standard length it is conservative.
+## Length gate
+
+**None.** All non–presence-only catch rows for *S. japonicus* in the pilot bbox enter the encounter frame (implied-zero rules unchanged). Specimen median length is attached when available for audit only; it is **not** used to exclude juveniles.
 
 ## Phase 1 — viability gate (exact counts)
 
-Non–presence-only presences in pilot bbox (before L50 gate):
+Non–presence-only presences in pilot bbox (all sizes):
 
 | Source | Species catch rows | Presence-only excluded | Non–presence-only presences |
 |--------|-------------------:|-----------------------:|----------------------------:|
-| Trawl | 122 | 0 | **122** |
+| Trawl | 122 | 1,379 (haul-level) | **122** |
 | Nearshore | 94 | 0 | **94** |
-| **Total** | | | **216** |
+| **Total (catch-level)** | | | **216** |
 
 Verdict: **viable — proceed** (≥150).
 
-## Training table (after L50 ≥ 274 mm + implied-zero rules)
+## Training table (all sizes + implied-zero + GLORYS QC)
 
 | Stage | Count |
 |-------|------:|
-| Observation rows (mackerel-only pilot species) | 572 |
-| Adult presence rows (trawl + nearshore) | 11 (6 trawl + 5 nearshore) |
-| Physics events (pilot bbox) | 570 |
-| Training rows after GLORYS QC (kept) | 443 |
-| **Adult presences in modeling frame** | **10** |
-| Absences (implied-zero + catch zero) | 433 |
+| Observation rows (mackerel-only) | 777 |
+| Physics events (pilot bbox) | 775 |
+| Rows after GLORYS / physics QC (kept) | 775 |
+| **Modeling frame** (export: biology + effort QC) | **565** |
+| **Presences in modeling frame** | **132** (113 trawl + 19 nearshore) |
+| Absences | 433 |
 
-Ingest: NOAA public GCS mirror (ERDDAP 504 on pilot-bbox haul subsets). GLORYS join: Copernicus env credentials present at build time.
+Build: `python3 scripts/build_adult_mackerel_training_table.py --all-sizes`  
+Export: `python3 scripts/export_adult_mackerel_model_tables.py`  
+Ingest: NOAA public GCS mirror. GLORYS join: Copernicus credentials at build time.
 
 ## Model spec (encounter-only; no hurdle)
 
-Per species redirect: **sdmTMB binomial** encounter GLMM with `log(effort_duration_min)` offset — **not** delta-gamma / Poisson-link hurdle (juvenile-dominated catch at L50).
+**sdmTMB binomial** encounter GLMM with `log(effort_duration_min)` offset.
 
-- Config: `configs/models/adult_pacific_mackerel_encounter.yaml`
-- Shared smoothers on GLORYS covariates (same set as adult CPS egg/CUFES pilots)
+- Config: `configs/models/adult_pacific_mackerel_encounter.yaml` (`species.name`: encounter probability, all sizes)
+- Shared smoothers on GLORYS covariates (same set as CPS egg/CUFES pilots)
 - Spatial: **on**; spatiotemporal: **off**; daily **rw0** intercept
 - Barrier mesh: Bakka land polygon (`scb_pilot_land_sf.rds`); `fishai_add_barrier_mesh` fallback when `sdmTMBextra` unavailable
 - Spatial-block CV: **60 km** blocks, seed **20260928**, **4** folds, sequential
@@ -48,20 +52,20 @@ Scores: `artifacts/models/adult_pacific_mackerel/spatial_block_cv_scores.json`
 
 | Metric | Value |
 |--------|------:|
-| Fit rows | 443 |
-| Presences | 10 |
-| Summed ELPD | **not eligible** (`n_failed_folds = 3`) |
-| Fold log-lik | NA, −11.0, NA, NA |
+| Fit rows | 565 |
+| Presences | 132 |
+| Summed ELPD | **not eligible** (`n_failed_folds = 1`, fold 3 NA) |
+| Per-fold log-lik | −57.5, −102.2, NA, −107.8 |
 | OOF AUC / TSS / Boyce | **not computed** (incomplete OOF) |
-
-Fold failures: holdout folds without both zeros and positives (sparse adults); fold 3 non-PD Hessian.
 
 **Validation verdict: model does not meet the preregistered CV gate (all four folds must converge for ELPD).**
 
+Compared with the retired L50 ≥ 274 mm adult gate (10 presences, 3 failed folds), all-sizes data improved fold stability but **one holdout fold still failed to converge**.
+
 ## 24-hour forecast check
 
-**Not run.** Operational 24h rolling-origin validation applies only after a model passes spatial-block CV; with 10 adult presences and failed folds, forecast skill testing would not be interpretable.
+**Not run.** Rolling-origin 24h validation runs only after spatial-block CV passes the preregistered ELPD gate.
 
 ## Product language
 
-Survey-based adult **encounter evidence** from fishery-independent CPS trawl and nearshore sets — not live tracking, not harvest advice, not fine-scale coordinates in any public artifact.
+Survey-based **encounter evidence** (all length classes) from fishery-independent CPS trawl and nearshore sets — not live tracking, not harvest advice, not fine-scale coordinates in any public artifact.
