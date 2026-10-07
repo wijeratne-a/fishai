@@ -1,0 +1,55 @@
+{
+  "status": "ok",
+  "code_sha": null,
+  "evidence_manifest": "prereg/cufes_glorys_training_evidence_build_manifest.json",
+  "training_table_builder_code_sha": "88083dedb099482d2f149d264a1e12f0f337f13e",
+  "protocol_config": "/workspace/configs/spatial_block_cv_hake_scores.yaml",
+  "spatial_block_cv": {
+    "block_size_km": 60,
+    "mesh_cutoff_km": 9,
+    "spatial_range_km": 60,
+    "seed": 20260928,
+    "n_folds": 4,
+    "epsg": 32611,
+    "block_size_source": "max(mesh.cutoff_km, mesh.range_guess_km)",
+    "spatial_range_source": "mesh.range_guess_km",
+    "seed_source": "prediction.seed",
+    "n_folds_source": "data.spatial_block_cv.n_folds"
+  },
+  "fold_assignment_csv": "/workspace/artifacts/spatial_block_cv/fold_assignment.csv",
+  "fold_assignment_sha256": "8fdda1d932dc66240e47e1bb0cdcb59618741009f659751ebb7bfb193bf1401d",
+  "min_duration_min": 2,
+  "wcofs_h_artifact": "data/derived/physics/wcofs_h_glorys_pilot.zarr",
+  "cv_checkpoint_dir": "/workspace/prereg/cv_checkpoints_hake",
+  "species": [
+    {
+      "label": "hake",
+      "taxon": "hake",
+      "model_config": "configs/models/cufes_hake.yaml",
+      "status": "ok",
+      "missing_inputs": [],
+      "n_fit_rows": 10152,
+      "elpd": "NA",
+      "elpd_eligible": false,
+      "elpd_ineligible_reason": "cv_fold_nonconverged",
+      "n_failed_folds": 2,
+      "fold_loglik": [-649.3519, "NA", -817.6576, "NA"],
+      "n_oof_rows": 4532,
+      "boyce": "NA",
+      "auc": "NA",
+      "tss": "NA",
+      "spatial_block_cv": {
+        "block_size_km": 60,
+        "mesh_cutoff_km": 9,
+        "spatial_range_km": 60,
+        "seed": 20260928,
+        "n_folds": 4,
+        "epsg": 32611,
+        "block_size_source": "max(mesh.cutoff_km, mesh.range_guess_km)",
+        "spatial_range_source": "mesh.range_guess_km",
+        "seed_source": "prediction.seed",
+        "n_folds_source": "data.spatial_block_cv.n_folds"
+      }
+    }
+  ]
+}

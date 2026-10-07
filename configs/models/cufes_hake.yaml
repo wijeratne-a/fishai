@@ -1,9 +1,9 @@
 fishai_engine_config:
   version: "1.0"
   species:
-    code: SARD
-    name: Pacific sardine
-    taxon: sardine
+    code: HAKE
+    name: Pacific hake
+    taxon: hake
   domain:
     lat_min: 32.0
     lat_max: 35.0
@@ -30,6 +30,10 @@ fishai_engine_config:
     spatial_block_cv:
       n_folds: 4
     fold_assignment_path: artifacts/sensitivity/fold_assignment.csv
+    event_count_guard:
+      n_events: 14592
+      n_short_event: 1266
+      n_long_event: 13326
   covariates:
     forcing_source_id: glorys
     depth_sample_m: 3
@@ -58,27 +62,11 @@ fishai_engine_config:
     engine: sdmTMB
     family: delta_gamma
     delta_type: poisson-link
-    # Prereg/config amendment (Upwelling path B): the CUFES evidence table has
-    # upwelling null on all 14,592 rows and no consistent, publicly licensed wind
-    # product spans training and nowcast. Upwelling is removed from the pilot
-    # covariates and formula; it is never imputed. Reintroduction needs a later
-    # prereg amendment plus publicly licensed, consistent data
-    # (prereg/pilot_model_upwelling_amendment.md).
     formula_shared: >-
       ~ s(temp_3m_z, k = 3) + s(sal_3m_z, k = 3) + s(mld_z, k = 3)
       + s(sst_grad_z, k = 3) + s(dist_front_z, k = 3)
       + s(log_depth_z, k = 3)
-    # Encounter component is non-spatial; the positive egg-count component
-    # stays spatial. Spatial-block ELPD -20651.9058 versus -20714.7404 with
-    # both components spatial. Same folds, mesh, and formula.
-    spatial: [off, on]
-    # 2026-10-01: spatiotemporal iid disabled (was [iid, off]). One iid spatial
-    # field per daily time_idx produced on the order of 1e6 random effects and
-    # OOM-killed a single CV fold at ~47 GB (15 GiB RAM + 32 GB swap
-    # exhausted); sequential folds, gc() and swap could not help because one
-    # fold alone exceeds the machine. Static spatial fields plus the daily
-    # intercept random walk (time_varying ~1 rw0) are retained. This matches
-    # the configuration the test suite exercises (helper.R forces off/off).
+    spatial: [on, on]
     spatiotemporal: [off, off]
     share_range: [true, true]
     time_varying:
@@ -99,11 +87,10 @@ fishai_engine_config:
     nsim: 50
     seed: 20260928
     grid_table: src/models/tests/fixtures/synthetic_grid.csv
-    physics_cycle: PASS
     inference_forcing_source_id: glorys
   ood:
     mess_mask_below: -20
     hull_pairs:
       - [temp_3m_z, sal_3m_z]
   output:
-    dir: artifacts/models/sardine
+    dir: artifacts/models/hake

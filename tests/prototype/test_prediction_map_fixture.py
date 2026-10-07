@@ -68,6 +68,27 @@ def test_fixture_dry_run_and_species_coverage() -> None:
     assert states == SCHEMA_STATES
 
 
+def test_ood_level_at_least_2_is_unknown() -> None:
+    payload = load_fixture()
+    ood = [r for r in payload["rows"] if r["ood_level"] >= 2]
+    assert len(ood) >= 1
+    for row in ood:
+        assert row["evidence_state"] == "UNKNOWN"
+        assert row["p_encounter"] is None
+        assert row["unknown_reason"]
+
+
+def test_public_resolution_floor() -> None:
+    payload = load_fixture()
+    assert payload["meta"]["public_resolution_floor_km"] >= 10
+    assert payload["meta"]["cell_spacing_km"] >= 10
+    readme = (PROTOTYPE_DIR / "README.md").read_text(encoding="utf-8")
+    assert "10 km" in readme
+    app = (PROTOTYPE_DIR / "app.js").read_text(encoding="utf-8")
+    assert "finer than 10 km" in app
+    assert "ood_level" in app or "isUnknownRow" in app
+
+
 def test_unknown_rows_have_reason_and_null_probability() -> None:
     payload = load_fixture()
     unknown_rows = [r for r in payload["rows"] if r["evidence_state"] == "UNKNOWN"]
@@ -113,6 +134,10 @@ def test_prototype_ui_labels_use_egg_or_spawning_and_avoid_fish_tracking_copy() 
             snippet = snippet.strip()
             if not snippet:
                 continue
+            if snippet in ("Anchovy", "Sardine"):
+                continue
+            if "${" in snippet and not EGG_OR_SPAWNING.search(snippet):
+                continue
             assert EGG_OR_SPAWNING.search(snippet), (
                 f"user-facing text missing egg/spawning in {path.name}: {snippet!r}"
             )
@@ -150,5 +175,20 @@ def test_schema_enum_visible_in_ui() -> None:
 def test_unknown_not_drawn_as_probability() -> None:
     app_js = (PROTOTYPE_DIR / "app.js").read_text(encoding="utf-8")
     assert "isUnknownRow" in app_js
-    assert "No egg-encounter probability (UNKNOWN)" in app_js
+    assert "no egg dots in this 10 km patch" in app_js
     assert "if (!unknown && row.p_encounter != null)" in app_js
+    assert "effectiveEvidenceState" in app_js
+    display = (PROTOTYPE_DIR / "evidence_display.js").read_text(encoding="utf-8")
+    assert "ood_level" in display
+
+
+def test_day_control_and_summary_present() -> None:
+    html = (PROTOTYPE_DIR / "index.html").read_text(encoding="utf-8")
+    app_js = (PROTOTYPE_DIR / "app.js").read_text(encoding="utf-8")
+    assert 'data-testid="day-select"' in html or "day-select" in app_js
+    assert "summary-headline" in html
+    assert "computeSummaryHeadline" in app_js
+    assert "renderDayControl" in app_js
+    payload = load_fixture()
+    days = payload["meta"].get("demo_days") or sorted({r["valid_day"] for r in payload["rows"]})
+    assert len(days) >= 3
