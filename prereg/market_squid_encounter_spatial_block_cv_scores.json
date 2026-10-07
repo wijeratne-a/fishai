@@ -1,19 +1,9 @@
 {
-  "status": "blocked",
-  "protocol_config": "configs/market_squid_encounter_spatial_block_cv_scores.yaml",
-  "product_label": "market squid encounter probability (all sizes; maturity unfiltered)",
-  "not_adult_model": true,
-  "block_reason": "Spatial-block CV was started locally (Rscript scripts/models/run_spatial_block_cv_scores.R configs/market_squid_encounter_spatial_block_cv_scores.yaml) but had not finished writing scores before this commit; sequential sdmTMB delta Poisson-link fits exceed ~45+ minutes on this VM with no fold checkpoints yet. Re-run on GHCR r-env or wait for the in-flight job to complete and overwrite this file.",
-  "model_ready_export": {
-    "source": "data/processed/adult_cps/model_ready/adult_cps_model_export_market_squid_encounter.json",
-    "n_observation_rows": 572,
-    "n_presence_unique_events": 275,
-    "presence_by_source": {
-      "swfsc_cps_trawl_haul_catch": 270,
-      "swfsc_cps_nearshore_set_catch": 5
-    },
-    "note_on_presence_count": "Pilot-bbox physics events with encounter=1 before GLORYS QC: 310 unique events (292 trawl + 18 nearshore). After GLORYS covariate QC and export filters (!excluded, positive effort): 275 unique presence events. Stated 110+29=139 presences was not reproduced under current GCS mirror and pipeline rules; counts above are from export summary."
-  },
+  "status": "ok",
+  "code_sha": null,
+  "evidence_manifest": null,
+  "training_table_builder_code_sha": "88083dedb099482d2f149d264a1e12f0f337f13e",
+  "protocol_config": "/workspace/configs/market_squid_encounter_spatial_block_cv_scores.yaml",
   "spatial_block_cv": {
     "block_size_km": 60,
     "mesh_cutoff_km": 9,
@@ -22,33 +12,2906 @@
     "n_folds": 4,
     "epsg": 32611,
     "block_size_source": "max(mesh.cutoff_km, mesh.range_guess_km)",
+    "spatial_range_source": "mesh.range_guess_km",
+    "seed_source": "prediction.seed",
     "n_folds_source": "data.spatial_block_cv.n_folds"
   },
-  "fold_assignment_csv": "artifacts/spatial_block_cv/market_squid_encounter_fold_assignment.csv",
+  "fold_assignment_csv": "/workspace/artifacts/spatial_block_cv/market_squid_encounter_fold_assignment.csv",
+  "fold_assignment_sha256": "fed72c21befe47d717f90681a5172697e3a66423df7b8c9745fc2d761cac9417",
+  "min_duration_min": 2,
+  "wcofs_h_artifact": "data/derived/physics/wcofs_h_glorys_pilot.zarr",
+  "cv_checkpoint_dir": "/workspace/prereg/cv_checkpoints",
   "species": [
     {
       "label": "market_squid_encounter",
       "taxon": "market_squid_encounter",
       "model_config": "configs/models/cps_market_squid_encounter.yaml",
-      "status": "blocked",
-      "elpd": null,
+      "status": "ok",
+      "missing_inputs": [],
+      "n_fit_rows": 572,
+      "elpd": "NA",
       "elpd_eligible": false,
-      "elpd_ineligible_reason": "cv_run_incomplete",
-      "n_failed_folds": null,
-      "fold_loglik": [],
-      "n_oof_rows": null,
-      "boyce": null,
-      "auc": null,
-      "tss": null
+      "elpd_ineligible_reason": "cv_fold_nonconverged",
+      "n_failed_folds": 4,
+      "fold_loglik": ["NA", "NA", "NA", "NA"],
+      "n_oof_rows": 0,
+      "boyce": "NA",
+      "auc": "NA",
+      "tss": "NA",
+      "fold_assignment": [
+        {
+          "event_id": "CPSTrawl:200504:JD:1",
+          "fold_id": 2,
+          "block_id": "bx7_by60"
+        },
+        {
+          "event_id": "CPSTrawl:200504:JD:2",
+          "fold_id": 2,
+          "block_id": "bx7_by60"
+        },
+        {
+          "event_id": "CPSTrawl:200504:JD:3",
+          "fold_id": 2,
+          "block_id": "bx4_by60"
+        },
+        {
+          "event_id": "CPSTrawl:200504:JD:5",
+          "fold_id": 3,
+          "block_id": "bx3_by61"
+        },
+        {
+          "event_id": "CPSTrawl:200504:JD:6",
+          "fold_id": 4,
+          "block_id": "bx3_by63"
+        },
+        {
+          "event_id": "CPSTrawl:200504:JD:7",
+          "fold_id": 3,
+          "block_id": "bx2_by62"
+        },
+        {
+          "event_id": "CPSTrawl:200504:JD:9",
+          "fold_id": 4,
+          "block_id": "bx2_by64"
+        },
+        {
+          "event_id": "CPSTrawl:200604:OD:22",
+          "fold_id": 2,
+          "block_id": "bx3_by60"
+        },
+        {
+          "event_id": "CPSTrawl:200604:OD:23",
+          "fold_id": 3,
+          "block_id": "bx3_by61"
+        },
+        {
+          "event_id": "CPSTrawl:200604:OD:25",
+          "fold_id": 2,
+          "block_id": "bx7_by60"
+        },
+        {
+          "event_id": "CPSTrawl:200604:OD:26",
+          "fold_id": 1,
+          "block_id": "bx6_by59"
+        },
+        {
+          "event_id": "CPSTrawl:200704:JD:1",
+          "fold_id": 2,
+          "block_id": "bx7_by60"
+        },
+        {
+          "event_id": "CPSTrawl:200704:JD:2",
+          "fold_id": 2,
+          "block_id": "bx6_by60"
+        },
+        {
+          "event_id": "CPSTrawl:200704:JD:3",
+          "fold_id": 2,
+          "block_id": "bx6_by60"
+        },
+        {
+          "event_id": "CPSTrawl:200704:JD:7",
+          "fold_id": 3,
+          "block_id": "bx3_by61"
+        },
+        {
+          "event_id": "CPSTrawl:200704:JD:8",
+          "fold_id": 3,
+          "block_id": "bx3_by61"
+        },
+        {
+          "event_id": "CPSTrawl:200704:JD:9",
+          "fold_id": 3,
+          "block_id": "bx2_by61"
+        },
+        {
+          "event_id": "CPSTrawl:200804:JD:1",
+          "fold_id": 2,
+          "block_id": "bx7_by60"
+        },
+        {
+          "event_id": "CPSTrawl:200804:JD:2",
+          "fold_id": 2,
+          "block_id": "bx6_by60"
+        },
+        {
+          "event_id": "CPSTrawl:200804:JD:8",
+          "fold_id": 1,
+          "block_id": "bx2_by59"
+        },
+        {
+          "event_id": "CPSTrawl:200804:JD:9",
+          "fold_id": 2,
+          "block_id": "bx3_by60"
+        },
+        {
+          "event_id": "CPSTrawl:200804:JD:10",
+          "fold_id": 2,
+          "block_id": "bx3_by60"
+        },
+        {
+          "event_id": "CPSTrawl:200804:JD:11",
+          "fold_id": 3,
+          "block_id": "bx3_by61"
+        },
+        {
+          "event_id": "CPSTrawl:200804:JD:12",
+          "fold_id": 3,
+          "block_id": "bx3_by61"
+        },
+        {
+          "event_id": "CPSTrawl:200904:FR:30",
+          "fold_id": 3,
+          "block_id": "bx2_by62"
+        },
+        {
+          "event_id": "CPSTrawl:200904:FR:31",
+          "fold_id": 3,
+          "block_id": "bx2_by62"
+        },
+        {
+          "event_id": "CPSTrawl:200904:FR:39",
+          "fold_id": 1,
+          "block_id": "bx2_by59"
+        },
+        {
+          "event_id": "CPSTrawl:200904:FR:41",
+          "fold_id": 2,
+          "block_id": "bx3_by60"
+        },
+        {
+          "event_id": "CPSTrawl:200904:FR:42",
+          "fold_id": 3,
+          "block_id": "bx6_by61"
+        },
+        {
+          "event_id": "CPSTrawl:200904:FR:43",
+          "fold_id": 1,
+          "block_id": "bx4_by59"
+        },
+        {
+          "event_id": "CPSTrawl:200904:FR:44",
+          "fold_id": 1,
+          "block_id": "bx4_by59"
+        },
+        {
+          "event_id": "CPSTrawl:200904:FR:45",
+          "fold_id": 1,
+          "block_id": "bx4_by59"
+        },
+        {
+          "event_id": "CPSTrawl:200904:FR:46",
+          "fold_id": 1,
+          "block_id": "bx3_by59"
+        },
+        {
+          "event_id": "CPSTrawl:200904:FR:60",
+          "fold_id": 1,
+          "block_id": "bx6_by59"
+        },
+        {
+          "event_id": "CPSTrawl:201004:MF:1",
+          "fold_id": 2,
+          "block_id": "bx6_by60"
+        },
+        {
+          "event_id": "CPSTrawl:201004:MF:8",
+          "fold_id": 1,
+          "block_id": "bx5_by59"
+        },
+        {
+          "event_id": "CPSTrawl:201004:MF:9",
+          "fold_id": 2,
+          "block_id": "bx5_by60"
+        },
+        {
+          "event_id": "CPSTrawl:201004:MF:10",
+          "fold_id": 2,
+          "block_id": "bx5_by60"
+        },
+        {
+          "event_id": "CPSTrawl:201004:MF:11",
+          "fold_id": 3,
+          "block_id": "bx5_by61"
+        },
+        {
+          "event_id": "CPSTrawl:201004:MF:12",
+          "fold_id": 3,
+          "block_id": "bx5_by61"
+        },
+        {
+          "event_id": "CPSTrawl:201004:MF:16",
+          "fold_id": 4,
+          "block_id": "bx4_by62"
+        },
+        {
+          "event_id": "CPSTrawl:201004:MF:17",
+          "fold_id": 4,
+          "block_id": "bx4_by62"
+        },
+        {
+          "event_id": "CPSTrawl:201004:MF:18",
+          "fold_id": 3,
+          "block_id": "bx2_by62"
+        },
+        {
+          "event_id": "CPSTrawl:201004:MF:19",
+          "fold_id": 3,
+          "block_id": "bx2_by62"
+        },
+        {
+          "event_id": "CPSTrawl:201004:MF:23",
+          "fold_id": 4,
+          "block_id": "bx2_by63"
+        },
+        {
+          "event_id": "CPSTrawl:201010:SH:1",
+          "fold_id": 2,
+          "block_id": "bx3_by60"
+        },
+        {
+          "event_id": "CPSTrawl:201010:SH:2",
+          "fold_id": 2,
+          "block_id": "bx4_by60"
+        },
+        {
+          "event_id": "CPSTrawl:201010:SH:3",
+          "fold_id": 2,
+          "block_id": "bx4_by60"
+        },
+        {
+          "event_id": "CPSTrawl:201010:SH:4",
+          "fold_id": 2,
+          "block_id": "bx3_by60"
+        },
+        {
+          "event_id": "CPSTrawl:201010:SH:5",
+          "fold_id": 2,
+          "block_id": "bx4_by60"
+        },
+        {
+          "event_id": "CPSTrawl:201010:SH:6",
+          "fold_id": 2,
+          "block_id": "bx4_by60"
+        },
+        {
+          "event_id": "CPSTrawl:201010:SH:8",
+          "fold_id": 2,
+          "block_id": "bx4_by60"
+        },
+        {
+          "event_id": "CPSTrawl:201104:FR:19",
+          "fold_id": 4,
+          "block_id": "bx3_by63"
+        },
+        {
+          "event_id": "CPSTrawl:201104:FR:20",
+          "fold_id": 4,
+          "block_id": "bx3_by63"
+        },
+        {
+          "event_id": "CPSTrawl:201104:FR:21",
+          "fold_id": 4,
+          "block_id": "bx4_by63"
+        },
+        {
+          "event_id": "CPSTrawl:201104:FR:46",
+          "fold_id": 4,
+          "block_id": "bx3_by63"
+        },
+        {
+          "event_id": "CPSTrawl:201104:FR:47",
+          "fold_id": 4,
+          "block_id": "bx4_by63"
+        },
+        {
+          "event_id": "CPSTrawl:201104:FR:48",
+          "fold_id": 3,
+          "block_id": "bx3_by61"
+        },
+        {
+          "event_id": "CPSTrawl:201104:FR:49",
+          "fold_id": 3,
+          "block_id": "bx4_by61"
+        },
+        {
+          "event_id": "CPSTrawl:201104:FR:50",
+          "fold_id": 3,
+          "block_id": "bx3_by61"
+        },
+        {
+          "event_id": "CPSTrawl:201104:FR:51",
+          "fold_id": 4,
+          "block_id": "bx6_by62"
+        },
+        {
+          "event_id": "CPSTrawl:201104:FR:53",
+          "fold_id": 3,
+          "block_id": "bx7_by61"
+        },
+        {
+          "event_id": "CPSTrawl:201104:FR:54",
+          "fold_id": 1,
+          "block_id": "bx5_by59"
+        },
+        {
+          "event_id": "CPSTrawl:201104:FR:55",
+          "fold_id": 1,
+          "block_id": "bx5_by59"
+        },
+        {
+          "event_id": "CPSTrawl:201104:FR:56",
+          "fold_id": 1,
+          "block_id": "bx5_by59"
+        },
+        {
+          "event_id": "CPSTrawl:201104:SH:18",
+          "fold_id": 2,
+          "block_id": "bx7_by60"
+        },
+        {
+          "event_id": "CPSTrawl:201104:SH:19",
+          "fold_id": 2,
+          "block_id": "bx7_by60"
+        },
+        {
+          "event_id": "CPSTrawl:201104:SH:20",
+          "fold_id": 1,
+          "block_id": "bx5_by59"
+        },
+        {
+          "event_id": "CPSTrawl:201104:SH:27",
+          "fold_id": 1,
+          "block_id": "bx3_by59"
+        },
+        {
+          "event_id": "CPSTrawl:201104:SH:29",
+          "fold_id": 2,
+          "block_id": "bx4_by60"
+        },
+        {
+          "event_id": "CPSTrawl:201104:SH:30",
+          "fold_id": 3,
+          "block_id": "bx6_by61"
+        },
+        {
+          "event_id": "CPSTrawl:201104:SH:31",
+          "fold_id": 3,
+          "block_id": "bx6_by61"
+        },
+        {
+          "event_id": "CPSTrawl:201104:SH:32",
+          "fold_id": 4,
+          "block_id": "bx5_by62"
+        },
+        {
+          "event_id": "CPSTrawl:201104:SH:33",
+          "fold_id": 4,
+          "block_id": "bx5_by62"
+        },
+        {
+          "event_id": "CPSTrawl:201104:SH:34",
+          "fold_id": 2,
+          "block_id": "bx2_by60"
+        },
+        {
+          "event_id": "CPSTrawl:201104:SH:35",
+          "fold_id": 2,
+          "block_id": "bx2_by60"
+        },
+        {
+          "event_id": "CPSTrawl:201104:SH:36",
+          "fold_id": 2,
+          "block_id": "bx2_by60"
+        },
+        {
+          "event_id": "CPSTrawl:201104:SH:39",
+          "fold_id": 4,
+          "block_id": "bx3_by62"
+        },
+        {
+          "event_id": "CPSTrawl:201104:SH:40",
+          "fold_id": 4,
+          "block_id": "bx3_by62"
+        },
+        {
+          "event_id": "CPSTrawl:201104:SH:41",
+          "fold_id": 4,
+          "block_id": "bx3_by63"
+        },
+        {
+          "event_id": "CPSTrawl:201104:SH:42",
+          "fold_id": 4,
+          "block_id": "bx3_by63"
+        },
+        {
+          "event_id": "CPSTrawl:201204:OS:29",
+          "fold_id": 4,
+          "block_id": "bx2_by64"
+        },
+        {
+          "event_id": "CPSTrawl:201204:SH:1",
+          "fold_id": 2,
+          "block_id": "bx6_by60"
+        },
+        {
+          "event_id": "CPSTrawl:201204:SH:2",
+          "fold_id": 3,
+          "block_id": "bx3_by61"
+        },
+        {
+          "event_id": "CPSTrawl:201204:SH:3",
+          "fold_id": 3,
+          "block_id": "bx3_by61"
+        },
+        {
+          "event_id": "CPSTrawl:201204:SH:4",
+          "fold_id": 4,
+          "block_id": "bx3_by62"
+        },
+        {
+          "event_id": "CPSTrawl:201204:SH:5",
+          "fold_id": 2,
+          "block_id": "bx3_by60"
+        },
+        {
+          "event_id": "CPSTrawl:201204:SH:6",
+          "fold_id": 3,
+          "block_id": "bx3_by61"
+        },
+        {
+          "event_id": "CPSTrawl:201204:SH:7",
+          "fold_id": 3,
+          "block_id": "bx3_by61"
+        },
+        {
+          "event_id": "CPSTrawl:201204:SH:8",
+          "fold_id": 4,
+          "block_id": "bx5_by62"
+        },
+        {
+          "event_id": "CPSTrawl:201204:SH:9",
+          "fold_id": 4,
+          "block_id": "bx5_by62"
+        },
+        {
+          "event_id": "CPSTrawl:201204:SH:10",
+          "fold_id": 4,
+          "block_id": "bx5_by62"
+        },
+        {
+          "event_id": "CPSTrawl:201204:SH:11",
+          "fold_id": 4,
+          "block_id": "bx4_by62"
+        },
+        {
+          "event_id": "CPSTrawl:201204:SH:12",
+          "fold_id": 3,
+          "block_id": "bx4_by61"
+        },
+        {
+          "event_id": "CPSTrawl:201204:SH:13",
+          "fold_id": 3,
+          "block_id": "bx4_by61"
+        },
+        {
+          "event_id": "CPSTrawl:201204:SH:14",
+          "fold_id": 2,
+          "block_id": "bx4_by60"
+        },
+        {
+          "event_id": "CPSTrawl:201204:SH:16",
+          "fold_id": 1,
+          "block_id": "bx2_by59"
+        },
+        {
+          "event_id": "CPSTrawl:201204:SH:18",
+          "fold_id": 1,
+          "block_id": "bx2_by59"
+        },
+        {
+          "event_id": "CPSTrawl:201204:SH:19",
+          "fold_id": 2,
+          "block_id": "bx3_by60"
+        },
+        {
+          "event_id": "CPSTrawl:201204:SH:20",
+          "fold_id": 2,
+          "block_id": "bx2_by60"
+        },
+        {
+          "event_id": "CPSTrawl:201204:SH:21",
+          "fold_id": 2,
+          "block_id": "bx2_by60"
+        },
+        {
+          "event_id": "CPSTrawl:201204:SH:22",
+          "fold_id": 2,
+          "block_id": "bx2_by60"
+        },
+        {
+          "event_id": "CPSTrawl:201208:OS:1",
+          "fold_id": 2,
+          "block_id": "bx7_by60"
+        },
+        {
+          "event_id": "CPSTrawl:201208:OS:2",
+          "fold_id": 2,
+          "block_id": "bx7_by60"
+        },
+        {
+          "event_id": "CPSTrawl:201208:OS:3",
+          "fold_id": 2,
+          "block_id": "bx7_by60"
+        },
+        {
+          "event_id": "CPSTrawl:201208:OS:10",
+          "fold_id": 2,
+          "block_id": "bx5_by60"
+        },
+        {
+          "event_id": "CPSTrawl:201208:OS:11",
+          "fold_id": 2,
+          "block_id": "bx5_by60"
+        },
+        {
+          "event_id": "CPSTrawl:201208:OS:12",
+          "fold_id": 2,
+          "block_id": "bx6_by60"
+        },
+        {
+          "event_id": "CPSTrawl:201208:OS:16",
+          "fold_id": 1,
+          "block_id": "bx2_by59"
+        },
+        {
+          "event_id": "CPSTrawl:201208:OS:17",
+          "fold_id": 1,
+          "block_id": "bx2_by59"
+        },
+        {
+          "event_id": "CPSTrawl:201208:OS:18",
+          "fold_id": 1,
+          "block_id": "bx2_by59"
+        },
+        {
+          "event_id": "CPSTrawl:201208:OS:19",
+          "fold_id": 3,
+          "block_id": "bx5_by61"
+        },
+        {
+          "event_id": "CPSTrawl:201208:OS:20",
+          "fold_id": 3,
+          "block_id": "bx5_by61"
+        },
+        {
+          "event_id": "CPSTrawl:201208:OS:21",
+          "fold_id": 3,
+          "block_id": "bx5_by61"
+        },
+        {
+          "event_id": "CPSTrawl:201208:OS:22",
+          "fold_id": 3,
+          "block_id": "bx3_by61"
+        },
+        {
+          "event_id": "CPSTrawl:201208:OS:23",
+          "fold_id": 3,
+          "block_id": "bx3_by61"
+        },
+        {
+          "event_id": "CPSTrawl:201208:OS:24",
+          "fold_id": 3,
+          "block_id": "bx3_by61"
+        },
+        {
+          "event_id": "CPSTrawl:201208:OS:27",
+          "fold_id": 4,
+          "block_id": "bx3_by63"
+        },
+        {
+          "event_id": "CPSTrawl:201208:OS:28",
+          "fold_id": 4,
+          "block_id": "bx4_by63"
+        },
+        {
+          "event_id": "CPSTrawl:201208:OS:29",
+          "fold_id": 4,
+          "block_id": "bx2_by63"
+        },
+        {
+          "event_id": "CPSTrawl:201208:OS:30",
+          "fold_id": 4,
+          "block_id": "bx2_by63"
+        },
+        {
+          "event_id": "CPSTrawl:201208:OS:31",
+          "fold_id": 4,
+          "block_id": "bx2_by64"
+        },
+        {
+          "event_id": "CPSTrawl:201304:OS:28",
+          "fold_id": 4,
+          "block_id": "bx3_by63"
+        },
+        {
+          "event_id": "CPSTrawl:201304:OS:29",
+          "fold_id": 4,
+          "block_id": "bx3_by63"
+        },
+        {
+          "event_id": "CPSTrawl:201304:OS:30",
+          "fold_id": 4,
+          "block_id": "bx3_by63"
+        },
+        {
+          "event_id": "CPSTrawl:201304:OS:31",
+          "fold_id": 3,
+          "block_id": "bx2_by62"
+        },
+        {
+          "event_id": "CPSTrawl:201304:OS:32",
+          "fold_id": 3,
+          "block_id": "bx2_by62"
+        },
+        {
+          "event_id": "CPSTrawl:201304:OS:33",
+          "fold_id": 3,
+          "block_id": "bx2_by62"
+        },
+        {
+          "event_id": "CPSTrawl:201304:OS:35",
+          "fold_id": 2,
+          "block_id": "bx2_by60"
+        },
+        {
+          "event_id": "CPSTrawl:201304:OS:36",
+          "fold_id": 3,
+          "block_id": "bx2_by61"
+        },
+        {
+          "event_id": "CPSTrawl:201304:OS:37",
+          "fold_id": 4,
+          "block_id": "bx4_by62"
+        },
+        {
+          "event_id": "CPSTrawl:201304:OS:38",
+          "fold_id": 4,
+          "block_id": "bx4_by62"
+        },
+        {
+          "event_id": "CPSTrawl:201304:OS:39",
+          "fold_id": 3,
+          "block_id": "bx3_by61"
+        },
+        {
+          "event_id": "CPSTrawl:201304:OS:40",
+          "fold_id": 2,
+          "block_id": "bx3_by60"
+        },
+        {
+          "event_id": "CPSTrawl:201304:OS:41",
+          "fold_id": 3,
+          "block_id": "bx3_by61"
+        },
+        {
+          "event_id": "CPSTrawl:201304:OS:42",
+          "fold_id": 3,
+          "block_id": "bx6_by61"
+        },
+        {
+          "event_id": "CPSTrawl:201304:OS:43",
+          "fold_id": 4,
+          "block_id": "bx5_by62"
+        },
+        {
+          "event_id": "CPSTrawl:201304:OS:44",
+          "fold_id": 3,
+          "block_id": "bx5_by61"
+        },
+        {
+          "event_id": "CPSTrawl:201304:OS:45",
+          "fold_id": 2,
+          "block_id": "bx3_by60"
+        },
+        {
+          "event_id": "CPSTrawl:201304:OS:46",
+          "fold_id": 2,
+          "block_id": "bx3_by60"
+        },
+        {
+          "event_id": "CPSTrawl:201304:OS:47",
+          "fold_id": 2,
+          "block_id": "bx3_by60"
+        },
+        {
+          "event_id": "CPSTrawl:201304:OS:49",
+          "fold_id": 1,
+          "block_id": "bx4_by59"
+        },
+        {
+          "event_id": "CPSTrawl:201304:OS:50",
+          "fold_id": 1,
+          "block_id": "bx4_by59"
+        },
+        {
+          "event_id": "CPSTrawl:201304:OS:51",
+          "fold_id": 1,
+          "block_id": "bx4_by59"
+        },
+        {
+          "event_id": "CPSTrawl:201304:OS:52",
+          "fold_id": 3,
+          "block_id": "bx7_by61"
+        },
+        {
+          "event_id": "CPSTrawl:201307:SH:1",
+          "fold_id": 2,
+          "block_id": "bx7_by60"
+        },
+        {
+          "event_id": "CPSTrawl:201307:SH:2",
+          "fold_id": 2,
+          "block_id": "bx7_by60"
+        },
+        {
+          "event_id": "CPSTrawl:201307:SH:4",
+          "fold_id": 4,
+          "block_id": "bx5_by62"
+        },
+        {
+          "event_id": "CPSTrawl:201307:SH:5",
+          "fold_id": 4,
+          "block_id": "bx3_by63"
+        },
+        {
+          "event_id": "CPSTrawl:201307:SH:6",
+          "fold_id": 4,
+          "block_id": "bx3_by63"
+        },
+        {
+          "event_id": "CPSTrawl:201307:SH:7",
+          "fold_id": 4,
+          "block_id": "bx3_by63"
+        },
+        {
+          "event_id": "CPSTrawl:201307:SH:8",
+          "fold_id": 4,
+          "block_id": "bx2_by64"
+        },
+        {
+          "event_id": "CPSTrawl:201404:OS:1",
+          "fold_id": 2,
+          "block_id": "bx6_by60"
+        },
+        {
+          "event_id": "CPSTrawl:201404:OS:2",
+          "fold_id": 1,
+          "block_id": "bx6_by59"
+        },
+        {
+          "event_id": "CPSTrawl:201404:OS:3",
+          "fold_id": 2,
+          "block_id": "bx6_by60"
+        },
+        {
+          "event_id": "CPSTrawl:201404:OS:4",
+          "fold_id": 4,
+          "block_id": "bx5_by62"
+        },
+        {
+          "event_id": "CPSTrawl:201404:OS:5",
+          "fold_id": 4,
+          "block_id": "bx6_by62"
+        },
+        {
+          "event_id": "CPSTrawl:201404:OS:6",
+          "fold_id": 3,
+          "block_id": "bx7_by61"
+        },
+        {
+          "event_id": "CPSTrawl:201404:OS:8",
+          "fold_id": 3,
+          "block_id": "bx6_by61"
+        },
+        {
+          "event_id": "CPSTrawl:201404:OS:9",
+          "fold_id": 4,
+          "block_id": "bx4_by63"
+        },
+        {
+          "event_id": "CPSTrawl:201404:OS:10",
+          "fold_id": 4,
+          "block_id": "bx3_by63"
+        },
+        {
+          "event_id": "CPSTrawl:201404:SH:30",
+          "fold_id": 4,
+          "block_id": "bx2_by64"
+        },
+        {
+          "event_id": "CPSTrawl:201507:SH:1",
+          "fold_id": 2,
+          "block_id": "bx7_by60"
+        },
+        {
+          "event_id": "CPSTrawl:201507:SH:2",
+          "fold_id": 2,
+          "block_id": "bx7_by60"
+        },
+        {
+          "event_id": "CPSTrawl:201507:SH:4",
+          "fold_id": 3,
+          "block_id": "bx7_by61"
+        },
+        {
+          "event_id": "CPSTrawl:201507:SH:5",
+          "fold_id": 3,
+          "block_id": "bx7_by61"
+        },
+        {
+          "event_id": "CPSTrawl:201507:SH:6",
+          "fold_id": 3,
+          "block_id": "bx7_by61"
+        },
+        {
+          "event_id": "CPSTrawl:201507:SH:7",
+          "fold_id": 3,
+          "block_id": "bx6_by61"
+        },
+        {
+          "event_id": "CPSTrawl:201507:SH:8",
+          "fold_id": 3,
+          "block_id": "bx6_by61"
+        },
+        {
+          "event_id": "CPSTrawl:201507:SH:9",
+          "fold_id": 3,
+          "block_id": "bx6_by61"
+        },
+        {
+          "event_id": "CPSTrawl:201507:SH:10",
+          "fold_id": 4,
+          "block_id": "bx4_by62"
+        },
+        {
+          "event_id": "CPSTrawl:201507:SH:11",
+          "fold_id": 4,
+          "block_id": "bx4_by62"
+        },
+        {
+          "event_id": "CPSTrawl:201507:SH:12",
+          "fold_id": 4,
+          "block_id": "bx4_by62"
+        },
+        {
+          "event_id": "CPSTrawl:201507:SH:13",
+          "fold_id": 4,
+          "block_id": "bx3_by63"
+        },
+        {
+          "event_id": "CPSTrawl:201507:SH:14",
+          "fold_id": 4,
+          "block_id": "bx3_by63"
+        },
+        {
+          "event_id": "CPSTrawl:201507:SH:15",
+          "fold_id": 4,
+          "block_id": "bx3_by63"
+        },
+        {
+          "event_id": "CPSTrawl:201507:SH:17",
+          "fold_id": 4,
+          "block_id": "bx2_by64"
+        },
+        {
+          "event_id": "CPSTrawl:201607:RL:90",
+          "fold_id": 4,
+          "block_id": "bx3_by63"
+        },
+        {
+          "event_id": "CPSTrawl:201607:RL:91",
+          "fold_id": 4,
+          "block_id": "bx3_by63"
+        },
+        {
+          "event_id": "CPSTrawl:201607:RL:92",
+          "fold_id": 4,
+          "block_id": "bx3_by63"
+        },
+        {
+          "event_id": "CPSTrawl:201607:RL:93",
+          "fold_id": 4,
+          "block_id": "bx3_by63"
+        },
+        {
+          "event_id": "CPSTrawl:201607:RL:94",
+          "fold_id": 4,
+          "block_id": "bx3_by63"
+        },
+        {
+          "event_id": "CPSTrawl:201607:RL:95",
+          "fold_id": 4,
+          "block_id": "bx3_by63"
+        },
+        {
+          "event_id": "CPSTrawl:201607:RL:96",
+          "fold_id": 4,
+          "block_id": "bx3_by62"
+        },
+        {
+          "event_id": "CPSTrawl:201607:RL:97",
+          "fold_id": 4,
+          "block_id": "bx4_by62"
+        },
+        {
+          "event_id": "CPSTrawl:201607:RL:98",
+          "fold_id": 4,
+          "block_id": "bx4_by62"
+        },
+        {
+          "event_id": "CPSTrawl:201607:RL:99",
+          "fold_id": 4,
+          "block_id": "bx4_by62"
+        },
+        {
+          "event_id": "CPSTrawl:201607:RL:100",
+          "fold_id": 4,
+          "block_id": "bx4_by62"
+        },
+        {
+          "event_id": "CPSTrawl:201607:RL:101",
+          "fold_id": 4,
+          "block_id": "bx4_by62"
+        },
+        {
+          "event_id": "CPSTrawl:201607:RL:102",
+          "fold_id": 4,
+          "block_id": "bx4_by62"
+        },
+        {
+          "event_id": "CPSTrawl:201607:RL:103",
+          "fold_id": 4,
+          "block_id": "bx4_by62"
+        },
+        {
+          "event_id": "CPSTrawl:201607:RL:104",
+          "fold_id": 3,
+          "block_id": "bx4_by61"
+        },
+        {
+          "event_id": "CPSTrawl:201607:RL:105",
+          "fold_id": 4,
+          "block_id": "bx5_by62"
+        },
+        {
+          "event_id": "CPSTrawl:201607:RL:106",
+          "fold_id": 4,
+          "block_id": "bx5_by62"
+        },
+        {
+          "event_id": "CPSTrawl:201607:RL:107",
+          "fold_id": 4,
+          "block_id": "bx5_by62"
+        },
+        {
+          "event_id": "CPSTrawl:201607:RL:108",
+          "fold_id": 3,
+          "block_id": "bx4_by61"
+        },
+        {
+          "event_id": "CPSTrawl:201607:RL:109",
+          "fold_id": 3,
+          "block_id": "bx4_by61"
+        },
+        {
+          "event_id": "CPSTrawl:201607:RL:110",
+          "fold_id": 3,
+          "block_id": "bx5_by61"
+        },
+        {
+          "event_id": "CPSTrawl:201607:RL:111",
+          "fold_id": 3,
+          "block_id": "bx5_by61"
+        },
+        {
+          "event_id": "CPSTrawl:201607:RL:112",
+          "fold_id": 3,
+          "block_id": "bx5_by61"
+        },
+        {
+          "event_id": "CPSTrawl:201607:RL:113",
+          "fold_id": 3,
+          "block_id": "bx5_by61"
+        },
+        {
+          "event_id": "CPSTrawl:201607:RL:114",
+          "fold_id": 3,
+          "block_id": "bx7_by61"
+        },
+        {
+          "event_id": "CPSTrawl:201607:RL:115",
+          "fold_id": 3,
+          "block_id": "bx6_by61"
+        },
+        {
+          "event_id": "CPSTrawl:201607:RL:116",
+          "fold_id": 3,
+          "block_id": "bx7_by61"
+        },
+        {
+          "event_id": "CPSTrawl:201607:RL:117",
+          "fold_id": 2,
+          "block_id": "bx7_by60"
+        },
+        {
+          "event_id": "CPSTrawl:201607:RL:118",
+          "fold_id": 2,
+          "block_id": "bx7_by60"
+        },
+        {
+          "event_id": "CPSTrawl:201607:RL:119",
+          "fold_id": 2,
+          "block_id": "bx7_by60"
+        },
+        {
+          "event_id": "CPSTrawl:201607:RL:121",
+          "fold_id": 2,
+          "block_id": "bx7_by60"
+        },
+        {
+          "event_id": "CPSTrawl:201704:RL:1",
+          "fold_id": 2,
+          "block_id": "bx7_by60"
+        },
+        {
+          "event_id": "CPSTrawl:201704:RL:2",
+          "fold_id": 2,
+          "block_id": "bx7_by60"
+        },
+        {
+          "event_id": "CPSTrawl:201704:RL:3",
+          "fold_id": 2,
+          "block_id": "bx7_by60"
+        },
+        {
+          "event_id": "CPSTrawl:201704:RL:5",
+          "fold_id": 2,
+          "block_id": "bx7_by60"
+        },
+        {
+          "event_id": "CPSTrawl:201704:RL:6",
+          "fold_id": 2,
+          "block_id": "bx7_by60"
+        },
+        {
+          "event_id": "CPSTrawl:201704:RL:7",
+          "fold_id": 3,
+          "block_id": "bx7_by61"
+        },
+        {
+          "event_id": "CPSTrawl:201704:RL:8",
+          "fold_id": 3,
+          "block_id": "bx7_by61"
+        },
+        {
+          "event_id": "CPSTrawl:201704:RL:9",
+          "fold_id": 3,
+          "block_id": "bx7_by61"
+        },
+        {
+          "event_id": "CPSTrawl:201704:RL:10",
+          "fold_id": 2,
+          "block_id": "bx5_by60"
+        },
+        {
+          "event_id": "CPSTrawl:201704:RL:11",
+          "fold_id": 3,
+          "block_id": "bx5_by61"
+        },
+        {
+          "event_id": "CPSTrawl:201704:RL:12",
+          "fold_id": 3,
+          "block_id": "bx5_by61"
+        },
+        {
+          "event_id": "CPSTrawl:201704:RL:13",
+          "fold_id": 3,
+          "block_id": "bx6_by61"
+        },
+        {
+          "event_id": "CPSTrawl:201704:RL:14",
+          "fold_id": 3,
+          "block_id": "bx7_by61"
+        },
+        {
+          "event_id": "CPSTrawl:201704:RL:15",
+          "fold_id": 3,
+          "block_id": "bx6_by61"
+        },
+        {
+          "event_id": "CPSTrawl:201704:RL:16",
+          "fold_id": 3,
+          "block_id": "bx5_by61"
+        },
+        {
+          "event_id": "CPSTrawl:201704:RL:17",
+          "fold_id": 3,
+          "block_id": "bx5_by61"
+        },
+        {
+          "event_id": "CPSTrawl:201704:RL:18",
+          "fold_id": 2,
+          "block_id": "bx5_by60"
+        },
+        {
+          "event_id": "CPSTrawl:201704:RL:19",
+          "fold_id": 4,
+          "block_id": "bx5_by62"
+        },
+        {
+          "event_id": "CPSTrawl:201704:RL:20",
+          "fold_id": 3,
+          "block_id": "bx5_by61"
+        },
+        {
+          "event_id": "CPSTrawl:201704:RL:21",
+          "fold_id": 3,
+          "block_id": "bx5_by61"
+        },
+        {
+          "event_id": "CPSTrawl:201704:RL:22",
+          "fold_id": 3,
+          "block_id": "bx4_by61"
+        },
+        {
+          "event_id": "CPSTrawl:201704:RL:25",
+          "fold_id": 3,
+          "block_id": "bx3_by61"
+        },
+        {
+          "event_id": "CPSTrawl:201704:RL:26",
+          "fold_id": 3,
+          "block_id": "bx3_by61"
+        },
+        {
+          "event_id": "CPSTrawl:201704:RL:27",
+          "fold_id": 3,
+          "block_id": "bx4_by61"
+        },
+        {
+          "event_id": "CPSTrawl:201704:RL:28",
+          "fold_id": 4,
+          "block_id": "bx5_by62"
+        },
+        {
+          "event_id": "CPSTrawl:201704:RL:29",
+          "fold_id": 4,
+          "block_id": "bx5_by62"
+        },
+        {
+          "event_id": "CPSTrawl:201704:RL:30",
+          "fold_id": 4,
+          "block_id": "bx5_by62"
+        },
+        {
+          "event_id": "CPSTrawl:201704:RL:31",
+          "fold_id": 3,
+          "block_id": "bx3_by61"
+        },
+        {
+          "event_id": "CPSTrawl:201704:RL:32",
+          "fold_id": 3,
+          "block_id": "bx3_by61"
+        },
+        {
+          "event_id": "CPSTrawl:201704:RL:33",
+          "fold_id": 4,
+          "block_id": "bx4_by63"
+        },
+        {
+          "event_id": "CPSTrawl:201704:RL:34",
+          "fold_id": 4,
+          "block_id": "bx4_by63"
+        },
+        {
+          "event_id": "CPSTrawl:201704:RL:35",
+          "fold_id": 4,
+          "block_id": "bx4_by63"
+        },
+        {
+          "event_id": "CPSTrawl:201704:RL:36",
+          "fold_id": 3,
+          "block_id": "bx2_by62"
+        },
+        {
+          "event_id": "CPSTrawl:201704:RL:37",
+          "fold_id": 3,
+          "block_id": "bx2_by62"
+        },
+        {
+          "event_id": "CPSTrawl:201704:RL:38",
+          "fold_id": 4,
+          "block_id": "bx2_by63"
+        },
+        {
+          "event_id": "CPSTrawl:201807:RL:139",
+          "fold_id": 4,
+          "block_id": "bx3_by63"
+        },
+        {
+          "event_id": "CPSTrawl:201807:RL:140",
+          "fold_id": 4,
+          "block_id": "bx4_by63"
+        },
+        {
+          "event_id": "CPSTrawl:201807:RL:141",
+          "fold_id": 4,
+          "block_id": "bx3_by62"
+        },
+        {
+          "event_id": "CPSTrawl:201807:RL:142",
+          "fold_id": 4,
+          "block_id": "bx3_by62"
+        },
+        {
+          "event_id": "CPSTrawl:201807:RL:145",
+          "fold_id": 4,
+          "block_id": "bx3_by62"
+        },
+        {
+          "event_id": "CPSTrawl:201807:RL:146",
+          "fold_id": 4,
+          "block_id": "bx3_by62"
+        },
+        {
+          "event_id": "CPSTrawl:201807:RL:147",
+          "fold_id": 4,
+          "block_id": "bx4_by62"
+        },
+        {
+          "event_id": "CPSTrawl:201807:RL:148",
+          "fold_id": 4,
+          "block_id": "bx4_by62"
+        },
+        {
+          "event_id": "CPSTrawl:201807:RL:149",
+          "fold_id": 4,
+          "block_id": "bx4_by62"
+        },
+        {
+          "event_id": "CPSTrawl:201807:RL:150",
+          "fold_id": 4,
+          "block_id": "bx4_by62"
+        },
+        {
+          "event_id": "CPSTrawl:201807:RL:151",
+          "fold_id": 4,
+          "block_id": "bx4_by62"
+        },
+        {
+          "event_id": "CPSTrawl:201807:RL:152",
+          "fold_id": 4,
+          "block_id": "bx4_by62"
+        },
+        {
+          "event_id": "CPSTrawl:201807:RL:153",
+          "fold_id": 3,
+          "block_id": "bx4_by61"
+        },
+        {
+          "event_id": "CPSTrawl:201807:RL:154",
+          "fold_id": 3,
+          "block_id": "bx4_by61"
+        },
+        {
+          "event_id": "CPSTrawl:201807:RL:155",
+          "fold_id": 3,
+          "block_id": "bx4_by61"
+        },
+        {
+          "event_id": "CPSTrawl:201807:RL:156",
+          "fold_id": 3,
+          "block_id": "bx5_by61"
+        },
+        {
+          "event_id": "CPSTrawl:201807:RL:157",
+          "fold_id": 3,
+          "block_id": "bx5_by61"
+        },
+        {
+          "event_id": "CPSTrawl:201807:RL:158",
+          "fold_id": 3,
+          "block_id": "bx5_by61"
+        },
+        {
+          "event_id": "CPSTrawl:201807:RL:159",
+          "fold_id": 4,
+          "block_id": "bx6_by62"
+        },
+        {
+          "event_id": "CPSTrawl:201807:RL:160",
+          "fold_id": 3,
+          "block_id": "bx6_by61"
+        },
+        {
+          "event_id": "CPSTrawl:201807:RL:161",
+          "fold_id": 3,
+          "block_id": "bx6_by61"
+        },
+        {
+          "event_id": "CPSTrawl:201807:RL:162",
+          "fold_id": 3,
+          "block_id": "bx5_by61"
+        },
+        {
+          "event_id": "CPSTrawl:201807:RL:163",
+          "fold_id": 3,
+          "block_id": "bx6_by61"
+        },
+        {
+          "event_id": "CPSTrawl:201807:RL:165",
+          "fold_id": 2,
+          "block_id": "bx6_by60"
+        },
+        {
+          "event_id": "CPSTrawl:201807:RL:166",
+          "fold_id": 2,
+          "block_id": "bx6_by60"
+        },
+        {
+          "event_id": "CPSTrawl:201807:RL:167",
+          "fold_id": 2,
+          "block_id": "bx6_by60"
+        },
+        {
+          "event_id": "CPSTrawl:201807:RL:168",
+          "fold_id": 2,
+          "block_id": "bx7_by60"
+        },
+        {
+          "event_id": "CPSTrawl:201807:RL:169",
+          "fold_id": 3,
+          "block_id": "bx7_by61"
+        },
+        {
+          "event_id": "CPSTrawl:201807:RL:170",
+          "fold_id": 3,
+          "block_id": "bx7_by61"
+        },
+        {
+          "event_id": "CPSTrawl:201807:RL:171",
+          "fold_id": 2,
+          "block_id": "bx6_by60"
+        },
+        {
+          "event_id": "CPSTrawl:201807:RL:172",
+          "fold_id": 2,
+          "block_id": "bx6_by60"
+        },
+        {
+          "event_id": "CPSTrawl:201807:RL:173",
+          "fold_id": 1,
+          "block_id": "bx6_by59"
+        },
+        {
+          "event_id": "CPSTrawl:201807:RL:174",
+          "fold_id": 2,
+          "block_id": "bx7_by60"
+        },
+        {
+          "event_id": "CPSTrawl:201807:RL:175",
+          "fold_id": 2,
+          "block_id": "bx7_by60"
+        },
+        {
+          "event_id": "CPSTrawl:201907:RL:119",
+          "fold_id": 4,
+          "block_id": "bx2_by63"
+        },
+        {
+          "event_id": "CPSTrawl:201907:RL:120",
+          "fold_id": 4,
+          "block_id": "bx2_by63"
+        },
+        {
+          "event_id": "CPSTrawl:201907:RL:122",
+          "fold_id": 4,
+          "block_id": "bx2_by64"
+        },
+        {
+          "event_id": "CPSTrawl:201907:RL:123",
+          "fold_id": 4,
+          "block_id": "bx2_by64"
+        },
+        {
+          "event_id": "CPSTrawl:201907:RL:125",
+          "fold_id": 4,
+          "block_id": "bx2_by63"
+        },
+        {
+          "event_id": "CPSTrawl:201907:RL:127",
+          "fold_id": 3,
+          "block_id": "bx2_by62"
+        },
+        {
+          "event_id": "CPSTrawl:201907:RL:129",
+          "fold_id": 4,
+          "block_id": "bx4_by63"
+        },
+        {
+          "event_id": "CPSTrawl:201907:RL:130",
+          "fold_id": 4,
+          "block_id": "bx3_by63"
+        },
+        {
+          "event_id": "CPSTrawl:201907:RL:131",
+          "fold_id": 3,
+          "block_id": "bx2_by62"
+        },
+        {
+          "event_id": "CPSTrawl:201907:RL:132",
+          "fold_id": 3,
+          "block_id": "bx2_by62"
+        },
+        {
+          "event_id": "CPSTrawl:201907:RL:133",
+          "fold_id": 3,
+          "block_id": "bx2_by62"
+        },
+        {
+          "event_id": "CPSTrawl:201907:RL:136",
+          "fold_id": 4,
+          "block_id": "bx4_by62"
+        },
+        {
+          "event_id": "CPSTrawl:201907:RL:138",
+          "fold_id": 4,
+          "block_id": "bx3_by62"
+        },
+        {
+          "event_id": "CPSTrawl:201907:RL:139",
+          "fold_id": 4,
+          "block_id": "bx3_by62"
+        },
+        {
+          "event_id": "CPSTrawl:201907:RL:140",
+          "fold_id": 3,
+          "block_id": "bx3_by61"
+        },
+        {
+          "event_id": "CPSTrawl:201907:RL:141",
+          "fold_id": 4,
+          "block_id": "bx4_by62"
+        },
+        {
+          "event_id": "CPSTrawl:201907:RL:142",
+          "fold_id": 4,
+          "block_id": "bx5_by62"
+        },
+        {
+          "event_id": "CPSTrawl:201907:RL:143",
+          "fold_id": 4,
+          "block_id": "bx5_by62"
+        },
+        {
+          "event_id": "CPSTrawl:201907:RL:144",
+          "fold_id": 4,
+          "block_id": "bx5_by62"
+        },
+        {
+          "event_id": "CPSTrawl:201907:RL:145",
+          "fold_id": 4,
+          "block_id": "bx5_by62"
+        },
+        {
+          "event_id": "CPSTrawl:201907:RL:146",
+          "fold_id": 4,
+          "block_id": "bx6_by62"
+        },
+        {
+          "event_id": "CPSTrawl:201907:RL:147",
+          "fold_id": 3,
+          "block_id": "bx5_by61"
+        },
+        {
+          "event_id": "CPSTrawl:201907:RL:148",
+          "fold_id": 3,
+          "block_id": "bx5_by61"
+        },
+        {
+          "event_id": "CPSTrawl:201907:RL:149",
+          "fold_id": 3,
+          "block_id": "bx5_by61"
+        },
+        {
+          "event_id": "CPSTrawl:201907:RL:150",
+          "fold_id": 3,
+          "block_id": "bx7_by61"
+        },
+        {
+          "event_id": "CPSTrawl:201907:RL:151",
+          "fold_id": 3,
+          "block_id": "bx6_by61"
+        },
+        {
+          "event_id": "CPSTrawl:201907:RL:152",
+          "fold_id": 3,
+          "block_id": "bx6_by61"
+        },
+        {
+          "event_id": "CPSTrawl:201907:RL:153",
+          "fold_id": 3,
+          "block_id": "bx6_by61"
+        },
+        {
+          "event_id": "CPSTrawl:201907:RL:154",
+          "fold_id": 3,
+          "block_id": "bx7_by61"
+        },
+        {
+          "event_id": "CPSTrawl:201907:RL:155",
+          "fold_id": 3,
+          "block_id": "bx7_by61"
+        },
+        {
+          "event_id": "CPSTrawl:201907:RL:156",
+          "fold_id": 2,
+          "block_id": "bx5_by60"
+        },
+        {
+          "event_id": "CPSTrawl:201907:RL:157",
+          "fold_id": 2,
+          "block_id": "bx5_by60"
+        },
+        {
+          "event_id": "CPSTrawl:201907:RL:158",
+          "fold_id": 1,
+          "block_id": "bx5_by59"
+        },
+        {
+          "event_id": "CPSTrawl:201907:RL:159",
+          "fold_id": 2,
+          "block_id": "bx7_by60"
+        },
+        {
+          "event_id": "CPSTrawl:201907:RL:160",
+          "fold_id": 2,
+          "block_id": "bx7_by60"
+        },
+        {
+          "event_id": "CPSTrawl:201907:RL:161",
+          "fold_id": 2,
+          "block_id": "bx7_by60"
+        },
+        {
+          "event_id": "CPSTrawl:201907:RL:162",
+          "fold_id": 1,
+          "block_id": "bx6_by59"
+        },
+        {
+          "event_id": "CPSTrawl:201907:RL:163",
+          "fold_id": 1,
+          "block_id": "bx6_by59"
+        },
+        {
+          "event_id": "CPSTrawl:201907:RL:164",
+          "fold_id": 1,
+          "block_id": "bx6_by59"
+        },
+        {
+          "event_id": "CPSTrawl:201907:RL:165",
+          "fold_id": 2,
+          "block_id": "bx7_by60"
+        },
+        {
+          "event_id": "CPSTrawl:201907:RL:166",
+          "fold_id": 2,
+          "block_id": "bx7_by60"
+        },
+        {
+          "event_id": "CPSTrawl:201907:RL:167",
+          "fold_id": 2,
+          "block_id": "bx7_by60"
+        },
+        {
+          "event_id": "CPSTrawl:202103:RL:1",
+          "fold_id": 2,
+          "block_id": "bx7_by60"
+        },
+        {
+          "event_id": "CPSTrawl:202103:RL:2",
+          "fold_id": 3,
+          "block_id": "bx7_by61"
+        },
+        {
+          "event_id": "CPSTrawl:202103:RL:3",
+          "fold_id": 2,
+          "block_id": "bx7_by60"
+        },
+        {
+          "event_id": "CPSTrawl:202103:RL:4",
+          "fold_id": 3,
+          "block_id": "bx7_by61"
+        },
+        {
+          "event_id": "CPSTrawl:202103:RL:5",
+          "fold_id": 3,
+          "block_id": "bx6_by61"
+        },
+        {
+          "event_id": "CPSTrawl:202103:RL:6",
+          "fold_id": 3,
+          "block_id": "bx5_by61"
+        },
+        {
+          "event_id": "CPSTrawl:202103:RL:7",
+          "fold_id": 3,
+          "block_id": "bx6_by61"
+        },
+        {
+          "event_id": "CPSTrawl:202103:RL:8",
+          "fold_id": 3,
+          "block_id": "bx7_by61"
+        },
+        {
+          "event_id": "CPSTrawl:202103:RL:10",
+          "fold_id": 3,
+          "block_id": "bx7_by61"
+        },
+        {
+          "event_id": "CPSTrawl:202103:RL:11",
+          "fold_id": 2,
+          "block_id": "bx6_by60"
+        },
+        {
+          "event_id": "CPSTrawl:202103:RL:12",
+          "fold_id": 2,
+          "block_id": "bx6_by60"
+        },
+        {
+          "event_id": "CPSTrawl:202103:RL:13",
+          "fold_id": 2,
+          "block_id": "bx6_by60"
+        },
+        {
+          "event_id": "CPSTrawl:202103:RL:14",
+          "fold_id": 1,
+          "block_id": "bx5_by59"
+        },
+        {
+          "event_id": "CPSTrawl:202103:RL:15",
+          "fold_id": 1,
+          "block_id": "bx5_by59"
+        },
+        {
+          "event_id": "CPSTrawl:202103:RL:16",
+          "fold_id": 2,
+          "block_id": "bx4_by60"
+        },
+        {
+          "event_id": "CPSTrawl:202103:RL:17",
+          "fold_id": 2,
+          "block_id": "bx4_by60"
+        },
+        {
+          "event_id": "CPSTrawl:202103:RL:18",
+          "fold_id": 2,
+          "block_id": "bx4_by60"
+        },
+        {
+          "event_id": "CPSTrawl:202103:RL:19",
+          "fold_id": 2,
+          "block_id": "bx4_by60"
+        },
+        {
+          "event_id": "CPSTrawl:202103:RL:20",
+          "fold_id": 3,
+          "block_id": "bx3_by61"
+        },
+        {
+          "event_id": "CPSTrawl:202103:RL:21",
+          "fold_id": 3,
+          "block_id": "bx3_by61"
+        },
+        {
+          "event_id": "CPSTrawl:202103:RL:22",
+          "fold_id": 3,
+          "block_id": "bx3_by61"
+        },
+        {
+          "event_id": "CPSTrawl:202103:RL:23",
+          "fold_id": 3,
+          "block_id": "bx2_by61"
+        },
+        {
+          "event_id": "CPSTrawl:202103:RL:24",
+          "fold_id": 3,
+          "block_id": "bx2_by61"
+        },
+        {
+          "event_id": "CPSTrawl:202103:RL:25",
+          "fold_id": 3,
+          "block_id": "bx2_by61"
+        },
+        {
+          "event_id": "CPSTrawl:202103:RL:29",
+          "fold_id": 4,
+          "block_id": "bx5_by62"
+        },
+        {
+          "event_id": "CPSTrawl:202103:RL:30",
+          "fold_id": 4,
+          "block_id": "bx5_by62"
+        },
+        {
+          "event_id": "CPSTrawl:202103:RL:31",
+          "fold_id": 4,
+          "block_id": "bx5_by62"
+        },
+        {
+          "event_id": "CPSTrawl:202103:RL:32",
+          "fold_id": 3,
+          "block_id": "bx5_by61"
+        },
+        {
+          "event_id": "CPSTrawl:202103:RL:33",
+          "fold_id": 3,
+          "block_id": "bx4_by61"
+        },
+        {
+          "event_id": "CPSTrawl:202103:RL:34",
+          "fold_id": 3,
+          "block_id": "bx2_by62"
+        },
+        {
+          "event_id": "CPSTrawl:202103:RL:35",
+          "fold_id": 3,
+          "block_id": "bx2_by62"
+        },
+        {
+          "event_id": "CPSTrawl:202103:RL:36",
+          "fold_id": 4,
+          "block_id": "bx3_by62"
+        },
+        {
+          "event_id": "CPSTrawl:202103:RL:37",
+          "fold_id": 3,
+          "block_id": "bx2_by62"
+        },
+        {
+          "event_id": "CPSTrawl:202103:RL:38",
+          "fold_id": 4,
+          "block_id": "bx2_by63"
+        },
+        {
+          "event_id": "CPSTrawl:202103:RL:39",
+          "fold_id": 4,
+          "block_id": "bx2_by63"
+        },
+        {
+          "event_id": "CPSTrawl:202103:RL:41",
+          "fold_id": 4,
+          "block_id": "bx2_by63"
+        },
+        {
+          "event_id": "CPSTrawl:202103:RL:42",
+          "fold_id": 4,
+          "block_id": "bx2_by63"
+        },
+        {
+          "event_id": "CPSTrawl:202107:RL:73",
+          "fold_id": 4,
+          "block_id": "bx3_by63"
+        },
+        {
+          "event_id": "CPSTrawl:202107:RL:76",
+          "fold_id": 4,
+          "block_id": "bx4_by62"
+        },
+        {
+          "event_id": "CPSTrawl:202107:RL:79",
+          "fold_id": 4,
+          "block_id": "bx5_by62"
+        },
+        {
+          "event_id": "CPSTrawl:202107:RL:80",
+          "fold_id": 4,
+          "block_id": "bx4_by62"
+        },
+        {
+          "event_id": "CPSTrawl:202107:RL:81",
+          "fold_id": 4,
+          "block_id": "bx4_by62"
+        },
+        {
+          "event_id": "CPSTrawl:202107:RL:82",
+          "fold_id": 3,
+          "block_id": "bx4_by61"
+        },
+        {
+          "event_id": "CPSTrawl:202107:RL:83",
+          "fold_id": 3,
+          "block_id": "bx4_by61"
+        },
+        {
+          "event_id": "CPSTrawl:202107:RL:85",
+          "fold_id": 3,
+          "block_id": "bx6_by61"
+        },
+        {
+          "event_id": "CPSTrawl:202107:RL:86",
+          "fold_id": 4,
+          "block_id": "bx6_by62"
+        },
+        {
+          "event_id": "CPSTrawl:202107:RL:87",
+          "fold_id": 3,
+          "block_id": "bx5_by61"
+        },
+        {
+          "event_id": "CPSTrawl:202107:RL:88",
+          "fold_id": 3,
+          "block_id": "bx5_by61"
+        },
+        {
+          "event_id": "CPSTrawl:202107:RL:89",
+          "fold_id": 3,
+          "block_id": "bx5_by61"
+        },
+        {
+          "event_id": "CPSTrawl:202107:RL:90",
+          "fold_id": 3,
+          "block_id": "bx4_by61"
+        },
+        {
+          "event_id": "CPSTrawl:202107:RL:91",
+          "fold_id": 3,
+          "block_id": "bx5_by61"
+        },
+        {
+          "event_id": "CPSTrawl:202107:RL:92",
+          "fold_id": 3,
+          "block_id": "bx5_by61"
+        },
+        {
+          "event_id": "CPSTrawl:202107:RL:93",
+          "fold_id": 2,
+          "block_id": "bx6_by60"
+        },
+        {
+          "event_id": "CPSTrawl:202107:RL:94",
+          "fold_id": 2,
+          "block_id": "bx6_by60"
+        },
+        {
+          "event_id": "CPSTrawl:202107:RL:95",
+          "fold_id": 2,
+          "block_id": "bx6_by60"
+        },
+        {
+          "event_id": "CPSTrawl:202107:RL:96",
+          "fold_id": 3,
+          "block_id": "bx7_by61"
+        },
+        {
+          "event_id": "CPSTrawl:202107:RL:98",
+          "fold_id": 3,
+          "block_id": "bx7_by61"
+        },
+        {
+          "event_id": "CPSTrawl:202107:RL:99",
+          "fold_id": 2,
+          "block_id": "bx7_by60"
+        },
+        {
+          "event_id": "CPSTrawl:202107:RL:101",
+          "fold_id": 2,
+          "block_id": "bx7_by60"
+        },
+        {
+          "event_id": "CPSTrawl:202107:RL:102",
+          "fold_id": 2,
+          "block_id": "bx7_by60"
+        },
+        {
+          "event_id": "CPSTrawl:202107:RL:103",
+          "fold_id": 2,
+          "block_id": "bx7_by60"
+        },
+        {
+          "event_id": "CPSTrawl:202107:RL:110",
+          "fold_id": 1,
+          "block_id": "bx7_by59"
+        },
+        {
+          "event_id": "CPSTrawl:202107:RL:111",
+          "fold_id": 1,
+          "block_id": "bx7_by59"
+        },
+        {
+          "event_id": "CPSTrawl:202107:RL:112",
+          "fold_id": 1,
+          "block_id": "bx7_by59"
+        },
+        {
+          "event_id": "CPSTrawl:202107:RL:113",
+          "fold_id": 1,
+          "block_id": "bx8_by59"
+        },
+        {
+          "event_id": "CPSTrawl:202107:RL:117",
+          "fold_id": 1,
+          "block_id": "bx8_by59"
+        },
+        {
+          "event_id": "CPSTrawl:202107:RL:118",
+          "fold_id": 1,
+          "block_id": "bx8_by59"
+        },
+        {
+          "event_id": "CPSTrawl:202207:RL:30",
+          "fold_id": 2,
+          "block_id": "bx7_by60"
+        },
+        {
+          "event_id": "CPSTrawl:202207:RL:31",
+          "fold_id": 2,
+          "block_id": "bx7_by60"
+        },
+        {
+          "event_id": "CPSTrawl:202207:RL:32",
+          "fold_id": 2,
+          "block_id": "bx6_by60"
+        },
+        {
+          "event_id": "CPSTrawl:202207:RL:33",
+          "fold_id": 2,
+          "block_id": "bx6_by60"
+        },
+        {
+          "event_id": "CPSTrawl:202207:RL:34",
+          "fold_id": 2,
+          "block_id": "bx6_by60"
+        },
+        {
+          "event_id": "CPSTrawl:202207:RL:35",
+          "fold_id": 3,
+          "block_id": "bx6_by61"
+        },
+        {
+          "event_id": "CPSTrawl:202207:RL:36",
+          "fold_id": 3,
+          "block_id": "bx5_by61"
+        },
+        {
+          "event_id": "CPSTrawl:202207:RL:37",
+          "fold_id": 3,
+          "block_id": "bx5_by61"
+        },
+        {
+          "event_id": "CPSTrawl:202207:RL:38",
+          "fold_id": 3,
+          "block_id": "bx4_by61"
+        },
+        {
+          "event_id": "CPSTrawl:202207:RL:39",
+          "fold_id": 3,
+          "block_id": "bx7_by61"
+        },
+        {
+          "event_id": "CPSTrawl:202207:RL:50",
+          "fold_id": 4,
+          "block_id": "bx2_by63"
+        },
+        {
+          "event_id": "CPSTrawl:202207:RL:51",
+          "fold_id": 4,
+          "block_id": "bx2_by63"
+        },
+        {
+          "event_id": "CPSTrawl:202207:RL:53",
+          "fold_id": 4,
+          "block_id": "bx3_by63"
+        },
+        {
+          "event_id": "CPSTrawl:202207:RL:55",
+          "fold_id": 4,
+          "block_id": "bx2_by63"
+        },
+        {
+          "event_id": "CPSTrawl:202207:RL:56",
+          "fold_id": 4,
+          "block_id": "bx3_by62"
+        },
+        {
+          "event_id": "CPSTrawl:202207:RL:57",
+          "fold_id": 4,
+          "block_id": "bx3_by62"
+        },
+        {
+          "event_id": "CPSTrawl:202207:RL:58",
+          "fold_id": 4,
+          "block_id": "bx5_by62"
+        },
+        {
+          "event_id": "CPSTrawl:202207:RL:59",
+          "fold_id": 4,
+          "block_id": "bx4_by62"
+        },
+        {
+          "event_id": "CPSTrawl:202207:RL:60",
+          "fold_id": 4,
+          "block_id": "bx3_by62"
+        },
+        {
+          "event_id": "CPSTrawl:202207:RL:61",
+          "fold_id": 3,
+          "block_id": "bx2_by61"
+        },
+        {
+          "event_id": "CPSTrawl:202207:RL:62",
+          "fold_id": 3,
+          "block_id": "bx3_by61"
+        },
+        {
+          "event_id": "CPSTrawl:202207:RL:63",
+          "fold_id": 3,
+          "block_id": "bx3_by61"
+        },
+        {
+          "event_id": "CPSTrawl:202207:RL:64",
+          "fold_id": 3,
+          "block_id": "bx4_by61"
+        },
+        {
+          "event_id": "CPSTrawl:202207:RL:65",
+          "fold_id": 3,
+          "block_id": "bx3_by61"
+        },
+        {
+          "event_id": "CPSTrawl:202207:RL:66",
+          "fold_id": 3,
+          "block_id": "bx4_by61"
+        },
+        {
+          "event_id": "CPSTrawl:202207:RL:67",
+          "fold_id": 3,
+          "block_id": "bx5_by61"
+        },
+        {
+          "event_id": "CPSTrawl:202207:RL:68",
+          "fold_id": 3,
+          "block_id": "bx5_by61"
+        },
+        {
+          "event_id": "CPSTrawl:202207:RL:69",
+          "fold_id": 3,
+          "block_id": "bx6_by61"
+        },
+        {
+          "event_id": "CPSTrawl:202207:RL:70",
+          "fold_id": 3,
+          "block_id": "bx5_by61"
+        },
+        {
+          "event_id": "CPSTrawl:202207:RL:71",
+          "fold_id": 4,
+          "block_id": "bx5_by62"
+        },
+        {
+          "event_id": "CPSTrawl:202207:RL:72",
+          "fold_id": 3,
+          "block_id": "bx6_by61"
+        },
+        {
+          "event_id": "CPSTrawl:202207:RL:73",
+          "fold_id": 2,
+          "block_id": "bx5_by60"
+        },
+        {
+          "event_id": "CPSTrawl:202207:RL:75",
+          "fold_id": 2,
+          "block_id": "bx5_by60"
+        },
+        {
+          "event_id": "CPSTrawl:202207:RL:77",
+          "fold_id": 2,
+          "block_id": "bx7_by60"
+        },
+        {
+          "event_id": "CPSTrawl:202207:RL:78",
+          "fold_id": 2,
+          "block_id": "bx7_by60"
+        },
+        {
+          "event_id": "CPSTrawl:202207:RL:79",
+          "fold_id": 1,
+          "block_id": "bx7_by59"
+        },
+        {
+          "event_id": "CPSTrawl:202307:RL:2",
+          "fold_id": 1,
+          "block_id": "bx7_by59"
+        },
+        {
+          "event_id": "CPSTrawl:202307:RL:3",
+          "fold_id": 2,
+          "block_id": "bx7_by60"
+        },
+        {
+          "event_id": "CPSTrawl:202307:RL:4",
+          "fold_id": 1,
+          "block_id": "bx7_by59"
+        },
+        {
+          "event_id": "CPSTrawl:202307:RL:5",
+          "fold_id": 2,
+          "block_id": "bx6_by60"
+        },
+        {
+          "event_id": "CPSTrawl:202307:RL:6",
+          "fold_id": 2,
+          "block_id": "bx5_by60"
+        },
+        {
+          "event_id": "CPSTrawl:202307:RL:7",
+          "fold_id": 2,
+          "block_id": "bx5_by60"
+        },
+        {
+          "event_id": "CPSTrawl:202307:RL:8",
+          "fold_id": 3,
+          "block_id": "bx7_by61"
+        },
+        {
+          "event_id": "CPSTrawl:202307:RL:9",
+          "fold_id": 3,
+          "block_id": "bx6_by61"
+        },
+        {
+          "event_id": "CPSTrawl:202307:RL:10",
+          "fold_id": 3,
+          "block_id": "bx6_by61"
+        },
+        {
+          "event_id": "CPSTrawl:202307:RL:12",
+          "fold_id": 3,
+          "block_id": "bx6_by61"
+        },
+        {
+          "event_id": "CPSTrawl:202307:RL:13",
+          "fold_id": 4,
+          "block_id": "bx4_by62"
+        },
+        {
+          "event_id": "CPSTrawl:202307:RL:14",
+          "fold_id": 3,
+          "block_id": "bx4_by61"
+        },
+        {
+          "event_id": "CPSTrawl:202307:RL:15",
+          "fold_id": 3,
+          "block_id": "bx4_by61"
+        },
+        {
+          "event_id": "CPSTrawl:202307:RL:16",
+          "fold_id": 2,
+          "block_id": "bx4_by60"
+        },
+        {
+          "event_id": "CPSTrawl:202307:RL:17",
+          "fold_id": 2,
+          "block_id": "bx4_by60"
+        },
+        {
+          "event_id": "CPSTrawl:202307:RL:18",
+          "fold_id": 3,
+          "block_id": "bx2_by62"
+        },
+        {
+          "event_id": "CPSTrawl:202307:RL:19",
+          "fold_id": 4,
+          "block_id": "bx3_by62"
+        },
+        {
+          "event_id": "CPSTrawl:202307:RL:20",
+          "fold_id": 3,
+          "block_id": "bx3_by61"
+        },
+        {
+          "event_id": "CPSTrawl:202307:RL:22",
+          "fold_id": 3,
+          "block_id": "bx2_by62"
+        },
+        {
+          "event_id": "CPSTrawl:202307:RL:23",
+          "fold_id": 4,
+          "block_id": "bx2_by63"
+        },
+        {
+          "event_id": "CPSTrawl:202307:RL:27",
+          "fold_id": 4,
+          "block_id": "bx2_by63"
+        },
+        {
+          "event_id": "CPSTrawl:202307:RL:28",
+          "fold_id": 4,
+          "block_id": "bx2_by63"
+        },
+        {
+          "event_id": "CPSTrawl:202307:RL:30",
+          "fold_id": 4,
+          "block_id": "bx2_by64"
+        },
+        {
+          "event_id": "CPSTrawl:202407:RL:11",
+          "fold_id": 1,
+          "block_id": "bx8_by59"
+        },
+        {
+          "event_id": "CPSTrawl:202407:RL:13",
+          "fold_id": 1,
+          "block_id": "bx6_by59"
+        },
+        {
+          "event_id": "CPSTrawl:202407:RL:14",
+          "fold_id": 1,
+          "block_id": "bx6_by59"
+        },
+        {
+          "event_id": "CPSTrawl:202407:RL:15",
+          "fold_id": 1,
+          "block_id": "bx6_by59"
+        },
+        {
+          "event_id": "CPSTrawl:202407:RL:16",
+          "fold_id": 2,
+          "block_id": "bx6_by60"
+        },
+        {
+          "event_id": "CPSTrawl:202407:RL:17",
+          "fold_id": 1,
+          "block_id": "bx6_by59"
+        },
+        {
+          "event_id": "CPSTrawl:202407:RL:18",
+          "fold_id": 1,
+          "block_id": "bx6_by59"
+        },
+        {
+          "event_id": "CPSTrawl:202407:RL:19",
+          "fold_id": 2,
+          "block_id": "bx7_by60"
+        },
+        {
+          "event_id": "CPSTrawl:202407:RL:20",
+          "fold_id": 2,
+          "block_id": "bx7_by60"
+        },
+        {
+          "event_id": "CPSTrawl:202407:RL:21",
+          "fold_id": 2,
+          "block_id": "bx7_by60"
+        },
+        {
+          "event_id": "CPSTrawl:202407:RL:22",
+          "fold_id": 2,
+          "block_id": "bx6_by60"
+        },
+        {
+          "event_id": "CPSTrawl:202407:RL:23",
+          "fold_id": 3,
+          "block_id": "bx7_by61"
+        },
+        {
+          "event_id": "CPSTrawl:202407:RL:24",
+          "fold_id": 3,
+          "block_id": "bx7_by61"
+        },
+        {
+          "event_id": "CPSTrawl:202407:RL:25",
+          "fold_id": 2,
+          "block_id": "bx6_by60"
+        },
+        {
+          "event_id": "CPSTrawl:202407:RL:26",
+          "fold_id": 3,
+          "block_id": "bx6_by61"
+        },
+        {
+          "event_id": "CPSTrawl:202407:RL:27",
+          "fold_id": 1,
+          "block_id": "bx5_by59"
+        },
+        {
+          "event_id": "CPSTrawl:202407:RL:28",
+          "fold_id": 2,
+          "block_id": "bx5_by60"
+        },
+        {
+          "event_id": "CPSTrawl:202407:RL:29",
+          "fold_id": 2,
+          "block_id": "bx5_by60"
+        },
+        {
+          "event_id": "CPSTrawl:202407:RL:30",
+          "fold_id": 2,
+          "block_id": "bx4_by60"
+        },
+        {
+          "event_id": "CPSTrawl:202407:RL:31",
+          "fold_id": 2,
+          "block_id": "bx4_by60"
+        },
+        {
+          "event_id": "CPSTrawl:202407:RL:32",
+          "fold_id": 2,
+          "block_id": "bx4_by60"
+        },
+        {
+          "event_id": "CPSTrawl:202407:RL:33",
+          "fold_id": 3,
+          "block_id": "bx5_by61"
+        },
+        {
+          "event_id": "CPSTrawl:202407:RL:34",
+          "fold_id": 3,
+          "block_id": "bx4_by61"
+        },
+        {
+          "event_id": "CPSTrawl:202407:RL:35",
+          "fold_id": 2,
+          "block_id": "bx4_by60"
+        },
+        {
+          "event_id": "CPSTrawl:202407:RL:36",
+          "fold_id": 3,
+          "block_id": "bx5_by61"
+        },
+        {
+          "event_id": "CPSTrawl:202407:RL:37",
+          "fold_id": 3,
+          "block_id": "bx5_by61"
+        },
+        {
+          "event_id": "CPSTrawl:202407:RL:38",
+          "fold_id": 3,
+          "block_id": "bx5_by61"
+        },
+        {
+          "event_id": "CPSTrawl:202407:RL:39",
+          "fold_id": 3,
+          "block_id": "bx6_by61"
+        },
+        {
+          "event_id": "CPSTrawl:202407:RL:40",
+          "fold_id": 4,
+          "block_id": "bx5_by62"
+        },
+        {
+          "event_id": "CPSTrawl:202407:RL:41",
+          "fold_id": 4,
+          "block_id": "bx5_by62"
+        },
+        {
+          "event_id": "CPSTrawl:202407:RL:42",
+          "fold_id": 4,
+          "block_id": "bx5_by62"
+        },
+        {
+          "event_id": "CPSTrawl:202407:RL:44",
+          "fold_id": 3,
+          "block_id": "bx4_by61"
+        },
+        {
+          "event_id": "CPSTrawl:202407:RL:45",
+          "fold_id": 3,
+          "block_id": "bx4_by61"
+        },
+        {
+          "event_id": "CPSTrawl:202407:RL:48",
+          "fold_id": 4,
+          "block_id": "bx4_by62"
+        },
+        {
+          "event_id": "CPSTrawl:202407:RL:49",
+          "fold_id": 3,
+          "block_id": "bx3_by61"
+        },
+        {
+          "event_id": "CPSTrawl:202407:RL:50",
+          "fold_id": 4,
+          "block_id": "bx3_by62"
+        },
+        {
+          "event_id": "CPSTrawl:202407:RL:51",
+          "fold_id": 3,
+          "block_id": "bx3_by61"
+        },
+        {
+          "event_id": "CPSTrawl:202407:RL:52",
+          "fold_id": 3,
+          "block_id": "bx3_by61"
+        },
+        {
+          "event_id": "CPSTrawl:202407:RL:54",
+          "fold_id": 4,
+          "block_id": "bx3_by62"
+        },
+        {
+          "event_id": "CPSTrawl:202407:RL:55",
+          "fold_id": 4,
+          "block_id": "bx3_by62"
+        },
+        {
+          "event_id": "CPSTrawl:202407:RL:56",
+          "fold_id": 3,
+          "block_id": "bx2_by62"
+        },
+        {
+          "event_id": "CPSTrawl:202407:RL:57",
+          "fold_id": 3,
+          "block_id": "bx2_by62"
+        },
+        {
+          "event_id": "CPSTrawl:202407:RL:58",
+          "fold_id": 3,
+          "block_id": "bx2_by62"
+        },
+        {
+          "event_id": "CPSTrawl:202407:RL:59",
+          "fold_id": 4,
+          "block_id": "bx2_by63"
+        },
+        {
+          "event_id": "CPSTrawl:202407:RL:60",
+          "fold_id": 4,
+          "block_id": "bx3_by63"
+        },
+        {
+          "event_id": "CPSTrawl:202407:RL:61",
+          "fold_id": 4,
+          "block_id": "bx2_by63"
+        },
+        {
+          "event_id": "CPSTrawl:202407:RL:62",
+          "fold_id": 4,
+          "block_id": "bx2_by63"
+        },
+        {
+          "event_id": "CPSTrawl:202407:RL:64",
+          "fold_id": 4,
+          "block_id": "bx2_by63"
+        },
+        {
+          "event_id": "CPSTrawl:202506:SH:2",
+          "fold_id": 2,
+          "block_id": "bx7_by60"
+        },
+        {
+          "event_id": "CPSTrawl:202506:SH:3",
+          "fold_id": 2,
+          "block_id": "bx7_by60"
+        },
+        {
+          "event_id": "CPSTrawl:202506:SH:4",
+          "fold_id": 2,
+          "block_id": "bx6_by60"
+        },
+        {
+          "event_id": "CPSTrawl:202506:SH:5",
+          "fold_id": 2,
+          "block_id": "bx6_by60"
+        },
+        {
+          "event_id": "CPSTrawl:202506:SH:6",
+          "fold_id": 3,
+          "block_id": "bx7_by61"
+        },
+        {
+          "event_id": "CPSTrawl:202506:SH:7",
+          "fold_id": 3,
+          "block_id": "bx6_by61"
+        },
+        {
+          "event_id": "CPSTrawl:202506:SH:8",
+          "fold_id": 3,
+          "block_id": "bx6_by61"
+        },
+        {
+          "event_id": "CPSTrawl:202506:SH:9",
+          "fold_id": 2,
+          "block_id": "bx5_by60"
+        },
+        {
+          "event_id": "CPSTrawl:202506:SH:10",
+          "fold_id": 2,
+          "block_id": "bx4_by60"
+        },
+        {
+          "event_id": "CPSTrawl:202506:SH:11",
+          "fold_id": 3,
+          "block_id": "bx6_by61"
+        },
+        {
+          "event_id": "CPSTrawl:202506:SH:12",
+          "fold_id": 3,
+          "block_id": "bx6_by61"
+        },
+        {
+          "event_id": "CPSTrawl:202506:SH:13",
+          "fold_id": 4,
+          "block_id": "bx5_by62"
+        },
+        {
+          "event_id": "CPSTrawl:202506:SH:14",
+          "fold_id": 3,
+          "block_id": "bx5_by61"
+        },
+        {
+          "event_id": "CPSTrawl:202506:SH:15",
+          "fold_id": 3,
+          "block_id": "bx5_by61"
+        },
+        {
+          "event_id": "CPSTrawl:202506:SH:16",
+          "fold_id": 3,
+          "block_id": "bx3_by61"
+        },
+        {
+          "event_id": "CPSTrawl:202506:SH:17",
+          "fold_id": 3,
+          "block_id": "bx3_by61"
+        },
+        {
+          "event_id": "CPSTrawl:202506:SH:18",
+          "fold_id": 3,
+          "block_id": "bx3_by61"
+        },
+        {
+          "event_id": "CPSTrawl:202506:SH:19",
+          "fold_id": 4,
+          "block_id": "bx5_by62"
+        },
+        {
+          "event_id": "CPSTrawl:202506:SH:20",
+          "fold_id": 4,
+          "block_id": "bx4_by62"
+        },
+        {
+          "event_id": "CPSTrawl:202506:SH:21",
+          "fold_id": 4,
+          "block_id": "bx4_by62"
+        },
+        {
+          "event_id": "CPSTrawl:202506:SH:23",
+          "fold_id": 4,
+          "block_id": "bx3_by63"
+        },
+        {
+          "event_id": "CPSTrawl:202506:SH:24",
+          "fold_id": 3,
+          "block_id": "bx2_by62"
+        },
+        {
+          "event_id": "CPSTrawl:202506:SH:25",
+          "fold_id": 4,
+          "block_id": "bx2_by63"
+        },
+        {
+          "event_id": "CPSTrawl:202606:RL:1",
+          "fold_id": 3,
+          "block_id": "bx7_by61"
+        },
+        {
+          "event_id": "CPSTrawl:202606:RL:2",
+          "fold_id": 2,
+          "block_id": "bx7_by60"
+        },
+        {
+          "event_id": "CPSTrawl:202606:RL:3",
+          "fold_id": 2,
+          "block_id": "bx6_by60"
+        },
+        {
+          "event_id": "CPSTrawl:202606:RL:4",
+          "fold_id": 1,
+          "block_id": "bx6_by59"
+        },
+        {
+          "event_id": "CPSTrawl:202606:RL:5",
+          "fold_id": 1,
+          "block_id": "bx5_by59"
+        },
+        {
+          "event_id": "CPSTrawl:202606:RL:6",
+          "fold_id": 2,
+          "block_id": "bx5_by60"
+        },
+        {
+          "event_id": "CPSTrawl:202606:RL:7",
+          "fold_id": 2,
+          "block_id": "bx5_by60"
+        },
+        {
+          "event_id": "CPSTrawl:202606:RL:8",
+          "fold_id": 2,
+          "block_id": "bx4_by60"
+        },
+        {
+          "event_id": "CPSTrawl:202606:RL:9",
+          "fold_id": 3,
+          "block_id": "bx6_by61"
+        },
+        {
+          "event_id": "CPSTrawl:202606:RL:10",
+          "fold_id": 3,
+          "block_id": "bx6_by61"
+        },
+        {
+          "event_id": "CPSTrawl:202606:RL:11",
+          "fold_id": 3,
+          "block_id": "bx7_by61"
+        },
+        {
+          "event_id": "CPSTrawl:202606:RL:12",
+          "fold_id": 4,
+          "block_id": "bx5_by62"
+        },
+        {
+          "event_id": "CPSTrawl:202606:RL:13",
+          "fold_id": 4,
+          "block_id": "bx6_by62"
+        },
+        {
+          "event_id": "CPSTrawl:202606:RL:14",
+          "fold_id": 3,
+          "block_id": "bx5_by61"
+        },
+        {
+          "event_id": "CPSTrawl:202606:RL:15",
+          "fold_id": 3,
+          "block_id": "bx5_by61"
+        },
+        {
+          "event_id": "CPSTrawl:202606:RL:16",
+          "fold_id": 3,
+          "block_id": "bx4_by61"
+        },
+        {
+          "event_id": "CPSTrawl:202606:RL:17",
+          "fold_id": 3,
+          "block_id": "bx4_by61"
+        },
+        {
+          "event_id": "CPSTrawl:202606:RL:18",
+          "fold_id": 3,
+          "block_id": "bx3_by61"
+        },
+        {
+          "event_id": "CPSTrawl:202606:RL:19",
+          "fold_id": 3,
+          "block_id": "bx3_by61"
+        },
+        {
+          "event_id": "CPSTrawl:202606:RL:20",
+          "fold_id": 3,
+          "block_id": "bx3_by61"
+        },
+        {
+          "event_id": "CPSTrawl:202606:RL:21",
+          "fold_id": 4,
+          "block_id": "bx3_by62"
+        },
+        {
+          "event_id": "CPSTrawl:202606:RL:22",
+          "fold_id": 3,
+          "block_id": "bx3_by61"
+        },
+        {
+          "event_id": "CPSTrawl:202606:RL:23",
+          "fold_id": 4,
+          "block_id": "bx3_by62"
+        },
+        {
+          "event_id": "CPSTrawl:202606:RL:24",
+          "fold_id": 3,
+          "block_id": "bx2_by62"
+        },
+        {
+          "event_id": "CPSTrawl:202606:RL:26",
+          "fold_id": 4,
+          "block_id": "bx2_by63"
+        },
+        {
+          "event_id": "CPSTrawl:202606:RL:33",
+          "fold_id": 4,
+          "block_id": "bx2_by63"
+        },
+        {
+          "event_id": "CPSTrawl:202606:RL:34",
+          "fold_id": 4,
+          "block_id": "bx2_by64"
+        },
+        {
+          "event_id": "CPSNearshore:201907:LBC:7",
+          "fold_id": 3,
+          "block_id": "bx5_by61"
+        },
+        {
+          "event_id": "CPSNearshore:202107:LBC:21",
+          "fold_id": 3,
+          "block_id": "bx3_by61"
+        },
+        {
+          "event_id": "CPSNearshore:202107:LBC:28",
+          "fold_id": 3,
+          "block_id": "bx6_by61"
+        },
+        {
+          "event_id": "CPSNearshore:202107:LBC:29",
+          "fold_id": 3,
+          "block_id": "bx6_by61"
+        },
+        {
+          "event_id": "CPSNearshore:202207:LBC:69",
+          "fold_id": 3,
+          "block_id": "bx5_by61"
+        },
+        {
+          "event_id": "CPSNearshore:202207:LBC:70",
+          "fold_id": 3,
+          "block_id": "bx5_by61"
+        },
+        {
+          "event_id": "CPSNearshore:202207:LBC:71",
+          "fold_id": 3,
+          "block_id": "bx5_by61"
+        },
+        {
+          "event_id": "CPSNearshore:202207:LBC:72",
+          "fold_id": 3,
+          "block_id": "bx6_by61"
+        },
+        {
+          "event_id": "CPSNearshore:202207:LBC:73",
+          "fold_id": 3,
+          "block_id": "bx5_by61"
+        },
+        {
+          "event_id": "CPSNearshore:202207:LBC:74",
+          "fold_id": 3,
+          "block_id": "bx6_by61"
+        },
+        {
+          "event_id": "CPSNearshore:202207:LBC:75",
+          "fold_id": 3,
+          "block_id": "bx6_by61"
+        },
+        {
+          "event_id": "CPSNearshore:202207:LBC:76",
+          "fold_id": 3,
+          "block_id": "bx6_by61"
+        },
+        {
+          "event_id": "CPSNearshore:202307:LBC:15",
+          "fold_id": 3,
+          "block_id": "bx6_by61"
+        },
+        {
+          "event_id": "CPSNearshore:202307:LBC:16",
+          "fold_id": 3,
+          "block_id": "bx6_by61"
+        },
+        {
+          "event_id": "CPSNearshore:202307:LBC:17",
+          "fold_id": 3,
+          "block_id": "bx6_by61"
+        },
+        {
+          "event_id": "CPSNearshore:202307:LBC:18",
+          "fold_id": 3,
+          "block_id": "bx6_by61"
+        },
+        {
+          "event_id": "CPSNearshore:202307:LBC:22",
+          "fold_id": 4,
+          "block_id": "bx6_by62"
+        },
+        {
+          "event_id": "CPSNearshore:202307:LBC:28",
+          "fold_id": 4,
+          "block_id": "bx5_by62"
+        },
+        {
+          "event_id": "CPSNearshore:202307:LBC:32",
+          "fold_id": 4,
+          "block_id": "bx4_by62"
+        },
+        {
+          "event_id": "CPSNearshore:202307:LM:10",
+          "fold_id": 4,
+          "block_id": "bx2_by63"
+        },
+        {
+          "event_id": "CPSNearshore:202307:LM:12",
+          "fold_id": 4,
+          "block_id": "bx2_by64"
+        },
+        {
+          "event_id": "CPSNearshore:202307:LM:9",
+          "fold_id": 4,
+          "block_id": "bx2_by63"
+        },
+        {
+          "event_id": "CPSNearshore:202407:LBC:15",
+          "fold_id": 3,
+          "block_id": "bx6_by61"
+        },
+        {
+          "event_id": "CPSNearshore:202407:LBC:16",
+          "fold_id": 3,
+          "block_id": "bx6_by61"
+        },
+        {
+          "event_id": "CPSNearshore:202407:LBC:18",
+          "fold_id": 3,
+          "block_id": "bx5_by61"
+        },
+        {
+          "event_id": "CPSNearshore:202506:LBC:13",
+          "fold_id": 4,
+          "block_id": "bx5_by62"
+        },
+        {
+          "event_id": "CPSNearshore:202506:LBC:5",
+          "fold_id": 3,
+          "block_id": "bx7_by61"
+        },
+        {
+          "event_id": "CPSNearshore:202506:LBC:8",
+          "fold_id": 3,
+          "block_id": "bx5_by61"
+        },
+        {
+          "event_id": "CPSNearshore:202606:LBC:5",
+          "fold_id": 3,
+          "block_id": "bx6_by61"
+        }
+      ],
+      "spatial_block_cv": {
+        "block_size_km": 60,
+        "mesh_cutoff_km": 9,
+        "spatial_range_km": 60,
+        "seed": 20260928,
+        "n_folds": 4,
+        "epsg": 32611,
+        "block_size_source": "max(mesh.cutoff_km, mesh.range_guess_km)",
+        "spatial_range_source": "mesh.range_guess_km",
+        "seed_source": "prediction.seed",
+        "n_folds_source": "data.spatial_block_cv.n_folds"
+      }
     }
-  ],
-  "egg_model_queued": {
-    "config": "configs/models/cufes_squid.yaml",
-    "blocked_scores": "prereg/cufes_squid_spatial_block_cv_scores.json",
-    "blocker": "CUFES ERDDAP ingest"
-  },
-  "forecast_24h": {
-    "status": "not_run",
-    "reason": "Encounter CV not validated (elpd_eligible + 4/4 folds)"
-  }
+  ]
 }
