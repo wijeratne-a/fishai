@@ -1,0 +1,20 @@
+# Pacific hake (CUFES egg) spatial-block CV — same protocol as sardine/anchovy pilots.
+
+spatial_block_cv_scores:
+  evidence_manifest: prereg/cufes_glorys_training_evidence_build_manifest.json
+  wcofs_h_artifact: data/derived/physics/wcofs_h_glorys_pilot.zarr
+  min_duration_min: 2
+
+  event_count_guard:
+    n_events: 14592
+    n_short_event: 1266
+    n_long_event: 13326
+
+  species:
+    - label: hake
+      model_config: configs/models/cufes_hake.yaml
+
+  output:
+    scores_json: prereg/cufes_hake_spatial_block_cv_scores.json
+    fold_assignment_csv: artifacts/spatial_block_cv/fold_assignment.csv
+    checkpoint_dir: prereg/cv_checkpoints_hake
