@@ -136,10 +136,30 @@ def main(argv: list[str] | None = None) -> int:
     train = pd.read_parquet(args.training_table)
     train = train[train["species"] == args.scientific_name].copy()
     events = pd.read_parquet(args.events_table)
-    ev_cols = [c for c in ("event_id", "lat", "lon", "stop_lat", "stop_lon", "time") if c in events.columns]
+    ev_cols = [
+        c
+        for c in (
+            "event_id",
+            "start_time",
+            "start_latitude",
+            "start_longitude",
+            "stop_latitude",
+            "stop_longitude",
+            "lat",
+            "lon",
+            "stop_lat",
+            "stop_lon",
+        )
+        if c in events.columns
+    ]
     train = train.merge(events[ev_cols], on="event_id", how="left")
-    origin = dt.date(1990, 1, 1)
-    train["event_day"] = origin + pd.to_timedelta(train["time_idx"].astype(int) - 1, unit="D")
+    time_col = "start_time" if "start_time" in train.columns else "time"
+    train["event_day"] = pd.to_datetime(train[time_col], utc=True).dt.date
+    if "lat" not in train.columns and "start_latitude" in train.columns:
+        train["lat"] = train["start_latitude"]
+        train["lon"] = train["start_longitude"]
+        train["stop_lat"] = train["stop_latitude"]
+        train["stop_lon"] = train["stop_longitude"]
 
     manifest = load_sources_manifest()
     pilot = manifest.get("pilot") or {}
