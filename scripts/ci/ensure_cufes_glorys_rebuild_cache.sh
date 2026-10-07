@@ -23,7 +23,7 @@ extract_archive() {
   container="$(docker create "${IMAGE}")"
   trap 'docker rm -f "${container}" >/dev/null 2>&1 || true' RETURN
   docker cp "${container}:/artifact.tar.gz" "${ARCHIVE}"
-  python - <<PY
+  python3 - <<PY
 from pathlib import Path
 from fishai.ingestion.rebuild.cufes_glorys_artifact_cache import restore_cache_archive
 

@@ -1,0 +1,45 @@
+{
+  "status": "blocked",
+  "code_sha": null,
+  "evidence_manifest": "prereg/cufes_glorys_training_evidence_build_manifest.json",
+  "training_table_builder_code_sha": null,
+  "protocol_config": "configs/cufes_squid_spatial_block_cv_scores.yaml",
+  "missing_inputs": [
+    "data/processed/calcofi_cufes/cufes_events.parquet",
+    "data/processed/calcofi_cufes/cufes_counts.parquet",
+    "data/processed/calcofi_cufes/cufes_training_covariates.parquet"
+  ],
+  "block_reason": "CUFES×GLORYS training table could not be built in this environment: NOAA ERDDAP (oceanview/coastwatch erdCalCOFIcufes) returned HTTP 504, timeouts, or SSL EOF on all window sizes tried; GHCR cache image ghcr.io/wijeratne-a/fishai/cufes-glorys-rebuild:612cb1551ac0e3b8f144f75b9104cac4d86b2a2762d9db12f27f2f078e4b1889 not published (docker pull: not found). Copernicus credentials are present locally but ERDDAP biology ingest is the blocker.",
+  "species": [
+    {
+      "label": "squid",
+      "taxon": "squid",
+      "model_config": "configs/models/cufes_squid.yaml",
+      "status": "blocked",
+      "missing_inputs": [
+        "data/processed/calcofi_cufes/cufes_training_covariates.parquet"
+      ],
+      "elpd": null,
+      "elpd_eligible": false,
+      "elpd_ineligible_reason": "missing_training_table",
+      "n_failed_folds": null,
+      "fold_loglik": [],
+      "n_oof_rows": null,
+      "boyce": null,
+      "auc": null,
+      "tss": null
+    }
+  ],
+  "spatial_block_cv": {
+    "block_size_km": 60,
+    "mesh_cutoff_km": 9,
+    "spatial_range_km": 60,
+    "seed": 20260928,
+    "n_folds": 4,
+    "epsg": 32611,
+    "block_size_source": "max(mesh.cutoff_km, mesh.range_guess_km)",
+    "spatial_range_source": "mesh.range_guess_km",
+    "seed_source": "prediction.seed",
+    "n_folds_source": "data.spatial_block_cv.n_folds"
+  }
+}
