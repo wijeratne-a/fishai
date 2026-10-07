@@ -82,14 +82,17 @@ def main(argv: list[str] | None = None) -> int:
 
     cfg = load_overlap_config()
     days = unique_event_days(events)
-    batches = plan_glorys_subset_batches(days, cfg)
-    enforce_subset_request_budget(len(batches))
-    store = new_glorys_field_store_for_live_build()
+    batches = plan_glorys_subset_batches(days)
+    enforce_subset_request_budget(batches)
+    store = new_glorys_field_store_for_live_build(cfg)
+    cache_dir = REPO_ROOT / "data" / "cache" / "glorys_market_squid_encounter"
+    cache_dir.mkdir(parents=True, exist_ok=True)
+    log_path = REPO_ROOT / str(cfg["pull_logs"]["glorys"])
     assert_copernicus_env_credentials()
-    populate_store_days_from_cache(store, days, cfg)
     for batch in batches:
-        _subset_batch_live(store, batch, cfg)
-    assert_store_ready_for_copernicus_export(store, expected_days=len(days))
+        _subset_batch_live(batch, cache_dir, log_path=log_path)
+    populate_store_days_from_cache(store, days, batches, cache_dir)
+    assert_store_ready_for_copernicus_export(store, days)
 
     table, qc, drops = build_adult_cps_training_table(events, observations, store)
     args.table_out.parent.mkdir(parents=True, exist_ok=True)
