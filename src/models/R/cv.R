@@ -636,8 +636,7 @@ run_cv_spatial <- function(
 #' @export
 run_cv_lfo <- function(dat, mesh, cfg, lfo_forecast = 1L, lfo_validations = 3L) {
   model <- cfg$model
-  frm <- build_delta_formula(model$formula_shared %||% model$formula_encounter)
-  assert_shared_delta_formula(frm)
+  frm <- resolve_delta_formulas(model)
   sdmTMB::sdmTMB_cv(
     formula = frm,
     data = dat,
