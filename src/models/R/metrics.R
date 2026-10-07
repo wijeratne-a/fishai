@@ -87,6 +87,15 @@ brier_score <- function(z, p) {
 
 #' Egg encounter probability on observed events using each row's ``log(volume_m3)`` offset.
 #' @export
+score_encounter_binomial_on_events <- function(fit, newdata, cfg) {
+  if (!"log_effort" %in% names(newdata)) {
+    stop("holdout data missing log_effort for per-event offsets", call. = FALSE)
+  }
+  pred <- stats::predict(fit, newdata = newdata)
+  eta <- pred$est + newdata$log_effort
+  1 / (1 + exp(-as.numeric(eta)))
+}
+
 score_encounter_on_events <- function(fit, newdata, cfg) {
   if (!"log_effort" %in% names(newdata)) {
     stop("holdout data missing log_effort for per-event offsets", call. = FALSE)

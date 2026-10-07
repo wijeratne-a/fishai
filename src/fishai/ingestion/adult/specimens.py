@@ -27,7 +27,17 @@ def _parse_float(value: Any) -> float | None:
 
 
 def _length_mm_from_row(row: Mapping[str, Any]) -> float | None:
-    for key in ("length_mm", "length", "standard_length", "fork_length"):
+    """Prefer standard length; if absent, use fork length (no FL→SL conversion)."""
+    for key in (
+        "standard_length",
+        "standardLength_mm",
+        "length_mm",
+        "length",
+    ):
+        val = _parse_float(row.get(key))
+        if val is not None and val > 0:
+            return val
+    for key in ("fork_length", "forkLength_mm"):
         val = _parse_float(row.get(key))
         if val is not None and val > 0:
             return val
@@ -40,7 +50,9 @@ def normalize_trawl_specimens(records: list[Mapping[str, Any]]) -> pd.DataFrame:
         cruise = str(row.get("cruise") or "").strip()
         ship = str(row.get("ship") or "").strip()
         haul = str(row.get("haul") or "").strip()
-        species = str(row.get("scientific_name") or row.get("species") or "").strip()
+        species = str(
+            row.get("scientific_name") or row.get("scientificName") or row.get("species") or ""
+        ).strip()
         length_mm = _length_mm_from_row(row)
         if not cruise or not ship or not haul or not species or length_mm is None:
             continue
@@ -60,7 +72,9 @@ def normalize_nearshore_specimens(records: list[Mapping[str, Any]]) -> pd.DataFr
         cruise = str(row.get("cruise") or "").strip()
         ship = str(row.get("ship") or "").strip()
         set_no = str(row.get("set") or row.get("set_number") or "").strip()
-        species = str(row.get("scientific_name") or row.get("species") or "").strip()
+        species = str(
+            row.get("scientific_name") or row.get("scientificName") or row.get("species") or ""
+        ).strip()
         length_mm = _length_mm_from_row(row)
         if not cruise or not ship or not set_no or not species or length_mm is None:
             continue
