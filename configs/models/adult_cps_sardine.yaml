@@ -59,7 +59,7 @@ fishai_engine_config:
       ~ s(temp_3m_z, k = 3) + s(sal_3m_z, k = 3) + s(mld_z, k = 3)
       + s(sst_grad_z, k = 3) + s(dist_front_z, k = 3)
       + s(log_depth_z, k = 3)
-    spatial: [off, on]
+    spatial: [off, off]
     spatiotemporal: [off, off]
     share_range: [true, true]
     time_varying:
