@@ -87,7 +87,7 @@ fit_delta_engine <- function(dat, mesh, cfg) {
     priors = pri,
     control = do.call(
       sdmTMB::sdmTMBcontrol,
-      c(list(newton_loops = 1L, multiphase = TRUE), model$control %||% list())
+      modifyList(list(newton_loops = 1L, multiphase = TRUE), model$control %||% list())
     ),
     silent = TRUE
   )
@@ -152,7 +152,7 @@ fit_encounter_binomial_engine <- function(dat, mesh, cfg) {
     priors = pri,
     control = do.call(
       sdmTMB::sdmTMBcontrol,
-      c(list(newton_loops = 1L, multiphase = TRUE), model$control %||% list())
+      modifyList(list(newton_loops = 1L, multiphase = TRUE), model$control %||% list())
     ),
     silent = TRUE
   )

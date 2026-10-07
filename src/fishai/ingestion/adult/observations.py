@@ -8,6 +8,7 @@ import pandas as pd
 
 from fishai.ingestion.adult.constants import (
     ADULT_MIN_LENGTH_MM,
+    ENCOUNTER_ALL_SIZES_SPECIES,
     EVIDENCE_IMPLIED_ZERO,
     EXCLUDE_REASON_JUVENILE,
     EXCLUDE_REASON_NO_SPECIMEN,
@@ -32,7 +33,19 @@ def _encounter_from_measurements(
     return 0
 
 
-def _adult_gate(
+def _encounter_length_gate(
+    event_id: str,
+    species: str,
+    medians: pd.Series,
+) -> tuple[bool, str | None, float | None]:
+    if species in ENCOUNTER_ALL_SIZES_SPECIES:
+        key = (event_id, species)
+        median_len = float(medians.loc[key]) if key in medians.index else None
+        return True, None, median_len
+    return _adult_length_gate(event_id, species, medians)
+
+
+def _adult_length_gate(
     event_id: str,
     species: str,
     medians: pd.Series,
@@ -75,8 +88,8 @@ def build_trawl_observations(
             stats["non_pilot_species_skipped"] += 1
             continue
         event_id = str(row["haul_id"])
-        adult_ok, reason, median_len = _adult_gate(event_id, species, medians)
-        if not adult_ok:
+        ok, reason, median_len = _encounter_length_gate(event_id, species, medians)
+        if not ok:
             if reason == EXCLUDE_REASON_JUVENILE:
                 stats["juvenile_excluded"] += 1
             else:
@@ -128,8 +141,8 @@ def build_nearshore_observations(
             stats["non_pilot_species_skipped"] += 1
             continue
         event_id = str(row["set_id"])
-        adult_ok, reason, median_len = _adult_gate(event_id, species, medians)
-        if not adult_ok:
+        ok, reason, median_len = _encounter_length_gate(event_id, species, medians)
+        if not ok:
             if reason == EXCLUDE_REASON_JUVENILE:
                 stats["juvenile_excluded"] += 1
             else:

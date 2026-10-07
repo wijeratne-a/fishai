@@ -60,18 +60,13 @@ OBSERVATION_SOURCE_NEARSHORE: Final = "swfsc_cps_nearshore_set_catch"
 ADULT_MIN_LENGTH_MM: Final = {
     "Sardinops sagax": 160.0,
     "Engraulis mordax": 98.0,
-    # L50 from Fitch (1956): 50% female maturity at 250 mm fork length (100% at 350 mm).
-    # Cutoff applied to standard length when measured; fork length only when SL absent
-    # (published L50 in fork length — see docs/adult-jack-mackerel-model-readout.md).
-    "Trachurus symmetricus": 250.0,
 }
 
-ADULT_LENGTH_CUTOFF_DISCLOSURE: Final = (
-    "Adult specimens were retained only if standard length >= 250 mm (jack mackerel, "
-    "Trachurus symmetricus). This cutoff is the length at 50% maturity (L50) from "
-    "Fitch (1956): 50% of females mature at 250 mm fork length (100% at 350 mm). "
-    "The published value is in fork length; applied to standard length it is "
-    "conservative, since fork length exceeds standard length for the same fish."
+# Species modeled as encounter probability over all length classes (no L50 gate).
+ENCOUNTER_ALL_SIZES_SPECIES: Final = ("Trachurus symmetricus",)
+
+ENCOUNTER_ALL_SIZES_PRODUCT_LABEL: Final = (
+    "jack mackerel encounter probability (all sizes)"
 )
 
 EVIDENCE_IMPLIED_ZERO: Final = "implied_zero_enumerated_frame"
