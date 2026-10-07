@@ -632,8 +632,14 @@ forecast_lock_cutoffs <- function(frames, test_end) {
 
 #' Fit one cutoff and score 24/48/72 h. Projects the daily intercept with extra_time.
 #' @export
-forecast_fit_cutoff <- function(dat, cfg, cutoff_date) {
+forecast_fit_cutoff <- function(
+  dat,
+  cfg,
+  cutoff_date,
+  extra_time_fill = c("through_holdout", "holdout_only")
+) {
   .cv_limit_tmb_threads()
+  extra_time_fill <- match.arg(extra_time_fill)
   cutoff_date <- as.Date(cutoff_date)
   train <- dat[dat$event_day <= cutoff_date, , drop = FALSE]
   hold <- dat[dat$event_day %in% (cutoff_date + 1:3), , drop = FALSE]
@@ -644,7 +650,11 @@ forecast_fit_cutoff <- function(dat, cfg, cutoff_date) {
     stop("cutoff day is not inside the training rows", call. = FALSE)
   }
   max_train <- max(as.integer(train$time_idx))
-  extra <- forecast_extra_time(max_train, hold$time_idx)
+  extra <- if (extra_time_fill == "holdout_only") {
+    sort(unique(as.integer(hold$time_idx)))
+  } else {
+    forecast_extra_time(max_train, hold$time_idx)
+  }
   fit_cfg <- cfg
   fit_cfg$model$extra_time_slices <- extra
   mesh <- build_fishai_production_mesh(train, cfg$mesh)

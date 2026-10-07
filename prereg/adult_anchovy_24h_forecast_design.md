@@ -36,6 +36,11 @@ Deterministic pick before any fit:
 2. Within each season, sort eligible dates; take earliest and latest at least 365 days apart (or the farthest pair with a note).
 3. Enforce at least **30 days** between selected cutoffs so holdout windows do not overlap.
 4. **Egg calendar reference:** the eight locked egg cutoffs from `prereg/cufes_forecast_temporal_holdout_scores.json` are recorded as `egg_reference_cutoffs`; overlap with the adult-selected set is reported in `egg_overlap_cutoffs`. Adult CPS coverage begins in 2003, so pre-2003 egg dates cannot be shared.
+5. **DJF gap:** fishery-independent adult CPS tows in this frame rarely fall in DJF with enough training depth for the eligibility rule. If strict four-season selection is infeasible, cutoffs are chosen with `adult_inventory_best_effort` (up to two dates per season that has eligible days, then fill to eight with 30-day separation). This is recorded in `cutoff_calendar` and `cutoff_notes`.
+
+## Time intercept
+
+For each cutoff, fit on rows with day ≤ D only. **`extra_time` is holdout-only:** the integer `time_idx` values for D+1, D+2, and D+3 only. CPS adult surveys are sparse (multi-day cruises separated by months or years), so filling every missing daily `time_idx` between the last training day and D+3 — as in the dense CUFES egg record — makes the random-walk projection unstable (non-PD Hessian). The egg protocol uses dense daily fill; this adult protocol does not.
 
 ## Physics (operational proxy)
 

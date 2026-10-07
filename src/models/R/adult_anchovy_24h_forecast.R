@@ -27,6 +27,130 @@ adult_forecast_test_end <- function(dat) {
   max(days) - 3L
 }
 
+#' Eight cutoffs when one or more meteorological seasons have no eligible days.
+#'
+#' CPS adult surveys cluster in spring/summer/fall; DJF is often empty. Take up
+#' to two cutoffs per season that has eligible days, then fill toward K = 8 from
+#' the remaining pool (farthest-apart dates first), keeping ``min_sep_days``.
+#' @export
+select_forecast_cutoffs_best_effort <- function(
+  eligible,
+  k = 8L,
+  pair_gap_days = 365L,
+  min_sep_days = 30L
+) {
+  eligible <- sort(unique(as.Date(eligible)))
+  seasons <- c("DJF", "MAM", "JJA", "SON")
+  notes <- character()
+  chosen <- as.Date(character())
+  for (season in seasons) {
+    pool <- eligible[forecast_season(eligible) == season]
+    if (length(pool) == 0L) {
+      notes <- c(notes, paste0("season ", season, " has 0 eligible cutoff(s); skipped"))
+      next
+    }
+    if (length(pool) == 1L) {
+      chosen <- c(chosen, pool[[1L]])
+      notes <- c(notes, paste0("season ", season, " contributes 1 cutoff (only one eligible day)"))
+      next
+    }
+    gap <- as.integer(pool[length(pool)] - pool[1L])
+    if (gap >= pair_gap_days) {
+      pair <- c(pool[1L], pool[length(pool)])
+    } else {
+      pair <- c(pool[1L], pool[length(pool)])
+      notes <- c(notes, sprintf("%s pair gap is %d days, under the %d-day target", season, gap, pair_gap_days))
+    }
+    chosen <- c(chosen, pair)
+  }
+  chosen <- unique(chosen)
+  if (length(chosen) < k) {
+    rest <- eligible[!eligible %in% chosen]
+    while (length(chosen) < k && length(rest)) {
+      best_i <- 1L
+      best_score <- -1L
+      for (i in seq_along(rest)) {
+        d <- rest[[i]]
+        sep <- min(abs(as.integer(d - chosen)))
+        if (sep >= min_sep_days && sep > best_score) {
+          best_score <- sep
+          best_i <- i
+        }
+      }
+      if (best_score < 0L) {
+        break
+      }
+      chosen <- c(chosen, rest[[best_i]])
+      rest <- rest[-best_i]
+    }
+  }
+  if (length(chosen) < 6L) {
+    return(list(
+      status = "design_infeasible",
+      reason = sprintf("only %d cutoff candidate(s) after season fill", length(chosen)),
+      cutoffs = as.Date(character()),
+      notes = notes
+    ))
+  }
+  selected <- sort(unique(chosen))
+  if (length(selected) > k) {
+    selected <- selected[seq_len(k)]
+  }
+  guard <- 0L
+  repeat {
+    guard <- guard + 1L
+    if (guard > 16L) {
+      return(list(
+        status = "design_infeasible",
+        reason = "cutoff separation did not settle (best effort)",
+        cutoffs = as.Date(character()),
+        notes = notes
+      ))
+    }
+    ord <- order(selected)
+    selected <- selected[ord]
+    conflict <- NA_integer_
+    for (i in seq_len(length(selected) - 1L)) {
+      if (as.integer(selected[i + 1L] - selected[i]) < min_sep_days) {
+        conflict <- i
+        break
+      }
+    }
+    if (is.na(conflict)) {
+      break
+    }
+    later <- selected[conflict + 1L]
+    season <- forecast_season(later)
+    pool <- eligible[forecast_season(eligible) == season]
+    blocked <- selected[forecast_season(selected) != season]
+    ok <- vapply(pool, function(d) {
+      all(abs(as.integer(d - blocked)) >= min_sep_days) && !(d %in% selected)
+    }, logical(1))
+    if (!any(ok)) {
+      return(list(
+        status = "design_infeasible",
+        reason = paste0("cannot separate ", format(later), " by ", min_sep_days, " days"),
+        cutoffs = as.Date(character()),
+        notes = notes
+      ))
+    }
+    cand <- pool[ok]
+    replacement <- cand[which.min(abs(as.integer(cand - later)))]
+    notes <- c(notes, sprintf(
+      "moved %s cutoff %s to %s to keep cutoffs %d days apart",
+      season, format(later), format(replacement), min_sep_days
+    ))
+    selected[conflict + 1L] <- replacement
+  }
+  list(
+    status = "ok",
+    reason = NULL,
+    cutoffs = selected[order(selected)],
+    seasons = forecast_season(selected[order(selected)]),
+    notes = notes
+  )
+}
+
 #' Lock eight cutoffs on the adult anchovy frame.
 #' @export
 adult_forecast_lock_cutoffs <- function(dat, test_end, min_train_rows = ADULT_FORECAST_MIN_TRAIN_ROWS) {
@@ -36,14 +160,25 @@ adult_forecast_lock_cutoffs <- function(dat, test_end, min_train_rows = ADULT_FO
     min_rows = min_train_rows,
     min_days = ADULT_FORECAST_MIN_TRAIN_DAYS
   )
-  picked <- select_forecast_cutoffs(eligible)
+  strict <- select_forecast_cutoffs(eligible)
+  picked <- if (identical(strict$status, "ok")) {
+    strict
+  } else {
+    select_forecast_cutoffs_best_effort(eligible)
+  }
   egg_ref <- adult_forecast_egg_reference_cutoffs()
+  calendar <- if (identical(picked$status, "ok")) {
+    if (identical(strict$status, "ok")) "adult_inventory" else "adult_inventory_best_effort"
+  } else {
+    "unresolved"
+  }
   list(
     eligible = eligible,
     shared_n = length(eligible),
     egg_reference_cutoffs = format(egg_ref),
     egg_overlap_cutoffs = format(intersect(as.Date(picked$cutoffs), egg_ref)),
-    calendar = if (identical(picked$status, "ok")) "adult_inventory" else "unresolved",
+    calendar = calendar,
+    strict_four_season_status = strict$status,
     selection = picked
   )
 }
@@ -77,9 +212,20 @@ adult_forecast_lock_cutoffs <- function(dat, test_end, min_train_rows = ADULT_FO
   ora <- h24$oracle
   pass <- isTRUE(sp$pass_24h)
   if (n_el < 6L) {
+    fails <- vapply(sp$cutoffs %||% list(), function(x) x$failure %||% "", character(1))
+    fails <- fails[nzchar(fails)]
+    conv <- sum(grepl("Hessian", fails, ignore.case = TRUE))
+    detail <- if (conv > 0L) {
+      sprintf(
+        "None of the eight rolling-origin refits passed the spatial-CV convergence gate (%d cutoffs failed with non-positive-definite Hessian). Temporal training subsets drop spatial coverage compared with the full validated fit, so forecast metrics were not computed.",
+        conv
+      )
+    } else {
+      sprintf("Only %d of 8 cutoffs produced a usable fit.", n_el)
+    }
     lines <- c(lines, sprintf(
-      "Adult anchovy: only %d of 8 cutoffs produced a usable fit. Six are required, so this is INSUFFICIENT for a pass/fail product claim.",
-      n_el
+      "Adult anchovy: %s Six eligible cutoffs are required; verdict is FAIL (INSUFFICIENT). NOT_ISSUED_FORECAST 24h proxy AUC/TSS were not compared to persistence or climatology.",
+      detail
     ))
     return(paste(lines, collapse = "\n\n"))
   }
@@ -175,7 +321,7 @@ run_adult_anchovy_24h_forecast <- function(
     }
     message("ADULT_FORECAST_CUTOFF_START ", format(cutoff))
     piece <- tryCatch(
-      forecast_fit_cutoff(dat, cfg, cutoff),
+      forecast_fit_cutoff(dat, cfg, cutoff, extra_time_fill = "holdout_only"),
       error = function(e) {
         list(
           cutoff = format(as.Date(cutoff)),
