@@ -165,7 +165,8 @@ def _subset_bbox(
 
 
 def _open_dataset_from_bytes(data: bytes) -> xr.Dataset:
-    return xr.open_dataset(io.BytesIO(data), engine="h5netcdf", decode_times=False)
+    engine = "h5netcdf" if data[:4] == b"\x89HDF" else "scipy"
+    return xr.open_dataset(io.BytesIO(data), engine=engine, decode_times=False)
 
 
 open_dataset_from_bytes = _open_dataset_from_bytes
