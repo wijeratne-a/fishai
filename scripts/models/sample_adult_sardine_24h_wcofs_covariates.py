@@ -45,6 +45,49 @@ def _event_lat_lon(row: pd.Series) -> tuple[float, float]:
     return lat0, lon0
 
 
+def _resolve_issued_key(day: dt.date, lead: str, list_keys) -> str:
+    """Public PDS key for an issued forecast lead.
+
+    Prefer a ROMS ``fields`` object (new or legacy name). When that product is
+    not published, use ``regulargrid.{lead}``, which is the issued forecast
+    file on later cycles (standard depth levels, not s-coordinates).
+    """
+    from fishai.ingestion.physics.wcofs_pds_store import (
+        CycleNotAvailable,
+        layout_prefixes,
+        resolve_fields_key,
+    )
+
+    try:
+        return resolve_fields_key(day, lead, list_keys)
+    except CycleNotAvailable:
+        pass
+    ymd = day.strftime("%Y%m%d")
+    bases = {
+        f"wcofs.t03z.{ymd}.regulargrid.{lead}.nc",
+        f"nos.wcofs.regulargrid.{lead}.{ymd}.t03z.nc",
+    }
+    matches: list[str] = []
+    for prefix in layout_prefixes(day):
+        for key in list_keys(prefix):
+            if key.rsplit("/", 1)[-1] in bases:
+                matches.append(key)
+    unique = sorted(set(matches))
+    if len(unique) == 1:
+        return unique[0]
+    if not unique:
+        raise CycleNotAvailable(f"no WCOFS forecast {lead} for {day.isoformat()}")
+    raise CycleNotAvailable(
+        f"ambiguous WCOFS forecast {lead} for {day.isoformat()}: {unique[:5]}"
+    )
+
+
+def _open_wcofs_bytes(data: bytes):
+    from fishai.ingestion.physics.sources.wcofs import _open_dataset_from_bytes
+
+    return _open_dataset_from_bytes(data)
+
+
 def _resolve_lead(cutoff: dt.date, h_days: int, cycle_exists) -> tuple[dt.date, str, str | None]:
     from fishai.ingestion.physics.sources import wcofs as wcofs_src
     from fishai.ingestion.physics.wcofs_daily import resolve_lead_for_offset
@@ -68,41 +111,137 @@ def _resolve_lead(cutoff: dt.date, h_days: int, cycle_exists) -> tuple[dt.date, 
 
 
 def _fetch_wcofs_fields(cycle: dt.date, lead: str, bbox: tuple[float, float, float, float]):
-    from fishai.ingestion.physics.sources import wcofs as wcofs_src
+    """Return (dataset, s3_key, error). error is None on success."""
+    from fishai.ingestion.physics.http_util import get_bytes
+    from fishai.ingestion.physics.sources.wcofs import DEFAULT_SUBSET_MARGIN_CELLS, _subset_bbox
+    from fishai.ingestion.physics.wcofs_pds_s3_list import list_keys_under_prefix
+    from fishai.ingestion.physics.wcofs_pds_store import CycleNotAvailable, _s3_url
 
     try:
-        ds = wcofs_src._fetch_one(cycle, lead, bbox, prefer_s3=True)
-    except Exception:
-        return None, None
-    key = str(ds.attrs.get("wcofs_s3_key", wcofs_src.fields_s3_key(cycle, lead)))
-    return ds, key
+        key = _resolve_issued_key(cycle, lead, list_keys_under_prefix)
+    except CycleNotAvailable:
+        return None, None, "missing_wcofs_object"
+    url = _s3_url(key)
+    try:
+        data = get_bytes(url, extra_cache_key=f"{cycle.isoformat()}_{lead}")
+        ds = _open_wcofs_bytes(data)
+        ds.attrs["wcofs_s3_key"] = key
+        if "lat_rho" in ds:
+            ds = _subset_bbox(ds, bbox, margin_cells=DEFAULT_SUBSET_MARGIN_CELLS)
+        return ds, key, None
+    except Exception as exc:  # noqa: BLE001
+        return None, key, f"fetch_failed:{type(exc).__name__}:{exc}"[:240]
 
 
-def _sample_covariates(ds, lat: float, lon: float, config: dict) -> dict[str, float] | None:
-    from fishai.ingestion.physics.wcofs_glorys_grid import (
-        coarsen_wcofs_to_glorys,
-        compute_wcofs_covariates_on_glorys_grid,
-    )
-    from fishai.ingestion.physics.wcofs_glorys_grid import min_wet_fraction_from_config
-    from fishai.ingestion.physics.wcofs_glorys_overlap import glorys_grid_from_config
-
-    lat_dst, lon_dst = glorys_grid_from_config(config)
-    gridded = coarsen_wcofs_to_glorys(
-        ds,
-        lat_dst,
-        lon_dst,
-        min_wet_fraction=min_wet_fraction_from_config(config),
-    )
-    fields = compute_wcofs_covariates_on_glorys_grid(gridded)
+def _values_from_fields(fields: dict, lat: float, lon: float, lat_dst, lon_dst) -> dict[str, float] | None:
     j, i = _nearest_cell(lat, lon, lat_dst, lon_dst)
     out: dict[str, float] = {}
     for z_col, raw in UPSTREAM.items():
-        arr = fields[raw]
-        val = float(arr[j, i])
+        val = float(fields[raw][j, i])
         if not np.isfinite(val):
             return None
         out[z_col] = val
     return out
+
+
+def _sample_roms_fields(ds, lat: float, lon: float, config: dict) -> dict[str, float] | None:
+    from fishai.ingestion.physics.wcofs_glorys_overlap import (
+        glorys_grid_from_config,
+        wcofs_covariate_arrays_on_glorys_grid,
+    )
+
+    lat_dst, lon_dst = glorys_grid_from_config(config)
+    fields = wcofs_covariate_arrays_on_glorys_grid(ds, lat_dst, lon_dst, config)
+    return _values_from_fields(fields, lat, lon, lat_dst, lon_dst)
+
+
+def _regulargrid_fields(ds, config: dict) -> dict | None:
+    """Bin an issued regular-grid forecast onto the GLORYS grid, then the shared covariates.
+
+    Later WCOFS cycles publish ``regulargrid.fHHH`` instead of ROMS ``fields.fHHH``.
+    Depth is already meters, positive down. Source points inside each GLORYS cell
+    are averaged with equal weight. This is still an issued WCOFS forecast.
+    """
+    from fishai.ingestion.physics.wcofs_glorys_grid import (
+        WcofsGlorysGrid,
+        compute_wcofs_covariates_on_glorys_grid,
+    )
+    from fishai.ingestion.physics.wcofs_glorys_overlap import depth_grid_m, glorys_grid_from_config
+
+    lat_dst, lon_dst = glorys_grid_from_config(config)
+    depth_grid = depth_grid_m(config)
+    lat2 = np.asarray(ds["Latitude"].values, dtype=float)
+    lon2 = np.asarray(ds["Longitude"].values, dtype=float)
+    lon2 = np.where(lon2 > 180.0, lon2 - 360.0, lon2)
+    mask = np.asarray(ds["mask"].values) == 1
+    depth_src = np.asarray(ds["Depth"].values, dtype=float)
+    temp = np.asarray(ds["temp"].values, dtype=float)
+    salt = np.asarray(ds["salt"].values, dtype=float)
+    if temp.ndim == 4:
+        temp = temp[0]
+        salt = salt[0]
+    pad = 0.2
+    window = (
+        (lat2 >= float(lat_dst.min()) - pad)
+        & (lat2 <= float(lat_dst.max()) + pad)
+        & (lon2 >= float(lon_dst.min()) - pad)
+        & (lon2 <= float(lon_dst.max()) + pad)
+        & mask
+    )
+    jj, ii = np.where(window)
+    if jj.size == 0:
+        return None
+    j_idx = np.abs(lat2[jj, ii, None] - lat_dst[None, :]).argmin(axis=1)
+    i_idx = np.abs(lon2[jj, ii, None] - lon_dst[None, :]).argmin(axis=1)
+    order = np.argsort(depth_src)
+    z = depth_src[order]
+    nj, ni, nz = lat_dst.size, lon_dst.size, depth_grid.size
+    temp_sum = np.zeros((nj, ni, nz), dtype=float)
+    salt_sum = np.zeros((nj, ni, nz), dtype=float)
+    counts = np.zeros((nj, ni), dtype=float)
+    for n in range(jj.size):
+        tcol = temp[order, jj[n], ii[n]]
+        scol = salt[order, jj[n], ii[n]]
+        finite = np.isfinite(tcol) & np.isfinite(scol)
+        if int(finite.sum()) < 2:
+            continue
+        t_i = np.interp(depth_grid, z[finite], tcol[finite], left=np.nan, right=np.nan)
+        s_i = np.interp(depth_grid, z[finite], scol[finite], left=np.nan, right=np.nan)
+        j = int(j_idx[n])
+        i = int(i_idx[n])
+        temp_sum[j, i] += np.where(np.isfinite(t_i), t_i, 0.0)
+        salt_sum[j, i] += np.where(np.isfinite(s_i), s_i, 0.0)
+        counts[j, i] += 1.0
+    good = counts > 0
+    temp_g = np.full((nj, ni, nz), np.nan, dtype=float)
+    salt_g = np.full((nj, ni, nz), np.nan, dtype=float)
+    temp_g[good] = temp_sum[good] / counts[good, None]
+    salt_g[good] = salt_sum[good] / counts[good, None]
+    wet = np.broadcast_to(good[:, :, None], (nj, ni, nz)).astype(float).copy()
+    wet[~good] = 0.0
+    gridded = WcofsGlorysGrid(
+        lat=np.asarray(lat_dst, dtype=float),
+        lon=np.asarray(lon_dst, dtype=float),
+        depth_m=np.asarray(depth_grid, dtype=float),
+        temp=temp_g,
+        salt=salt_g,
+        wet_fraction=wet,
+    )
+    return compute_wcofs_covariates_on_glorys_grid(gridded)
+
+
+def _sample_covariates(ds, lat: float, lon: float, config: dict) -> dict[str, float] | None:
+    if "lat_rho" in ds and "temp" in ds:
+        return _sample_roms_fields(ds, lat, lon, config)
+    if "Latitude" in ds and "temp" in ds and "Depth" in ds:
+        from fishai.ingestion.physics.wcofs_glorys_overlap import glorys_grid_from_config
+
+        fields = _regulargrid_fields(ds, config)
+        if fields is None:
+            return None
+        lat_dst, lon_dst = glorys_grid_from_config(config)
+        return _values_from_fields(fields, lat, lon, lat_dst, lon_dst)
+    return None
 
 
 def main(argv: list[str] | None = None) -> int:
@@ -165,6 +304,42 @@ def main(argv: list[str] | None = None) -> int:
     bbox = (float(box["lat_min"]), float(box["lat_max"]), float(box["lon_min"]), float(box["lon_max"]))
     config = load_overlap_config()
 
+    prepared: dict[tuple[dt.date, str], tuple] = {}
+
+    def _prepared_fields(cycle: dt.date, lead: str):
+        token = (cycle, lead)
+        if token in prepared:
+            return prepared[token]
+        ds, key, fetch_err = _fetch_wcofs_fields(cycle, lead, bbox)
+        if ds is None:
+            prepared[token] = (None, key, fetch_err or "missing_wcofs_object")
+            return prepared[token]
+        try:
+            from fishai.ingestion.physics.wcofs_glorys_overlap import glorys_grid_from_config
+
+            lat_dst, lon_dst = glorys_grid_from_config(config)
+            if "lat_rho" in ds and "temp" in ds:
+                from fishai.ingestion.physics.wcofs_glorys_overlap import (
+                    wcofs_covariate_arrays_on_glorys_grid,
+                )
+
+                fields = wcofs_covariate_arrays_on_glorys_grid(ds, lat_dst, lon_dst, config)
+            elif "Latitude" in ds and "temp" in ds and "Depth" in ds:
+                fields = _regulargrid_fields(ds, config)
+                if fields is None:
+                    prepared[token] = (None, key, "non_finite_wcofs_cell")
+                    return prepared[token]
+            else:
+                prepared[token] = (None, key, "unsupported_wcofs_product")
+                return prepared[token]
+            prepared[token] = (fields, key, None)
+            return prepared[token]
+        except Exception as exc:  # noqa: BLE001
+            prepared[token] = (None, key, f"fetch_failed:{type(exc).__name__}:{exc}"[:240])
+            return prepared[token]
+        finally:
+            ds.close()
+
     rows: list[dict] = []
     for cutoff in cutoffs:
         hold = train[train["event_day"].isin([cutoff + dt.timedelta(days=h) for h in (1, 2, 3)])]
@@ -193,22 +368,24 @@ def main(argv: list[str] | None = None) -> int:
                 )
                 continue
             cycle, lead, fallback = _resolve_lead(cutoff, h_days, cycle_available)
-            ds, key = _fetch_wcofs_fields(cycle, lead, bbox)
-            if ds is None:
+            fields, key, fetch_err = _prepared_fields(cycle, lead)
+            if fields is None:
                 rows.append(
                     {
                         **base,
                         "physics_source": "damped_anomaly_proxy",
                         "operational_claim": "NOT_ISSUED_FORECAST",
-                        "proxy_reason": "missing_wcofs_object",
-                        "wcofs_s3_key": "",
+                        "proxy_reason": fetch_err or "missing_wcofs_object",
+                        "wcofs_s3_key": key or "",
                         "wcofs_lead_tag": lead,
                         **{c: np.nan for c in DYN_Z_COLS},
                     }
                 )
                 continue
-            sampled = _sample_covariates(ds, lat, lon, config)
-            ds.close()
+            from fishai.ingestion.physics.wcofs_glorys_overlap import glorys_grid_from_config
+
+            lat_dst, lon_dst = glorys_grid_from_config(config)
+            sampled = _values_from_fields(fields, lat, lon, lat_dst, lon_dst)
             if sampled is None:
                 rows.append(
                     {

@@ -225,6 +225,10 @@ adult_forecast_lock_cutoffs <- function(dat, test_end, min_train_rows = ADULT_FO
 }
 
 .sardine_call_wcofs_sampler <- function(root, cutoffs) {
+  if (identical(Sys.getenv("FISHAI_SKIP_WCOFS_SAMPLER", unset = ""), "1")) {
+    message("WCOFS sampler skipped; using existing operational covariate table")
+    return(invisible(NULL))
+  }
   py <- "/tmp/fishai-venv/bin/python3"
   if (!file.exists(py)) {
     py <- Sys.which("python3")

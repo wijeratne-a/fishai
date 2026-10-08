@@ -49,9 +49,9 @@ Public NOAA PDS issued WCOFS **fields** when the archive covers the lead; otherw
 **Issued forecast (when archive covers cutoff cycle D):**
 
 - Holdout event on calendar day D+h (h = 1, 2, 3): use a forecast issued from the **03z cycle on cutoff day D**, lead `f024` / `f048` / `f072` (not the event-day nowcast).
-- Public objects under `wcofs/netcdf/YYYY/MM/DD/wcofs.t03z.YYYYMMDD.fields.f0HH.nc` from bucket `noaa-nos-ofs-pds` only.
-- Archive starts **2024-07-01**; cycles before that ⇒ proxy with `coverage_forced_proxy`.
-- Coarsen onto the GLORYS grid (`coarsen_wcofs_to_glorys`, `compute_wcofs_covariates_on_glorys_grid`), sample the event's GLORYS cell (same nearest-cell rule as training). Map to `temp_3m_z`, `sal_3m_z`, `mld_z`, `sst_grad_z`, `dist_front_z`. `log_depth_z` stays the static training value. **No** WCOFS→GLORYS bias-correction map (frozen artifact not in repo).
+- Public objects from bucket `noaa-nos-ofs-pds` only. Prefer the ROMS `fields` forecast (`wcofs.t03z.*.fields.f0HH.nc` or legacy `nos.wcofs.fields.f0HH.*.nc`). Classic NetCDF (`CDF\x02`, used in 2024) is opened with the scipy engine; HDF5/NetCDF-4 uses h5netcdf. When `fields.f0HH` is not published, use the issued `regulargrid.f0HH` forecast (standard depths, positive down) and bin it onto the GLORYS grid before the same covariate functions. The S3 key on each row records which product was used.
+- Archive starts **2024-07-01**; cycles before that ⇒ proxy with `coverage_forced_proxy`. A missing object after that date is `missing_wcofs_object`, not a silent proxy.
+- Coarsen onto the GLORYS grid (`coarsen_wcofs_to_glorys` for ROMS fields; equal-weight binning for `regulargrid`), then `compute_wcofs_covariates_on_glorys_grid`. Sample the event's GLORYS cell. Map to `temp_3m_z`, `sal_3m_z`, `mld_z`, `sst_grad_z`, `dist_front_z`. `log_depth_z` stays the static training value. **No** WCOFS→GLORYS bias-correction map (frozen artifact not in repo).
 - Labels: `physics_source = wcofs_issued_forecast`, `operational_claim = ISSUED_FORECAST`, record S3 key and lead tag (and fallback metadata when `resolve_lead_for_offset` applies).
 
 **Proxy (coverage or missing field):**
