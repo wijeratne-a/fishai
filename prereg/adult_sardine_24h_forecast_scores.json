@@ -7,7 +7,7 @@
   "physics_source_summary": "damped_anomaly_proxy",
   "tau_days": 3,
   "lane_oracle": "retrospective",
-  "code_sha": "8170ce9",
+  "code_sha": "767748b",
   "design": "prereg/adult_sardine_24h_forecast_design.md",
   "pass_rule": "operational AUC and TSS at 24h strictly greater than persistence and climatology, with at least 6 eligible cutoffs",
   "test_end": "2026-07-08",
