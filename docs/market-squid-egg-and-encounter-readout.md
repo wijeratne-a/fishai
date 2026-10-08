@@ -8,26 +8,34 @@ Branch: `cursor/fishai-market-squid-pipeline-86df`.
 
 **Spatial-block CV protocol:** `configs/cufes_squid_spatial_block_cv_scores.yaml` — 60 km blocks, seed **20260928**, **4** folds (same as anchovy/sardine).
 
-### Egg CV scores (this environment)
+### CUFES×GLORYS training table (2026-10-08, ERDDAP recovered)
 
-**Status: blocked** — no ELPD / AUC / TSS produced.
+Cold rebuild: `SKIP_CACHE=1 bash scripts/ci/rebuild_cufes_glorys_training_table.sh` (ERDDAP `erdCalCOFIcufes` on oceanview.pfeg.noaa.gov).
+
+| Table | Rows |
+| --- | --- |
+| `cufes_events.parquet` (QC-kept) | **14,592** |
+| `cufes_counts.parquet` (all taxa long) | **82,426** |
+| `cufes_counts` squid taxon rows | **11,612** |
+| `cufes_training_covariates.parquet` | **14,592** |
+| Covariate drops | **5,640** |
+
+### Egg CV scores
+
+**Protocol:** `configs/cufes_squid_spatial_block_cv_scores.yaml` — 60 km blocks, seed **20260928**, 4 folds.  
+**Artifact:** `prereg/cufes_squid_spatial_block_cv_scores.json` (`status: ok`).
 
 | Metric | Value |
 | --- | --- |
-| ELPD | — (not computed) |
-| ELPD eligible | **false** |
-| AUC / TSS / Boyce | — |
-| Failed folds | — |
+| Squid model fit rows (`n_fit_rows`) | **8,630** |
+| OOF rows | **7,259** |
+| Folds converged | **3 / 4** (fold 1: non–PD Hessian) |
+| ELPD | **NA** (`elpd_eligible: false`, `cv_fold_nonconverged`) |
+| Fold log-lik | NA, −8305.92, −8234.75, −4098.25 |
+| AUC / TSS / Boyce | **NA** (ELPD ineligible) |
+| `n_failed_folds` | **1** |
 
-**Reason:** The shared CUFES×GLORYS training table could not be materialized:
-
-- NOAA ERDDAP (`erdCalCOFIcufes` on oceanview/coastwatch) failed with **504**, read timeouts, and **SSL EOF** on all fetch strategies tried (yearly, half-year, single-cruise).
-- Public GHCR cache `cufes-glorys-rebuild:612cb155…` is **not published** (`docker pull`: not found).
-- `COPERNICUSMARINE_*` credentials **are** present locally; the blocker is **ERDDAP CUFES ingest**, not Copernicus.
-
-Artifact: `prereg/cufes_squid_spatial_block_cv_scores.json` (`status: blocked`).
-
-**24 h rolling-origin forecast (eggs):** not run — requires a validated egg CV fit first (`prereg/cufes_forecast_temporal_holdout_design.md`).
+**24 h rolling-origin forecast (eggs):** not run — CV not fully validated (1/4 folds failed).
 
 ---
 
@@ -60,9 +68,8 @@ Both runs: 60 km blocks, seed **20260928**, 4 folds, 572 fit rows; `elpd_eligibl
 
 ---
 
-## Next unblock (ops)
+## Next ops
 
-1. Rebuild CUFES×GLORYS where ERDDAP is healthy (or publish GHCR `cufes-glorys-rebuild` cache tar for key `612cb155…`).
-2. Re-run: `Rscript scripts/models/run_spatial_block_cv_scores.R configs/cufes_squid_spatial_block_cv_scores.yaml`
-3. If egg CV validates (`elpd_eligible` + 4/4 folds), run temporal holdout per forecast branch `cursor/fishai-forecast-validation-a046`.
-4. Encounter CV: build table → `configs/models/cps_market_squid_encounter.yaml` (to add) → adult-style spatial-block CV.
+1. Squid egg CV: diagnose fold 1 non–PD Hessian or apply a preregistered simplified retry if policy allows.
+2. If egg CV validates (`elpd_eligible` + 4/4 folds), run temporal holdout per forecast branch `cursor/fishai-forecast-validation-a046`.
+3. Encounter model: no further spec changes after linear/spatial-off retry (0/4 folds); see §2.
