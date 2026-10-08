@@ -1,0 +1,34 @@
+{
+  "species": "Pacific sardine (adult CPS encounter)",
+  "model_config": "configs/models/adult_cps_sardine.yaml",
+  "n_fit_rows": 458,
+  "n_presence_rows": 59,
+  "spatial_block_cv": {
+    "block_size_km": 60,
+    "mesh_cutoff_km": 9,
+    "spatial_range_km": 60,
+    "seed": 20260928,
+    "n_folds": 4,
+    "epsg": 32611,
+    "block_size_source": "max(mesh.cutoff_km, mesh.range_guess_km)",
+    "spatial_range_source": "mesh.range_guess_km",
+    "seed_source": "prediction.seed",
+    "n_folds_source": "data.spatial_block_cv.n_folds"
+  },
+  "elpd": -588.9487,
+  "elpd_eligible": true,
+  "elpd_ineligible_reason": {},
+  "fold_loglik": [
+    -73.3391,
+    -120.4313,
+    -325.4053,
+    -69.7729
+  ],
+  "n_failed_folds": 0,
+  "fold_failures": [],
+  "oof_auc": 0.6769,
+  "oof_tss": 0.1953,
+  "oof_boyce": 0.7538,
+  "oof_boyce_method": "cbi_continuous_moving_window",
+  "product_label": "adult spawning encounter evidence (survey catch; not live fish tracking)"
+}

@@ -1,4 +1,4 @@
-"""ERDDAP fetch for SWFSC CPS trawl haul catch (batched, cacheable CSV)."""
+"""ERDDAP fetch for SWFSC CPS nearshore set catch (batched, cacheable CSV)."""
 
 from __future__ import annotations
 
@@ -12,11 +12,15 @@ from pathlib import Path
 from typing import Any, Sequence
 from urllib.parse import quote
 
-from fishai.ingestion.biology.cps_trawl.constants import ERDDAP_FIELDS, ERDDAP_TABLEDAP_BASE, SOURCE_ID
+from fishai.ingestion.biology.cps_nearshore.constants import (
+    ERDDAP_FIELDS,
+    ERDDAP_TABLEDAP_BASE,
+    SOURCE_ID,
+)
 from fishai.ingestion.biology.cufes.erddap_rows import is_erddap_units_row
 from fishai.ingestion.sources import REPO_ROOT, require_approved
 
-DEFAULT_TIMEOUT_SEC = 300.0
+DEFAULT_TIMEOUT_SEC = 120.0
 DEFAULT_MAX_RETRIES = 5
 DEFAULT_BACKOFF_SEC = 2.0
 
@@ -34,7 +38,7 @@ class BBox:
 
 
 def raw_dir() -> Path:
-    return REPO_ROOT / "data" / "raw" / "swfsc_cps_trawl_haul_catch"
+    return REPO_ROOT / "data" / "raw" / "swfsc_cps_nearshore_set_catch"
 
 
 def build_erddap_csv_url(
@@ -43,6 +47,7 @@ def build_erddap_csv_url(
     bbox: BBox | None = None,
     *,
     fields: Sequence[str] = ERDDAP_FIELDS,
+    erddap_base: str | None = None,
 ) -> str:
     """Build a tabledap CSV URL with percent-encoded constraint operators."""
     field_list = ",".join(fields)
@@ -73,7 +78,8 @@ def build_erddap_csv_url(
             ]
         )
     query = f"{field_list}&" + "&".join(constraints)
-    return f"{ERDDAP_TABLEDAP_BASE}.csv?{query}"
+    base = erddap_base or ERDDAP_TABLEDAP_BASE
+    return f"{base}.csv?{query}"
 
 
 def _erddap_time(dt: datetime) -> str:
@@ -82,28 +88,6 @@ def _erddap_time(dt: datetime) -> str:
     else:
         dt = dt.astimezone(timezone.utc)
     return dt.strftime("%Y-%m-%d")
-
-
-def iter_halfyear_windows(t0: date, t1: date) -> list[tuple[datetime, datetime]]:
-    """Six-month batches clipped to [t0, t1]."""
-    if t1 < t0:
-        return []
-    range_start = datetime.combine(t0, datetime.min.time(), tzinfo=timezone.utc)
-    range_end = datetime.combine(t1 + timedelta(days=1), datetime.min.time(), tzinfo=timezone.utc)
-    windows: list[tuple[datetime, datetime]] = []
-    for year in range(t0.year, t1.year + 1):
-        for month_start, month_end in ((1, 7), (7, 13)):
-            win_start = datetime(year, month_start, 1, tzinfo=timezone.utc)
-            win_end = (
-                datetime(year + 1, 1, 1, tzinfo=timezone.utc)
-                if month_end == 13
-                else datetime(year, month_end, 1, tzinfo=timezone.utc)
-            )
-            clip_start = max(win_start, range_start)
-            clip_end = min(win_end, range_end)
-            if clip_start < clip_end:
-                windows.append((clip_start, clip_end))
-    return windows
 
 
 def iter_yearly_windows(t0: date, t1: date) -> list[tuple[datetime, datetime]]:
@@ -125,69 +109,28 @@ def iter_yearly_windows(t0: date, t1: date) -> list[tuple[datetime, datetime]]:
     return windows
 
 
-def _http_get(url: str, *, timeout: float, max_retries: int, backoff: float) -> bytes:
-    last_err: Exception | None = None
+def _download(url: str, *, timeout_sec: float, max_retries: int, backoff_sec: float) -> str:
+    last_error: Exception | None = None
     for attempt in range(max_retries):
         try:
-            req = urllib.request.Request(url, headers={"User-Agent": "fishai-cps-trawl-ingest/0.1"})
-            with urllib.request.urlopen(req, timeout=timeout) as resp:
-                return resp.read()
+            req = urllib.request.Request(url, headers={"User-Agent": "fishai-ingestion/1.0"})
+            with urllib.request.urlopen(req, timeout=timeout_sec) as resp:
+                return resp.read().decode("utf-8", errors="replace")
         except urllib.error.HTTPError as exc:
             if exc.code == 404:
                 raise
-            last_err = exc
+            last_error = exc
             if attempt + 1 < max_retries:
-                time.sleep(backoff * (2**attempt))
-        except (urllib.error.URLError, TimeoutError) as exc:
-            last_err = exc
+                time.sleep(backoff_sec * (2**attempt))
+        except (urllib.error.URLError, TimeoutError, OSError) as exc:
+            last_error = exc
             if attempt + 1 < max_retries:
-                time.sleep(backoff * (2**attempt))
-    raise RuntimeError(f"ERDDAP fetch failed after {max_retries} attempts: {last_err}") from last_err
+                time.sleep(backoff_sec * (2**attempt))
+    raise RuntimeError(f"ERDDAP download failed after {max_retries} attempts: {url}") from last_error
 
 
-def fetch_cps_trawl_haul_catch(
-    t0: date,
-    t1: date,
-    bbox: BBox | None = None,
-    *,
-    dest_dir: Path | None = None,
-    timeout: float = DEFAULT_TIMEOUT_SEC,
-    max_retries: int = DEFAULT_MAX_RETRIES,
-    backoff: float = DEFAULT_BACKOFF_SEC,
-    manifest_path: Path | None = None,
-) -> list[Path]:
-    """
-    Download CPS trawl haul-catch rows into ``data/raw/swfsc_cps_trawl_haul_catch/``.
-
-    One HTTP request per half-year when ``bbox`` is set, else per calendar year (sequential).
-    Skips windows that return ERDDAP 404 (no rows). Requires ``swfsc_cps_trawl_haul_catch``
-    approved in ``data/SOURCES.yaml``.
-    """
-    require_approved(SOURCE_ID, path=manifest_path)
-    out_dir = dest_dir or raw_dir()
-    out_dir.mkdir(parents=True, exist_ok=True)
-    written: list[Path] = []
-    windows = iter_halfyear_windows(t0, t1) if bbox is not None else iter_yearly_windows(t0, t1)
-    for win_start, win_end in windows:
-        url = build_erddap_csv_url(win_start, win_end, bbox)
-        tag = win_start.strftime("%Y%m%d")
-        dest = out_dir / f"FRDCPSTrawlLHHaulCatch_{tag}.csv"
-        if dest.is_file() and dest.stat().st_size > 0:
-            written.append(dest)
-            continue
-        try:
-            body = _http_get(url, timeout=timeout, max_retries=max_retries, backoff=backoff)
-        except urllib.error.HTTPError as exc:
-            if exc.code == 404:
-                continue
-            raise
-        dest.write_bytes(body)
-        written.append(dest)
-    return written
-
-
-def read_cps_trawl_csv(path: Path) -> tuple[list[dict[str, Any]], int]:
-    """Return (data rows, units_rows_skipped)."""
+def read_cps_nearshore_csv(path: Path) -> tuple[list[dict[str, Any]], int]:
+    """Return (data rows, units_rows_skipped) from a downloaded CSV file."""
     text = path.read_text(encoding="utf-8")
     reader = csv.DictReader(io.StringIO(text))
     rows: list[dict[str, Any]] = []
@@ -198,9 +141,49 @@ def read_cps_trawl_csv(path: Path) -> tuple[list[dict[str, Any]], int]:
         if is_erddap_units_row(row, data_row_index=data_row_index, path=path):
             skipped += 1
             continue
-        rows.append(dict(row))
+        rows.append({k: (v.strip() if isinstance(v, str) else v) for k, v in row.items()})
     if not saw_data_row:
         raise ValueError(f"expected ERDDAP units row as first data line in {path}, file has no data rows")
     if skipped == 0:
         raise ValueError(f"expected ERDDAP units row as first data line in {path}, no units row was skipped")
     return rows, skipped
+
+
+OCEANVIEW_NEARSHORE_SET_CATCH_BASE = (
+    "https://oceanview.pfeg.noaa.gov/erddap/tabledap/FRDCPSNearshoreSetCatch"
+)
+
+
+def fetch_cps_nearshore_set_catch(
+    t0: date,
+    t1: date,
+    bbox: BBox | None,
+    dest: Path,
+    *,
+    timeout_sec: float = DEFAULT_TIMEOUT_SEC,
+    max_retries: int = DEFAULT_MAX_RETRIES,
+    backoff_sec: float = DEFAULT_BACKOFF_SEC,
+    erddap_base: str | None = None,
+    window_fn=iter_yearly_windows,
+) -> list[Path]:
+    """Download yearly CSV windows into ``dest``; returns written file paths."""
+    require_approved(SOURCE_ID)
+    dest.mkdir(parents=True, exist_ok=True)
+    written: list[Path] = []
+    for win_start, win_end in window_fn(t0, t1):
+        url = build_erddap_csv_url(win_start, win_end, bbox, erddap_base=erddap_base)
+        try:
+            text = _download(
+                url,
+                timeout_sec=timeout_sec,
+                max_retries=max_retries,
+                backoff_sec=backoff_sec,
+            )
+        except urllib.error.HTTPError as exc:
+            if exc.code == 404:
+                continue
+            raise
+        out = dest / f"cps_nearshore_set_catch_{win_start.strftime('%Y%m%d')}.csv"
+        out.write_text(text, encoding="utf-8")
+        written.append(out)
+    return written
