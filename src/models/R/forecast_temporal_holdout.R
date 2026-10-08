@@ -542,7 +542,7 @@ forecast_operational_covariates_for_row <- function(
       vals <- as.numeric(ov[dyn_cols])
       if (all(is.finite(vals))) {
         return(list(
-          values = stats::setNames(vals, dyn_cols),
+          values = as.list(stats::setNames(vals, dyn_cols)),
           physics_source = FORECAST_PHYSICS_SOURCE_WCOFS,
           operational_claim = FORECAST_OPERATIONAL_CLAIM_ISSUED,
           wcofs_s3_key = as.character(ov$wcofs_s3_key[[1L]] %||% NA_character_),
@@ -567,7 +567,7 @@ forecast_operational_covariates_for_row <- function(
     vals[[col]] <- forecast_damped_anomaly(clim[[col]], x_cut[[col]], horizon_days)
   }
   list(
-    values = vals,
+    values = as.list(vals),
     physics_source = FORECAST_PHYSICS_SOURCE,
     operational_claim = FORECAST_OPERATIONAL_CLAIM,
     wcofs_s3_key = NA_character_,
