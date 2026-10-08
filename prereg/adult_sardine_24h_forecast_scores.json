@@ -3,11 +3,11 @@
   "claim": "24h adult sardine encounter forecast skill (rolling-origin holdout)",
   "operational_claim": "NOT_ISSUED_FORECAST",
   "physics_source": "damped_anomaly_proxy",
-  "operational_claim_summary": "NOT_ISSUED_FORECAST",
-  "physics_source_summary": "damped_anomaly_proxy",
+  "operational_claim_summary": "MIXED_ISSUED_AND_PROXY",
+  "physics_source_summary": "wcofs_issued_forecast_and_damped_anomaly_proxy",
   "tau_days": 3,
   "lane_oracle": "retrospective",
-  "code_sha": "767748b",
+  "code_sha": "80690ac",
   "design": "prereg/adult_sardine_24h_forecast_design.md",
   "pass_rule": "operational AUC and TSS at 24h strictly greater than persistence and climatology, with at least 6 eligible cutoffs",
   "test_end": "2026-07-08",
@@ -30,7 +30,16 @@
   "cutoff_notes": [
     "season DJF has 0 eligible cutoff(s); skipped"
   ],
-  "cutoffs": ["2014-04-25", "2015-06-20", "2016-09-08", "2018-09-20", "2021-03-26", "2022-09-23", "2024-07-29", "2026-06-25"],
+  "cutoffs": [
+    "2014-04-25",
+    "2015-06-20",
+    "2016-09-08",
+    "2018-09-20",
+    "2021-03-26",
+    "2022-09-23",
+    "2024-07-29",
+    "2026-06-25"
+  ],
   "cutoff_seasons": [
     "MAM",
     "JJA",
@@ -60,8 +69,8 @@
         "24": {
           "horizon_hours": 24,
           "n_common_support": 5,
-          "n_issued_wcofs": 0,
-          "n_proxy": 5,
+          "n_issued_wcofs": 2,
+          "n_proxy": 3,
           "oracle": {
             "n": 5,
             "n_presence": 1,
@@ -75,11 +84,11 @@
           "operational_proxy": {
             "n": 5,
             "n_presence": 1,
-            "auc": 0.75,
+            "auc": 1,
             "tss": 0,
-            "boyce": 0.866,
-            "elpd_per_event": -1.6952,
-            "elpd": -8.4762,
+            "boyce": null,
+            "elpd_per_event": -1.6486,
+            "elpd": -8.2431,
             "elpd_kind": "delta_encounter_plus_gamma",
             "operational_claim": "NOT_ISSUED_FORECAST",
             "physics_source": "damped_anomaly_proxy"
@@ -125,8 +134,8 @@
             "auc": null,
             "tss": null,
             "boyce": null,
-            "elpd_per_event": -0.1062,
-            "elpd": -0.6371,
+            "elpd_per_event": -0.0716,
+            "elpd": -0.4297,
             "elpd_kind": "delta_encounter_plus_gamma",
             "operational_claim": "NOT_ISSUED_FORECAST",
             "physics_source": "damped_anomaly_proxy"
@@ -1389,8 +1398,8 @@
             "24": {
               "horizon_hours": 24,
               "n_common_support": 1,
-              "n_issued_wcofs": 0,
-              "n_proxy": 1,
+              "n_issued_wcofs": 1,
+              "n_proxy": 0,
               "oracle": {
                 "n": 1,
                 "n_presence": 0,
@@ -1407,8 +1416,8 @@
                 "auc": null,
                 "tss": null,
                 "boyce": null,
-                "elpd_per_event": -0.1179,
-                "elpd": -0.1179,
+                "elpd_per_event": -0.0055,
+                "elpd": -0.0055,
                 "elpd_kind": "delta_encounter_plus_gamma",
                 "operational_claim": "NOT_ISSUED_FORECAST",
                 "physics_source": "damped_anomaly_proxy"
@@ -1454,8 +1463,8 @@
                 "auc": null,
                 "tss": null,
                 "boyce": null,
-                "elpd_per_event": -0.1042,
-                "elpd": -0.2084,
+                "elpd_per_event": -0.0005,
+                "elpd": -0.0011,
                 "elpd_kind": "delta_encounter_plus_gamma",
                 "operational_claim": "NOT_ISSUED_FORECAST",
                 "physics_source": "damped_anomaly_proxy"
@@ -1580,8 +1589,8 @@
             "24": {
               "horizon_hours": 24,
               "n_common_support": 1,
-              "n_issued_wcofs": 0,
-              "n_proxy": 1,
+              "n_issued_wcofs": 1,
+              "n_proxy": 0,
               "oracle": {
                 "n": 1,
                 "n_presence": 0,
@@ -1598,8 +1607,8 @@
                 "auc": null,
                 "tss": null,
                 "boyce": null,
-                "elpd_per_event": -0.121,
-                "elpd": -0.121,
+                "elpd_per_event": -0.0004,
+                "elpd": -0.0004,
                 "elpd_kind": "delta_encounter_plus_gamma",
                 "operational_claim": "NOT_ISSUED_FORECAST",
                 "physics_source": "damped_anomaly_proxy"
@@ -1763,8 +1772,8 @@
       ]
     }
   ],
-  "n_issued_wcofs": 0,
-  "n_proxy": 5,
+  "n_issued_wcofs": 2,
+  "n_proxy": 3,
   "n_eligible_cutoffs": 8,
   "fit_status": "scored",
   "pass_24h": false,
@@ -2918,8 +2927,8 @@
         "24": {
           "horizon_hours": 24,
           "n_common_support": 1,
-          "n_issued_wcofs": 0,
-          "n_proxy": 1,
+          "n_issued_wcofs": 1,
+          "n_proxy": 0,
           "oracle": {
             "n": 1,
             "n_presence": 0,
@@ -2936,8 +2945,8 @@
             "auc": null,
             "tss": null,
             "boyce": null,
-            "elpd_per_event": -0.1179,
-            "elpd": -0.1179,
+            "elpd_per_event": -0.0055,
+            "elpd": -0.0055,
             "elpd_kind": "delta_encounter_plus_gamma",
             "operational_claim": "NOT_ISSUED_FORECAST",
             "physics_source": "damped_anomaly_proxy"
@@ -2983,8 +2992,8 @@
             "auc": null,
             "tss": null,
             "boyce": null,
-            "elpd_per_event": -0.1042,
-            "elpd": -0.2084,
+            "elpd_per_event": -0.0005,
+            "elpd": -0.0011,
             "elpd_kind": "delta_encounter_plus_gamma",
             "operational_claim": "NOT_ISSUED_FORECAST",
             "physics_source": "damped_anomaly_proxy"
@@ -3109,8 +3118,8 @@
         "24": {
           "horizon_hours": 24,
           "n_common_support": 1,
-          "n_issued_wcofs": 0,
-          "n_proxy": 1,
+          "n_issued_wcofs": 1,
+          "n_proxy": 0,
           "oracle": {
             "n": 1,
             "n_presence": 0,
@@ -3127,8 +3136,8 @@
             "auc": null,
             "tss": null,
             "boyce": null,
-            "elpd_per_event": -0.121,
-            "elpd": -0.121,
+            "elpd_per_event": -0.0004,
+            "elpd": -0.0004,
             "elpd_kind": "delta_encounter_plus_gamma",
             "operational_claim": "NOT_ISSUED_FORECAST",
             "physics_source": "damped_anomaly_proxy"
@@ -3289,5 +3298,17 @@
         }
       }
     }
-  ]
+  ],
+  "wcofs_holdout_rows": {
+    "n": 58,
+    "n_issued": 15,
+    "n_proxy_pre_archive": 43,
+    "n_24h_common_support_issued": 2,
+    "n_24h_common_support_proxy": 3,
+    "products": {
+      "2024-07-29 fields f024/f048/f072": 6,
+      "2026-06-25 regulargrid f024/f048/f072": 9
+    },
+    "note": "Every holdout row on or after 2024-07-01 used an issued WCOFS forecast from the cutoff-day cycle. Earlier rows are the damped-anomaly proxy because the public archive does not cover them. No bias-correction map was applied."
+  }
 }

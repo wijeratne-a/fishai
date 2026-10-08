@@ -106,7 +106,9 @@ def _resolve_lead(cutoff: dt.date, h_days: int, cycle_exists) -> tuple[dt.date, 
         max_missed_cycles=5,
     )
     if lp is None:
-        return cutoff, tag, "missing_operational_cycle"
+        # The requested cycle may still have this forecast lead even when the
+        # nowcast probe (n024) is absent, as in the July 2024 fields layout.
+        return cutoff, tag, None
     return lp.cycle_date, lp.lead_tag, lp.fallback
 
 
