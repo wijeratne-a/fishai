@@ -48,6 +48,23 @@ def test_glorys_cli_subprocess_uses_pinned_catalog_env() -> None:
     assert proc.stdout.strip() == PRODUCT_ID_MY
 
 
+def test_glorys_cli_resolves_many_dates_in_one_process() -> None:
+    import os
+
+    full_env = os.environ.copy()
+    full_env["FISHAI_GLORYS_PINNED_CATALOG_JSON"] = str(PINNED)
+    proc = subprocess.run(
+        [sys.executable, str(CLI), "1996-03-16", "2020-06-01", "2022-04-19"],
+        check=True,
+        capture_output=True,
+        text=True,
+        env=full_env,
+        cwd=str(REPO),
+    )
+    lines = [line.strip() for line in proc.stdout.splitlines() if line.strip()]
+    assert lines == [PRODUCT_ID_MY, PRODUCT_ID_MY, PRODUCT_ID_MY]
+
+
 def test_live_catalog_unreachable_raises_when_unpinned(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:

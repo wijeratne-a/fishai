@@ -1,0 +1,2549 @@
+{
+  "status": "ok",
+  "claim": "72h egg-encounter forecast skill",
+  "operational_claim": "NOT_ISSUED_FORECAST",
+  "physics_source": "damped_anomaly_proxy",
+  "tau_days": 3,
+  "lane_oracle": "retrospective",
+  "code_sha": "2ab9a75f321cd8853ad7058d42c7530e90b5ac4c",
+  "design": "prereg/cufes_forecast_temporal_holdout_design.md",
+  "test_end": "2022-04-27",
+  "cutoff_calendar": "shared",
+  "cutoff_selection_status": "ok",
+  "cutoff_selection_reason": null,
+  "cutoff_notes": [
+    "moved MAM cutoff 1998-03-01 to 1998-04-07 to keep cutoffs 30 days apart"
+  ],
+  "cutoffs": ["1998-02-26", "1998-04-07", "1998-06-13", "2012-09-03", "2017-08-05", "2018-09-20", "2021-01-22", "2022-04-12"],
+  "cutoff_seasons": [
+    "DJF",
+    "MAM",
+    "JJA",
+    "SON",
+    "JJA",
+    "SON",
+    "DJF",
+    "MAM"
+  ],
+  "eligible_counts": {
+    "sardine": 174,
+    "anchovy": 174
+  },
+  "min_train_rows": 2000,
+  "min_train_days": 30,
+  "species": [
+    {
+      "label": "sardine",
+      "taxon": "sardine",
+      "model_config": "configs/models/cufes_sardine.yaml",
+      "operational_claim": "NOT_ISSUED_FORECAST",
+      "physics_source": "damped_anomaly_proxy",
+      "n_cutoffs": 8,
+      "n_eligible_cutoffs": 7,
+      "fit_status": "scored",
+      "pass_24h": false,
+      "pass_rule": "operational_proxy AUC and TSS at 24h strictly greater than persistence and climatology, with at least 6 eligible cutoffs",
+      "pooled": {
+        "24": {
+          "horizon_hours": 24,
+          "n_common_support": 120,
+          "oracle": {
+            "n": 120,
+            "n_presence": 1,
+            "auc": 0.8067,
+            "tss": -0.0336,
+            "boyce": -0.5477,
+            "elpd_per_event": -0.2014,
+            "elpd": -24.1722,
+            "elpd_kind": "delta_encounter_plus_gamma"
+          },
+          "operational_proxy": {
+            "n": 120,
+            "n_presence": 1,
+            "auc": 0.8235,
+            "tss": -0.0084,
+            "boyce": -0.2739,
+            "elpd_per_event": -0.1631,
+            "elpd": -19.5749,
+            "elpd_kind": "delta_encounter_plus_gamma",
+            "operational_claim": "NOT_ISSUED_FORECAST",
+            "physics_source": "damped_anomaly_proxy"
+          },
+          "persistence": {
+            "n": 120,
+            "n_presence": 1,
+            "auc": 0.5966,
+            "tss": 0,
+            "boyce": -0.5477,
+            "elpd_per_event": -0.1349,
+            "elpd": -16.1936,
+            "elpd_kind": "delta_encounter_plus_gamma"
+          },
+          "climatology": {
+            "n": 120,
+            "n_presence": 1,
+            "auc": 0.9832,
+            "tss": 0.8908,
+            "boyce": 0.6547,
+            "elpd_per_event": -0.2081,
+            "elpd_encounter_bernoulli": -24.9703,
+            "elpd_kind": "encounter_bernoulli_only",
+            "elpd_not_ranked_against_delta": true
+          }
+        },
+        "48": {
+          "horizon_hours": 48,
+          "n_common_support": 103,
+          "oracle": {
+            "n": 103,
+            "n_presence": 1,
+            "auc": 1,
+            "tss": 0.9412,
+            "boyce": null,
+            "elpd_per_event": -0.1325,
+            "elpd": -13.6518,
+            "elpd_kind": "delta_encounter_plus_gamma"
+          },
+          "operational_proxy": {
+            "n": 103,
+            "n_presence": 1,
+            "auc": 1,
+            "tss": 0.9804,
+            "boyce": null,
+            "elpd_per_event": -0.1139,
+            "elpd": -11.735,
+            "elpd_kind": "delta_encounter_plus_gamma",
+            "operational_claim": "NOT_ISSUED_FORECAST",
+            "physics_source": "damped_anomaly_proxy"
+          },
+          "persistence": {
+            "n": 103,
+            "n_presence": 1,
+            "auc": 0.9412,
+            "tss": 0,
+            "boyce": 0.1309,
+            "elpd_per_event": -0.0882,
+            "elpd": -9.0888,
+            "elpd_kind": "delta_encounter_plus_gamma"
+          },
+          "climatology": {
+            "n": 103,
+            "n_presence": 1,
+            "auc": 0.1471,
+            "tss": 0,
+            "boyce": -0.7746,
+            "elpd_per_event": -0.1838,
+            "elpd_encounter_bernoulli": -18.9363,
+            "elpd_kind": "encounter_bernoulli_only",
+            "elpd_not_ranked_against_delta": true
+          },
+          "degradation_from_24h": {
+            "oracle": {
+              "auc": 0.1933,
+              "tss": 0.9748
+            },
+            "operational_proxy": {
+              "auc": 0.1765,
+              "tss": 0.9888,
+              "operational_claim": "NOT_ISSUED_FORECAST"
+            },
+            "persistence": {
+              "auc": 0.3445,
+              "tss": 0
+            },
+            "climatology": {
+              "auc": -0.8361,
+              "tss": -0.8908
+            }
+          }
+        },
+        "72": {
+          "horizon_hours": 72,
+          "n_common_support": 74,
+          "oracle": {
+            "n": 74,
+            "n_presence": 4,
+            "auc": 0.6821,
+            "tss": -0.0714,
+            "boyce": -0.7326,
+            "elpd_per_event": -0.5147,
+            "elpd": -38.0874,
+            "elpd_kind": "delta_encounter_plus_gamma"
+          },
+          "operational_proxy": {
+            "n": 74,
+            "n_presence": 4,
+            "auc": 0.7786,
+            "tss": -0.0857,
+            "boyce": -0.7624,
+            "elpd_per_event": -0.495,
+            "elpd": -36.6321,
+            "elpd_kind": "delta_encounter_plus_gamma",
+            "operational_claim": "NOT_ISSUED_FORECAST",
+            "physics_source": "damped_anomaly_proxy"
+          },
+          "persistence": {
+            "n": 74,
+            "n_presence": 4,
+            "auc": 0.725,
+            "tss": 0,
+            "boyce": -0.3,
+            "elpd_per_event": -0.4588,
+            "elpd": -33.9503,
+            "elpd_kind": "delta_encounter_plus_gamma"
+          },
+          "climatology": {
+            "n": 74,
+            "n_presence": 4,
+            "auc": 0.3929,
+            "tss": 0.1929,
+            "boyce": 0.0778,
+            "elpd_per_event": -0.3901,
+            "elpd_encounter_bernoulli": -28.8674,
+            "elpd_kind": "encounter_bernoulli_only",
+            "elpd_not_ranked_against_delta": true
+          },
+          "degradation_from_24h": {
+            "oracle": {
+              "auc": -0.1246,
+              "tss": -0.0378
+            },
+            "operational_proxy": {
+              "auc": -0.045,
+              "tss": -0.0773,
+              "operational_claim": "NOT_ISSUED_FORECAST"
+            },
+            "persistence": {
+              "auc": 0.1284,
+              "tss": 0
+            },
+            "climatology": {
+              "auc": -0.5903,
+              "tss": -0.6979
+            }
+          }
+        }
+      },
+      "cutoffs": [
+        {
+          "cutoff": "1998-02-26",
+          "eligible": true,
+          "failure": null,
+          "n_train": 2015,
+          "n_holdout": 65,
+          "n_common_support": 65,
+          "horizons": {
+            "24": {
+              "horizon_hours": 24,
+              "n_common_support": 31,
+              "oracle": {
+                "n": 31,
+                "n_presence": 0,
+                "auc": null,
+                "tss": null,
+                "boyce": null,
+                "elpd_per_event": -0.0004,
+                "elpd": -0.0116,
+                "elpd_kind": "delta_encounter_plus_gamma"
+              },
+              "operational_proxy": {
+                "n": 31,
+                "n_presence": 0,
+                "auc": null,
+                "tss": null,
+                "boyce": null,
+                "elpd_per_event": -0.0006,
+                "elpd": -0.0183,
+                "elpd_kind": "delta_encounter_plus_gamma",
+                "operational_claim": "NOT_ISSUED_FORECAST",
+                "physics_source": "damped_anomaly_proxy"
+              },
+              "persistence": {
+                "n": 31,
+                "n_presence": 0,
+                "auc": null,
+                "tss": null,
+                "boyce": null,
+                "elpd_per_event": -0.0006,
+                "elpd": -0.018,
+                "elpd_kind": "delta_encounter_plus_gamma"
+              },
+              "climatology": {
+                "n": 31,
+                "n_presence": 0,
+                "auc": null,
+                "tss": null,
+                "boyce": null,
+                "elpd_per_event": -0.0521,
+                "elpd_encounter_bernoulli": -1.6152,
+                "elpd_kind": "encounter_bernoulli_only",
+                "elpd_not_ranked_against_delta": true
+              }
+            },
+            "48": {
+              "horizon_hours": 48,
+              "n_common_support": 30,
+              "oracle": {
+                "n": 30,
+                "n_presence": 0,
+                "auc": null,
+                "tss": null,
+                "boyce": null,
+                "elpd_per_event": -0.0003,
+                "elpd": -0.0091,
+                "elpd_kind": "delta_encounter_plus_gamma"
+              },
+              "operational_proxy": {
+                "n": 30,
+                "n_presence": 0,
+                "auc": null,
+                "tss": null,
+                "boyce": null,
+                "elpd_per_event": -0.0006,
+                "elpd": -0.0175,
+                "elpd_kind": "delta_encounter_plus_gamma",
+                "operational_claim": "NOT_ISSUED_FORECAST",
+                "physics_source": "damped_anomaly_proxy"
+              },
+              "persistence": {
+                "n": 30,
+                "n_presence": 0,
+                "auc": null,
+                "tss": null,
+                "boyce": null,
+                "elpd_per_event": -0.0006,
+                "elpd": -0.0173,
+                "elpd_kind": "delta_encounter_plus_gamma"
+              },
+              "climatology": {
+                "n": 30,
+                "n_presence": 0,
+                "auc": null,
+                "tss": null,
+                "boyce": null,
+                "elpd_per_event": -0.0512,
+                "elpd_encounter_bernoulli": -1.5359,
+                "elpd_kind": "encounter_bernoulli_only",
+                "elpd_not_ranked_against_delta": true
+              },
+              "degradation_from_24h": {
+                "oracle": {
+                  "auc": null,
+                  "tss": null
+                },
+                "operational_proxy": {
+                  "auc": null,
+                  "tss": null,
+                  "operational_claim": "NOT_ISSUED_FORECAST"
+                },
+                "persistence": {
+                  "auc": null,
+                  "tss": null
+                },
+                "climatology": {
+                  "auc": null,
+                  "tss": null
+                }
+              }
+            },
+            "72": {
+              "horizon_hours": 72,
+              "n_common_support": 4,
+              "oracle": {
+                "n": 4,
+                "n_presence": 0,
+                "auc": null,
+                "tss": null,
+                "boyce": null,
+                "elpd_per_event": -0.0002,
+                "elpd": -0.001,
+                "elpd_kind": "delta_encounter_plus_gamma"
+              },
+              "operational_proxy": {
+                "n": 4,
+                "n_presence": 0,
+                "auc": null,
+                "tss": null,
+                "boyce": null,
+                "elpd_per_event": -0.0004,
+                "elpd": -0.0017,
+                "elpd_kind": "delta_encounter_plus_gamma",
+                "operational_claim": "NOT_ISSUED_FORECAST",
+                "physics_source": "damped_anomaly_proxy"
+              },
+              "persistence": {
+                "n": 4,
+                "n_presence": 0,
+                "auc": null,
+                "tss": null,
+                "boyce": null,
+                "elpd_per_event": -0.0006,
+                "elpd": -0.0023,
+                "elpd_kind": "delta_encounter_plus_gamma"
+              },
+              "climatology": {
+                "n": 4,
+                "n_presence": 0,
+                "auc": null,
+                "tss": null,
+                "boyce": null,
+                "elpd_per_event": -0.046,
+                "elpd_encounter_bernoulli": -0.1839,
+                "elpd_kind": "encounter_bernoulli_only",
+                "elpd_not_ranked_against_delta": true
+              },
+              "degradation_from_24h": {
+                "oracle": {
+                  "auc": null,
+                  "tss": null
+                },
+                "operational_proxy": {
+                  "auc": null,
+                  "tss": null,
+                  "operational_claim": "NOT_ISSUED_FORECAST"
+                },
+                "persistence": {
+                  "auc": null,
+                  "tss": null
+                },
+                "climatology": {
+                  "auc": null,
+                  "tss": null
+                }
+              }
+            }
+          }
+        },
+        {
+          "cutoff": "1998-04-07",
+          "eligible": true,
+          "failure": null,
+          "n_train": 2279,
+          "n_holdout": 93,
+          "n_common_support": 36,
+          "horizons": {
+            "24": {
+              "horizon_hours": 24,
+              "n_common_support": 14,
+              "oracle": {
+                "n": 14,
+                "n_presence": 1,
+                "auc": 1,
+                "tss": 0,
+                "boyce": null,
+                "elpd_per_event": -0.791,
+                "elpd": -11.0744,
+                "elpd_kind": "delta_encounter_plus_gamma"
+              },
+              "operational_proxy": {
+                "n": 14,
+                "n_presence": 1,
+                "auc": 1,
+                "tss": 0,
+                "boyce": null,
+                "elpd_per_event": -0.6866,
+                "elpd": -9.6119,
+                "elpd_kind": "delta_encounter_plus_gamma",
+                "operational_claim": "NOT_ISSUED_FORECAST",
+                "physics_source": "damped_anomaly_proxy"
+              },
+              "persistence": {
+                "n": 14,
+                "n_presence": 1,
+                "auc": 1,
+                "tss": 0,
+                "boyce": null,
+                "elpd_per_event": -0.9315,
+                "elpd": -13.0412,
+                "elpd_kind": "delta_encounter_plus_gamma"
+              },
+              "climatology": {
+                "n": 14,
+                "n_presence": 1,
+                "auc": 0.8462,
+                "tss": 0,
+                "boyce": 0.4108,
+                "elpd_per_event": -0.9365,
+                "elpd_encounter_bernoulli": -13.1105,
+                "elpd_kind": "encounter_bernoulli_only",
+                "elpd_not_ranked_against_delta": true
+              }
+            },
+            "48": {
+              "horizon_hours": 48,
+              "n_common_support": 0,
+              "oracle": {
+                "n": 0,
+                "n_presence": 0,
+                "auc": null,
+                "tss": null,
+                "boyce": null,
+                "elpd_per_event": null,
+                "elpd": null,
+                "elpd_kind": "delta_encounter_plus_gamma"
+              },
+              "operational_proxy": {
+                "n": 0,
+                "n_presence": 0,
+                "auc": null,
+                "tss": null,
+                "boyce": null,
+                "elpd_per_event": null,
+                "elpd": null,
+                "elpd_kind": "delta_encounter_plus_gamma",
+                "operational_claim": "NOT_ISSUED_FORECAST",
+                "physics_source": "damped_anomaly_proxy"
+              },
+              "persistence": {
+                "n": 0,
+                "n_presence": 0,
+                "auc": null,
+                "tss": null,
+                "boyce": null,
+                "elpd_per_event": null,
+                "elpd": null,
+                "elpd_kind": "delta_encounter_plus_gamma"
+              },
+              "climatology": {
+                "n": 0,
+                "n_presence": 0,
+                "auc": null,
+                "tss": null,
+                "boyce": null,
+                "elpd_per_event": null,
+                "elpd_encounter_bernoulli": null,
+                "elpd_kind": "encounter_bernoulli_only",
+                "elpd_not_ranked_against_delta": true
+              },
+              "degradation_from_24h": {
+                "oracle": {
+                  "auc": null,
+                  "tss": null
+                },
+                "operational_proxy": {
+                  "auc": null,
+                  "tss": null,
+                  "operational_claim": "NOT_ISSUED_FORECAST"
+                },
+                "persistence": {
+                  "auc": null,
+                  "tss": null
+                },
+                "climatology": {
+                  "auc": null,
+                  "tss": null
+                }
+              }
+            },
+            "72": {
+              "horizon_hours": 72,
+              "n_common_support": 22,
+              "oracle": {
+                "n": 22,
+                "n_presence": 1,
+                "auc": 1,
+                "tss": 0,
+                "boyce": null,
+                "elpd_per_event": -0.3989,
+                "elpd": -8.7756,
+                "elpd_kind": "delta_encounter_plus_gamma"
+              },
+              "operational_proxy": {
+                "n": 22,
+                "n_presence": 1,
+                "auc": 1,
+                "tss": 0,
+                "boyce": null,
+                "elpd_per_event": -0.3861,
+                "elpd": -8.4945,
+                "elpd_kind": "delta_encounter_plus_gamma",
+                "operational_claim": "NOT_ISSUED_FORECAST",
+                "physics_source": "damped_anomaly_proxy"
+              },
+              "persistence": {
+                "n": 22,
+                "n_presence": 1,
+                "auc": 1,
+                "tss": 0,
+                "boyce": 0.7071,
+                "elpd_per_event": -0.5062,
+                "elpd": -11.1362,
+                "elpd_kind": "delta_encounter_plus_gamma"
+              },
+              "climatology": {
+                "n": 22,
+                "n_presence": 1,
+                "auc": 0.9048,
+                "tss": 0.8095,
+                "boyce": 0.5222,
+                "elpd_per_event": -0.439,
+                "elpd_encounter_bernoulli": -9.6587,
+                "elpd_kind": "encounter_bernoulli_only",
+                "elpd_not_ranked_against_delta": true
+              },
+              "degradation_from_24h": {
+                "oracle": {
+                  "auc": 0,
+                  "tss": 0
+                },
+                "operational_proxy": {
+                  "auc": 0,
+                  "tss": 0,
+                  "operational_claim": "NOT_ISSUED_FORECAST"
+                },
+                "persistence": {
+                  "auc": 0,
+                  "tss": 0
+                },
+                "climatology": {
+                  "auc": 0.0586,
+                  "tss": 0.8095
+                }
+              }
+            }
+          }
+        },
+        {
+          "cutoff": "1998-06-13",
+          "eligible": true,
+          "failure": null,
+          "n_train": 2478,
+          "n_holdout": 76,
+          "n_common_support": 72,
+          "horizons": {
+            "24": {
+              "horizon_hours": 24,
+              "n_common_support": 20,
+              "oracle": {
+                "n": 20,
+                "n_presence": 0,
+                "auc": null,
+                "tss": null,
+                "boyce": null,
+                "elpd_per_event": -0.0295,
+                "elpd": -0.5904,
+                "elpd_kind": "delta_encounter_plus_gamma"
+              },
+              "operational_proxy": {
+                "n": 20,
+                "n_presence": 0,
+                "auc": null,
+                "tss": null,
+                "boyce": null,
+                "elpd_per_event": -0.0312,
+                "elpd": -0.625,
+                "elpd_kind": "delta_encounter_plus_gamma",
+                "operational_claim": "NOT_ISSUED_FORECAST",
+                "physics_source": "damped_anomaly_proxy"
+              },
+              "persistence": {
+                "n": 20,
+                "n_presence": 0,
+                "auc": null,
+                "tss": null,
+                "boyce": null,
+                "elpd_per_event": -0.0416,
+                "elpd": -0.8311,
+                "elpd_kind": "delta_encounter_plus_gamma"
+              },
+              "climatology": {
+                "n": 20,
+                "n_presence": 0,
+                "auc": null,
+                "tss": null,
+                "boyce": null,
+                "elpd_per_event": -0.4044,
+                "elpd_encounter_bernoulli": -8.087,
+                "elpd_kind": "encounter_bernoulli_only",
+                "elpd_not_ranked_against_delta": true
+              }
+            },
+            "48": {
+              "horizon_hours": 48,
+              "n_common_support": 30,
+              "oracle": {
+                "n": 30,
+                "n_presence": 0,
+                "auc": null,
+                "tss": null,
+                "boyce": null,
+                "elpd_per_event": -0.0273,
+                "elpd": -0.8197,
+                "elpd_kind": "delta_encounter_plus_gamma"
+              },
+              "operational_proxy": {
+                "n": 30,
+                "n_presence": 0,
+                "auc": null,
+                "tss": null,
+                "boyce": null,
+                "elpd_per_event": -0.0295,
+                "elpd": -0.8855,
+                "elpd_kind": "delta_encounter_plus_gamma",
+                "operational_claim": "NOT_ISSUED_FORECAST",
+                "physics_source": "damped_anomaly_proxy"
+              },
+              "persistence": {
+                "n": 30,
+                "n_presence": 0,
+                "auc": null,
+                "tss": null,
+                "boyce": null,
+                "elpd_per_event": -0.0415,
+                "elpd": -1.2446,
+                "elpd_kind": "delta_encounter_plus_gamma"
+              },
+              "climatology": {
+                "n": 30,
+                "n_presence": 0,
+                "auc": null,
+                "tss": null,
+                "boyce": null,
+                "elpd_per_event": -0.4058,
+                "elpd_encounter_bernoulli": -12.1738,
+                "elpd_kind": "encounter_bernoulli_only",
+                "elpd_not_ranked_against_delta": true
+              },
+              "degradation_from_24h": {
+                "oracle": {
+                  "auc": null,
+                  "tss": null
+                },
+                "operational_proxy": {
+                  "auc": null,
+                  "tss": null,
+                  "operational_claim": "NOT_ISSUED_FORECAST"
+                },
+                "persistence": {
+                  "auc": null,
+                  "tss": null
+                },
+                "climatology": {
+                  "auc": null,
+                  "tss": null
+                }
+              }
+            },
+            "72": {
+              "horizon_hours": 72,
+              "n_common_support": 22,
+              "oracle": {
+                "n": 22,
+                "n_presence": 0,
+                "auc": null,
+                "tss": null,
+                "boyce": null,
+                "elpd_per_event": -0.0273,
+                "elpd": -0.6013,
+                "elpd_kind": "delta_encounter_plus_gamma"
+              },
+              "operational_proxy": {
+                "n": 22,
+                "n_presence": 0,
+                "auc": null,
+                "tss": null,
+                "boyce": null,
+                "elpd_per_event": -0.0287,
+                "elpd": -0.632,
+                "elpd_kind": "delta_encounter_plus_gamma",
+                "operational_claim": "NOT_ISSUED_FORECAST",
+                "physics_source": "damped_anomaly_proxy"
+              },
+              "persistence": {
+                "n": 22,
+                "n_presence": 0,
+                "auc": null,
+                "tss": null,
+                "boyce": null,
+                "elpd_per_event": -0.0415,
+                "elpd": -0.9126,
+                "elpd_kind": "delta_encounter_plus_gamma"
+              },
+              "climatology": {
+                "n": 22,
+                "n_presence": 0,
+                "auc": null,
+                "tss": null,
+                "boyce": null,
+                "elpd_per_event": -0.3558,
+                "elpd_encounter_bernoulli": -7.8274,
+                "elpd_kind": "encounter_bernoulli_only",
+                "elpd_not_ranked_against_delta": true
+              },
+              "degradation_from_24h": {
+                "oracle": {
+                  "auc": null,
+                  "tss": null
+                },
+                "operational_proxy": {
+                  "auc": null,
+                  "tss": null,
+                  "operational_claim": "NOT_ISSUED_FORECAST"
+                },
+                "persistence": {
+                  "auc": null,
+                  "tss": null
+                },
+                "climatology": {
+                  "auc": null,
+                  "tss": null
+                }
+              }
+            }
+          }
+        },
+        {
+          "cutoff": "2012-09-03",
+          "eligible": true,
+          "failure": null,
+          "n_train": 8388,
+          "n_holdout": 59,
+          "n_common_support": 59,
+          "horizons": {
+            "24": {
+              "horizon_hours": 24,
+              "n_common_support": 22,
+              "oracle": {
+                "n": 22,
+                "n_presence": 0,
+                "auc": null,
+                "tss": null,
+                "boyce": null,
+                "elpd_per_event": -0.5557,
+                "elpd": -12.2259,
+                "elpd_kind": "delta_encounter_plus_gamma"
+              },
+              "operational_proxy": {
+                "n": 22,
+                "n_presence": 0,
+                "auc": null,
+                "tss": null,
+                "boyce": null,
+                "elpd_per_event": -0.4006,
+                "elpd": -8.8129,
+                "elpd_kind": "delta_encounter_plus_gamma",
+                "operational_claim": "NOT_ISSUED_FORECAST",
+                "physics_source": "damped_anomaly_proxy"
+              },
+              "persistence": {
+                "n": 22,
+                "n_presence": 0,
+                "auc": null,
+                "tss": null,
+                "boyce": null,
+                "elpd_per_event": -0.0912,
+                "elpd": -2.0053,
+                "elpd_kind": "delta_encounter_plus_gamma"
+              },
+              "climatology": {
+                "n": 22,
+                "n_presence": 0,
+                "auc": null,
+                "tss": null,
+                "boyce": null,
+                "elpd_per_event": -0.0296,
+                "elpd_encounter_bernoulli": -0.651,
+                "elpd_kind": "encounter_bernoulli_only",
+                "elpd_not_ranked_against_delta": true
+              }
+            },
+            "48": {
+              "horizon_hours": 48,
+              "n_common_support": 18,
+              "oracle": {
+                "n": 18,
+                "n_presence": 1,
+                "auc": 1,
+                "tss": 0.6471,
+                "boyce": null,
+                "elpd_per_event": -0.7092,
+                "elpd": -12.7654,
+                "elpd_kind": "delta_encounter_plus_gamma"
+              },
+              "operational_proxy": {
+                "n": 18,
+                "n_presence": 1,
+                "auc": 1,
+                "tss": 0.8824,
+                "boyce": null,
+                "elpd_per_event": -0.5988,
+                "elpd": -10.7783,
+                "elpd_kind": "delta_encounter_plus_gamma",
+                "operational_claim": "NOT_ISSUED_FORECAST",
+                "physics_source": "damped_anomaly_proxy"
+              },
+              "persistence": {
+                "n": 18,
+                "n_presence": 1,
+                "auc": 0.6471,
+                "tss": 0,
+                "boyce": -0.1309,
+                "elpd_per_event": -0.4288,
+                "elpd": -7.7176,
+                "elpd_kind": "delta_encounter_plus_gamma"
+              },
+              "climatology": {
+                "n": 18,
+                "n_presence": 1,
+                "auc": 0,
+                "tss": 0,
+                "boyce": -0.5774,
+                "elpd_per_event": -0.2601,
+                "elpd_encounter_bernoulli": -4.6823,
+                "elpd_kind": "encounter_bernoulli_only",
+                "elpd_not_ranked_against_delta": true
+              },
+              "degradation_from_24h": {
+                "oracle": {
+                  "auc": null,
+                  "tss": null
+                },
+                "operational_proxy": {
+                  "auc": null,
+                  "tss": null,
+                  "operational_claim": "NOT_ISSUED_FORECAST"
+                },
+                "persistence": {
+                  "auc": null,
+                  "tss": null
+                },
+                "climatology": {
+                  "auc": null,
+                  "tss": null
+                }
+              }
+            },
+            "72": {
+              "horizon_hours": 72,
+              "n_common_support": 19,
+              "oracle": {
+                "n": 19,
+                "n_presence": 3,
+                "auc": 0.2083,
+                "tss": -0.3125,
+                "boyce": -0.7326,
+                "elpd_per_event": -1.486,
+                "elpd": -28.2333,
+                "elpd_kind": "delta_encounter_plus_gamma"
+              },
+              "operational_proxy": {
+                "n": 19,
+                "n_presence": 3,
+                "auc": 0.1875,
+                "tss": -0.375,
+                "boyce": -0.7624,
+                "elpd_per_event": -1.4323,
+                "elpd": -27.2131,
+                "elpd_kind": "delta_encounter_plus_gamma",
+                "operational_claim": "NOT_ISSUED_FORECAST",
+                "physics_source": "damped_anomaly_proxy"
+              },
+              "persistence": {
+                "n": 19,
+                "n_presence": 3,
+                "auc": 0.3125,
+                "tss": 0,
+                "boyce": -0.1782,
+                "elpd_per_event": -1.1408,
+                "elpd": -21.6759,
+                "elpd_kind": "delta_encounter_plus_gamma"
+              },
+              "climatology": {
+                "n": 19,
+                "n_presence": 3,
+                "auc": 0.625,
+                "tss": 0,
+                "boyce": -0.0445,
+                "elpd_per_event": -0.5726,
+                "elpd_encounter_bernoulli": -10.879,
+                "elpd_kind": "encounter_bernoulli_only",
+                "elpd_not_ranked_against_delta": true
+              },
+              "degradation_from_24h": {
+                "oracle": {
+                  "auc": null,
+                  "tss": null
+                },
+                "operational_proxy": {
+                  "auc": null,
+                  "tss": null,
+                  "operational_claim": "NOT_ISSUED_FORECAST"
+                },
+                "persistence": {
+                  "auc": null,
+                  "tss": null
+                },
+                "climatology": {
+                  "auc": null,
+                  "tss": null
+                }
+              }
+            }
+          }
+        },
+        {
+          "cutoff": "2017-08-05",
+          "eligible": true,
+          "failure": null,
+          "n_train": 10829,
+          "n_holdout": 49,
+          "n_common_support": 12,
+          "horizons": {
+            "24": {
+              "horizon_hours": 24,
+              "n_common_support": 6,
+              "oracle": {
+                "n": 6,
+                "n_presence": 0,
+                "auc": null,
+                "tss": null,
+                "boyce": null,
+                "elpd_per_event": -0.0334,
+                "elpd": -0.2004,
+                "elpd_kind": "delta_encounter_plus_gamma"
+              },
+              "operational_proxy": {
+                "n": 6,
+                "n_presence": 0,
+                "auc": null,
+                "tss": null,
+                "boyce": null,
+                "elpd_per_event": -0.0731,
+                "elpd": -0.4387,
+                "elpd_kind": "delta_encounter_plus_gamma",
+                "operational_claim": "NOT_ISSUED_FORECAST",
+                "physics_source": "damped_anomaly_proxy"
+              },
+              "persistence": {
+                "n": 6,
+                "n_presence": 0,
+                "auc": null,
+                "tss": null,
+                "boyce": null,
+                "elpd_per_event": -0.0361,
+                "elpd": -0.2165,
+                "elpd_kind": "delta_encounter_plus_gamma"
+              },
+              "climatology": {
+                "n": 6,
+                "n_presence": 0,
+                "auc": null,
+                "tss": null,
+                "boyce": null,
+                "elpd_per_event": -0.0039,
+                "elpd_encounter_bernoulli": -0.0235,
+                "elpd_kind": "encounter_bernoulli_only",
+                "elpd_not_ranked_against_delta": true
+              }
+            },
+            "48": {
+              "horizon_hours": 48,
+              "n_common_support": 0,
+              "oracle": {
+                "n": 0,
+                "n_presence": 0,
+                "auc": null,
+                "tss": null,
+                "boyce": null,
+                "elpd_per_event": null,
+                "elpd": null,
+                "elpd_kind": "delta_encounter_plus_gamma"
+              },
+              "operational_proxy": {
+                "n": 0,
+                "n_presence": 0,
+                "auc": null,
+                "tss": null,
+                "boyce": null,
+                "elpd_per_event": null,
+                "elpd": null,
+                "elpd_kind": "delta_encounter_plus_gamma",
+                "operational_claim": "NOT_ISSUED_FORECAST",
+                "physics_source": "damped_anomaly_proxy"
+              },
+              "persistence": {
+                "n": 0,
+                "n_presence": 0,
+                "auc": null,
+                "tss": null,
+                "boyce": null,
+                "elpd_per_event": null,
+                "elpd": null,
+                "elpd_kind": "delta_encounter_plus_gamma"
+              },
+              "climatology": {
+                "n": 0,
+                "n_presence": 0,
+                "auc": null,
+                "tss": null,
+                "boyce": null,
+                "elpd_per_event": null,
+                "elpd_encounter_bernoulli": null,
+                "elpd_kind": "encounter_bernoulli_only",
+                "elpd_not_ranked_against_delta": true
+              },
+              "degradation_from_24h": {
+                "oracle": {
+                  "auc": null,
+                  "tss": null
+                },
+                "operational_proxy": {
+                  "auc": null,
+                  "tss": null,
+                  "operational_claim": "NOT_ISSUED_FORECAST"
+                },
+                "persistence": {
+                  "auc": null,
+                  "tss": null
+                },
+                "climatology": {
+                  "auc": null,
+                  "tss": null
+                }
+              }
+            },
+            "72": {
+              "horizon_hours": 72,
+              "n_common_support": 6,
+              "oracle": {
+                "n": 6,
+                "n_presence": 0,
+                "auc": null,
+                "tss": null,
+                "boyce": null,
+                "elpd_per_event": -0.0787,
+                "elpd": -0.4724,
+                "elpd_kind": "delta_encounter_plus_gamma"
+              },
+              "operational_proxy": {
+                "n": 6,
+                "n_presence": 0,
+                "auc": null,
+                "tss": null,
+                "boyce": null,
+                "elpd_per_event": -0.0479,
+                "elpd": -0.2876,
+                "elpd_kind": "delta_encounter_plus_gamma",
+                "operational_claim": "NOT_ISSUED_FORECAST",
+                "physics_source": "damped_anomaly_proxy"
+              },
+              "persistence": {
+                "n": 6,
+                "n_presence": 0,
+                "auc": null,
+                "tss": null,
+                "boyce": null,
+                "elpd_per_event": -0.0361,
+                "elpd": -0.2165,
+                "elpd_kind": "delta_encounter_plus_gamma"
+              },
+              "climatology": {
+                "n": 6,
+                "n_presence": 0,
+                "auc": null,
+                "tss": null,
+                "boyce": null,
+                "elpd_per_event": -0.053,
+                "elpd_encounter_bernoulli": -0.3183,
+                "elpd_kind": "encounter_bernoulli_only",
+                "elpd_not_ranked_against_delta": true
+              },
+              "degradation_from_24h": {
+                "oracle": {
+                  "auc": null,
+                  "tss": null
+                },
+                "operational_proxy": {
+                  "auc": null,
+                  "tss": null,
+                  "operational_claim": "NOT_ISSUED_FORECAST"
+                },
+                "persistence": {
+                  "auc": null,
+                  "tss": null
+                },
+                "climatology": {
+                  "auc": null,
+                  "tss": null
+                }
+              }
+            }
+          }
+        },
+        {
+          "cutoff": "2018-09-20",
+          "eligible": true,
+          "failure": null,
+          "n_train": 11258,
+          "n_holdout": 28,
+          "n_common_support": 25,
+          "horizons": {
+            "24": {
+              "horizon_hours": 24,
+              "n_common_support": 11,
+              "oracle": {
+                "n": 11,
+                "n_presence": 0,
+                "auc": null,
+                "tss": null,
+                "boyce": null,
+                "elpd_per_event": -0.0059,
+                "elpd": -0.0654,
+                "elpd_kind": "delta_encounter_plus_gamma"
+              },
+              "operational_proxy": {
+                "n": 11,
+                "n_presence": 0,
+                "auc": null,
+                "tss": null,
+                "boyce": null,
+                "elpd_per_event": -0.0055,
+                "elpd": -0.0602,
+                "elpd_kind": "delta_encounter_plus_gamma",
+                "operational_claim": "NOT_ISSUED_FORECAST",
+                "physics_source": "damped_anomaly_proxy"
+              },
+              "persistence": {
+                "n": 11,
+                "n_presence": 0,
+                "auc": null,
+                "tss": null,
+                "boyce": null,
+                "elpd_per_event": -0.0064,
+                "elpd": -0.0706,
+                "elpd_kind": "delta_encounter_plus_gamma"
+              },
+              "climatology": {
+                "n": 11,
+                "n_presence": 0,
+                "auc": null,
+                "tss": null,
+                "boyce": null,
+                "elpd_per_event": -0.0029,
+                "elpd_encounter_bernoulli": -0.0319,
+                "elpd_kind": "encounter_bernoulli_only",
+                "elpd_not_ranked_against_delta": true
+              }
+            },
+            "48": {
+              "horizon_hours": 48,
+              "n_common_support": 13,
+              "oracle": {
+                "n": 13,
+                "n_presence": 0,
+                "auc": null,
+                "tss": null,
+                "boyce": null,
+                "elpd_per_event": -0.0037,
+                "elpd": -0.0479,
+                "elpd_kind": "delta_encounter_plus_gamma"
+              },
+              "operational_proxy": {
+                "n": 13,
+                "n_presence": 0,
+                "auc": null,
+                "tss": null,
+                "boyce": null,
+                "elpd_per_event": -0.0031,
+                "elpd": -0.0401,
+                "elpd_kind": "delta_encounter_plus_gamma",
+                "operational_claim": "NOT_ISSUED_FORECAST",
+                "physics_source": "damped_anomaly_proxy"
+              },
+              "persistence": {
+                "n": 13,
+                "n_presence": 0,
+                "auc": null,
+                "tss": null,
+                "boyce": null,
+                "elpd_per_event": -0.0072,
+                "elpd": -0.0939,
+                "elpd_kind": "delta_encounter_plus_gamma"
+              },
+              "climatology": {
+                "n": 13,
+                "n_presence": 0,
+                "auc": null,
+                "tss": null,
+                "boyce": null,
+                "elpd_per_event": 0,
+                "elpd_encounter_bernoulli": 0,
+                "elpd_kind": "encounter_bernoulli_only",
+                "elpd_not_ranked_against_delta": true
+              },
+              "degradation_from_24h": {
+                "oracle": {
+                  "auc": null,
+                  "tss": null
+                },
+                "operational_proxy": {
+                  "auc": null,
+                  "tss": null,
+                  "operational_claim": "NOT_ISSUED_FORECAST"
+                },
+                "persistence": {
+                  "auc": null,
+                  "tss": null
+                },
+                "climatology": {
+                  "auc": null,
+                  "tss": null
+                }
+              }
+            },
+            "72": {
+              "horizon_hours": 72,
+              "n_common_support": 1,
+              "oracle": {
+                "n": 1,
+                "n_presence": 0,
+                "auc": null,
+                "tss": null,
+                "boyce": null,
+                "elpd_per_event": -0.0038,
+                "elpd": -0.0038,
+                "elpd_kind": "delta_encounter_plus_gamma"
+              },
+              "operational_proxy": {
+                "n": 1,
+                "n_presence": 0,
+                "auc": null,
+                "tss": null,
+                "boyce": null,
+                "elpd_per_event": -0.0032,
+                "elpd": -0.0032,
+                "elpd_kind": "delta_encounter_plus_gamma",
+                "operational_claim": "NOT_ISSUED_FORECAST",
+                "physics_source": "damped_anomaly_proxy"
+              },
+              "persistence": {
+                "n": 1,
+                "n_presence": 0,
+                "auc": null,
+                "tss": null,
+                "boyce": null,
+                "elpd_per_event": -0.0068,
+                "elpd": -0.0068,
+                "elpd_kind": "delta_encounter_plus_gamma"
+              },
+              "climatology": {
+                "n": 1,
+                "n_presence": 0,
+                "auc": null,
+                "tss": null,
+                "boyce": null,
+                "elpd_per_event": 0,
+                "elpd_encounter_bernoulli": 0,
+                "elpd_kind": "encounter_bernoulli_only",
+                "elpd_not_ranked_against_delta": true
+              },
+              "degradation_from_24h": {
+                "oracle": {
+                  "auc": null,
+                  "tss": null
+                },
+                "operational_proxy": {
+                  "auc": null,
+                  "tss": null,
+                  "operational_claim": "NOT_ISSUED_FORECAST"
+                },
+                "persistence": {
+                  "auc": null,
+                  "tss": null
+                },
+                "climatology": {
+                  "auc": null,
+                  "tss": null
+                }
+              }
+            }
+          }
+        },
+        {
+          "cutoff": "2021-01-22",
+          "eligible": true,
+          "failure": null,
+          "n_train": 11781,
+          "n_holdout": 43,
+          "n_common_support": 28,
+          "horizons": {
+            "24": {
+              "horizon_hours": 24,
+              "n_common_support": 16,
+              "oracle": {
+                "n": 16,
+                "n_presence": 0,
+                "auc": null,
+                "tss": null,
+                "boyce": null,
+                "elpd_per_event": -0.0003,
+                "elpd": -0.0041,
+                "elpd_kind": "delta_encounter_plus_gamma"
+              },
+              "operational_proxy": {
+                "n": 16,
+                "n_presence": 0,
+                "auc": null,
+                "tss": null,
+                "boyce": null,
+                "elpd_per_event": -0.0005,
+                "elpd": -0.0078,
+                "elpd_kind": "delta_encounter_plus_gamma",
+                "operational_claim": "NOT_ISSUED_FORECAST",
+                "physics_source": "damped_anomaly_proxy"
+              },
+              "persistence": {
+                "n": 16,
+                "n_presence": 0,
+                "auc": null,
+                "tss": null,
+                "boyce": null,
+                "elpd_per_event": -0.0007,
+                "elpd": -0.0109,
+                "elpd_kind": "delta_encounter_plus_gamma"
+              },
+              "climatology": {
+                "n": 16,
+                "n_presence": 0,
+                "auc": null,
+                "tss": null,
+                "boyce": null,
+                "elpd_per_event": -0.0907,
+                "elpd_encounter_bernoulli": -1.4512,
+                "elpd_kind": "encounter_bernoulli_only",
+                "elpd_not_ranked_against_delta": true
+              }
+            },
+            "48": {
+              "horizon_hours": 48,
+              "n_common_support": 12,
+              "oracle": {
+                "n": 12,
+                "n_presence": 0,
+                "auc": null,
+                "tss": null,
+                "boyce": null,
+                "elpd_per_event": -0.0008,
+                "elpd": -0.0098,
+                "elpd_kind": "delta_encounter_plus_gamma"
+              },
+              "operational_proxy": {
+                "n": 12,
+                "n_presence": 0,
+                "auc": null,
+                "tss": null,
+                "boyce": null,
+                "elpd_per_event": -0.0011,
+                "elpd": -0.0136,
+                "elpd_kind": "delta_encounter_plus_gamma",
+                "operational_claim": "NOT_ISSUED_FORECAST",
+                "physics_source": "damped_anomaly_proxy"
+              },
+              "persistence": {
+                "n": 12,
+                "n_presence": 0,
+                "auc": null,
+                "tss": null,
+                "boyce": null,
+                "elpd_per_event": -0.0013,
+                "elpd": -0.0153,
+                "elpd_kind": "delta_encounter_plus_gamma"
+              },
+              "climatology": {
+                "n": 12,
+                "n_presence": 0,
+                "auc": null,
+                "tss": null,
+                "boyce": null,
+                "elpd_per_event": -0.0454,
+                "elpd_encounter_bernoulli": -0.5443,
+                "elpd_kind": "encounter_bernoulli_only",
+                "elpd_not_ranked_against_delta": true
+              },
+              "degradation_from_24h": {
+                "oracle": {
+                  "auc": null,
+                  "tss": null
+                },
+                "operational_proxy": {
+                  "auc": null,
+                  "tss": null,
+                  "operational_claim": "NOT_ISSUED_FORECAST"
+                },
+                "persistence": {
+                  "auc": null,
+                  "tss": null
+                },
+                "climatology": {
+                  "auc": null,
+                  "tss": null
+                }
+              }
+            },
+            "72": {
+              "horizon_hours": 72,
+              "n_common_support": 0,
+              "oracle": {
+                "n": 0,
+                "n_presence": 0,
+                "auc": null,
+                "tss": null,
+                "boyce": null,
+                "elpd_per_event": null,
+                "elpd": null,
+                "elpd_kind": "delta_encounter_plus_gamma"
+              },
+              "operational_proxy": {
+                "n": 0,
+                "n_presence": 0,
+                "auc": null,
+                "tss": null,
+                "boyce": null,
+                "elpd_per_event": null,
+                "elpd": null,
+                "elpd_kind": "delta_encounter_plus_gamma",
+                "operational_claim": "NOT_ISSUED_FORECAST",
+                "physics_source": "damped_anomaly_proxy"
+              },
+              "persistence": {
+                "n": 0,
+                "n_presence": 0,
+                "auc": null,
+                "tss": null,
+                "boyce": null,
+                "elpd_per_event": null,
+                "elpd": null,
+                "elpd_kind": "delta_encounter_plus_gamma"
+              },
+              "climatology": {
+                "n": 0,
+                "n_presence": 0,
+                "auc": null,
+                "tss": null,
+                "boyce": null,
+                "elpd_per_event": null,
+                "elpd_encounter_bernoulli": null,
+                "elpd_kind": "encounter_bernoulli_only",
+                "elpd_not_ranked_against_delta": true
+              },
+              "degradation_from_24h": {
+                "oracle": {
+                  "auc": null,
+                  "tss": null
+                },
+                "operational_proxy": {
+                  "auc": null,
+                  "tss": null,
+                  "operational_claim": "NOT_ISSUED_FORECAST"
+                },
+                "persistence": {
+                  "auc": null,
+                  "tss": null
+                },
+                "climatology": {
+                  "auc": null,
+                  "tss": null
+                }
+              }
+            }
+          }
+        },
+        {
+          "cutoff": "2022-04-12",
+          "eligible": false,
+          "failure": "non-positive-definite Hessian",
+          "n_train": null,
+          "n_holdout": null,
+          "n_common_support": 0
+        }
+      ]
+    },
+    {
+      "label": "anchovy",
+      "taxon": "anchovy",
+      "model_config": "configs/models/cufes_anchovy.yaml",
+      "operational_claim": "NOT_ISSUED_FORECAST",
+      "physics_source": "damped_anomaly_proxy",
+      "n_cutoffs": 8,
+      "n_eligible_cutoffs": 4,
+      "fit_status": "INSUFFICIENT",
+      "pass_24h": false,
+      "pass_rule": "operational_proxy AUC and TSS at 24h strictly greater than persistence and climatology, with at least 6 eligible cutoffs",
+      "pooled": {
+        "24": {
+          "horizon_hours": 24,
+          "n_common_support": 81,
+          "oracle": {
+            "n": 81,
+            "n_presence": 6,
+            "auc": 0.9756,
+            "tss": 0,
+            "boyce": 0.8018,
+            "elpd_per_event": -0.4896,
+            "elpd": -39.6605,
+            "elpd_kind": "delta_encounter_plus_gamma"
+          },
+          "operational_proxy": {
+            "n": 81,
+            "n_presence": 6,
+            "auc": 0.9622,
+            "tss": 0,
+            "boyce": 0.9258,
+            "elpd_per_event": -0.4763,
+            "elpd": -38.5775,
+            "elpd_kind": "delta_encounter_plus_gamma",
+            "operational_claim": "NOT_ISSUED_FORECAST",
+            "physics_source": "damped_anomaly_proxy"
+          },
+          "persistence": {
+            "n": 81,
+            "n_presence": 6,
+            "auc": 0.9911,
+            "tss": 0,
+            "boyce": 0.8018,
+            "elpd_per_event": -0.4691,
+            "elpd": -37.9964,
+            "elpd_kind": "delta_encounter_plus_gamma"
+          },
+          "climatology": {
+            "n": 81,
+            "n_presence": 6,
+            "auc": 0.9889,
+            "tss": 0,
+            "boyce": 0.8532,
+            "elpd_per_event": -0.1621,
+            "elpd_encounter_bernoulli": -13.1287,
+            "elpd_kind": "encounter_bernoulli_only",
+            "elpd_not_ranked_against_delta": true
+          }
+        },
+        "48": {
+          "horizon_hours": 48,
+          "n_common_support": 72,
+          "oracle": {
+            "n": 72,
+            "n_presence": 5,
+            "auc": 1,
+            "tss": 0,
+            "boyce": 0.8281,
+            "elpd_per_event": -0.4981,
+            "elpd": -35.8625,
+            "elpd_kind": "delta_encounter_plus_gamma"
+          },
+          "operational_proxy": {
+            "n": 72,
+            "n_presence": 5,
+            "auc": 1,
+            "tss": 0,
+            "boyce": 0.7071,
+            "elpd_per_event": -0.4969,
+            "elpd": -35.7741,
+            "elpd_kind": "delta_encounter_plus_gamma",
+            "operational_claim": "NOT_ISSUED_FORECAST",
+            "physics_source": "damped_anomaly_proxy"
+          },
+          "persistence": {
+            "n": 72,
+            "n_presence": 5,
+            "auc": 1,
+            "tss": 0,
+            "boyce": 0.866,
+            "elpd_per_event": -0.5954,
+            "elpd": -42.8662,
+            "elpd_kind": "delta_encounter_plus_gamma"
+          },
+          "climatology": {
+            "n": 72,
+            "n_presence": 5,
+            "auc": 0.9821,
+            "tss": 0,
+            "boyce": 0.8964,
+            "elpd_per_event": -0.226,
+            "elpd_encounter_bernoulli": -16.2711,
+            "elpd_kind": "encounter_bernoulli_only",
+            "elpd_not_ranked_against_delta": true
+          },
+          "degradation_from_24h": {
+            "oracle": {
+              "auc": 0.0244,
+              "tss": 0
+            },
+            "operational_proxy": {
+              "auc": 0.0378,
+              "tss": 0,
+              "operational_claim": "NOT_ISSUED_FORECAST"
+            },
+            "persistence": {
+              "auc": 0.0089,
+              "tss": 0
+            },
+            "climatology": {
+              "auc": -0.0068,
+              "tss": 0
+            }
+          }
+        },
+        "72": {
+          "horizon_hours": 72,
+          "n_common_support": 48,
+          "oracle": {
+            "n": 48,
+            "n_presence": 0,
+            "auc": null,
+            "tss": null,
+            "boyce": null,
+            "elpd_per_event": -0.002,
+            "elpd": -0.0973,
+            "elpd_kind": "delta_encounter_plus_gamma"
+          },
+          "operational_proxy": {
+            "n": 48,
+            "n_presence": 0,
+            "auc": null,
+            "tss": null,
+            "boyce": null,
+            "elpd_per_event": -0.0033,
+            "elpd": -0.16,
+            "elpd_kind": "delta_encounter_plus_gamma",
+            "operational_claim": "NOT_ISSUED_FORECAST",
+            "physics_source": "damped_anomaly_proxy"
+          },
+          "persistence": {
+            "n": 48,
+            "n_presence": 0,
+            "auc": null,
+            "tss": null,
+            "boyce": null,
+            "elpd_per_event": -0.002,
+            "elpd": -0.0968,
+            "elpd_kind": "delta_encounter_plus_gamma"
+          },
+          "climatology": {
+            "n": 48,
+            "n_presence": 0,
+            "auc": null,
+            "tss": null,
+            "boyce": null,
+            "elpd_per_event": -0.0478,
+            "elpd_encounter_bernoulli": -2.2952,
+            "elpd_kind": "encounter_bernoulli_only",
+            "elpd_not_ranked_against_delta": true
+          },
+          "degradation_from_24h": {
+            "oracle": {
+              "auc": null,
+              "tss": null
+            },
+            "operational_proxy": {
+              "auc": null,
+              "tss": null,
+              "operational_claim": "NOT_ISSUED_FORECAST"
+            },
+            "persistence": {
+              "auc": null,
+              "tss": null
+            },
+            "climatology": {
+              "auc": null,
+              "tss": null
+            }
+          }
+        }
+      },
+      "cutoffs": [
+        {
+          "cutoff": "1998-02-26",
+          "eligible": true,
+          "failure": null,
+          "n_train": 2015,
+          "n_holdout": 65,
+          "n_common_support": 65,
+          "horizons": {
+            "24": {
+              "horizon_hours": 24,
+              "n_common_support": 31,
+              "oracle": {
+                "n": 31,
+                "n_presence": 0,
+                "auc": null,
+                "tss": null,
+                "boyce": null,
+                "elpd_per_event": -0.0009,
+                "elpd": -0.0292,
+                "elpd_kind": "delta_encounter_plus_gamma"
+              },
+              "operational_proxy": {
+                "n": 31,
+                "n_presence": 0,
+                "auc": null,
+                "tss": null,
+                "boyce": null,
+                "elpd_per_event": -0.0009,
+                "elpd": -0.0279,
+                "elpd_kind": "delta_encounter_plus_gamma",
+                "operational_claim": "NOT_ISSUED_FORECAST",
+                "physics_source": "damped_anomaly_proxy"
+              },
+              "persistence": {
+                "n": 31,
+                "n_presence": 0,
+                "auc": null,
+                "tss": null,
+                "boyce": null,
+                "elpd_per_event": -0.001,
+                "elpd": -0.0307,
+                "elpd_kind": "delta_encounter_plus_gamma"
+              },
+              "climatology": {
+                "n": 31,
+                "n_presence": 0,
+                "auc": null,
+                "tss": null,
+                "boyce": null,
+                "elpd_per_event": -0.0226,
+                "elpd_encounter_bernoulli": -0.7002,
+                "elpd_kind": "encounter_bernoulli_only",
+                "elpd_not_ranked_against_delta": true
+              }
+            },
+            "48": {
+              "horizon_hours": 48,
+              "n_common_support": 30,
+              "oracle": {
+                "n": 30,
+                "n_presence": 0,
+                "auc": null,
+                "tss": null,
+                "boyce": null,
+                "elpd_per_event": -0.0007,
+                "elpd": -0.0195,
+                "elpd_kind": "delta_encounter_plus_gamma"
+              },
+              "operational_proxy": {
+                "n": 30,
+                "n_presence": 0,
+                "auc": null,
+                "tss": null,
+                "boyce": null,
+                "elpd_per_event": -0.0008,
+                "elpd": -0.0235,
+                "elpd_kind": "delta_encounter_plus_gamma",
+                "operational_claim": "NOT_ISSUED_FORECAST",
+                "physics_source": "damped_anomaly_proxy"
+              },
+              "persistence": {
+                "n": 30,
+                "n_presence": 0,
+                "auc": null,
+                "tss": null,
+                "boyce": null,
+                "elpd_per_event": -0.001,
+                "elpd": -0.0312,
+                "elpd_kind": "delta_encounter_plus_gamma"
+              },
+              "climatology": {
+                "n": 30,
+                "n_presence": 0,
+                "auc": null,
+                "tss": null,
+                "boyce": null,
+                "elpd_per_event": -0.0226,
+                "elpd_encounter_bernoulli": -0.6783,
+                "elpd_kind": "encounter_bernoulli_only",
+                "elpd_not_ranked_against_delta": true
+              },
+              "degradation_from_24h": {
+                "oracle": {
+                  "auc": null,
+                  "tss": null
+                },
+                "operational_proxy": {
+                  "auc": null,
+                  "tss": null,
+                  "operational_claim": "NOT_ISSUED_FORECAST"
+                },
+                "persistence": {
+                  "auc": null,
+                  "tss": null
+                },
+                "climatology": {
+                  "auc": null,
+                  "tss": null
+                }
+              }
+            },
+            "72": {
+              "horizon_hours": 72,
+              "n_common_support": 4,
+              "oracle": {
+                "n": 4,
+                "n_presence": 0,
+                "auc": null,
+                "tss": null,
+                "boyce": null,
+                "elpd_per_event": -0.0001,
+                "elpd": -0.0005,
+                "elpd_kind": "delta_encounter_plus_gamma"
+              },
+              "operational_proxy": {
+                "n": 4,
+                "n_presence": 0,
+                "auc": null,
+                "tss": null,
+                "boyce": null,
+                "elpd_per_event": -0.0002,
+                "elpd": -0.0008,
+                "elpd_kind": "delta_encounter_plus_gamma",
+                "operational_claim": "NOT_ISSUED_FORECAST",
+                "physics_source": "damped_anomaly_proxy"
+              },
+              "persistence": {
+                "n": 4,
+                "n_presence": 0,
+                "auc": null,
+                "tss": null,
+                "boyce": null,
+                "elpd_per_event": -0.0004,
+                "elpd": -0.0014,
+                "elpd_kind": "delta_encounter_plus_gamma"
+              },
+              "climatology": {
+                "n": 4,
+                "n_presence": 0,
+                "auc": null,
+                "tss": null,
+                "boyce": null,
+                "elpd_per_event": -0.0227,
+                "elpd_encounter_bernoulli": -0.0909,
+                "elpd_kind": "encounter_bernoulli_only",
+                "elpd_not_ranked_against_delta": true
+              },
+              "degradation_from_24h": {
+                "oracle": {
+                  "auc": null,
+                  "tss": null
+                },
+                "operational_proxy": {
+                  "auc": null,
+                  "tss": null,
+                  "operational_claim": "NOT_ISSUED_FORECAST"
+                },
+                "persistence": {
+                  "auc": null,
+                  "tss": null
+                },
+                "climatology": {
+                  "auc": null,
+                  "tss": null
+                }
+              }
+            }
+          }
+        },
+        {
+          "cutoff": "1998-04-07",
+          "eligible": true,
+          "failure": null,
+          "n_train": 2279,
+          "n_holdout": 93,
+          "n_common_support": 36,
+          "horizons": {
+            "24": {
+              "horizon_hours": 24,
+              "n_common_support": 14,
+              "oracle": {
+                "n": 14,
+                "n_presence": 0,
+                "auc": null,
+                "tss": null,
+                "boyce": null,
+                "elpd_per_event": -0.0003,
+                "elpd": -0.0047,
+                "elpd_kind": "delta_encounter_plus_gamma"
+              },
+              "operational_proxy": {
+                "n": 14,
+                "n_presence": 0,
+                "auc": null,
+                "tss": null,
+                "boyce": null,
+                "elpd_per_event": -0.0006,
+                "elpd": -0.0084,
+                "elpd_kind": "delta_encounter_plus_gamma",
+                "operational_claim": "NOT_ISSUED_FORECAST",
+                "physics_source": "damped_anomaly_proxy"
+              },
+              "persistence": {
+                "n": 14,
+                "n_presence": 0,
+                "auc": null,
+                "tss": null,
+                "boyce": null,
+                "elpd_per_event": -0.001,
+                "elpd": -0.0138,
+                "elpd_kind": "delta_encounter_plus_gamma"
+              },
+              "climatology": {
+                "n": 14,
+                "n_presence": 0,
+                "auc": null,
+                "tss": null,
+                "boyce": null,
+                "elpd_per_event": -0.0337,
+                "elpd_encounter_bernoulli": -0.472,
+                "elpd_kind": "encounter_bernoulli_only",
+                "elpd_not_ranked_against_delta": true
+              }
+            },
+            "48": {
+              "horizon_hours": 48,
+              "n_common_support": 0,
+              "oracle": {
+                "n": 0,
+                "n_presence": 0,
+                "auc": null,
+                "tss": null,
+                "boyce": null,
+                "elpd_per_event": null,
+                "elpd": null,
+                "elpd_kind": "delta_encounter_plus_gamma"
+              },
+              "operational_proxy": {
+                "n": 0,
+                "n_presence": 0,
+                "auc": null,
+                "tss": null,
+                "boyce": null,
+                "elpd_per_event": null,
+                "elpd": null,
+                "elpd_kind": "delta_encounter_plus_gamma",
+                "operational_claim": "NOT_ISSUED_FORECAST",
+                "physics_source": "damped_anomaly_proxy"
+              },
+              "persistence": {
+                "n": 0,
+                "n_presence": 0,
+                "auc": null,
+                "tss": null,
+                "boyce": null,
+                "elpd_per_event": null,
+                "elpd": null,
+                "elpd_kind": "delta_encounter_plus_gamma"
+              },
+              "climatology": {
+                "n": 0,
+                "n_presence": 0,
+                "auc": null,
+                "tss": null,
+                "boyce": null,
+                "elpd_per_event": null,
+                "elpd_encounter_bernoulli": null,
+                "elpd_kind": "encounter_bernoulli_only",
+                "elpd_not_ranked_against_delta": true
+              },
+              "degradation_from_24h": {
+                "oracle": {
+                  "auc": null,
+                  "tss": null
+                },
+                "operational_proxy": {
+                  "auc": null,
+                  "tss": null,
+                  "operational_claim": "NOT_ISSUED_FORECAST"
+                },
+                "persistence": {
+                  "auc": null,
+                  "tss": null
+                },
+                "climatology": {
+                  "auc": null,
+                  "tss": null
+                }
+              }
+            },
+            "72": {
+              "horizon_hours": 72,
+              "n_common_support": 22,
+              "oracle": {
+                "n": 22,
+                "n_presence": 0,
+                "auc": null,
+                "tss": null,
+                "boyce": null,
+                "elpd_per_event": -0.0011,
+                "elpd": -0.0251,
+                "elpd_kind": "delta_encounter_plus_gamma"
+              },
+              "operational_proxy": {
+                "n": 22,
+                "n_presence": 0,
+                "auc": null,
+                "tss": null,
+                "boyce": null,
+                "elpd_per_event": -0.0034,
+                "elpd": -0.0748,
+                "elpd_kind": "delta_encounter_plus_gamma",
+                "operational_claim": "NOT_ISSUED_FORECAST",
+                "physics_source": "damped_anomaly_proxy"
+              },
+              "persistence": {
+                "n": 22,
+                "n_presence": 0,
+                "auc": null,
+                "tss": null,
+                "boyce": null,
+                "elpd_per_event": -0.0014,
+                "elpd": -0.0301,
+                "elpd_kind": "delta_encounter_plus_gamma"
+              },
+              "climatology": {
+                "n": 22,
+                "n_presence": 0,
+                "auc": null,
+                "tss": null,
+                "boyce": null,
+                "elpd_per_event": -0.0786,
+                "elpd_encounter_bernoulli": -1.7297,
+                "elpd_kind": "encounter_bernoulli_only",
+                "elpd_not_ranked_against_delta": true
+              },
+              "degradation_from_24h": {
+                "oracle": {
+                  "auc": null,
+                  "tss": null
+                },
+                "operational_proxy": {
+                  "auc": null,
+                  "tss": null,
+                  "operational_claim": "NOT_ISSUED_FORECAST"
+                },
+                "persistence": {
+                  "auc": null,
+                  "tss": null
+                },
+                "climatology": {
+                  "auc": null,
+                  "tss": null
+                }
+              }
+            }
+          }
+        },
+        {
+          "cutoff": "1998-06-13",
+          "eligible": true,
+          "failure": null,
+          "n_train": 2478,
+          "n_holdout": 76,
+          "n_common_support": 72,
+          "horizons": {
+            "24": {
+              "horizon_hours": 24,
+              "n_common_support": 20,
+              "oracle": {
+                "n": 20,
+                "n_presence": 0,
+                "auc": null,
+                "tss": null,
+                "boyce": null,
+                "elpd_per_event": -0.005,
+                "elpd": -0.1001,
+                "elpd_kind": "delta_encounter_plus_gamma"
+              },
+              "operational_proxy": {
+                "n": 20,
+                "n_presence": 0,
+                "auc": null,
+                "tss": null,
+                "boyce": null,
+                "elpd_per_event": -0.0036,
+                "elpd": -0.0727,
+                "elpd_kind": "delta_encounter_plus_gamma",
+                "operational_claim": "NOT_ISSUED_FORECAST",
+                "physics_source": "damped_anomaly_proxy"
+              },
+              "persistence": {
+                "n": 20,
+                "n_presence": 0,
+                "auc": null,
+                "tss": null,
+                "boyce": null,
+                "elpd_per_event": -0.0029,
+                "elpd": -0.059,
+                "elpd_kind": "delta_encounter_plus_gamma"
+              },
+              "climatology": {
+                "n": 20,
+                "n_presence": 0,
+                "auc": null,
+                "tss": null,
+                "boyce": null,
+                "elpd_per_event": -0.0283,
+                "elpd_encounter_bernoulli": -0.5651,
+                "elpd_kind": "encounter_bernoulli_only",
+                "elpd_not_ranked_against_delta": true
+              }
+            },
+            "48": {
+              "horizon_hours": 48,
+              "n_common_support": 30,
+              "oracle": {
+                "n": 30,
+                "n_presence": 0,
+                "auc": null,
+                "tss": null,
+                "boyce": null,
+                "elpd_per_event": -0.0037,
+                "elpd": -0.1115,
+                "elpd_kind": "delta_encounter_plus_gamma"
+              },
+              "operational_proxy": {
+                "n": 30,
+                "n_presence": 0,
+                "auc": null,
+                "tss": null,
+                "boyce": null,
+                "elpd_per_event": -0.004,
+                "elpd": -0.1203,
+                "elpd_kind": "delta_encounter_plus_gamma",
+                "operational_claim": "NOT_ISSUED_FORECAST",
+                "physics_source": "damped_anomaly_proxy"
+              },
+              "persistence": {
+                "n": 30,
+                "n_presence": 0,
+                "auc": null,
+                "tss": null,
+                "boyce": null,
+                "elpd_per_event": -0.003,
+                "elpd": -0.0891,
+                "elpd_kind": "delta_encounter_plus_gamma"
+              },
+              "climatology": {
+                "n": 30,
+                "n_presence": 0,
+                "auc": null,
+                "tss": null,
+                "boyce": null,
+                "elpd_per_event": -0.0296,
+                "elpd_encounter_bernoulli": -0.8888,
+                "elpd_kind": "encounter_bernoulli_only",
+                "elpd_not_ranked_against_delta": true
+              },
+              "degradation_from_24h": {
+                "oracle": {
+                  "auc": null,
+                  "tss": null
+                },
+                "operational_proxy": {
+                  "auc": null,
+                  "tss": null,
+                  "operational_claim": "NOT_ISSUED_FORECAST"
+                },
+                "persistence": {
+                  "auc": null,
+                  "tss": null
+                },
+                "climatology": {
+                  "auc": null,
+                  "tss": null
+                }
+              }
+            },
+            "72": {
+              "horizon_hours": 72,
+              "n_common_support": 22,
+              "oracle": {
+                "n": 22,
+                "n_presence": 0,
+                "auc": null,
+                "tss": null,
+                "boyce": null,
+                "elpd_per_event": -0.0033,
+                "elpd": -0.0717,
+                "elpd_kind": "delta_encounter_plus_gamma"
+              },
+              "operational_proxy": {
+                "n": 22,
+                "n_presence": 0,
+                "auc": null,
+                "tss": null,
+                "boyce": null,
+                "elpd_per_event": -0.0038,
+                "elpd": -0.0844,
+                "elpd_kind": "delta_encounter_plus_gamma",
+                "operational_claim": "NOT_ISSUED_FORECAST",
+                "physics_source": "damped_anomaly_proxy"
+              },
+              "persistence": {
+                "n": 22,
+                "n_presence": 0,
+                "auc": null,
+                "tss": null,
+                "boyce": null,
+                "elpd_per_event": -0.003,
+                "elpd": -0.0654,
+                "elpd_kind": "delta_encounter_plus_gamma"
+              },
+              "climatology": {
+                "n": 22,
+                "n_presence": 0,
+                "auc": null,
+                "tss": null,
+                "boyce": null,
+                "elpd_per_event": -0.0216,
+                "elpd_encounter_bernoulli": -0.4746,
+                "elpd_kind": "encounter_bernoulli_only",
+                "elpd_not_ranked_against_delta": true
+              },
+              "degradation_from_24h": {
+                "oracle": {
+                  "auc": null,
+                  "tss": null
+                },
+                "operational_proxy": {
+                  "auc": null,
+                  "tss": null,
+                  "operational_claim": "NOT_ISSUED_FORECAST"
+                },
+                "persistence": {
+                  "auc": null,
+                  "tss": null
+                },
+                "climatology": {
+                  "auc": null,
+                  "tss": null
+                }
+              }
+            }
+          }
+        },
+        {
+          "cutoff": "2012-09-03",
+          "eligible": false,
+          "failure": "non-positive-definite Hessian",
+          "n_train": null,
+          "n_holdout": null,
+          "n_common_support": 0
+        },
+        {
+          "cutoff": "2017-08-05",
+          "eligible": false,
+          "failure": "non-positive-definite Hessian",
+          "n_train": null,
+          "n_holdout": null,
+          "n_common_support": 0
+        },
+        {
+          "cutoff": "2018-09-20",
+          "eligible": false,
+          "failure": "non-positive-definite Hessian",
+          "n_train": null,
+          "n_holdout": null,
+          "n_common_support": 0
+        },
+        {
+          "cutoff": "2021-01-22",
+          "eligible": true,
+          "failure": null,
+          "n_train": 11781,
+          "n_holdout": 43,
+          "n_common_support": 28,
+          "horizons": {
+            "24": {
+              "horizon_hours": 24,
+              "n_common_support": 16,
+              "oracle": {
+                "n": 16,
+                "n_presence": 6,
+                "auc": 0.8167,
+                "tss": 0,
+                "boyce": 0.8625,
+                "elpd_per_event": -2.4704,
+                "elpd": -39.5264,
+                "elpd_kind": "delta_encounter_plus_gamma"
+              },
+              "operational_proxy": {
+                "n": 16,
+                "n_presence": 6,
+                "auc": 0.7167,
+                "tss": 0,
+                "boyce": 0.3448,
+                "elpd_per_event": -2.4043,
+                "elpd": -38.4685,
+                "elpd_kind": "delta_encounter_plus_gamma",
+                "operational_claim": "NOT_ISSUED_FORECAST",
+                "physics_source": "damped_anomaly_proxy"
+              },
+              "persistence": {
+                "n": 16,
+                "n_presence": 6,
+                "auc": 0.9333,
+                "tss": 0,
+                "boyce": 0.8964,
+                "elpd_per_event": -2.3683,
+                "elpd": -37.8929,
+                "elpd_kind": "delta_encounter_plus_gamma"
+              },
+              "climatology": {
+                "n": 16,
+                "n_presence": 6,
+                "auc": 0.9167,
+                "tss": 0,
+                "boyce": 0.6522,
+                "elpd_per_event": -0.712,
+                "elpd_encounter_bernoulli": -11.3913,
+                "elpd_kind": "encounter_bernoulli_only",
+                "elpd_not_ranked_against_delta": true
+              }
+            },
+            "48": {
+              "horizon_hours": 48,
+              "n_common_support": 12,
+              "oracle": {
+                "n": 12,
+                "n_presence": 5,
+                "auc": 1,
+                "tss": 0,
+                "boyce": 0.7071,
+                "elpd_per_event": -2.9776,
+                "elpd": -35.7314,
+                "elpd_kind": "delta_encounter_plus_gamma"
+              },
+              "operational_proxy": {
+                "n": 12,
+                "n_presence": 5,
+                "auc": 1,
+                "tss": 0,
+                "boyce": 0.7071,
+                "elpd_per_event": -2.9692,
+                "elpd": -35.6303,
+                "elpd_kind": "delta_encounter_plus_gamma",
+                "operational_claim": "NOT_ISSUED_FORECAST",
+                "physics_source": "damped_anomaly_proxy"
+              },
+              "persistence": {
+                "n": 12,
+                "n_presence": 5,
+                "auc": 1,
+                "tss": 0,
+                "boyce": 0.8783,
+                "elpd_per_event": -3.5622,
+                "elpd": -42.7459,
+                "elpd_kind": "delta_encounter_plus_gamma"
+              },
+              "climatology": {
+                "n": 12,
+                "n_presence": 5,
+                "auc": 0.8286,
+                "tss": 0,
+                "boyce": 0.9487,
+                "elpd_per_event": -1.2253,
+                "elpd_encounter_bernoulli": -14.704,
+                "elpd_kind": "encounter_bernoulli_only",
+                "elpd_not_ranked_against_delta": true
+              },
+              "degradation_from_24h": {
+                "oracle": {
+                  "auc": 0.1833,
+                  "tss": 0
+                },
+                "operational_proxy": {
+                  "auc": 0.2833,
+                  "tss": 0,
+                  "operational_claim": "NOT_ISSUED_FORECAST"
+                },
+                "persistence": {
+                  "auc": 0.0667,
+                  "tss": 0
+                },
+                "climatology": {
+                  "auc": -0.0881,
+                  "tss": 0
+                }
+              }
+            },
+            "72": {
+              "horizon_hours": 72,
+              "n_common_support": 0,
+              "oracle": {
+                "n": 0,
+                "n_presence": 0,
+                "auc": null,
+                "tss": null,
+                "boyce": null,
+                "elpd_per_event": null,
+                "elpd": null,
+                "elpd_kind": "delta_encounter_plus_gamma"
+              },
+              "operational_proxy": {
+                "n": 0,
+                "n_presence": 0,
+                "auc": null,
+                "tss": null,
+                "boyce": null,
+                "elpd_per_event": null,
+                "elpd": null,
+                "elpd_kind": "delta_encounter_plus_gamma",
+                "operational_claim": "NOT_ISSUED_FORECAST",
+                "physics_source": "damped_anomaly_proxy"
+              },
+              "persistence": {
+                "n": 0,
+                "n_presence": 0,
+                "auc": null,
+                "tss": null,
+                "boyce": null,
+                "elpd_per_event": null,
+                "elpd": null,
+                "elpd_kind": "delta_encounter_plus_gamma"
+              },
+              "climatology": {
+                "n": 0,
+                "n_presence": 0,
+                "auc": null,
+                "tss": null,
+                "boyce": null,
+                "elpd_per_event": null,
+                "elpd_encounter_bernoulli": null,
+                "elpd_kind": "encounter_bernoulli_only",
+                "elpd_not_ranked_against_delta": true
+              },
+              "degradation_from_24h": {
+                "oracle": {
+                  "auc": null,
+                  "tss": null
+                },
+                "operational_proxy": {
+                  "auc": null,
+                  "tss": null,
+                  "operational_claim": "NOT_ISSUED_FORECAST"
+                },
+                "persistence": {
+                  "auc": null,
+                  "tss": null
+                },
+                "climatology": {
+                  "auc": null,
+                  "tss": null
+                }
+              }
+            }
+          }
+        },
+        {
+          "cutoff": "2022-04-12",
+          "eligible": false,
+          "failure": "non-positive-definite Hessian",
+          "n_train": null,
+          "n_holdout": null,
+          "n_common_support": 0
+        }
+      ]
+    }
+  ],
+  "pass_24h": [
+    false,
+    false
+  ]
+}
