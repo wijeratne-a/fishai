@@ -32,7 +32,7 @@ from fishai.ingestion.physics.covariates import (
     DROP_REASON_TOO_FEW_TRACK_POINTS,
     mean_covariates_along_segment,
 )
-from tests.ingestion.physics.cufes_glorys_synthetic_fixture import glorys_store_from_synthetic_days
+from cufes_glorys_synthetic_fixture import glorys_store_from_synthetic_days
 
 
 GLORYS_TEST_DAY = dt.date(2021, 7, 1)
