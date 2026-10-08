@@ -14,6 +14,12 @@ root <- normalizePath(file.path(
 ))
 setwd(root)
 Sys.setenv(FISHAI_ROOT = root)
+if (requireNamespace("renv", quietly = TRUE)) {
+  try(renv::repair(), silent = TRUE)
+  if (!requireNamespace("arrow", quietly = TRUE)) {
+    renv::install("arrow", prompt = FALSE, lock = FALSE)
+  }
+}
 source(file.path(root, "src", "models", "tests", "testthat", "helper.R"))
 load_fishaisdm(root)
 
