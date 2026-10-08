@@ -25,17 +25,14 @@ Cold rebuild: `SKIP_CACHE=1 bash scripts/ci/rebuild_cufes_glorys_training_table.
 **Protocol:** `configs/cufes_squid_spatial_block_cv_scores.yaml` — 60 km blocks, seed **20260928**, 4 folds.  
 **Artifact:** `prereg/cufes_squid_spatial_block_cv_scores.json` (`status: ok`).
 
-| Metric | Value |
-| --- | --- |
-| Squid model fit rows (`n_fit_rows`) | **8,630** |
-| OOF rows | **7,259** |
-| Folds converged | **3 / 4** (fold 1: non–PD Hessian) |
-| ELPD | **NA** (`elpd_eligible: false`, `cv_fold_nonconverged`) |
-| Fold log-lik | NA, −8305.92, −8234.75, −4098.25 |
-| AUC / TSS / Boyce | **NA** (ELPD ineligible) |
-| `n_failed_folds` | **1** |
+| Run | Spec | Folds | ELPD | AUC | TSS | Boyce |
+| --- | --- | --- | --- | --- | --- | --- |
+| Full (smoothers + spatial on) | original | **3/4** (fold 1 non–PD) | NA | NA | NA | NA |
+| **Simplified retry (playbook)** | linear `_z`; spatial/spatiotemporal **off**; **rw0** | **4/4** | **−23030.46** | **0.767** | **0.360** | **1.0** |
 
-**24 h rolling-origin forecast (eggs):** not run — CV not fully validated (1/4 folds failed).
+Retry fit rows: **8,632**; OOF **8,632**; fold log-lik: −5608.55, −6721.05, −6940.25, −3760.61 (`elpd_eligible: true`).
+
+**24 h rolling-origin forecast (eggs):** not run in this turn (CV validated on simplified spec only).
 
 ---
 

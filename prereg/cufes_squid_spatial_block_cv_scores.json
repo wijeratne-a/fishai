@@ -28,16 +28,16 @@
       "model_config": "configs/models/cufes_squid.yaml",
       "status": "ok",
       "missing_inputs": [],
-      "n_fit_rows": 8630,
-      "elpd": "NA",
-      "elpd_eligible": false,
-      "elpd_ineligible_reason": "cv_fold_nonconverged",
-      "n_failed_folds": 1,
-      "fold_loglik": ["NA", -8305.9229, -8234.7493, -4098.2543],
-      "n_oof_rows": 7259,
-      "boyce": "NA",
-      "auc": "NA",
-      "tss": "NA",
+      "n_fit_rows": 8632,
+      "elpd": -23030.461,
+      "elpd_eligible": true,
+      "elpd_ineligible_reason": null,
+      "n_failed_folds": 0,
+      "fold_loglik": [-5608.5513, -6721.0463, -6940.2535, -3760.6098],
+      "n_oof_rows": 8632,
+      "boyce": 1,
+      "auc": 0.7671,
+      "tss": 0.36,
       "fold_assignment": [
         {
           "event_id": "CUFES:199802:JD:1",
@@ -33315,6 +33315,11 @@
           "block_id": "bx6_by62"
         },
         {
+          "event_id": "CUFES:201307:SH:97",
+          "fold_id": 4,
+          "block_id": "bx6_by62"
+        },
+        {
           "event_id": "CUFES:201307:SH:99",
           "fold_id": 4,
           "block_id": "bx5_by62"
@@ -35631,6 +35636,11 @@
         },
         {
           "event_id": "CUFES:201501:NH:159",
+          "fold_id": 4,
+          "block_id": "bx4_by62"
+        },
+        {
+          "event_id": "CUFES:201501:NH:160",
           "fold_id": 4,
           "block_id": "bx4_by62"
         },
