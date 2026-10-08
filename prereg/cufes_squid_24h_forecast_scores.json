@@ -5,7 +5,7 @@
   "physics_source": "damped_anomaly_proxy",
   "tau_days": 3,
   "lane_oracle": "retrospective",
-  "code_sha": "1ffc85d",
+  "code_sha": "1ffc85db070ca51d08a9aaa23277a0e70f512c51",
   "design": "prereg/cufes_squid_24h_forecast_design.md",
   "test_end": "2022-04-27",
   "cutoff_calendar": "shared",
