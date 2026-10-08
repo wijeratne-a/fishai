@@ -206,17 +206,20 @@ write_side_by_side_map <- function(egg, adult, path) {
     }
     br <- seq(min(z, na.rm = TRUE), max(z, na.rm = TRUE), length.out = 101)
     ci <- pmin(100L, pmax(1L, as.integer(cut(z, breaks = br, include.lowest = TRUE))))
+    # Grids store UTM kilometres, not latitude/longitude headers.
+    xs <- if ("X" %in% names(df)) df$X[ok] else df$longitude[ok]
+    ys <- if ("Y" %in% names(df)) df$Y[ok] else df$latitude[ok]
     plot(
-      df$longitude[ok],
-      df$latitude[ok],
+      xs,
+      ys,
       col = cols[ci],
       pch = 15,
       cex = 0.9,
       xlab = "",
       ylab = "",
       main = main,
-      xlim = c(-121, -117),
-      ylim = c(32, 35)
+      xlim = range(xs, na.rm = TRUE),
+      ylim = range(ys, na.rm = TRUE)
     )
   }
   plot_surface(egg, "Egg encounter (CUFES model)")

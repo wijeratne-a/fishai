@@ -186,7 +186,10 @@ def main(argv: list[str] | None = None) -> int:
     store = _load_glorys_store_for_days(days)
     enriched = grid_with_covariates(grid, when=datetime.combine(day, datetime.min.time(), tzinfo=timezone.utc), store=store)
     args.output.parent.mkdir(parents=True, exist_ok=True)
-    enriched.to_csv(args.output, index=False)
+    # Committed grids keep projected X/Y and cell_id. Latitude and longitude
+    # stay in memory for the GLORYS sample and are not written (coordinate scan).
+    write_cols = [c for c in enriched.columns if c not in {"latitude", "longitude"}]
+    enriched.loc[:, write_cols].to_csv(args.output, index=False)
     print(f"wrote {args.output} rows={len(enriched)} day={day.isoformat()}")
     return 0
 
