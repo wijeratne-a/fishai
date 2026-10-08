@@ -22,10 +22,8 @@ from fishai.ingestion.physics.cufes_training_covariates import (  # noqa: E402
     load_events_parquet,
     new_glorys_field_store_for_live_build,
     populate_store_days_from_cache,
-    plan_glorys_subset_batches,
     unique_event_days,
 )
-from fishai.ingestion.physics.glorys_cufes_subset import GlorysSubsetBatch  # noqa: E402
 from fishai.ingestion.physics.wcofs_glorys_overlap import load_overlap_config  # noqa: E402
 from fishai.ingestion.sources import REPO_ROOT as REPO  # noqa: E402
 
@@ -67,15 +65,68 @@ def build_cell_centers(
     return pd.DataFrame(rows)
 
 
+def _parse_subset_nc_dates(path: Path) -> tuple[date, date]:
+    """Parse ``{dataset_id}_{start}_{end}.nc`` date span from cache filename."""
+    stem = path.stem
+    end = date.fromisoformat(stem.rsplit("_", 1)[-1])
+    start = date.fromisoformat(stem.rsplit("_", 2)[-2])
+    return start, end
+
+
+def _batches_from_glorys_cache(days: list[date], cache_dir: Path) -> list:
+    from fishai.ingestion.physics.cufes_training_covariates import (
+        GlorysSubsetBatch,
+        PILOT_BBOX,
+        TRAINING_SUBSET_VARIABLES,
+    )
+    from fishai.ingestion.physics.sources.glorys import glorys_product_for_date
+
+    nc_files = sorted(cache_dir.glob("*.nc"))
+    if not nc_files:
+        raise FileNotFoundError(f"no GLORYS subset cache under {cache_dir}")
+    by_key: dict[tuple[str, date, date], Path] = {}
+    for nc in nc_files:
+        start, end = _parse_subset_nc_dates(nc)
+        dataset_id = nc.name.rsplit("_", 2)[0]
+        by_key[(dataset_id, start, end)] = nc
+
+    batches: list[GlorysSubsetBatch] = []
+    seen: set[tuple[str, date, date]] = set()
+    for day in days:
+        product_id = glorys_product_for_date(day)
+        hit = None
+        for (dataset_id, start, end), _path in by_key.items():
+            if dataset_id != product_id:
+                continue
+            if start <= day <= end:
+                hit = (dataset_id, start, end)
+                break
+        if hit is None:
+            raise FileNotFoundError(f"no cached GLORYS subset covers {day.isoformat()}")
+        if hit not in seen:
+            seen.add(hit)
+            dataset_id, start, end = hit
+            batches.append(
+                GlorysSubsetBatch(
+                    dataset_id=dataset_id,
+                    date_start=start,
+                    date_end=end,
+                    variables=TRAINING_SUBSET_VARIABLES,
+                    bbox=PILOT_BBOX,
+                )
+            )
+    return batches
+
+
 def _load_glorys_store_for_days(days: list[date]) -> GlorysFieldStore:
     cfg = load_overlap_config()
     store = new_glorys_field_store_for_live_build(cfg)
-    batches = plan_glorys_subset_batches(days)
     cache_dir = REPO / "data" / "cache" / "glorys_cufes"
     if not cache_dir.is_dir():
         raise FileNotFoundError(
             f"GLORYS cache missing at {cache_dir}; run CUFES×GLORYS training covariate build first"
         )
+    batches = _batches_from_glorys_cache(days, cache_dir)
     populate_store_days_from_cache(store, days, batches, cache_dir)
     return store
 
@@ -86,7 +137,11 @@ def grid_with_covariates(
     when: datetime,
     store: GlorysFieldStore,
 ) -> pd.DataFrame:
-    ts = pd.Timestamp(when, tz="UTC")
+    ts = pd.Timestamp(when)
+    if ts.tzinfo is None:
+        ts = ts.tz_localize("UTC")
+    else:
+        ts = ts.tz_convert("UTC")
     sampler = store.field_sampler
     out_rows: list[dict[str, object]] = []
     for _, row in grid.iterrows():

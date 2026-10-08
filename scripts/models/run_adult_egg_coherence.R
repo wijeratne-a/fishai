@@ -51,10 +51,57 @@ train_if_needed <- function(cfg, label) {
     up <- upstream[[slug]] %||% slug
     zcol <- paste0(slug, "_z")
     if (up %in% names(grid)) {
-      grid[[zcol]] <- grid[[up]]
+      grid[[zcol]] <- as.numeric(grid[[up]])
+    } else if (slug %in% names(grid)) {
+      grid[[zcol]] <- as.numeric(grid[[slug]])
     }
   }
   grid
+}
+
+.intersect_prediction_days <- function(egg_art, adult_art, cfg, candidates) {
+  levels_e <- as.integer(egg_art$time_idx_levels)
+  levels_a <- as.integer(adult_art$time_idx_levels)
+  shared <- intersect(levels_e, levels_a)
+  if (!length(shared)) {
+    stop("no shared time_idx between egg and adult artifacts", call. = FALSE)
+  }
+  origin <- .time_idx_origin_date(cfg)
+  shared_dates <- origin + shared - 1L
+  keep <- character()
+  for (day in candidates) {
+    idx <- as.integer(as.Date(day) - origin) + 1L
+    if (idx %in% shared) {
+      keep <- c(keep, day)
+    }
+  }
+  if (!length(keep)) {
+    for (day in candidates) {
+      d <- as.Date(day)
+      ym <- format(d, "%Y-%m")
+      in_month <- shared_dates[format(shared_dates, "%Y-%m") == ym]
+      if (length(in_month)) {
+        nearest <- in_month[which.min(abs(as.integer(in_month - d)))]
+        keep <- c(keep, format(nearest, "%Y-%m-%d"))
+      }
+    }
+  }
+  if (!length(keep)) {
+    apr <- shared_dates[format(shared_dates, "%m") == "04"]
+    jul <- shared_dates[format(shared_dates, "%m") == "07"]
+    mid <- function(v) {
+      if (!length(v)) {
+        return(NA_character_)
+      }
+      format(sort(v)[ceiling(length(v) / 2)], "%Y-%m-%d")
+    }
+    keep <- c(mid(apr), mid(jul))
+    keep <- keep[!is.na(keep) & nzchar(keep)]
+  }
+  if (!length(keep)) {
+    stop("no climatology days could be aligned to shared survey time_idx", call. = FALSE)
+  }
+  unique(keep)
 }
 
 .day_to_time_idx <- function(day, cfg) {
@@ -86,9 +133,18 @@ build_grid_for_day <- function(day, cfg) {
 predict_surface <- function(artifact, cfg, day, label) {
   cfg$prediction$hindcast_evidence <- TRUE
   grid <- build_grid_for_day(day, cfg)
+  zcols <- paste0(
+    c(cfg$covariates$dynamic %||% character(), cfg$covariates$static %||% character()),
+    "_z"
+  )
+  zcols <- intersect(zcols, names(grid))
+  ok <- if (length(zcols)) stats::complete.cases(grid[, zcols, drop = FALSE]) else rep(TRUE, nrow(grid))
+  if (!any(ok)) {
+    stop("no grid cells with complete covariates for ", day, call. = FALSE)
+  }
   pred <- predict_engine(
     artifact,
-    grid,
+    grid[ok, , drop = FALSE],
     cfg,
     physics_cycle = "PASS",
     species = "anchovy",
@@ -167,14 +223,33 @@ write_side_by_side_map <- function(egg, adult, path) {
   plot_surface(adult, "Adult encounter (CPS model)")
 }
 
-# Representative days: peak egg (Apr) and broad summer adult coverage
-climatology_days <- c("2016-04-15", "2017-04-15", "2018-04-15", "2019-07-15", "2020-07-15")
+# Candidate days: spring (egg peak) and summer; filtered to shared training time_idx
+climatology_candidates <- c(
+  "2014-04-15", "2015-04-15", "2016-04-15", "2017-04-15",
+  "2014-07-15", "2015-07-15", "2016-07-15", "2017-07-15"
+)
 
 message("loading configs...")
 egg_cfg <- load_config_yaml(egg_cfg_path)
 adult_cfg <- load_config_yaml(adult_cfg_path)
 egg_cfg$output$dir <- file.path(root, "artifacts", "models", "anchovy_egg_coherence")
 adult_cfg$output$dir <- file.path(root, "artifacts", "models", "anchovy_adult_coherence")
+
+# Host budget: validated formula/covariates/families; barrier mesh omitted here only
+# (full barrier fits exceed cloud-agent wall time on ~12k CUFES rows).
+egg_cfg$mesh$barrier$enabled <- FALSE
+adult_cfg$mesh$barrier$enabled <- FALSE
+egg_cfg$mesh$cutoff_km <- max(egg_cfg$mesh$cutoff_km %||% 9, 15)
+adult_cfg$mesh$cutoff_km <- max(adult_cfg$mesh$cutoff_km %||% 9, 15)
+
+# freeze_model() calls egg_split_fit_end(); adult CPS YAML has no egg_split block.
+adult_cfg$egg_split <- list(
+  fit_end = "2025-12-31",
+  test_start = "2099-01-01",
+  test_end = "2099-01-01",
+  test_score_include_post_boundary = TRUE
+)
+adult_cfg$training_end <- "2025-12-31"
 
 message("checking training tables...")
 .require_inputs(egg_cfg)
@@ -183,6 +258,14 @@ message("checking training tables...")
 message("train / load artifacts (full data, not CV)...")
 egg_res <- train_if_needed(egg_cfg, "anchovy_egg")
 adult_res <- train_if_needed(adult_cfg, "anchovy_adult")
+
+climatology_days <- .intersect_prediction_days(
+  egg_res$artifact,
+  adult_res$artifact,
+  egg_res$cfg,
+  climatology_candidates
+)
+message("climatology days (shared time_idx): ", paste(climatology_days, collapse = ", "))
 
 surfaces <- list()
 metrics_by_day <- list()
@@ -220,6 +303,30 @@ write_side_by_side_map(
   surfaces[[ref_day]]$adult,
   file.path(out_dir, "map_egg_vs_adult_side_by_side.png")
 )
+
+spring_days <- climatology_days[grepl("-04-", climatology_days)]
+summer_days <- climatology_days[grepl("-07-", climatology_days)]
+season_rows <- function(days, label) {
+  if (!length(days)) {
+    return(NULL)
+  }
+  sub <- agg[agg$day %in% days, , drop = FALSE]
+  data.frame(
+    season = label,
+    n_days = nrow(sub),
+    mean_pearson_r = mean(sub$pearson_r, na.rm = TRUE),
+    mean_top_decile_jaccard = mean(sub$top_decile_jaccard, na.rm = TRUE),
+    mean_top_decile_hit_rate = mean(sub$top_decile_hit_rate, na.rm = TRUE),
+    stringsAsFactors = FALSE
+  )
+}
+season_agg <- do.call(rbind, Filter(Negate(is.null), list(
+  season_rows(spring_days, "spring_apr"),
+  season_rows(summer_days, "summer_jul")
+)))
+if (!is.null(season_agg) && nrow(season_agg)) {
+  write.csv(season_agg, file.path(out_dir, "coherence_metrics_by_season.csv"), row.names = FALSE)
+}
 
 cat(
   "\nCoherence summary (anchovy, 10 km SCB grid):\n",
