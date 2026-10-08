@@ -56,6 +56,19 @@
   NULL
 }
 
+.cv_binomial_holdout_loglik <- function(fishai_fit, test, cfg) {
+  p <- score_encounter_binomial_on_events(fishai_fit$fit, test, cfg)
+  z <- as.integer(test$y > 0)
+  ll <- 0
+  if (any(!z)) {
+    ll <- ll + sum(log(pmax(1 - p[!z], .Machine$double.eps)))
+  }
+  if (any(z)) {
+    ll <- ll + sum(log(pmax(p[z], .Machine$double.eps)))
+  }
+  ll
+}
+
 .cv_delta_holdout_loglik <- function(fishai_fit, test, cfg) {
   fit <- fishai_fit$fit
   if (!"log_effort" %in% names(test)) {
@@ -307,8 +320,13 @@ cv_elpd_ineligible_reason <- function(cv_obj) {
   # sdmTMB scores them only when those levels were supplied as extra_time.
   fold_cfg <- cfg
   fold_cfg$model$extra_time_slices <- sort(unique(test$time_idx))
+  fit_fn <- if (identical(cfg$response$type %||% "", "encounter_binomial")) {
+    fit_encounter_binomial_engine
+  } else {
+    fit_delta_engine
+  }
   fit_res <- tryCatch(
-    fit_delta_engine(train, train_mesh, fold_cfg),
+    fit_fn(train, train_mesh, fold_cfg),
     error = function(e) {
       structure(list(message = conditionMessage(e)), class = "cv_fold_error")
     }
@@ -333,7 +351,11 @@ cv_elpd_ineligible_reason <- function(cv_obj) {
     ))
   }
   ll <- tryCatch(
-    .cv_delta_holdout_loglik(fit_res, test, cfg),
+    if (identical(cfg$response$type %||% "", "encounter_binomial")) {
+      .cv_binomial_holdout_loglik(fit_res, test, cfg)
+    } else {
+      .cv_delta_holdout_loglik(fit_res, test, cfg)
+    },
     error = function(e) conditionMessage(e)
   )
   if (is.character(ll) && length(ll) == 1L) {
@@ -354,8 +376,13 @@ cv_elpd_ineligible_reason <- function(cv_obj) {
       oof = .cv_empty_oof_predictions()
     ))
   }
+  score_fn <- if (identical(cfg$response$type %||% "", "encounter_binomial")) {
+    function(fit, test, cfg) score_encounter_binomial_on_events(fit, test, cfg)
+  } else {
+    function(fit, test, cfg) score_encounter_on_events(fit, test, cfg)
+  }
   p <- tryCatch(
-    score_encounter_on_events(fit_res$fit, test, cfg),
+    score_fn(fit_res$fit, test, cfg),
     error = function(e) conditionMessage(e)
   )
   if (is.character(p) && length(p) == 1L) {
@@ -419,7 +446,12 @@ cv_elpd_ineligible_reason <- function(cv_obj) {
             )
           }
         }
-        fit_delta_engine(train, mesh_fold, cfg)
+        fit_fn <- if (identical(cfg$response$type %||% "", "encounter_binomial")) {
+          fit_encounter_binomial_engine
+        } else {
+          fit_delta_engine
+        }
+        fit_fn(train, mesh_fold, cfg)
       },
       error = function(e) {
         structure(list(message = conditionMessage(e)), class = "cv_fold_error")
@@ -432,7 +464,12 @@ cv_elpd_ineligible_reason <- function(cv_obj) {
     if (!is.null(fit_reason)) {
       return(NULL)
     }
-    p <- tryCatch(score_encounter_on_events(fit_res$fit, test, cfg), error = function(e) NULL)
+    score_fn <- if (identical(cfg$response$type %||% "", "encounter_binomial")) {
+      function(fit, test, cfg) score_encounter_binomial_on_events(fit, test, cfg)
+    } else {
+      function(fit, test, cfg) score_encounter_on_events(fit, test, cfg)
+    }
+    p <- tryCatch(score_fn(fit_res$fit, test, cfg), error = function(e) NULL)
     if (is.null(p)) {
       return(NULL)
     }

@@ -87,7 +87,7 @@ fit_delta_engine <- function(dat, mesh, cfg) {
     priors = pri,
     control = do.call(
       sdmTMB::sdmTMBcontrol,
-      c(list(newton_loops = 1L, multiphase = TRUE), model$control %||% list())
+      modifyList(list(newton_loops = 1L, multiphase = TRUE), model$control %||% list())
     ),
     silent = TRUE
   )
@@ -110,4 +110,56 @@ fit_delta_engine <- function(dat, mesh, cfg) {
 fit_uses_log_effort_offset <- function(fit_obj) {
   fit <- fit_obj$fit
   identical(as.character(fit$call$offset), "log_effort")
+}
+
+#' Encounter-only binomial GLMM (fallback when delta hurdle Hessians fail).
+#' @export
+fit_encounter_binomial_engine <- function(dat, mesh, cfg) {
+  model <- cfg$model
+  rhs <- model$formula_shared %||% model$formula_encounter
+  if (!grepl("^~", rhs)) {
+    rhs <- paste("~", rhs)
+  }
+  frm <- stats::as.formula(paste("y", rhs))
+  pc <- model$priors$pc_matern %||% list()
+  range_gt <- (pc$range_gt_mult_max_edge %||% 2) * (cfg$mesh$cutoff_km %||% 9)
+  pri <- sdmTMB::sdmTMBpriors(
+    matern_s = sdmTMB::pc_matern(
+      range_gt = range_gt,
+      sigma_lt = pc$sigma_lt %||% 2
+    )
+  )
+  extra <- cfg$model$extra_time_slices
+  .as_pair <- function(x, default) {
+    if (is.null(x)) {
+      return(default)
+    }
+    if (is.list(x)) {
+      return(x)
+    }
+    as.list(x)
+  }
+  fit_args <- list(
+    formula = frm,
+    data = dat,
+    mesh = mesh,
+    time = "time_idx",
+    family = binomial(),
+    offset = "log_effort",
+    spatial = .as_pair(model$spatial, list("on")),
+    spatiotemporal = .as_pair(model$spatiotemporal, list("off")),
+    extra_time = extra,
+    priors = pri,
+    control = do.call(
+      sdmTMB::sdmTMBcontrol,
+      modifyList(list(newton_loops = 1L, multiphase = TRUE), model$control %||% list())
+    ),
+    silent = TRUE
+  )
+  if (!is.null(model$time_varying)) {
+    fit_args$time_varying <- stats::as.formula(model$time_varying$formula %||% "~ 1")
+    fit_args$time_varying_type <- model$time_varying$type %||% "rw0"
+  }
+  fit <- do.call(sdmTMB::sdmTMB, fit_args)
+  structure(list(fit = fit, delta_type = NA_character_), class = "fishai_fit")
 }
