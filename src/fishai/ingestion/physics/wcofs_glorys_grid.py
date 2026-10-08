@@ -233,8 +233,20 @@ def compute_wcofs_covariates_on_glorys_grid(
             sst[j, i] = _interp_gridded_column(depth, tp, GLORYS_TOP_LEVEL_DEPTH_M)
             t3m[j, i] = _interp_gridded_column(depth, tp, CUFES_SAMPLE_DEPTH_M)
             s3m[j, i] = _interp_gridded_column(depth, sp, CUFES_SAMPLE_DEPTH_M)
-            z3d = (-depth)[:, None, None]
-            mld_m[j, i] = float(mld(z3d, tp[:, None, None])[0, 0])
+            # ``mld`` expects deep-first ROMS z and a fully finite column.
+            # Coarsened profiles are shallow-first and NaN below the bottom.
+            finite = np.isfinite(tp)
+            if int(finite.sum()) < 2 or not bool(finite[0]):
+                continue
+            last = int(np.argmax(~finite)) if not bool(finite[-1]) else tp.size
+            if last < 2:
+                continue
+            z_col = -np.asarray(depth[:last], dtype=float)
+            t_col = np.asarray(tp[:last], dtype=float)
+            if z_col[0] > z_col[-1]:
+                z_col = z_col[::-1]
+                t_col = t_col[::-1]
+            mld_m[j, i] = float(mld(z_col[:, None, None], t_col[:, None, None])[0, 0])
     grad = sst_gradient(sst, gridded.lat, gridded.lon)
     lat2d, lon2d = np.meshgrid(gridded.lat, gridded.lon, indexing="ij")
     front_km = front_distance_km(grad, lat2d, lon2d)
