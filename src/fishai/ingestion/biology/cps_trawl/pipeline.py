@@ -117,15 +117,55 @@ def write_metadata(metadata: dict[str, Any], dest: Path) -> Path:
     return path
 
 
+ODP_TRAWL_HAUL_CATCH_CSV = "CPS_Trawl_LifeHistory_HaulCatch.csv"
+
+
+def _load_odp_trawl_haul_catch_rows(path: Path) -> list[dict[str, Any]]:
+    """Load SWFSC ODP bulk CSV (InPort distribution; column names differ from ERDDAP)."""
+    import csv
+
+    mapping = {
+        "startLatitude": "latitude",
+        "startLongitude": "longitude",
+        "stopLatitude": "stop_latitude",
+        "stopLongitude": "stop_longitude",
+        "equilibriumTime": "time",
+        "haulBackTime": "haulback_time",
+        "surfaceTemp": "surface_temp",
+        "surfaceTempMethod": "surface_temp_method",
+        "shipSpeedThrougtheWater": "ship_spd_through_water",
+        "itisTSN": "itis_tsn",
+        "scientificName": "scientific_name",
+        "subSampleCount": "subsample_count",
+        "subSampleWeightkg": "subsample_weight",
+        "remainingWeightkg": "remaining_weight",
+    }
+    out: list[dict[str, Any]] = []
+    with path.open(encoding="utf-8", newline="") as handle:
+        reader = csv.DictReader(handle)
+        for row in reader:
+            mapped = {mapping.get(k, k): v for k, v in row.items()}
+            out.append(mapped)
+    return out
+
+
 def load_raw_rows_for_window(t0: date, t1: date, raw_dir: Path) -> tuple[list[dict[str, Any]], int]:
     rows: list[dict[str, Any]] = []
     units_skipped = 0
-    for win_start, _ in iter_yearly_windows(t0, t1):
-        path = raw_dir / f"FRDCPSTrawlLHHaulCatch_{win_start.year}.csv"
-        if path.is_file():
-            chunk, skipped = read_cps_trawl_csv(path)
-            rows.extend(chunk)
-            units_skipped += skipped
+    odp = raw_dir / ODP_TRAWL_HAUL_CATCH_CSV
+    if odp.is_file():
+        rows.extend(_load_odp_trawl_haul_catch_rows(odp))
+        return rows, units_skipped
+    paths = sorted(raw_dir.glob("FRDCPSTrawlLHHaulCatch_*.csv"))
+    if not paths:
+        for win_start, _ in iter_yearly_windows(t0, t1):
+            legacy = raw_dir / f"FRDCPSTrawlLHHaulCatch_{win_start.year}.csv"
+            if legacy.is_file():
+                paths.append(legacy)
+    for path in paths:
+        chunk, skipped = read_cps_trawl_csv(path)
+        rows.extend(chunk)
+        units_skipped += skipped
     return rows, units_skipped
 
 

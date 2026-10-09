@@ -1,0 +1,127 @@
+{
+  "status": "ok",
+  "claim": "24h adult anchovy encounter forecast skill (rolling-origin holdout)",
+  "operational_claim": "NOT_ISSUED_FORECAST",
+  "physics_source": "damped_anomaly_proxy",
+  "tau_days": 3,
+  "lane_oracle": "retrospective",
+  "code_sha": null,
+  "design": "prereg/adult_anchovy_24h_forecast_design.md",
+  "test_end": "2026-06-24",
+  "cutoff_calendar": "adult_inventory_best_effort",
+  "egg_reference_cutoffs": [
+    "1998-02-26",
+    "1998-04-07",
+    "1998-06-13",
+    "2012-09-03",
+    "2017-08-05",
+    "2018-09-20",
+    "2021-01-22",
+    "2022-04-12"
+  ],
+  "egg_overlap_cutoffs": [],
+  "cutoff_selection_status": "ok",
+  "cutoff_selection_reason": null,
+  "cutoff_notes": [
+    "season DJF has 0 eligible cutoff(s); skipped"
+  ],
+  "cutoffs": ["2015-06-22", "2016-09-08", "2017-03-22", "2018-09-13", "2019-08-26", "2021-04-02", "2022-09-23", "2025-06-17"],
+  "cutoff_seasons": [
+    "JJA",
+    "SON",
+    "MAM",
+    "SON",
+    "JJA",
+    "MAM",
+    "SON",
+    "JJA"
+  ],
+  "eligible_day_count": 45,
+  "min_train_rows": 150,
+  "min_train_days": 30,
+  "species": [
+    {
+      "label": "adult_anchovy",
+      "taxon": "anchovy",
+      "model_config": "configs/models/adult_cps_anchovy.yaml",
+      "operational_claim": "NOT_ISSUED_FORECAST",
+      "physics_source": "damped_anomaly_proxy",
+      "n_cutoffs": 8,
+      "n_eligible_cutoffs": 0,
+      "fit_status": "INSUFFICIENT",
+      "convergence_note": "All 8 cutoffs failed spatial-CV convergence (non-positive-definite Hessian); forecast metrics not pooled.",
+      "pass_24h": false,
+      "pass_rule": "operational_proxy AUC and TSS at 24h strictly greater than persistence and climatology, with at least 6 eligible cutoffs",
+      "pooled": null,
+      "cutoffs": [
+        {
+          "cutoff": "2015-06-22",
+          "eligible": false,
+          "failure": "non-positive-definite Hessian",
+          "n_train": null,
+          "n_holdout": null,
+          "n_common_support": 0
+        },
+        {
+          "cutoff": "2016-09-08",
+          "eligible": false,
+          "failure": "non-positive-definite Hessian",
+          "n_train": null,
+          "n_holdout": null,
+          "n_common_support": 0
+        },
+        {
+          "cutoff": "2017-03-22",
+          "eligible": false,
+          "failure": "non-positive-definite Hessian",
+          "n_train": null,
+          "n_holdout": null,
+          "n_common_support": 0
+        },
+        {
+          "cutoff": "2018-09-13",
+          "eligible": false,
+          "failure": "non-positive-definite Hessian",
+          "n_train": null,
+          "n_holdout": null,
+          "n_common_support": 0
+        },
+        {
+          "cutoff": "2019-08-26",
+          "eligible": false,
+          "failure": "non-positive-definite Hessian",
+          "n_train": null,
+          "n_holdout": null,
+          "n_common_support": 0
+        },
+        {
+          "cutoff": "2021-04-02",
+          "eligible": false,
+          "failure": "non-positive-definite Hessian",
+          "n_train": null,
+          "n_holdout": null,
+          "n_common_support": 0
+        },
+        {
+          "cutoff": "2022-09-23",
+          "eligible": false,
+          "failure": "non-positive-definite Hessian",
+          "n_train": null,
+          "n_holdout": null,
+          "n_common_support": 0
+        },
+        {
+          "cutoff": "2025-06-17",
+          "eligible": false,
+          "failure": "non-positive-definite Hessian",
+          "n_train": null,
+          "n_holdout": null,
+          "n_common_support": 0
+        }
+      ]
+    }
+  ],
+  "pass_24h": {
+    "adult_anchovy": false
+  }
+}

@@ -115,9 +115,41 @@ def write_metadata(metadata: dict[str, Any], dest: Path) -> Path:
     return path
 
 
+ODP_NEARSHORE_SET_CATCH_CSV = "CPS_Trawl_LifeHistory_Nearshore_SetCatch.csv"
+
+
+def _load_odp_nearshore_set_catch_rows(path: Path) -> list[dict[str, Any]]:
+    import csv
+
+    mapping = {
+        "Latitude": "latitude",
+        "Longitude": "longitude",
+        "scientificName": "scientific_name",
+        "itisTSN": "itis_tsn",
+        "datetime_UTC": "time",
+        "time_PDT": "time_pdt",
+        "totalNumber": "totalNumber",
+        "totalWeightkg": "totalWeightkg",
+        "gearType": "gearType",
+    }
+    out: list[dict[str, Any]] = []
+    with path.open(encoding="utf-8", newline="") as handle:
+        reader = csv.DictReader(handle)
+        for row in reader:
+            mapped = {mapping.get(k, k): v for k, v in row.items()}
+            if mapped.get("time") in (None, "") and mapped.get("time_pdt"):
+                mapped["time"] = mapped["time_pdt"]
+            out.append(mapped)
+    return out
+
+
 def load_raw_rows_for_window(t0: date, t1: date, raw: Path) -> tuple[list[dict[str, Any]], int]:
     rows: list[dict[str, Any]] = []
     files = 0
+    odp = raw / ODP_NEARSHORE_SET_CATCH_CSV
+    if odp.is_file():
+        rows.extend(_load_odp_nearshore_set_catch_rows(odp))
+        return rows, 1
     paths = sorted(raw.glob("cps_nearshore_set_catch_*.csv"))
     if not paths:
         for win_start, _ in iter_yearly_windows(t0, t1):

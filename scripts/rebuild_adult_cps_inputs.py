@@ -13,12 +13,14 @@ if str(REPO_ROOT / "src") not in sys.path:
 
 
 def main() -> int:
-    from fishai.ingestion.adult.specimen_fetch import iter_halfyear_windows
-    from fishai.ingestion.biology.cps_nearshore.fetch import (
-        OCEANVIEW_NEARSHORE_SET_CATCH_BASE,
-        fetch_cps_nearshore_set_catch,
-        raw_dir as near_raw_dir,
-    )
+    import subprocess
+
+    odp_script = REPO_ROOT / "scripts" / "fetch_odp_adult_cps_bulk.py"
+    print("ensure SWFSC ODP bulk CSVs (public GCS mirror)...")
+    rc = subprocess.call([sys.executable, str(odp_script)])
+    if rc != 0:
+        return rc
+
     from fishai.ingestion.biology.cps_nearshore.pipeline import pilot_bbox_from_manifest, sync_cps_nearshore_set_catch
     from fishai.ingestion.biology.cps_trawl.pipeline import pilot_bbox_from_manifest as trawl_bbox, sync_cps_trawl_haul_catch
 
@@ -27,22 +29,13 @@ def main() -> int:
     trawl_qc = sync_cps_trawl_haul_catch(
         date(2003, 7, 9),
         date(2026, 12, 31),
-        fetch=True,
+        fetch=False,
         bbox=bbox,
     )
     print(f"trawl hauls={trawl_qc['n_hauls']} catch_rows={trawl_qc['n_catch_rows']}")
 
     near_bbox = pilot_bbox_from_manifest()
-    raw = near_raw_dir()
-    print("sync nearshore set catch (oceanview, half-year windows)...")
-    fetch_cps_nearshore_set_catch(
-        date(2019, 6, 21),
-        date(2026, 12, 31),
-        near_bbox,
-        raw,
-        erddap_base=OCEANVIEW_NEARSHORE_SET_CATCH_BASE,
-        window_fn=iter_halfyear_windows,
-    )
+    print("sync nearshore set catch (ODP bulk)...")
     near_qc = sync_cps_nearshore_set_catch(
         date(2019, 6, 21),
         date(2026, 12, 31),
@@ -51,10 +44,12 @@ def main() -> int:
     )
     print(f"nearshore sets raw_rows={near_qc['raw_rows']}")
 
-    import subprocess
-
     return subprocess.call(
-        [sys.executable, str(REPO_ROOT / "scripts" / "fetch_adult_cps_specimens.py"), "--nearshore-half-year"]
+        [
+            sys.executable,
+            str(REPO_ROOT / "scripts" / "fetch_adult_cps_specimens.py"),
+            "--odp-bulk",
+        ]
     )
 
 
