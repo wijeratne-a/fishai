@@ -11,15 +11,20 @@ REPO_ROOT = Path(__file__).resolve().parents[3]
 MODEL_CONFIG_DIR = REPO_ROOT / "configs" / "models"
 
 
+def _component_on(part: object) -> bool:
+    # PyYAML loads bare on/off as booleans.
+    if isinstance(part, bool):
+        return part
+    return str(part).strip().lower() not in {"off", "false", "no", "0"}
+
+
 def _spatial_field_on(cfg: dict) -> bool:
     spatial = (cfg.get("model") or {}).get("spatial")
     if spatial is None:
         return True
-    if isinstance(spatial, str):
-        return spatial != "off"
     if isinstance(spatial, (list, tuple)):
-        return any(str(part) != "off" for part in spatial)
-    return True
+        return any(_component_on(part) for part in spatial)
+    return _component_on(spatial)
 
 
 class CufesModelYamlBarrierTests(unittest.TestCase):
