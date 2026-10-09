@@ -1,0 +1,10 @@
+{
+  "cycle_date": "2024-09-05",
+  "lead_tag": "f024",
+  "forcing_source": "wcofs_forecast",
+  "grid_spacing_km": 10.0,
+  "product": "egg_encounter_pipeline_demo",
+  "wcofs_s3_key": "wcofs/netcdf/202409/nos.wcofs.fields.f024.20240905.t03z.nc",
+  "cycle": "20240905T03Z",
+  "min_wet_fraction": 0.5
+}

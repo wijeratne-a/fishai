@@ -1,0 +1,158 @@
+{
+  "status": "ok",
+  "claim": "24h egg-encounter forecast with WCOFS-first forcing",
+  "forcing_source": "proxy_fallback",
+  "wcofs_lead_tag": "f024",
+  "proxy_physics_source": "damped_anomaly_proxy",
+  "operational_claim": "NOT_ISSUED_FORECAST",
+  "code_sha": "0ae2cc423da3e1b1544315c85d39b3f25e8f95c7",
+  "design": "prereg/cufes_forecast_temporal_holdout_design.md",
+  "test_end": "2022-04-27",
+  "cutoffs": [
+    "1998-02-26",
+    "1998-04-07",
+    "1998-06-13",
+    "2012-09-03",
+    "2017-08-05",
+    "2018-09-20",
+    "2021-01-22",
+    "2022-04-12"
+  ],
+  "cutoff_forcing_resolution": {
+    "1998-02-26": "proxy_fallback",
+    "1998-04-07": "proxy_fallback",
+    "1998-06-13": "proxy_fallback",
+    "2012-09-03": "proxy_fallback",
+    "2017-08-05": "proxy_fallback",
+    "2018-09-20": "proxy_fallback",
+    "2021-01-22": "proxy_fallback",
+    "2022-04-12": "proxy_fallback"
+  },
+  "note": "Egg scoring ends before public WCOFS fields archives; every cutoff uses proxy_fallback (damped-anomaly). Operational 24 h metrics match cufes_forecast_temporal_holdout_scores.json operational_proxy until WCOFS-overlap egg labels exist.",
+  "species": [
+    {
+      "label": "sardine",
+      "taxon": "sardine",
+      "model_config": "configs/models/cufes_sardine.yaml",
+      "forcing_source": "proxy_fallback",
+      "n_cutoffs": 8,
+      "n_eligible_cutoffs": 7,
+      "fit_status": "scored",
+      "pass_24h": false,
+      "pass_rule": "operational (WCOFS or proxy_fallback) AUC and TSS at 24h strictly greater than persistence and climatology, with at least 6 eligible cutoffs",
+      "pooled": {
+        "24": {
+          "horizon_hours": 24,
+          "n_common_support": 120,
+          "oracle": {
+            "n": 120,
+            "n_presence": 1,
+            "auc": 0.8067,
+            "tss": -0.0336,
+            "boyce": -0.5477,
+            "elpd_per_event": -0.2014,
+            "elpd": -24.1722,
+            "elpd_kind": "delta_encounter_plus_gamma"
+          },
+          "operational": {
+            "n": 120,
+            "n_presence": 1,
+            "auc": 0.8235,
+            "tss": -0.0084,
+            "boyce": -0.2739,
+            "elpd_per_event": -0.1631,
+            "elpd": -19.5749,
+            "elpd_kind": "delta_encounter_plus_gamma",
+            "operational_claim": "NOT_ISSUED_FORECAST",
+            "physics_source": "damped_anomaly_proxy"
+          },
+          "persistence": {
+            "n": 120,
+            "n_presence": 1,
+            "auc": 0.5966,
+            "tss": 0,
+            "boyce": -0.5477,
+            "elpd_per_event": -0.1349,
+            "elpd": -16.1936,
+            "elpd_kind": "delta_encounter_plus_gamma"
+          },
+          "climatology": {
+            "n": 120,
+            "n_presence": 1,
+            "auc": 0.9832,
+            "tss": 0.8908,
+            "boyce": 0.6547,
+            "elpd_per_event": -0.2081,
+            "elpd_encounter_bernoulli": -24.9703,
+            "elpd_kind": "encounter_bernoulli_only",
+            "elpd_not_ranked_against_delta": true
+          }
+        }
+      }
+    },
+    {
+      "label": "anchovy",
+      "taxon": "anchovy",
+      "model_config": "configs/models/cufes_anchovy.yaml",
+      "forcing_source": "proxy_fallback",
+      "n_cutoffs": 8,
+      "n_eligible_cutoffs": 4,
+      "fit_status": "INSUFFICIENT",
+      "pass_24h": false,
+      "pass_rule": "operational (WCOFS or proxy_fallback) AUC and TSS at 24h strictly greater than persistence and climatology, with at least 6 eligible cutoffs",
+      "pooled": {
+        "24": {
+          "horizon_hours": 24,
+          "n_common_support": 81,
+          "oracle": {
+            "n": 81,
+            "n_presence": 6,
+            "auc": 0.9756,
+            "tss": 0,
+            "boyce": 0.8018,
+            "elpd_per_event": -0.4896,
+            "elpd": -39.6605,
+            "elpd_kind": "delta_encounter_plus_gamma"
+          },
+          "operational": {
+            "n": 81,
+            "n_presence": 6,
+            "auc": 0.9622,
+            "tss": 0,
+            "boyce": 0.9258,
+            "elpd_per_event": -0.4763,
+            "elpd": -38.5775,
+            "elpd_kind": "delta_encounter_plus_gamma",
+            "operational_claim": "NOT_ISSUED_FORECAST",
+            "physics_source": "damped_anomaly_proxy"
+          },
+          "persistence": {
+            "n": 81,
+            "n_presence": 6,
+            "auc": 0.9911,
+            "tss": 0,
+            "boyce": 0.8018,
+            "elpd_per_event": -0.4691,
+            "elpd": -37.9964,
+            "elpd_kind": "delta_encounter_plus_gamma"
+          },
+          "climatology": {
+            "n": 81,
+            "n_presence": 6,
+            "auc": 0.9889,
+            "tss": 0,
+            "boyce": 0.8532,
+            "elpd_per_event": -0.1621,
+            "elpd_encounter_bernoulli": -13.1287,
+            "elpd_kind": "encounter_bernoulli_only",
+            "elpd_not_ranked_against_delta": true
+          }
+        }
+      }
+    }
+  ],
+  "pass_24h": [
+    false,
+    false
+  ]
+}

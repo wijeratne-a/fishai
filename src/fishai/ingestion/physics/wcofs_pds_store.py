@@ -203,7 +203,8 @@ def open_wcofs_cycle(
         raise CycleNotAvailable(f"WCOFS object not reachable: {key}")
 
     data = get_bytes(url, extra_cache_key=key)
-    ds = xr.open_dataset(io.BytesIO(data), engine="h5netcdf", decode_times=False)
+    engine = "h5netcdf" if data[:4] == b"\x89HDF" else "scipy"
+    ds = xr.open_dataset(io.BytesIO(data), engine=engine, decode_times=False)
     _reject_parallel_mode_test_run(ds, cycle_date)
     ds.attrs.setdefault("wcofs_s3_key", key)
     ds.attrs.setdefault("cycle", f"{cycle_date.strftime('%Y%m%d')}T03Z")
