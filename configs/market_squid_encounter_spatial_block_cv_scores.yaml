@@ -1,0 +1,14 @@
+# Market squid CPS encounter (all sizes; maturity unfiltered) — spatial-block CV.
+# Same protocol as CUFES/adult CPS: 60 km blocks, seed 20260928, 4 folds.
+spatial_block_cv_scores:
+  wcofs_h_artifact: data/derived/physics/wcofs_h_glorys_pilot.zarr
+  min_duration_min: 2
+
+  species:
+    - label: market_squid_encounter
+      model_config: configs/models/cps_market_squid_encounter.yaml
+
+  output:
+    scores_json: prereg/market_squid_encounter_spatial_block_cv_scores.json
+    fold_assignment_csv: artifacts/spatial_block_cv/market_squid_encounter_fold_assignment.csv
+    checkpoint_dir: prereg/cv_checkpoints

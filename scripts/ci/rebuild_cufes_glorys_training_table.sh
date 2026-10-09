@@ -10,7 +10,7 @@ ARCHIVE="${FISHAI_CUFES_GLORYS_ARCHIVE:-data/cache/cufes_glorys_rebuild_${INPUT_
 
 if [[ "${SKIP_CACHE:-0}" != "1" ]]; then
   if EXTRACT=1 scripts/ci/ensure_cufes_glorys_rebuild_cache.sh; then
-    python - <<'PY'
+    python3 - <<'PY'
 from fishai.ingestion.rebuild.cufes_glorys_artifact_cache import assert_cufes_glorys_rebuild_guards
 
 assert_cufes_glorys_rebuild_guards()
@@ -21,7 +21,7 @@ PY
 fi
 
 echo "CUFES×GLORYS rebuild: cache miss; running cold builders"
-python - <<PY
+python3 - <<PY
 from pathlib import Path
 from fishai.ingestion.rebuild.cufes_glorys_artifact_cache import run_cufes_glorys_rebuild
 

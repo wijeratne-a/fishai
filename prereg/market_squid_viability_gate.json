@@ -1,0 +1,23 @@
+{
+  "aliases_matched": [
+    "Doryteuthis opalescens",
+    "Loligo opalescens"
+  ],
+  "nearshore_catch_rows_pilot": 529,
+  "nearshore_non_presence_only_presences": 18,
+  "nearshore_specimen_rows": 23567,
+  "pilot_bbox": {
+    "lat_max": 35.0,
+    "lat_min": 32.0,
+    "lon_max": -117.0,
+    "lon_min": -121.0
+  },
+  "species": "Doryteuthis opalescens",
+  "total_non_presence_only_presences": 309,
+  "trawl_catch_rows_pilot": 5630,
+  "trawl_events_with_median_length": 4,
+  "trawl_non_presence_only_presences": 291,
+  "trawl_specimen_length_rows": 26,
+  "trawl_specimen_rows": 91475,
+  "viability": "proceed"
+}
