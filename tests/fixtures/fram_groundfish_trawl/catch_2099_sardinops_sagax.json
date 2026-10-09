@@ -1,0 +1,15 @@
+[
+  {
+    "trawl_id": 209903008001,
+    "field_identified_taxonomy_dim$scientific_name": "Sardinops sagax",
+    "vessel": "Test Vessel",
+    "tow": 1,
+    "project": "Groundfish Slope and Shelf Combination Survey",
+    "performance": "Satisfactory",
+    "total_catch_wt_kg": 2.5,
+    "total_catch_numbers": 120,
+    "cpue_kg_per_ha_der": 1.25,
+    "depth_m": 95.0,
+    "station_invalid": 0
+  }
+]
