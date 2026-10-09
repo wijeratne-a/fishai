@@ -1,0 +1,13 @@
+# Adult CPS × GLORYS spatial-block CV (anchovy encounter model).
+spatial_block_cv_scores:
+  wcofs_h_artifact: data/derived/physics/wcofs_h_glorys_pilot.zarr
+  min_duration_min: 2
+
+  species:
+    - label: adult_anchovy
+      model_config: configs/models/adult_cps_anchovy.yaml
+
+  output:
+    scores_json: prereg/adult_anchovy_spatial_block_cv_scores.json
+    fold_assignment_csv: artifacts/spatial_block_cv/adult_anchovy_fold_assignment.csv
+    checkpoint_dir: prereg/cv_checkpoints

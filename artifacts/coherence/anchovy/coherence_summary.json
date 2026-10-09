@@ -1,0 +1,9 @@
+{
+  "life_stage": "anchovy",
+  "grid_spacing_km": 10,
+  "climatology_days": ["2014-04-24", "2017-04-04"],
+  "mean_pearson_r": 0.6034,
+  "mean_top_decile_jaccard": 0.271,
+  "mean_top_decile_hit_rate": 0.4063,
+  "framing": "coherence_check_not_validation"
+}
