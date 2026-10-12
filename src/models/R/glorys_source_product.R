@@ -20,8 +20,15 @@
   invisible(Sys.getenv("FISHAI_GLORYS_PINNED_CATALOG_JSON"))
 }
 
-#' Expected GLORYS Copernicus product id for a calendar day (via Python ``glorys_product_for_date``).
-.expected_glorys_product_for_iso_date <- function(iso_date) {
+#' Expected GLORYS Copernicus product ids for calendar days.
+#'
+#' One Python process resolves every date so the catalogue is fetched once.
+#' Returns a named character vector (ISO date -> product id).
+.expected_glorys_products_for_iso_dates <- function(iso_dates) {
+  iso_dates <- as.character(iso_dates)
+  if (!length(iso_dates)) {
+    return(stats::setNames(character(), character()))
+  }
   root <- Sys.getenv("FISHAI_ROOT", unset = normalizePath(getwd()))
   script <- file.path(root, "scripts", "ci", "glorys_product_for_date_cli.py")
   if (!file.exists(script)) {
@@ -30,7 +37,7 @@
   out <- suppressWarnings(
     system2(
       "python3",
-      c(script, iso_date),
+      c(script, iso_dates),
       stdout = TRUE,
       stderr = TRUE
     )
@@ -38,18 +45,29 @@
   status <- attr(out, "status")
   if (!is.null(status) && status != 0L) {
     stop(
-      "glorys_product_for_date lookup failed for ",
-      iso_date,
-      ": ",
+      "glorys_product_for_date lookup failed: ",
       paste(out, collapse = "\n"),
       call. = FALSE
     )
   }
-  prod <- trimws(out[[length(out)]])
-  if (!nzchar(prod)) {
-    stop("empty glorys_product_for_date result for ", iso_date, call. = FALSE)
+  prods <- trimws(out)
+  prods <- prods[nzchar(prods)]
+  if (length(prods) != length(iso_dates)) {
+    stop(
+      "glorys_product_for_date returned ",
+      length(prods),
+      " ids for ",
+      length(iso_dates),
+      " dates",
+      call. = FALSE
+    )
   }
-  prod
+  stats::setNames(prods, iso_dates)
+}
+
+#' Expected GLORYS Copernicus product id for a calendar day (via Python ``glorys_product_for_date``).
+.expected_glorys_product_for_iso_date <- function(iso_date) {
+  unname(.expected_glorys_products_for_iso_dates(iso_date))
 }
 
 .assert_glorys_covariate_source_product <- function(events, cfg) {
@@ -73,10 +91,7 @@
   days <- format(tt, "%Y-%m-%d")
   got <- trimws(as.character(events$source_product))
   uniq_days <- unique(days)
-  expected_by_day <- stats::setNames(
-    vapply(uniq_days, .expected_glorys_product_for_iso_date, character(1)),
-    uniq_days
-  )
+  expected_by_day <- .expected_glorys_products_for_iso_dates(uniq_days)
   for (i in seq_len(nrow(events))) {
     expected <- expected_by_day[[days[[i]]]]
     if (!identical(got[[i]], expected)) {
