@@ -1,0 +1,10 @@
+{
+  "test_fold": 4,
+  "n_events": 539,
+  "n_train": 381,
+  "n_test": 158,
+  "n_source_days": 225,
+  "n_grid_s_days": 225,
+  "ref_log_effort": 3.434,
+  "oof_auc": 0.7624
+}
