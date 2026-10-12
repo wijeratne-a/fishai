@@ -25,3 +25,14 @@ Spatial-block CV: **60 km** blocks, **4** folds, same fold assignment CSV as bas
 **PASS** only if the interaction model beats baseline on **both** out-of-fold **AUC** and **Brier** with all folds converged. Otherwise **FAIL** (no mixture / larger spec escalation).
 
 Results artifact: `artifacts/models/jack_mackerel_behavioral_regime/tier1_cv_comparison.json`.
+
+## Tier 1 results (this run)
+
+| Model | Rows | Presences | Folds | OOF AUC | OOF Brier | OOF TSS |
+|-------|-----:|----------:|------:|--------:|----------:|--------:|
+| Baseline (no interactions) | 539 | 254 | 4 | 0.762 | 0.199 | 0.407 |
+| Behavioral-regime interactions | 539 | 254 | 4 | 0.717 | 0.221 | 0.378 |
+
+**Verdict: FAIL** — interaction model did not beat baseline on both AUC and Brier.
+
+Event timestamps include UTC hour/minute (trawl/set start times); day/night interactions were included.

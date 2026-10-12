@@ -1,0 +1,86 @@
+{
+  "tier": 1,
+  "species": "Pacific jack mackerel (all sizes)",
+  "length_gate": "none (all sizes)",
+  "verdict": "FAIL",
+  "verdict_rule": "interaction model must beat baseline OOF AUC AND OOF Brier on spatial-block CV",
+  "baseline": {
+    "label": "jack_mackerel_encounter_all_sizes",
+    "model_config": "artifacts/models/jack_mackerel_encounter_all_sizes/spatial_block_cv_scores.json",
+    "n_fit_rows": 539,
+    "n_presence_rows": 254,
+    "n_folds": 4,
+    "spatial_block_cv": {
+      "block_size_km": 60,
+      "mesh_cutoff_km": 9,
+      "spatial_range_km": 60,
+      "seed": 20260928,
+      "n_folds": 4,
+      "epsg": 32611,
+      "block_size_source": "max(mesh.cutoff_km, mesh.range_guess_km)",
+      "spatial_range_source": "mesh.range_guess_km",
+      "seed_source": "prediction.seed",
+      "n_folds_source": "data.spatial_block_cv.n_folds"
+    },
+    "n_failed_folds": 0,
+    "fold_failures": [],
+    "elpd": -431.2439,
+    "elpd_eligible": true,
+    "oof_auc": 0.7624,
+    "oof_brier": 0.1986,
+    "oof_tss": 0.4074,
+    "oof_boyce": 0.9673,
+    "oof_complete": true,
+    "scores_path": "artifacts/models/jack_mackerel_encounter_all_sizes/spatial_block_cv_scores.json"
+  },
+  "interaction": {
+    "label": "jack_mackerel_encounter_behavioral_regime",
+    "model_config": "artifacts/models/jack_mackerel_encounter_behavioral_regime/spatial_block_cv_scores.json",
+    "n_fit_rows": 539,
+    "n_presence_rows": 254,
+    "n_folds": 4,
+    "spatial_block_cv": {
+      "block_size_km": 60,
+      "mesh_cutoff_km": 9,
+      "spatial_range_km": 60,
+      "seed": 20260928,
+      "n_folds": 4,
+      "epsg": 32611,
+      "block_size_source": "max(mesh.cutoff_km, mesh.range_guess_km)",
+      "spatial_range_source": "mesh.range_guess_km",
+      "seed_source": "prediction.seed",
+      "n_folds_source": "data.spatial_block_cv.n_folds"
+    },
+    "n_failed_folds": 0,
+    "fold_failures": [],
+    "elpd": -340.8864,
+    "elpd_eligible": true,
+    "oof_auc": 0.7172,
+    "oof_brier": 0.2207,
+    "oof_tss": 0.3784,
+    "oof_boyce": 0.9167,
+    "oof_complete": true,
+    "scores_path": "artifacts/models/jack_mackerel_encounter_behavioral_regime/spatial_block_cv_scores.json"
+  },
+  "lift": {
+    "delta_auc": -0.0451,
+    "delta_brier": 0.0221
+  },
+  "behavioral_regime_encoding": {
+    "season": "meteorological DJF/MAM/JJA/SON via forecast_season() on event UTC date",
+    "day_night": "civil UTC day = hour in [6,18); night otherwise (requires event timestamps)",
+    "event_timestamps_present": true,
+    "season_counts": {
+      "DJF": 0,
+      "MAM": 199,
+      "JJA": 189,
+      "SON": 151
+    },
+    "day_night_counts": {
+      "day": 354,
+      "night": 185
+    },
+    "interaction_covariates": ["temp_3m_z", "sal_3m_z", "mld_z", "sst_grad_z", "dist_front_z"],
+    "interaction_rationale": "Dynamic GLORYS physical drivers (SST proxy, salinity, mixed-layer depth, SST gradient, front distance) may govern habitat differently by season and diel vertical migration; log_depth_z is a static bathymetry main effect only."
+  }
+}

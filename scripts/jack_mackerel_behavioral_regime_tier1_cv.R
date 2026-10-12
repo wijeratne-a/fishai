@@ -67,9 +67,33 @@ run_one_cv <- function(cfg_path, label, scores_rel) {
   if (!eligible) {
     elpd <- NA_real_
   }
+  scores_path <- file.path(root, scores_rel)
+  report <- list(
+    species = "Pacific jack mackerel (all sizes)",
+    model_kind = "encounter_binomial",
+    model_config = scores_rel,
+    n_fit_rows = nrow(dat),
+    n_presence_rows = sum(as.integer(dat$y > 0)),
+    spatial_block_cv = cv$spatial_block_cv,
+    elpd = elpd,
+    elpd_eligible = eligible,
+    elpd_ineligible_reason = cv$elpd_ineligible_reason,
+    fold_loglik = as.list(cv$fold_loglik),
+    n_failed_folds = cv$n_failed_folds,
+    fold_failures = cv$fold_failures,
+    oof_auc = auc,
+    oof_brier = brier,
+    oof_tss = tss,
+    oof_boyce = boyce,
+    oof_boyce_method = "cbi_continuous_moving_window",
+    length_gate = "none (all sizes)"
+  )
+  dir.create(dirname(scores_path), recursive = TRUE, showWarnings = FALSE)
+  jsonlite::write_json(report, scores_path, auto_unbox = TRUE, pretty = TRUE)
+
   list(
     label = label,
-    model_config = cfg_path,
+    model_config = scores_rel,
     n_fit_rows = nrow(dat),
     n_presence_rows = sum(as.integer(dat$y > 0)),
     n_folds = length(expected_folds),
@@ -83,7 +107,7 @@ run_one_cv <- function(cfg_path, label, scores_rel) {
     oof_tss = tss,
     oof_boyce = boyce,
     oof_complete = oof_complete,
-    scores_path = file.path(root, scores_rel)
+    scores_path = scores_rel
   )
 }
 
@@ -102,7 +126,7 @@ interaction <- run_one_cv(
 )
 
 # Timestamp audit on interaction frame (document day/night availability).
-int_dat <- load_model_data(load_config_yaml(interaction_cfg))
+int_dat <- load_model_data(cfg = load_config_yaml(interaction_cfg))
 time_has_hour <- FALSE
 if ("time" %in% names(int_dat)) {
   tt <- as.POSIXct(int_dat$time, tz = "UTC")
