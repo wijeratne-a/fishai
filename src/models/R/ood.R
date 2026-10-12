@@ -10,6 +10,10 @@ mess_scores <- function(pred, reference) {
     x <- pred[i, ]
     s_j <- numeric(ncol(pred))
     for (j in seq_len(ncol(pred))) {
+      if (is.na(x[j])) {
+        s_j[j] <- -Inf
+        next
+      }
       r <- sort(reference[, j])
       mn <- r[1]
       mx <- r[n_ref]
@@ -128,6 +132,9 @@ maha_distance <- function(pred, reference) {
 convex_hull_flags <- function(pred, reference, pairs = list(c("sst_z", "sal_z"))) {
   flags <- rep(FALSE, nrow(pred))
   .inside <- function(x, y, poly_x, poly_y) {
+    if (is.na(x) || is.na(y)) {
+      return(FALSE)
+    }
     n <- length(poly_x)
     inside <- FALSE
     j <- n
@@ -188,11 +195,14 @@ classify_ood_level <- function(
   }
   maha_threshold <- maha_reference_threshold(maha_ref)
   lvl <- rep(0L, length(mess))
-  lvl[mess < 0 & mess >= mess_mask_below] <- 2L
-  lvl[mess < mess_mask_below] <- 3L
-  lvl[nt1 < 0] <- pmax(lvl[nt1 < 0], 2L)
+  missing_cov <- is.na(mess) | is.na(nt1) | is.na(nt2) | !is.finite(maha)
+  lvl[missing_cov] <- 3L
+  ok <- !missing_cov
+  lvl[ok & mess < 0 & mess >= mess_mask_below] <- 2L
+  lvl[ok & mess < mess_mask_below] <- 3L
+  lvl[ok & nt1 < 0] <- pmax(lvl[ok & nt1 < 0], 2L)
   maha_novel <- !is.finite(maha) | (maha > maha_threshold) %in% TRUE
-  caution <- (nt2 > 1) %in% TRUE | hull_out %in% TRUE | maha_novel
+  caution <- ok & ((nt2 > 1) %in% TRUE | hull_out %in% TRUE | maha_novel)
   lvl[caution & lvl < 2L] <- 1L
   lvl
 }
