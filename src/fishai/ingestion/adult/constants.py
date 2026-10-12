@@ -62,6 +62,13 @@ ADULT_MIN_LENGTH_MM: Final = {
     "Engraulis mordax": 98.0,
 }
 
+# Species modeled as encounter probability over all length classes (no L50 gate).
+ENCOUNTER_ALL_SIZES_SPECIES: Final = ("Trachurus symmetricus",)
+
+ENCOUNTER_ALL_SIZES_PRODUCT_LABEL: Final = (
+    "jack mackerel encounter probability (all sizes)"
+)
+
 EVIDENCE_IMPLIED_ZERO: Final = "implied_zero_enumerated_frame"
 
 PILOT_SPECIES: Final = tuple(PILOT_MATRIX_SPECIES)

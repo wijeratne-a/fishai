@@ -18,6 +18,10 @@ scores_path <- if (length(args) >= 2L && nzchar(args[2L])) {
 }
 
 cfg <- load_config_yaml(cfg_path)
+model_config_rel <- cfg_path
+if (grepl("^/", model_config_rel)) {
+  model_config_rel <- sub(paste0("^", root, "/?"), "", model_config_rel)
+}
 dat <- load_model_data(cfg = cfg)
 if (is.null(dat$fold_id)) {
   stop("model frame missing fold_id", call. = FALSE)
@@ -76,7 +80,7 @@ if (!eligible) {
 
 report <- list(
   species = "Pacific sardine (adult CPS encounter)",
-  model_config = cfg_path,
+  model_config = model_config_rel,
   n_fit_rows = nrow(dat),
   n_presence_rows = sum(as.integer(dat$y > 0)),
   spatial_block_cv = cv$spatial_block_cv,

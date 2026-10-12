@@ -54,9 +54,9 @@ Pacific sardine modeling frame after species filter and positive effort: **458 r
 
 **Summed ELPD:** **-588.95** (eligible; all four folds converged).
 
-**Out-of-fold discrimination (moving-window Boyce):**
+**Out-of-fold discrimination** (`oof_boyce_method`: `cbi_continuous_moving_window` on holdout encounter probabilities):
 
-| AUC | TSS @ 0.5 | Boyce |
+| OOF AUC | OOF TSS @ 0.5 | OOF Boyce |
 |---:|---:|---:|
 | 0.677 | 0.195 | 0.754 |
 
