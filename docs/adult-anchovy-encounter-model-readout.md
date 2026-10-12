@@ -28,7 +28,7 @@ Mirrors validated CUFES egg anchovy config (`configs/models/cufes_anchovy.yaml`)
 | Out-of-fold Boyce (moving-window) | **0.600** |
 | Fit rows | 400 (154 presences, 246 absences) |
 
-Full manifest: `prereg/adult_anchovy_spatial_block_cv_scores.json`.
+Full manifest: `prereg/adult_anchovy_spatial_block_cv_scores.json` (references `prereg/adult_cps_training_evidence_build_manifest.json`; repo-relative paths only).
 
 ## Product language
 

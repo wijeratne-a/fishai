@@ -267,6 +267,21 @@ load_spatial_block_cv_scores_protocol <- function(path = NULL) {
   invisible(TRUE)
 }
 
+.repo_relative_path <- function(root, path) {
+  if (is.null(path) || !nzchar(path) || is.na(path)) {
+    return(path)
+  }
+  root_norm <- normalizePath(root, wins2 = "/", mustWork = FALSE)
+  if (grepl("^/", path)) {
+    path_norm <- normalizePath(path, wins2 = "/", mustWork = FALSE)
+    if (startsWith(path_norm, paste0(root_norm, "/"))) {
+      return(sub(paste0("^", root_norm, "/?"), "", path_norm))
+    }
+    return(path)
+  }
+  path
+}
+
 #' Run spatial-block CV for all configured species; write JSON report.
 #' @export
 run_spatial_block_cv_scores <- function(protocol_path = NULL, output_override = NULL) {
@@ -353,18 +368,39 @@ run_spatial_block_cv_scores <- function(protocol_path = NULL, output_override = 
   }
   dir.create(dirname(out_json), recursive = TRUE, showWarnings = FALSE)
 
+  builder_sha <- "88083dedb099482d2f149d264a1e12f0f337f13e"
+  if (!is.null(protocol$evidence_manifest) && nzchar(protocol$evidence_manifest)) {
+    em_path <- protocol$evidence_manifest
+    if (!grepl("^/", em_path)) {
+      em_path <- file.path(root, em_path)
+    }
+    if (file.exists(em_path)) {
+      em <- jsonlite::read_json(em_path)
+      if (!is.null(em$training_table_builder_code_sha) && nzchar(em$training_table_builder_code_sha)) {
+        builder_sha <- em$training_table_builder_code_sha
+      }
+    }
+  }
+
+  protocol_rel <- protocol$config_path
+  if (!is.null(protocol_path) && nzchar(protocol_path)) {
+    protocol_rel <- protocol_path
+  }
+  fold_csv_rel <- protocol$output$fold_assignment_csv
+  checkpoint_rel <- protocol$output$checkpoint_dir %||% "prereg/cv_checkpoints"
+
   manifest <- list(
     status = if (blocked) "blocked" else "ok",
     code_sha = Sys.getenv("GITHUB_SHA", unset = NA_character_),
     evidence_manifest = protocol$evidence_manifest,
-    training_table_builder_code_sha = "88083dedb099482d2f149d264a1e12f0f337f13e",
-    protocol_config = protocol$config_path,
+    training_table_builder_code_sha = builder_sha,
+    protocol_config = .repo_relative_path(root, protocol_rel),
     spatial_block_cv = spatial_params,
-    fold_assignment_csv = fold_csv,
+    fold_assignment_csv = .repo_relative_path(root, fold_csv_rel),
     fold_assignment_sha256 = fold_sha,
     min_duration_min = min_dur,
     wcofs_h_artifact = wcofs_rel,
-    cv_checkpoint_dir = checkpoint_dir,
+    cv_checkpoint_dir = .repo_relative_path(root, checkpoint_rel),
     species = species_out
   )
   if (blocked) {
