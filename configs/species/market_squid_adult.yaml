@@ -1,0 +1,12 @@
+# Staged for Phase 2 — L50 cutoff pending user follow-up.
+species:
+  scientific_name: Doryteuthis opalescens
+  aliases:
+    - Loligo opalescens
+  itis_tsn: null  # resolve at table-build time from catch rows
+data:
+  ingestion_script: scripts/stage_market_squid_cps_inputs.py
+  viability_artifact: prereg/market_squid_viability_gate.json
+  pilot_bbox_ref: data/SOURCES.yaml#pilot
+adult_length_mm:
+  l50_standard_length: null  # REQUIRED: set from user follow-up before training table

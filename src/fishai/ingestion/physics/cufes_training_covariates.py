@@ -45,6 +45,7 @@ from fishai.ingestion.physics.covariates import (
     event_mid_time,
     event_midpoint_lat_lon,
     great_circle_sample_points,
+    haversine_km,
     join_covariates_to_events,
     normalize_cufes_events_for_physics,
 )
@@ -280,7 +281,11 @@ def mean_bottom_depth_m_along_segment(
         return float("nan"), []
     lat0, lon0 = float(event[COL_START_LAT]), float(event[COL_START_LON])
     lat1, lon1 = float(event[COL_STOP_LAT]), float(event[COL_STOP_LON])
-    points = great_circle_sample_points(lat0, lon0, lat1, lon1, grid_cell_km=grid_cell_km)
+    dist_km = haversine_km(lat0, lon0, lat1, lon1)
+    if dist_km == 0.0:
+        points = [(lat0, lon0)]
+    else:
+        points = great_circle_sample_points(lat0, lon0, lat1, lon1, grid_cell_km=grid_cell_km)
     depths: list[float] = []
     reasons: list[str] = []
     for lat, lon in points:
