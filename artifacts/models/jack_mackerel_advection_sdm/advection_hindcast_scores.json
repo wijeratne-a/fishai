@@ -1,0 +1,39 @@
+{
+  "advection_beats_sdm_on_test_brier": false,
+  "all_events": {
+    "auc_advection_taxis": 0.5506889763779528,
+    "auc_persistence": 0.5028121484814398,
+    "auc_sdm_alone": 0.7618953880764905,
+    "brier_advection_taxis": 0.47565286144655056,
+    "brier_persistence": 0.47136473445908245,
+    "brier_sdm_alone": 0.19882963907312687,
+    "n_events": 534
+  },
+  "fitted_parameters": {
+    "alpha": 0.0,
+    "sigma_km": 30.0
+  },
+  "model_config": "configs/models/jack_mackerel_encounter_all_sizes.yaml",
+  "n_grid_days_with_currents": 164,
+  "n_hindcast_events_total": 539,
+  "species": "Pacific jack mackerel (all sizes)",
+  "test_fold": 4,
+  "test_subset": {
+    "auc_advection_taxis": 0.4749813293502614,
+    "auc_persistence": 0.5098954443614638,
+    "auc_sdm_alone": 0.7473861090365945,
+    "brier_advection_taxis": 0.3354825504130779,
+    "brier_persistence": 0.3246011665800572,
+    "brier_sdm_alone": 0.20226185052736567,
+    "n_events": 155
+  },
+  "train_subset": {
+    "auc_advection_taxis": 0.5698523242154725,
+    "auc_persistence": 0.5018039939587179,
+    "auc_sdm_alone": 0.7659003188454439,
+    "brier_advection_taxis": 0.5329784503916383,
+    "brier_persistence": 0.5313867740929846,
+    "brier_sdm_alone": 0.19742596420397907,
+    "n_events": 379
+  }
+}
