@@ -165,7 +165,19 @@ def _subset_bbox(
 
 
 def _open_dataset_from_bytes(data: bytes) -> xr.Dataset:
-    return xr.open_dataset(io.BytesIO(data), engine="h5netcdf", decode_times=False)
+    """Open a WCOFS download.
+
+    Forecast ``fields`` files through 2024 are NetCDF classic (``CDF\\x02``).
+    ``h5netcdf`` only reads NetCDF-4/HDF5, so classic files fall through to
+    the scipy engine, which reads them from memory.
+    """
+    errors: list[str] = []
+    for engine in ("h5netcdf", "scipy"):
+        try:
+            return xr.open_dataset(io.BytesIO(data), engine=engine, decode_times=False)
+        except Exception as exc:  # noqa: BLE001
+            errors.append(f"{engine}: {type(exc).__name__}")
+    raise RuntimeError("unable to open WCOFS bytes (" + "; ".join(errors) + ")")
 
 
 open_dataset_from_bytes = _open_dataset_from_bytes

@@ -5,9 +5,12 @@
 #' Every operational record carries operational_claim NOT_ISSUED_FORECAST.
 
 FORECAST_OPERATIONAL_CLAIM <- "NOT_ISSUED_FORECAST"
+FORECAST_OPERATIONAL_CLAIM_ISSUED <- "ISSUED_FORECAST"
 FORECAST_PHYSICS_SOURCE <- "damped_anomaly_proxy"
+FORECAST_PHYSICS_SOURCE_WCOFS <- "wcofs_issued_forecast"
 FORECAST_TAU_DAYS <- 3
 FORECAST_HORIZONS <- c(24L, 48L, 72L)
+FORECAST_WCOFS_ARCHIVE_START <- as.Date("2024-07-01")
 
 #' Meteorological season of a cutoff date (DJF, MAM, JJA, SON).
 #' @export
@@ -315,6 +318,10 @@ forecast_pool_metrics <- function(rows) {
   for (h in horizons) {
     sub <- rows[rows$in_common_support %in% TRUE & rows$horizon_hours == h, , drop = FALSE]
     slot <- list(horizon_hours = h, n_common_support = nrow(sub))
+    if (h == 24L && nrow(sub) && "physics_source" %in% names(sub)) {
+      slot$n_issued_wcofs <- sum(sub$physics_source == FORECAST_PHYSICS_SOURCE_WCOFS)
+      slot$n_proxy <- sum(sub$physics_source == FORECAST_PHYSICS_SOURCE)
+    }
     for (src in sources) {
       block <- .forecast_metric_block(
         sub$z,
@@ -520,7 +527,68 @@ forecast_lock_cutoffs <- function(frames, test_end) {
   exp(as.numeric(pr$est2))
 }
 
-.forecast_score_rows <- function(fit, train, hold, cfg, cutoff_date, extra_time) {
+#' Resolve operational covariates for one holdout row (issued WCOFS or damped proxy).
+#' @export
+forecast_operational_covariates_for_row <- function(
+  dyn_cols,
+  x_cut,
+  clim,
+  horizon_days,
+  override = NULL
+) {
+  if (!is.null(override) && nrow(override) == 1L) {
+    ov <- override
+    if (identical(as.character(ov$physics_source[[1L]]), FORECAST_PHYSICS_SOURCE_WCOFS)) {
+      vals <- as.numeric(ov[dyn_cols])
+      if (all(is.finite(vals))) {
+        return(list(
+          values = as.list(stats::setNames(vals, dyn_cols)),
+          physics_source = FORECAST_PHYSICS_SOURCE_WCOFS,
+          operational_claim = FORECAST_OPERATIONAL_CLAIM_ISSUED,
+          wcofs_s3_key = as.character(ov$wcofs_s3_key[[1L]] %||% NA_character_),
+          wcofs_lead_tag = as.character(ov$wcofs_lead_tag[[1L]] %||% NA_character_),
+          proxy_reason = NA_character_
+        ))
+      }
+    }
+  }
+  vals <- stats::setNames(rep(NA_real_, length(dyn_cols)), dyn_cols)
+  for (col in dyn_cols) {
+    if (!is.finite(x_cut[[col]]) || !is.finite(clim[[col]])) {
+      return(list(
+        values = NULL,
+        physics_source = FORECAST_PHYSICS_SOURCE,
+        operational_claim = FORECAST_OPERATIONAL_CLAIM,
+        wcofs_s3_key = NA_character_,
+        wcofs_lead_tag = NA_character_,
+        proxy_reason = "operational_proxy_support"
+      ))
+    }
+    vals[[col]] <- forecast_damped_anomaly(clim[[col]], x_cut[[col]], horizon_days)
+  }
+  list(
+    values = as.list(vals),
+    physics_source = FORECAST_PHYSICS_SOURCE,
+    operational_claim = FORECAST_OPERATIONAL_CLAIM,
+    wcofs_s3_key = NA_character_,
+    wcofs_lead_tag = NA_character_,
+    proxy_reason = if (!is.null(override) && nrow(override) == 1L) {
+      as.character(override$proxy_reason[[1L]] %||% "coverage_forced_proxy")
+    } else {
+      NA_character_
+    }
+  )
+}
+
+.forecast_score_rows <- function(
+  fit,
+  train,
+  hold,
+  cfg,
+  cutoff_date,
+  extra_time,
+  operational_covariates = NULL
+) {
   dyn_cols <- .forecast_dynamic_columns(cfg)
   missing_cols <- setdiff(dyn_cols, names(hold))
   if (length(missing_cols)) {
@@ -545,6 +613,19 @@ forecast_lock_cutoffs <- function(frames, test_end) {
   ll_clim <- rep(NA_real_, n)
   unknown <- rep("", n)
   op_new <- hold
+  physics_source <- rep(FORECAST_PHYSICS_SOURCE, n)
+  operational_claim <- rep(FORECAST_OPERATIONAL_CLAIM, n)
+  wcofs_s3_key <- rep(NA_character_, n)
+  wcofs_lead_tag <- rep(NA_character_, n)
+  proxy_reason <- rep(NA_character_, n)
+  if (!is.null(operational_covariates) && nrow(operational_covariates)) {
+    if (!"event_id" %in% names(hold)) {
+      stop("holdout frame missing event_id for operational_covariates join", call. = FALSE)
+    }
+    if (!"event_id" %in% names(operational_covariates)) {
+      stop("operational_covariates missing event_id", call. = FALSE)
+    }
+  }
 
   for (i in seq_len(n)) {
     h_days <- as.integer(hold$event_day[i] - cutoff_date)
@@ -571,7 +652,6 @@ forecast_lock_cutoffs <- function(frames, test_end) {
     } else {
       ll_clim[i] <- .forecast_bernoulli_ll(p_clim[i], hold$y[i])
     }
-    op_ok <- any(near_cut)
     x_cut <- stats::setNames(rep(NA_real_, length(dyn_cols)), dyn_cols)
     clim <- x_cut
     for (col in dyn_cols) {
@@ -579,15 +659,24 @@ forecast_lock_cutoffs <- function(frames, test_end) {
         x_cut[[col]] <- forecast_idw(cutoff_rows[[col]][near_cut], d_cut[near_cut])
       }
       clim[[col]] <- forecast_local_mean(train[[col]], d_train, doy_d)
-      if (!is.finite(x_cut[[col]]) || !is.finite(clim[[col]])) {
-        op_ok <- FALSE
-      }
     }
-    if (!op_ok) {
-      reasons <- c(reasons, "operational_proxy_support")
+    override <- NULL
+    if (!is.null(operational_covariates) && nrow(operational_covariates)) {
+      override <- operational_covariates[operational_covariates$event_id == hold$event_id[i], , drop = FALSE]
+    }
+    op_res <- forecast_operational_covariates_for_row(dyn_cols, x_cut, clim, h_days, override)
+    if (is.null(op_res$values)) {
+      reasons <- c(reasons, op_res$proxy_reason %||% "operational_proxy_support")
     } else {
       for (col in dyn_cols) {
-        op_new[[col]][i] <- forecast_damped_anomaly(clim[[col]], x_cut[[col]], h_days)
+        op_new[[col]][i] <- op_res$values[[col]]
+      }
+      physics_source[i] <- op_res$physics_source
+      operational_claim[i] <- op_res$operational_claim
+      wcofs_s3_key[i] <- op_res$wcofs_s3_key
+      wcofs_lead_tag[i] <- op_res$wcofs_lead_tag
+      if (nzchar(op_res$proxy_reason %||% "")) {
+        proxy_reason[i] <- op_res$proxy_reason
       }
     }
     unknown[i] <- paste(unique(reasons), collapse = ";")
@@ -597,7 +686,7 @@ forecast_lock_cutoffs <- function(frames, test_end) {
   mu_oracle <- .forecast_positive_mu(fit, hold)
   ll_oracle <- .forecast_event_delta_ll(p_oracle, hold$y, mu_oracle, shape)
 
-  op_rows <- !grepl("operational_proxy_support", unknown)
+  op_rows <- !grepl("operational_proxy_support|coverage_forced_proxy", unknown)
   p_op <- rep(NA_real_, n)
   ll_op <- rep(NA_real_, n)
   if (any(op_rows)) {
@@ -626,14 +715,26 @@ forecast_lock_cutoffs <- function(frames, test_end) {
     ll_climatology = ll_clim,
     in_common_support = common,
     unknown_reason = ifelse(common, "", unknown),
+    physics_source = physics_source,
+    operational_claim = operational_claim,
+    wcofs_s3_key = wcofs_s3_key,
+    wcofs_lead_tag = wcofs_lead_tag,
+    proxy_reason = proxy_reason,
     stringsAsFactors = FALSE
   )
 }
 
 #' Fit one cutoff and score 24/48/72 h. Projects the daily intercept with extra_time.
 #' @export
-forecast_fit_cutoff <- function(dat, cfg, cutoff_date) {
+forecast_fit_cutoff <- function(
+  dat,
+  cfg,
+  cutoff_date,
+  extra_time_fill = c("through_holdout", "holdout_only"),
+  operational_covariates = NULL
+) {
   .cv_limit_tmb_threads()
+  extra_time_fill <- match.arg(extra_time_fill)
   cutoff_date <- as.Date(cutoff_date)
   train <- dat[dat$event_day <= cutoff_date, , drop = FALSE]
   hold <- dat[dat$event_day %in% (cutoff_date + 1:3), , drop = FALSE]
@@ -644,7 +745,18 @@ forecast_fit_cutoff <- function(dat, cfg, cutoff_date) {
     stop("cutoff day is not inside the training rows", call. = FALSE)
   }
   max_train <- max(as.integer(train$time_idx))
-  extra <- forecast_extra_time(max_train, hold$time_idx)
+  extra <- if (extra_time_fill == "holdout_only") {
+    sort(unique(as.integer(hold$time_idx)))
+  } else {
+    forecast_extra_time(max_train, hold$time_idx)
+  }
+  op_cov <- operational_covariates
+  if (!is.null(op_cov) && nrow(op_cov)) {
+    op_cov <- op_cov[op_cov$cutoff == format(cutoff_date), , drop = FALSE]
+    if (!nrow(op_cov)) {
+      op_cov <- NULL
+    }
+  }
   fit_cfg <- cfg
   fit_cfg$model$extra_time_slices <- extra
   mesh <- build_fishai_production_mesh(train, cfg$mesh)
@@ -658,7 +770,15 @@ forecast_fit_cutoff <- function(dat, cfg, cutoff_date) {
       rows = NULL
     ))
   }
-  rows <- .forecast_score_rows(fit_res$fit, train, hold, cfg, cutoff_date, extra)
+  rows <- .forecast_score_rows(
+    fit_res$fit,
+    train,
+    hold,
+    cfg,
+    cutoff_date,
+    extra,
+    operational_covariates = op_cov
+  )
   list(
     cutoff = format(cutoff_date),
     eligible = TRUE,

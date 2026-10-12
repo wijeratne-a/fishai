@@ -55,11 +55,11 @@ fishai_engine_config:
     engine: sdmTMB
     family: delta_gamma
     delta_type: poisson-link
+    # Shared linear fixed effects (no smooths): reduces gamma-component parameters for ~58 presences.
+    # sdmTMB requires identical main-effects formulas on both delta components when smoothers are used.
     formula_shared: >-
-      ~ s(temp_3m_z, k = 3) + s(sal_3m_z, k = 3) + s(mld_z, k = 3)
-      + s(sst_grad_z, k = 3) + s(dist_front_z, k = 3)
-      + s(log_depth_z, k = 3)
-    spatial: [off, on]
+      ~ temp_3m_z + sal_3m_z + mld_z + sst_grad_z + dist_front_z + log_depth_z
+    spatial: [off, off]
     spatiotemporal: [off, off]
     share_range: [true, true]
     time_varying:
