@@ -1,0 +1,12 @@
+# Per-cruise+ship evidence for CPS nearshore set zero-catch frame verification.
+# A frame is VERIFIED only when an entry exists and expected_sets equals
+# report_set_log minus aborted_sets (see zero_frame.py).
+#
+# Empty by default — all cruises remain UNVERIFIED until humans add audited entries.
+# To verify a cruise: compare the ERDDAP set numbers for (cruise, ship) against
+# the cruise report's set log (NOAA repository cruise reports for the CPS survey),
+# list every set number from the report in report_set_log, list aborted/incomplete
+# sets in aborted_sets, and set expected_sets = report_set_log - aborted_sets.
+
+version: 1
+cruise_frames: []

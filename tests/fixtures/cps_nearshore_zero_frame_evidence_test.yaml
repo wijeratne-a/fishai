@@ -1,0 +1,10 @@
+# Per-cruise+ship evidence for CPS nearshore set zero-catch frame verification.
+# Test fixture — synthetic cruises only.
+version: 1
+cruise_frames:
+  - cruise: "209901"
+    ship: "SY"
+    source_report_citation: "Temp-dir e2e fixture."
+    report_set_log: [1, 2]
+    aborted_sets: []
+    expected_sets: [1, 2]

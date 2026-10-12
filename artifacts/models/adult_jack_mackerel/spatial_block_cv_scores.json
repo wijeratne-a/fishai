@@ -1,0 +1,41 @@
+{
+  "species": "Pacific jack mackerel (adult CPS encounter)",
+  "model_kind": "encounter_binomial",
+  "model_config": "/workspace/configs/models/adult_cps_jack_mackerel_binomial.yaml",
+  "n_fit_rows": 307,
+  "n_presence_rows": 24,
+  "spatial_block_cv": {
+    "block_size_km": 60,
+    "mesh_cutoff_km": 9,
+    "spatial_range_km": 60,
+    "seed": 20260928,
+    "n_folds": 4,
+    "epsg": 32611,
+    "block_size_source": "max(mesh.cutoff_km, mesh.range_guess_km)",
+    "spatial_range_source": "mesh.range_guess_km",
+    "seed_source": "prediction.seed",
+    "n_folds_source": "data.spatial_block_cv.n_folds"
+  },
+  "elpd": "NA",
+  "elpd_eligible": false,
+  "elpd_ineligible_reason": "cv_fold_nonconverged",
+  "fold_loglik": [
+    "NA",
+    "NA",
+    "NA",
+    "NA"
+  ],
+  "n_failed_folds": 4,
+  "fold_failures": {
+    "1": "non-positive-definite Hessian",
+    "2": "non-positive-definite Hessian",
+    "3": "non-positive-definite Hessian",
+    "4": "non-positive-definite Hessian"
+  },
+  "oof_auc": "NA",
+  "oof_tss": "NA",
+  "oof_boyce": "NA",
+  "oof_boyce_method": "cbi_continuous_moving_window",
+  "adult_length_cutoff_disclosure": "Adult specimens were retained only if standard length >= 250 mm (jack mackerel, Trachurus symmetricus). This cutoff is the length at 50% maturity (L50) from Fitch (1956): 50% of females mature at 250 mm fork length (100% at 350 mm). The published value is in fork length; applied to standard length it is conservative, since fork length exceeds standard length for the same fish.",
+  "product_label": "adult spawning encounter evidence (survey catch; not live fish tracking)"
+}
