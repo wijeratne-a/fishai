@@ -1,3 +1,13 @@
+test_that("resolve_delta_formulas allows distinct positive linear effects", {
+  model <- list(
+    formula_encounter = "~ s(temp_3m_z, k = 3)",
+    formula_positive = "~ temp_3m_z + sal_3m_z"
+  )
+  frm <- resolve_delta_formulas(model)
+  expect_length(frm, 2L)
+  expect_false(identical(frm[[1]], frm[[2]]))
+})
+
 test_that("shared delta formula smoothers match", {
   frm <- build_delta_formula("~ s(sst_z, k = 3)")
   expect_silent(assert_shared_delta_formula(frm))

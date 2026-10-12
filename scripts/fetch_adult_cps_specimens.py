@@ -19,6 +19,50 @@ except ImportError as exc:  # pragma: no cover
     raise SystemExit("pyarrow is required") from exc
 
 
+def _load_odp_csv_rows(path: Path, mapping: dict[str, str]) -> list[dict]:
+    import csv
+
+    out: list[dict] = []
+    with path.open(encoding="utf-8", newline="") as handle:
+        for row in csv.DictReader(handle):
+            out.append({mapping.get(k, k): v for k, v in row.items()})
+    return out
+
+
+def _load_odp_trawl_specimen_rows(path: Path) -> list[dict]:
+    return _load_odp_csv_rows(
+        path,
+        {
+            "Latitude": "latitude",
+            "Longitude": "longitude",
+            "Time": "time",
+            "itisTSN": "itis_tsn",
+            "scientificName": "scientific_name",
+            "standardLength_mm": "standard_length",
+            "forkLength_mm": "fork_length",
+            "totalLength_mm": "total_length",
+            "weightg": "weight",
+        },
+    )
+
+
+def _load_odp_nearshore_specimen_rows(path: Path) -> list[dict]:
+    return _load_odp_csv_rows(
+        path,
+        {
+            "Latitude": "latitude",
+            "Longitude": "longitude",
+            "Time": "time",
+            "itisTSN": "itis_tsn",
+            "scientificName": "scientific_name",
+            "standardLength_mm": "standard_length",
+            "forkLength_mm": "fork_length",
+            "totalLength_mm": "total_length",
+            "weightg": "weight",
+        },
+    )
+
+
 def main(argv: list[str] | None = None) -> int:
     from fishai.ingestion.adult.constants import NEARSHORE_SPECIMENS_PATH, TRAWL_SPECIMENS_PATH
     from fishai.ingestion.adult.specimen_fetch import (
@@ -45,6 +89,11 @@ def main(argv: list[str] | None = None) -> int:
     )
     parser.add_argument("--skip-trawl", action="store_true")
     parser.add_argument("--skip-nearshore", action="store_true")
+    parser.add_argument(
+        "--odp-bulk",
+        action="store_true",
+        help="Load SWFSC ODP bulk CSVs from data/raw (no ERDDAP)",
+    )
     args = parser.parse_args(argv)
 
     bbox = trawl_bbox()
@@ -53,10 +102,16 @@ def main(argv: list[str] | None = None) -> int:
 
     if not args.skip_trawl:
         raw_trawl = REPO_ROOT / "data" / "raw" / "swfsc_cps_trawl_haul_catch" / "specimens"
-        files = fetch_trawl_specimens(args.trawl_start, args.trawl_end, bbox, dest_dir=raw_trawl)
-        for path in sorted(files):
-            chunk, _ = read_specimen_csv(path)
-            trawl_rows.extend(chunk)
+        if args.odp_bulk:
+            odp = raw_trawl / "CPS_Trawl_LifeHistory_Specimen.csv"
+            if not odp.is_file():
+                raise SystemExit(f"missing ODP trawl specimen CSV: {odp}")
+            trawl_rows.extend(_load_odp_trawl_specimen_rows(odp))
+        else:
+            files = fetch_trawl_specimens(args.trawl_start, args.trawl_end, bbox, dest_dir=raw_trawl)
+            for path in sorted(files):
+                chunk, _ = read_specimen_csv(path)
+                trawl_rows.extend(chunk)
         trawl_df = normalize_trawl_specimens(trawl_rows)
         TRAWL_SPECIMENS_PATH.parent.mkdir(parents=True, exist_ok=True)
         pq.write_table(pa.Table.from_pandas(trawl_df), TRAWL_SPECIMENS_PATH)
@@ -64,16 +119,22 @@ def main(argv: list[str] | None = None) -> int:
 
     if not args.skip_nearshore:
         raw_near = REPO_ROOT / "data" / "raw" / "swfsc_cps_nearshore_set_catch" / "specimens"
-        files = fetch_nearshore_specimens(
-            args.nearshore_start,
-            args.nearshore_end,
-            near_bbox(),
-            dest_dir=raw_near,
-            half_year=args.nearshore_half_year,
-        )
-        for path in sorted(files):
-            chunk, _ = read_specimen_csv(path)
-            near_rows.extend(chunk)
+        if args.odp_bulk:
+            odp = raw_near / "CPS_Trawl_LifeHistory_Nearshore_Specimen.csv"
+            if not odp.is_file():
+                raise SystemExit(f"missing ODP nearshore specimen CSV: {odp}")
+            near_rows.extend(_load_odp_nearshore_specimen_rows(odp))
+        else:
+            files = fetch_nearshore_specimens(
+                args.nearshore_start,
+                args.nearshore_end,
+                near_bbox(),
+                dest_dir=raw_near,
+                half_year=args.nearshore_half_year,
+            )
+            for path in sorted(files):
+                chunk, _ = read_specimen_csv(path)
+                near_rows.extend(chunk)
         near_df = normalize_nearshore_specimens(near_rows)
         NEARSHORE_SPECIMENS_PATH.parent.mkdir(parents=True, exist_ok=True)
         pq.write_table(pa.Table.from_pandas(near_df), NEARSHORE_SPECIMENS_PATH)

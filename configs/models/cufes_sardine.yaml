@@ -68,7 +68,10 @@ fishai_engine_config:
       ~ s(temp_3m_z, k = 3) + s(sal_3m_z, k = 3) + s(mld_z, k = 3)
       + s(sst_grad_z, k = 3) + s(dist_front_z, k = 3)
       + s(log_depth_z, k = 3)
-    spatial: [on, on]
+    # Encounter component is non-spatial; the positive egg-count component
+    # stays spatial. Spatial-block ELPD -20651.9058 versus -20714.7404 with
+    # both components spatial. Same folds, mesh, and formula.
+    spatial: [off, on]
     # 2026-10-01: spatiotemporal iid disabled (was [iid, off]). One iid spatial
     # field per daily time_idx produced on the order of 1e6 random effects and
     # OOM-killed a single CV fold at ~47 GB (15 GiB RAM + 32 GB swap

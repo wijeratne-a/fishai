@@ -1,5 +1,6 @@
 # Adult CPS × GLORYS spatial-block CV (anchovy encounter model).
 spatial_block_cv_scores:
+  evidence_manifest: prereg/adult_cps_training_evidence_build_manifest.json
   wcofs_h_artifact: data/derived/physics/wcofs_h_glorys_pilot.zarr
   min_duration_min: 2
 

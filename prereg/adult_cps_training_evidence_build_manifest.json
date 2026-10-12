@@ -1,0 +1,24 @@
+{
+  "schema_version": 1,
+  "evidence_status": "EVIDENCE-ONLY adult CPS trawl + nearshore × GLORYS training table (not CUFES egg table)",
+  "code_sha": null,
+  "builder_entrypoint": "scripts/build_adult_cps_training_table.py",
+  "builder_module": "src/fishai/ingestion/adult/training_build.py",
+  "training_table_builder_code_sha": "32f692a9aa878647bc0860beacc7e4660978e7a1",
+  "data_sources": {
+    "swfsc_cps_trawl_haul_catch": "data/SOURCES.yaml#swfsc_cps_trawl_haul_catch",
+    "swfsc_cps_nearshore_set_catch": "data/SOURCES.yaml#swfsc_cps_nearshore_set_catch",
+    "glorys_forcing": "data/SOURCES.yaml (Copernicus GLORYS via cufes_training_covariates join)",
+    "wcofs_bathymetry": "data/derived/physics/wcofs_h_glorys_pilot.zarr"
+  },
+  "model_ready_outputs_local_only": {
+    "events_glob": "data/processed/adult_cps/model_ready/adult_cps_events_*.parquet",
+    "counts_glob": "data/processed/adult_cps/model_ready/adult_cps_counts_*.parquet",
+    "covariates_glob": "data/processed/adult_cps/model_ready/adult_cps_covariates_*.parquet"
+  },
+  "provenance_logs": [
+    "data/provenance/copernicus_pull_log.jsonl"
+  ],
+  "validation_doc": "docs/adult-training-table-validation.md",
+  "note": "Committed score JSON must reference this manifest and repo-relative paths only; no /workspace or /app absolute paths."
+}

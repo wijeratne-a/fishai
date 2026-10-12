@@ -29,6 +29,36 @@ assert_shared_delta_formula <- function(formula_list) {
   regmatches(txt, gregexpr("s\\([^\\)]+\\)", txt, perl = TRUE))[[1]]
 }
 
+.as_delta_response_formula <- function(formula_rhs) {
+  if (!grepl("^~", formula_rhs)) {
+    formula_rhs <- paste("~", formula_rhs)
+  }
+  stats::as.formula(paste("y", formula_rhs))
+}
+
+#' Resolve encounter (component 1) and positive (component 2) delta formulas.
+#'
+#' When ``formula_positive`` is set, component formulas may differ (e.g. linear
+#' positive effects with smooth encounter terms). Otherwise ``formula_shared`` or
+#' ``formula_encounter`` is duplicated and smoother structure must match.
+#' @export
+resolve_delta_formulas <- function(model) {
+  enc_rhs <- model$formula_encounter %||% model$formula_shared
+  if (is.null(enc_rhs) || !nzchar(trimws(enc_rhs))) {
+    stop("model requires formula_shared or formula_encounter", call. = FALSE)
+  }
+  pos_rhs <- model$formula_positive
+  if (is.null(pos_rhs) || !nzchar(trimws(pos_rhs))) {
+    frm <- build_delta_formula(enc_rhs)
+    assert_shared_delta_formula(frm)
+    return(frm)
+  }
+  list(
+    .as_delta_response_formula(enc_rhs),
+    .as_delta_response_formula(pos_rhs)
+  )
+}
+
 #' Fit delta GLMM with FishAI defaults (Poisson-link pilot).
 #'
 #' Effort is ``log(volume_m3)`` via ``offset = \"log_effort\"``. For
@@ -41,9 +71,7 @@ fit_delta_engine <- function(dat, mesh, cfg) {
   model <- cfg$model
   family <- resolve_delta_family(cfg)
 
-  rhs <- model$formula_shared %||% model$formula_encounter
-  frm <- build_delta_formula(rhs)
-  assert_shared_delta_formula(frm)
+  frm <- resolve_delta_formulas(model)
 
   pc <- model$priors$pc_matern %||% list()
   range_gt <- (pc$range_gt_mult_max_edge %||% 2) * (cfg$mesh$cutoff_km %||% 9)
@@ -87,7 +115,7 @@ fit_delta_engine <- function(dat, mesh, cfg) {
     priors = pri,
     control = do.call(
       sdmTMB::sdmTMBcontrol,
-      c(list(newton_loops = 1L, multiphase = TRUE), model$control %||% list())
+      modifyList(list(newton_loops = 1L, multiphase = TRUE), model$control %||% list())
     ),
     silent = TRUE
   )
@@ -110,4 +138,56 @@ fit_delta_engine <- function(dat, mesh, cfg) {
 fit_uses_log_effort_offset <- function(fit_obj) {
   fit <- fit_obj$fit
   identical(as.character(fit$call$offset), "log_effort")
+}
+
+#' Encounter-only binomial GLMM (fallback when delta hurdle Hessians fail).
+#' @export
+fit_encounter_binomial_engine <- function(dat, mesh, cfg) {
+  model <- cfg$model
+  rhs <- model$formula_shared %||% model$formula_encounter
+  if (!grepl("^~", rhs)) {
+    rhs <- paste("~", rhs)
+  }
+  frm <- stats::as.formula(paste("y", rhs))
+  pc <- model$priors$pc_matern %||% list()
+  range_gt <- (pc$range_gt_mult_max_edge %||% 2) * (cfg$mesh$cutoff_km %||% 9)
+  pri <- sdmTMB::sdmTMBpriors(
+    matern_s = sdmTMB::pc_matern(
+      range_gt = range_gt,
+      sigma_lt = pc$sigma_lt %||% 2
+    )
+  )
+  extra <- cfg$model$extra_time_slices
+  .as_pair <- function(x, default) {
+    if (is.null(x)) {
+      return(default)
+    }
+    if (is.list(x)) {
+      return(x)
+    }
+    as.list(x)
+  }
+  fit_args <- list(
+    formula = frm,
+    data = dat,
+    mesh = mesh,
+    time = "time_idx",
+    family = binomial(),
+    offset = "log_effort",
+    spatial = .as_pair(model$spatial, list("on")),
+    spatiotemporal = .as_pair(model$spatiotemporal, list("off")),
+    extra_time = extra,
+    priors = pri,
+    control = do.call(
+      sdmTMB::sdmTMBcontrol,
+      modifyList(list(newton_loops = 1L, multiphase = TRUE), model$control %||% list())
+    ),
+    silent = TRUE
+  )
+  if (!is.null(model$time_varying)) {
+    fit_args$time_varying <- stats::as.formula(model$time_varying$formula %||% "~ 1")
+    fit_args$time_varying_type <- model$time_varying$type %||% "rw0"
+  }
+  fit <- do.call(sdmTMB::sdmTMB, fit_args)
+  structure(list(fit = fit, delta_type = NA_character_), class = "fishai_fit")
 }

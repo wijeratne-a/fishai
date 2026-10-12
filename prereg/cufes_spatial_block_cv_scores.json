@@ -29,20 +29,20 @@
       "status": "ok",
       "missing_inputs": [],
       "n_fit_rows": 10928,
-      "elpd": -20714.7404,
+      "elpd": -20651.9058,
       "elpd_eligible": true,
       "elpd_ineligible_reason": null,
       "n_failed_folds": 0,
       "fold_loglik": [
-        -4131.2168,
-        -6532.6602,
-        -6126.9216,
-        -3923.9419
+        -4190.257,
+        -6538.5751,
+        -6130.7377,
+        -3792.336
       ],
       "n_oof_rows": 10928,
-      "boyce": 1,
-      "auc": 0.7658,
-      "tss": 0.313,
+      "boyce": 0.9928,
+      "auc": 0.7723,
+      "tss": 0.3146,
       "spatial_block_cv": {
         "block_size_km": 60,
         "mesh_cutoff_km": 9,

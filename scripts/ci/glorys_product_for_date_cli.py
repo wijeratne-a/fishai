@@ -14,11 +14,16 @@ from fishai.ingestion.physics.sources.glorys import glorys_product_for_date  # n
 
 
 def main() -> int:
-    if len(sys.argv) != 2:
-        print("usage: glorys_product_for_date_cli.py YYYY-MM-DD", file=sys.stderr)
+    if len(sys.argv) < 2:
+        print(
+            "usage: glorys_product_for_date_cli.py YYYY-MM-DD [YYYY-MM-DD ...]",
+            file=sys.stderr,
+        )
         return 2
-    day = dt.date.fromisoformat(sys.argv[1])
-    print(glorys_product_for_date(day))
+    # One process, one catalogue load. Print one product id per date, in order.
+    for raw in sys.argv[1:]:
+        day = dt.date.fromisoformat(raw)
+        print(glorys_product_for_date(day))
     return 0
 
 

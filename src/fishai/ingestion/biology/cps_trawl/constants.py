@@ -57,10 +57,18 @@ ITIS_TSN_ENGRAULIS_NANUS: Final = 161836
 # ITIS https://www.itis.gov/ITISWebService/jsonservice/getFullRecordFromTSN?tsn=161030
 # Osteichthyes (superclass); coarse container for bony fishes including pilot targets.
 ITIS_TSN_OSTEICHTHYES: Final = 161030
-PILOT_MATRIX_SPECIES: Final = ("Sardinops sagax", "Engraulis mordax")
+# ITIS https://www.itis.gov/servlet/SingleRpt/SingleRpt?search_topic=TSN&search_value=168586
+# Trachurus symmetricus (Pacific jack mackerel); taxonUsageRating=valid.
+ITIS_TSN_TRACHURUS_SYMMETRICUS: Final = 168586
+PILOT_MATRIX_SPECIES: Final = (
+    "Sardinops sagax",
+    "Engraulis mordax",
+    "Trachurus symmetricus",
+)
 PILOT_SPECIES_ITIS_TSN: Final = {
     "Sardinops sagax": ITIS_TSN_SARDINOPS_SAGAX,
     "Engraulis mordax": ITIS_TSN_ENGRAULIS_MORDAX,
+    "Trachurus symmetricus": ITIS_TSN_TRACHURUS_SYMMETRICUS,
 }
 HAUL_SPECIES_MATRIX_FILENAME: Final = "cps_trawl_haul_species_matrix.parquet"
 
