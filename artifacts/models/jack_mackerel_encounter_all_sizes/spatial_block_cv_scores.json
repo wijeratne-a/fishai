@@ -1,9 +1,9 @@
 {
   "species": "Pacific jack mackerel (all sizes)",
   "model_kind": "encounter_binomial",
-  "model_config": "/workspace/configs/models/jack_mackerel_encounter_all_sizes.yaml",
-  "n_fit_rows": 536,
-  "n_presence_rows": 253,
+  "model_config": "artifacts/models/jack_mackerel_encounter_all_sizes/spatial_block_cv_scores.json",
+  "n_fit_rows": 539,
+  "n_presence_rows": 254,
   "spatial_block_cv": {
     "block_size_km": 60,
     "mesh_cutoff_km": 9,
@@ -16,22 +16,21 @@
     "seed_source": "prediction.seed",
     "n_folds_source": "data.spatial_block_cv.n_folds"
   },
-  "elpd": -423.9642,
+  "elpd": -431.2439,
   "elpd_eligible": true,
   "elpd_ineligible_reason": {},
   "fold_loglik": [
-    -91.9523,
-    -87.9449,
-    -150.3332,
-    -93.7337
+    -93.3556,
+    -91.9229,
+    -152.1023,
+    -93.8631
   ],
   "n_failed_folds": 0,
   "fold_failures": [],
-  "oof_auc": 0.7622,
-  "oof_tss": 0.4121,
-  "oof_boyce": 0.9565,
+  "oof_auc": 0.7624,
+  "oof_brier": 0.1986,
+  "oof_tss": 0.4074,
+  "oof_boyce": 0.9673,
   "oof_boyce_method": "cbi_continuous_moving_window",
-  "product_label": "jack mackerel encounter probability (all sizes)",
-  "length_gate": "none (all sizes)",
-  "model_spec": "linear_covariates_spatial_off_rw0"
+  "length_gate": "none (all sizes)"
 }

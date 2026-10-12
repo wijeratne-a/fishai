@@ -175,6 +175,7 @@ load_model_data <- function(
   dat <- cov_prep$dat
   cfg <- cov_prep$cfg
   dat <- .ensure_time_idx(dat, cfg)
+  dat <- .attach_diel_vertical_migration_terms(dat, cfg)
 
   short_filt <- .apply_short_event_filter(dat, exclude_short_events)
   dat <- short_filt$dat

@@ -1,0 +1,40 @@
+{
+  "verdict": "FAIL",
+  "gate": "DVM beats baseline on both OOF AUC (higher) and OOF Brier (lower); all folds converged",
+  "baseline": {
+    "label": "jack_mackerel_encounter_all_sizes",
+    "model_config": "configs/models/jack_mackerel_encounter_all_sizes.yaml",
+    "n_fit_rows": 539,
+    "n_presence_rows": 254,
+    "n_folds": 4,
+    "elpd": -431.2439,
+    "elpd_eligible": true,
+    "oof_auc": 0.7624,
+    "oof_brier": 0.1986,
+    "oof_tss": 0.4074,
+    "n_failed_folds": 0
+  },
+  "dvm": {
+    "label": "jack_mackerel_encounter_dvm",
+    "model_config": "configs/models/jack_mackerel_encounter_dvm.yaml",
+    "n_fit_rows": 539,
+    "n_presence_rows": 254,
+    "n_folds": 4,
+    "elpd": -418.6709,
+    "elpd_eligible": true,
+    "oof_auc": 0.7499,
+    "oof_brier": 0.2043,
+    "oof_tss": 0.3973,
+    "n_failed_folds": 0
+  },
+  "pass_auc": false,
+  "pass_brier": false,
+  "dvm_pattern_plot": "artifacts/models/jack_mackerel_encounter_dvm/dvm_hour_depth_pattern.png",
+  "dvm_pattern_diagnostic": {
+    "shallow_peak_hour": 13.5,
+    "shallow_min_hour": 1.5,
+    "shallow_night_day_delta": -0.0451,
+    "dvm_consistent": false,
+    "interpretation": "Shallow-stratum peak at local solar ~13:30 and minimum ~01:30; night minus midday delta negative — opposite of DVM (shallow night peak expected ~00–04h)."
+  }
+}

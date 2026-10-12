@@ -31,7 +31,12 @@ add_barrier_land <- function(mesh, land_sf, range_fraction = 0.1, proj_scaling =
   if (range_fraction <= 0 || range_fraction >= 1) {
     stop("range_fraction must be in (0, 1)", call. = FALSE)
   }
-  sdmTMBextra::add_barrier_mesh(
+  add_barrier <- if (requireNamespace("sdmTMBextra", quietly = TRUE)) {
+    sdmTMBextra::add_barrier_mesh
+  } else {
+    sdmTMB::add_barrier_mesh
+  }
+  add_barrier(
     spde_obj = mesh,
     barrier_sf = land_sf,
     range_fraction = range_fraction,
