@@ -1,0 +1,75 @@
+{
+  "bucket": "noaa-nos-ofs-pds",
+  "pds_archive_start": "2024-07-01",
+  "lead": "f024",
+  "cycle": "t03z",
+  "cutoffs": [
+    {
+      "cutoff": "2013-04-26",
+      "available": false,
+      "product": null,
+      "s3_key": null,
+      "url": null,
+      "reason": "no_pds_f024"
+    },
+    {
+      "cutoff": "2013-06-10",
+      "available": false,
+      "product": null,
+      "s3_key": null,
+      "url": null,
+      "reason": "no_pds_f024"
+    },
+    {
+      "cutoff": "2016-09-08",
+      "available": false,
+      "product": null,
+      "s3_key": null,
+      "url": null,
+      "reason": "no_pds_f024"
+    },
+    {
+      "cutoff": "2018-09-20",
+      "available": false,
+      "product": null,
+      "s3_key": null,
+      "url": null,
+      "reason": "no_pds_f024"
+    },
+    {
+      "cutoff": "2021-04-02",
+      "available": false,
+      "product": null,
+      "s3_key": null,
+      "url": null,
+      "reason": "no_pds_f024"
+    },
+    {
+      "cutoff": "2022-09-23",
+      "available": false,
+      "product": null,
+      "s3_key": null,
+      "url": null,
+      "reason": "no_pds_f024"
+    },
+    {
+      "cutoff": "2024-07-29",
+      "available": true,
+      "product": "fields",
+      "s3_key": "wcofs/netcdf/202407/nos.wcofs.fields.f024.20240729.t03z.nc",
+      "url": "https://noaa-nos-ofs-pds.s3.amazonaws.com/wcofs/netcdf/202407/nos.wcofs.fields.f024.20240729.t03z.nc"
+    },
+    {
+      "cutoff": "2026-06-25",
+      "available": true,
+      "product": "regulargrid",
+      "s3_key": "wcofs/netcdf/2026/06/25/wcofs.t03z.20260625.regulargrid.f024.nc",
+      "url": "https://noaa-nos-ofs-pds.s3.amazonaws.com/wcofs/netcdf/2026/06/25/wcofs.t03z.20260625.regulargrid.f024.nc"
+    }
+  ],
+  "cutoffs_with_f024": [
+    "2024-07-29",
+    "2026-06-25"
+  ],
+  "n_cutoffs_with_f024": 2
+}

@@ -598,9 +598,11 @@ forecast_operational_covariates_for_row <- function(
   if (!nrow(cutoff_rows)) {
     stop("cutoff day has no training rows", call. = FALSE)
   }
-  p_cut <- as.numeric(score_encounter_on_events(fit, cutoff_rows, cfg))
-  mu_cut <- .forecast_positive_mu(fit, cutoff_rows)
-  shape <- .forecast_shape(fit)
+  is_binomial <- identical(cfg$response$type %||% "", "encounter_binomial")
+  score_events <- if (is_binomial) score_encounter_binomial_on_events else score_encounter_on_events
+  p_cut <- as.numeric(score_events(fit, cutoff_rows, cfg))
+  mu_cut <- if (!is_binomial) .forecast_positive_mu(fit, cutoff_rows) else NULL
+  shape <- if (!is_binomial) .forecast_shape(fit) else NULL
   future_idx <- sort(unique(as.integer(hold$time_idx)))
   if (!all(future_idx %in% as.integer(extra_time))) {
     stop("holdout time_idx was not projected with extra_time", call. = FALSE)
@@ -636,12 +638,21 @@ forecast_operational_covariates_for_row <- function(
       reasons <- c(reasons, "no_cutoff_track_within_120km")
     } else {
       p_per[i] <- forecast_idw(p_cut[near_cut], d_cut[near_cut])
-      mu_i <- forecast_idw(mu_cut[near_cut], d_cut[near_cut])
-      if (is.finite(p_per[i]) && is.finite(mu_i) && mu_i > 0) {
-        ll_per[i] <- .forecast_event_delta_ll(p_per[i], hold$y[i], mu_i, shape)
+      if (is_binomial) {
+        if (is.finite(p_per[i])) {
+          ll_per[i] <- .forecast_bernoulli_ll(p_per[i], hold$y[i])
+        } else {
+          p_per[i] <- NA_real_
+          reasons <- c(reasons, "persistence_mean_not_finite")
+        }
       } else {
-        p_per[i] <- NA_real_
-        reasons <- c(reasons, "persistence_mean_not_finite")
+        mu_i <- forecast_idw(mu_cut[near_cut], d_cut[near_cut])
+        if (is.finite(p_per[i]) && is.finite(mu_i) && mu_i > 0) {
+          ll_per[i] <- .forecast_event_delta_ll(p_per[i], hold$y[i], mu_i, shape)
+        } else {
+          p_per[i] <- NA_real_
+          reasons <- c(reasons, "persistence_mean_not_finite")
+        }
       }
     }
     d_train <- forecast_dist_km(hold$X[i], hold$Y[i], train$X, train$Y)
@@ -682,18 +693,26 @@ forecast_operational_covariates_for_row <- function(
     unknown[i] <- paste(unique(reasons), collapse = ";")
   }
 
-  p_oracle <- as.numeric(score_encounter_on_events(fit, hold, cfg))
-  mu_oracle <- .forecast_positive_mu(fit, hold)
-  ll_oracle <- .forecast_event_delta_ll(p_oracle, hold$y, mu_oracle, shape)
+  p_oracle <- as.numeric(score_events(fit, hold, cfg))
+  if (is_binomial) {
+    ll_oracle <- .forecast_bernoulli_ll(p_oracle, hold$y)
+  } else {
+    mu_oracle <- .forecast_positive_mu(fit, hold)
+    ll_oracle <- .forecast_event_delta_ll(p_oracle, hold$y, mu_oracle, shape)
+  }
 
   op_rows <- !grepl("operational_proxy_support|coverage_forced_proxy", unknown)
   p_op <- rep(NA_real_, n)
   ll_op <- rep(NA_real_, n)
   if (any(op_rows)) {
     op_sub <- op_new[op_rows, , drop = FALSE]
-    p_op[op_rows] <- as.numeric(score_encounter_on_events(fit, op_sub, cfg))
-    mu_op <- .forecast_positive_mu(fit, op_sub)
-    ll_op[op_rows] <- .forecast_event_delta_ll(p_op[op_rows], op_sub$y, mu_op, shape)
+    p_op[op_rows] <- as.numeric(score_events(fit, op_sub, cfg))
+    if (is_binomial) {
+      ll_op[op_rows] <- .forecast_bernoulli_ll(p_op[op_rows], op_sub$y)
+    } else {
+      mu_op <- .forecast_positive_mu(fit, op_sub)
+      ll_op[op_rows] <- .forecast_event_delta_ll(p_op[op_rows], op_sub$y, mu_op, shape)
+    }
   }
 
   common <- is.finite(p_oracle) & is.finite(ll_oracle) &
@@ -760,7 +779,12 @@ forecast_fit_cutoff <- function(
   fit_cfg <- cfg
   fit_cfg$model$extra_time_slices <- extra
   mesh <- build_fishai_production_mesh(train, cfg$mesh)
-  fit_res <- fit_delta_engine(train, mesh, fit_cfg)
+  is_binomial <- identical(cfg$response$type %||% "", "encounter_binomial")
+  fit_res <- if (is_binomial) {
+    fit_encounter_binomial_engine(train, mesh, fit_cfg)
+  } else {
+    fit_delta_engine(train, mesh, fit_cfg)
+  }
   reason <- .cv_fit_failure_reason(fit_res)
   if (!is.null(reason)) {
     return(list(
