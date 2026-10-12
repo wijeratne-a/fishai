@@ -271,9 +271,9 @@ load_spatial_block_cv_scores_protocol <- function(path = NULL) {
   if (is.null(path) || !nzchar(path) || is.na(path)) {
     return(path)
   }
-  root_norm <- normalizePath(root, wins2 = "/", mustWork = FALSE)
+  root_norm <- gsub("\\\\", "/", normalizePath(root, mustWork = FALSE))
   if (grepl("^/", path)) {
-    path_norm <- normalizePath(path, wins2 = "/", mustWork = FALSE)
+    path_norm <- gsub("\\\\", "/", normalizePath(path, mustWork = FALSE))
     if (startsWith(path_norm, paste0(root_norm, "/"))) {
       return(sub(paste0("^", root_norm, "/?"), "", path_norm))
     }
