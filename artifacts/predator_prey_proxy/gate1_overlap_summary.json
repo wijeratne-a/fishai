@@ -1,0 +1,154 @@
+{
+  "generated_at_utc": "2026-10-12T22:23:03.466411+00:00",
+  "pilot_bbox": {
+    "lat_min": 32.0,
+    "lat_max": 35.0,
+    "lon_min": -121.0,
+    "lon_max": -117.0
+  },
+  "predator_sources_gbif_topp": [
+    {
+      "title": "TOPP Summary of SSM-derived Telemetry",
+      "url": "https://www.gbif.org/dataset/50914b57-6c66-4432-91c7-edbc7a296a9f",
+      "doi": "10.82144/d127533f",
+      "notes": "SSM-derived; 1\u00b0 grid cells in many records (coarse).",
+      "dataset_key": "50914b57-6c66-4432-91c7-edbc7a296a9f",
+      "n_occurrences_gbif_global": 10692,
+      "n_occurrences_pilot_bbox": 57
+    },
+    {
+      "title": "TOPP Albatrosses 2002-06",
+      "url": "https://www.gbif.org/dataset/e737f8ca-6176-4e3a-9ab1-dc5a77d46194",
+      "doi": null,
+      "notes": "Point-level satellite/GPS albatross tracks.",
+      "dataset_key": "e737f8ca-6176-4e3a-9ab1-dc5a77d46194",
+      "n_occurrences_gbif_global": 33789,
+      "n_occurrences_pilot_bbox": 415
+    }
+  ],
+  "predator_summary": {
+    "n_global": 472,
+    "n_pilot_bbox": 472,
+    "year_min_pilot": 2003,
+    "year_max_pilot": 2009,
+    "n_pilot_year_lte_2010": 472,
+    "n_pilot_year_gte_2011": 0,
+    "top_species_pilot": [
+      [
+        "Phoebastria immutabilis",
+        417
+      ],
+      [
+        "Zalophus californianus",
+        11
+      ],
+      [
+        "Balaenoptera musculus",
+        11
+      ],
+      [
+        "Puffinus griseus",
+        9
+      ],
+      [
+        "Mirounga angustirostris",
+        8
+      ],
+      [
+        "Dermochelys coriacea",
+        5
+      ],
+      [
+        "Megaptera novaeangliae",
+        5
+      ],
+      [
+        "Balaenoptera physalus",
+        4
+      ],
+      [
+        "Phoebastria nigripes",
+        2
+      ]
+    ],
+    "by_dataset_pilot": {
+      "50914b57-6c66-4432-91c7-edbc7a296a9f": 57,
+      "e737f8ca-6176-4e3a-9ab1-dc5a77d46194": 415
+    },
+    "n_global_gbif_topp_datasets": 44481
+  },
+  "prey_survey_sources": {
+    "trawl": {
+      "dataset": "FRDCPSTrawlLHHaulCatch",
+      "url": "https://oceanview.pfeg.noaa.gov/erddap/tabledap/FRDCPSTrawlLHHaulCatch",
+      "date_range_requested": [
+        "2003-07-09",
+        "2025-09-10"
+      ]
+    },
+    "nearshore": {
+      "dataset": "FRDCPSNearshoreSetCatch",
+      "url": "https://coastwatch.pfeg.noaa.gov/erddap/tabledap/FRDCPSNearshoreSetCatch",
+      "date_range_requested": [
+        "2019-06-21",
+        "2026-06-01"
+      ]
+    }
+  },
+  "prey_presence_summary": {
+    "n_presence_events_pilot": 968,
+    "year_min": 2005,
+    "year_max": 2026,
+    "n_presence_events_year_gte_2011": 911,
+    "by_species": {
+      "sardine": 312,
+      "jack_mackerel": 281,
+      "anchovy": 375
+    },
+    "by_source": {
+      "swfsc_cps_trawl_haul_catch": 720,
+      "swfsc_cps_nearshore_set_catch": 248
+    }
+  },
+  "model_training_note": "Jack mackerel all-sizes encounter fit frame: 253 presences / 536 rows after mesh/covariate QC (configs/models/jack_mackerel_encounter_all_sizes.yaml); includes nearshore through 2024\u20132025.",
+  "jack_mackerel_cv_baseline": {
+    "source": "artifacts/models/jack_mackerel_encounter_all_sizes/spatial_block_cv_scores.json",
+    "n_failed_folds": 0,
+    "oof_auc": 0.7622,
+    "model_spec": "linear_covariates_spatial_off_rw0"
+  },
+  "overlap_all_years": {
+    "spatial_match_km": 50.0,
+    "temporal_match_days": 14,
+    "n_pred_pilot": 472,
+    "n_prey_presence": 968,
+    "n_pred_matched": 35,
+    "fraction_pred_matched": 0.07415254237288135,
+    "n_prey_matched": 2,
+    "fraction_prey_matched": 0.002066115702479339
+  },
+  "overlap_post_2010_prey_era": {
+    "n_pred_pilot": 0,
+    "n_prey_presence": 911,
+    "n_pred_matched": 0,
+    "fraction_pred_matched": 0.0,
+    "n_prey_matched": 0,
+    "fraction_prey_matched": 0.0,
+    "subset": "pilot_bbox_and_year_gte_2011"
+  },
+  "ancillary_source_scan": {
+    "ioos_atn_portal": {
+      "url": "https://portal.atn.ioos.us/",
+      "result": "Portal loads; no public ERDDAP/API bulk export discovered at /api/ or /erddap/ (404 on 2026-10-12). Catalog search not scripted."
+    },
+    "ocean_tracking_network": {
+      "url": "https://oceantrack.org/data/",
+      "result": "Program site; no California Current bulk track download endpoint used (Atlantic-centric network)."
+    },
+    "imos_animal_tracking": {
+      "url": "https://animaltracking.aodn.org.au/",
+      "result": "Australian domain; not queried for SCB overlap (out of geography)."
+    }
+  },
+  "gate1_verdict": "STOP: temporal mismatch \u2014 all TOPP GBIF points in pilot bbox end by 2010; post-2010 prey presence events=911 with zero overlapping-era predator tags."
+}
