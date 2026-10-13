@@ -21,7 +21,37 @@ build_fishai_mesh <- function(dat, cfg = list()) {
   )
 }
 
-#' Add Bakka barrier mesh using land polygons (sdmTMBextra).
+.add_barrier_mesh_inla <- function(spde_obj, barrier_sf, range_fraction = 0.1, proj_scaling = 1000) {
+  if (!requireNamespace("sf", quietly = TRUE)) {
+    stop("add_barrier_land: package 'sf' is required", call. = FALSE)
+  }
+  if (!requireNamespace("INLAspacetime", quietly = TRUE)) {
+    stop("add_barrier_land: package 'INLAspacetime' is required", call. = FALSE)
+  }
+  mesh <- spde_obj$mesh
+  tl <- length(mesh$graph$tv[, 1])
+  pos_tri <- matrix(0, tl, 2)
+  for (i in seq_len(tl)) {
+    temp <- mesh$loc[mesh$graph$tv[i, ], ]
+    pos_tri[i, ] <- colMeans(temp)[c(1, 2)]
+  }
+  mesh_sf <- as.data.frame(pos_tri)
+  mesh_sf$X <- mesh_sf$V1 * proj_scaling
+  mesh_sf$Y <- mesh_sf$V2 * proj_scaling
+  mesh_sf <- sf::st_as_sf(mesh_sf, crs = sf::st_crs(barrier_sf), coords = c("X", "Y"))
+  intersected <- sf::st_intersects(mesh_sf, barrier_sf)
+  water.triangles <- which(lengths(intersected) == 0)
+  land.triangles <- which(lengths(intersected) > 0)
+  barrier_spde <- INLAspacetime::mesh2fem.barrier(mesh, barrier.triangles = land.triangles)
+  spde_obj$spde_barrier <- barrier_spde
+  spde_obj$barrier_scaling <- c(1, range_fraction)
+  spde_obj$mesh_sf <- mesh_sf
+  spde_obj$barrier_triangles <- land.triangles
+  spde_obj$normal_triangles <- water.triangles
+  spde_obj
+}
+
+#' Add Bakka barrier mesh using land polygons (sdmTMBextra or INLAspacetime fallback).
 #' @param mesh sdmTMB mesh from [build_fishai_mesh()].
 #' @param land_sf sf polygon in metres (model CRS).
 #' @param range_fraction Barrier range fraction over land (default 0.1).
@@ -31,12 +61,20 @@ add_barrier_land <- function(mesh, land_sf, range_fraction = 0.1, proj_scaling =
   if (range_fraction <= 0 || range_fraction >= 1) {
     stop("range_fraction must be in (0, 1)", call. = FALSE)
   }
-  sdmTMBextra::add_barrier_mesh(
+  if (requireNamespace("sdmTMBextra", quietly = TRUE)) {
+    return(sdmTMBextra::add_barrier_mesh(
+      spde_obj = mesh,
+      barrier_sf = land_sf,
+      range_fraction = range_fraction,
+      proj_scaling = proj_scaling,
+      plot = FALSE
+    ))
+  }
+  .add_barrier_mesh_inla(
     spde_obj = mesh,
     barrier_sf = land_sf,
     range_fraction = range_fraction,
-    proj_scaling = proj_scaling,
-    plot = FALSE
+    proj_scaling = proj_scaling
   )
 }
 

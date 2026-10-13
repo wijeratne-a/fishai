@@ -151,13 +151,6 @@ fit_encounter_binomial_engine <- function(dat, mesh, cfg) {
   frm <- stats::as.formula(paste("y", rhs))
   pc <- model$priors$pc_matern %||% list()
   range_gt <- (pc$range_gt_mult_max_edge %||% 2) * (cfg$mesh$cutoff_km %||% 9)
-  pri <- sdmTMB::sdmTMBpriors(
-    matern_s = sdmTMB::pc_matern(
-      range_gt = range_gt,
-      sigma_lt = pc$sigma_lt %||% 2
-    )
-  )
-  extra <- cfg$model$extra_time_slices
   .as_pair <- function(x, default) {
     if (is.null(x)) {
       return(default)
@@ -167,6 +160,24 @@ fit_encounter_binomial_engine <- function(dat, mesh, cfg) {
     }
     as.list(x)
   }
+  sp_pair <- .as_pair(model$spatiotemporal, list("off"))
+  st_on <- any(vapply(sp_pair, function(x) {
+    val <- tolower(as.character(x)[1L])
+    !is.na(val) && !identical(val, "off")
+  }, logical(1L)))
+  pri <- sdmTMB::sdmTMBpriors(
+    matern_s = sdmTMB::pc_matern(
+      range_gt = range_gt,
+      sigma_lt = pc$sigma_lt %||% 2
+    )
+  )
+  if (st_on) {
+    pri$matern_st <- sdmTMB::pc_matern(
+      range_gt = range_gt,
+      sigma_lt = pc$sigma_lt %||% 2
+    )
+  }
+  extra <- cfg$model$extra_time_slices
   fit_args <- list(
     formula = frm,
     data = dat,
@@ -175,7 +186,7 @@ fit_encounter_binomial_engine <- function(dat, mesh, cfg) {
     family = binomial(),
     offset = "log_effort",
     spatial = .as_pair(model$spatial, list("on")),
-    spatiotemporal = .as_pair(model$spatiotemporal, list("off")),
+    spatiotemporal = sp_pair,
     extra_time = extra,
     priors = pri,
     control = do.call(
