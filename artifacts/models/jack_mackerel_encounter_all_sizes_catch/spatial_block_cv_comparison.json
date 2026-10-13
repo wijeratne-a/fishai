@@ -1,0 +1,32 @@
+{
+  "test": "jack_mackerel_commercial_catch_proxy",
+  "catch_data_source": "PacFIN ALL005 CPS shoreside (California, 2003-2025, port-group x year)",
+  "spatial_temporal_match": "Annual port-group landings joined to survey events by calendar year and lat-derived port group (see docs/jack-mackerel-catch-proxy-readout.md)",
+  "bias_correction": "log1p(total CPEL WETF port-year tonnage) as fleet effort proxy; preferential sampling acknowledged",
+  "verdict": "FAIL",
+  "pass_rule": "catch model beats baseline on both OOF AUC and OOF Brier (lower)",
+  "baseline": {
+    "config": "/workspace/configs/models/jack_mackerel_encounter_all_sizes.yaml",
+    "oof_auc": 0.7622,
+    "oof_brier": 0.1989,
+    "oof_tss": 0.4121,
+    "oof_boyce": 0.9565,
+    "n_fit_rows": 536,
+    "n_presence_rows": 253,
+    "elpd": -423.9642
+  },
+  "catch_model": {
+    "config": "/workspace/configs/models/jack_mackerel_encounter_all_sizes_catch.yaml",
+    "oof_auc": 0.7627,
+    "oof_brier": 0.1997,
+    "oof_tss": 0.3893,
+    "oof_boyce": 0.981,
+    "n_fit_rows": 536,
+    "n_presence_rows": 253,
+    "elpd": -479.7368
+  },
+  "delta": {
+    "auc": 0.0006,
+    "brier": 0.0007
+  }
+}
