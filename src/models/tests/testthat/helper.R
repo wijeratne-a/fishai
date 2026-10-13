@@ -12,6 +12,16 @@ FISHAI_ROOT <- .fishai_root_from_helper()
 
 load_fishaisdm <- function(root = FISHAI_ROOT) {
   root <- normalizePath(root, mustWork = TRUE)
+  user_r_lib <- Sys.getenv("FISHAI_EXTRA_R_LIBS", unset = "")
+  if (!nzchar(user_r_lib)) {
+    alt <- path.expand("~/R/library")
+    if (dir.exists(alt)) {
+      user_r_lib <- alt
+    }
+  }
+  if (nzchar(user_r_lib) && dir.exists(user_r_lib)) {
+    .libPaths(c(user_r_lib, .libPaths()))
+  }
   lib <- file.path(root, "renv", "library")
   if (dir.exists(lib)) {
     .libPaths(c(lib, .libPaths()))
@@ -26,6 +36,9 @@ load_fishaisdm <- function(root = FISHAI_ROOT) {
   r_dir <- file.path(root, "src", "models", "R")
   for (f in sort(list.files(r_dir, pattern = "\\.[Rr]$", full.names = TRUE))) {
     source(f, local = FALSE)
+  }
+  if (nzchar(user_r_lib) && dir.exists(user_r_lib)) {
+    .libPaths(c(user_r_lib, .libPaths()))
   }
   invisible(root)
 }

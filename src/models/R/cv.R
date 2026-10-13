@@ -299,7 +299,7 @@ cv_elpd_ineligible_reason <- function(cv_obj) {
     ))
   }
   train_mesh <- tryCatch(
-    build_fishai_production_mesh(train, cfg$mesh),
+    build_fishai_production_mesh(train, cfg$mesh, model_cfg = cfg$model),
     error = function(e) {
       structure(
         list(message = paste0("CV fold ", fold_id, " barrier mesh: ", conditionMessage(e))),
@@ -434,18 +434,7 @@ cv_elpd_ineligible_reason <- function(cv_obj) {
     }
     fit_res <- tryCatch(
       {
-        mesh_fold <- build_fishai_mesh(train, cfg$mesh)
-        if (isTRUE(cfg$mesh$barrier$enabled)) {
-          land_path <- cfg$mesh$barrier$land_sf_rds
-          if (!is.null(land_path) && nzchar(land_path) && file.exists(land_path)) {
-            land_sf <- readRDS(land_path)
-            mesh_fold <- add_barrier_land(
-              mesh_fold,
-              land_sf,
-              range_fraction = cfg$mesh$barrier$range_fraction %||% 0.1
-            )
-          }
-        }
+        mesh_fold <- build_fishai_production_mesh(train, cfg$mesh, model_cfg = cfg$model)
         fit_fn <- if (identical(cfg$response$type %||% "", "encounter_binomial")) {
           fit_encounter_binomial_engine
         } else {

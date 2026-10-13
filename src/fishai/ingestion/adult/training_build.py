@@ -196,6 +196,8 @@ def build_adult_cps_training_table(
             "excluded",
             "excluded_reason",
         ):
+            if pd.api.types.is_bool_dtype(merged[col]):
+                continue
             merged.loc[row_excluded, col] = pd.NA
 
     effort = events[

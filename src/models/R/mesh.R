@@ -31,7 +31,12 @@ add_barrier_land <- function(mesh, land_sf, range_fraction = 0.1, proj_scaling =
   if (range_fraction <= 0 || range_fraction >= 1) {
     stop("range_fraction must be in (0, 1)", call. = FALSE)
   }
-  sdmTMBextra::add_barrier_mesh(
+  add_barrier <- if (requireNamespace("sdmTMBextra", quietly = TRUE)) {
+    sdmTMBextra::add_barrier_mesh
+  } else {
+    sdmTMB::add_barrier_mesh
+  }
+  add_barrier(
     spde_obj = mesh,
     barrier_sf = land_sf,
     range_fraction = range_fraction,
@@ -88,10 +93,15 @@ check_barrier <- function(bmesh, obs, land_sf = NULL) {
 #' plain mesh.
 #' @param dat Data with X, Y in km.
 #' @param mesh_cfg ``cfg$mesh`` block.
+#' @param model_cfg Optional ``cfg$model``; when all spatial fields are ``off``,
+#'   barrier triangles are skipped (midpoint land QC still applies in data prep).
 #' @export
-build_fishai_production_mesh <- function(dat, mesh_cfg) {
+build_fishai_production_mesh <- function(dat, mesh_cfg, model_cfg = NULL) {
   mesh <- build_fishai_mesh(dat, mesh_cfg)
   if (!isTRUE(mesh_cfg$barrier$enabled)) {
+    return(mesh)
+  }
+  if (!is.null(model_cfg) && !.model_uses_spatial_field(model_cfg)) {
     return(mesh)
   }
   land_sf <- .read_barrier_land(mesh_cfg)
@@ -102,6 +112,25 @@ build_fishai_production_mesh <- function(dat, mesh_cfg) {
   )
   check_barrier(mesh, dat, land_sf = land_sf)
   mesh
+}
+
+#' True when any sdmTMB spatial random field is enabled (delta-safe).
+.model_uses_spatial_field <- function(model_cfg) {
+  sp <- model_cfg$spatial
+  if (is.null(sp)) {
+    return(TRUE)
+  }
+  vals <- if (is.list(sp)) unlist(sp, use.names = FALSE) else sp
+  any(vapply(
+    vals,
+    function(x) {
+      if (is.logical(x)) {
+        return(isTRUE(x))
+      }
+      !tolower(as.character(x)) %in% "off"
+    },
+    logical(1L)
+  ))
 }
 
 #' Ratio of approximate correlation across land vs through water at equal distance.

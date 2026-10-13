@@ -19,12 +19,7 @@
   "elpd": -423.9642,
   "elpd_eligible": true,
   "elpd_ineligible_reason": {},
-  "fold_loglik": [
-    -91.9523,
-    -87.9449,
-    -150.3332,
-    -93.7337
-  ],
+  "fold_loglik": [-91.9523, -87.9449, -150.3332, -93.7337],
   "n_failed_folds": 0,
   "fold_failures": [],
   "oof_auc": 0.7622,
@@ -33,5 +28,6 @@
   "oof_boyce_method": "cbi_continuous_moving_window",
   "product_label": "jack mackerel encounter probability (all sizes)",
   "length_gate": "none (all sizes)",
-  "model_spec": "linear_covariates_spatial_off_rw0"
+  "model_spec": "linear_covariates_spatial_off_rw0",
+  "oof_brier": 0.1989
 }

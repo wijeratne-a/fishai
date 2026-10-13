@@ -9,8 +9,21 @@ Sys.setenv(
 root <- normalizePath(file.path(dirname(sub("^--file=", "", commandArgs()[grep("^--file=", commandArgs())][1])), ".."))
 setwd(root)
 Sys.setenv(FISHAI_ROOT = root)
+user_r_lib <- Sys.getenv("FISHAI_EXTRA_R_LIBS", unset = "")
+if (!nzchar(user_r_lib)) {
+  alt <- path.expand("~/R/library")
+  if (dir.exists(alt)) {
+    user_r_lib <- alt
+  }
+}
+if (nzchar(user_r_lib) && dir.exists(user_r_lib)) {
+  .libPaths(c(user_r_lib, .libPaths()))
+}
 source(file.path(root, "src", "models", "tests", "testthat", "helper.R"))
 load_fishaisdm(root)
+if (nzchar(user_r_lib) && dir.exists(user_r_lib)) {
+  .libPaths(c(user_r_lib, .libPaths()))
+}
 
 cfg_path <- file.path(root, "configs", "models", "jack_mackerel_encounter_all_sizes.yaml")
 scores_path <- file.path(root, "artifacts", "models", "jack_mackerel_encounter_all_sizes", "spatial_block_cv_scores.json")

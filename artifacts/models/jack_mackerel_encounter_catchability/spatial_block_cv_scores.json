@@ -1,0 +1,14 @@
+{
+  "experiment": "jack_mackerel_catchability_detection_submodels",
+  "branch": "cursor/fishai-catchability-model",
+  "baseline": {
+    "config": "configs/models/jack_mackerel_encounter_all_sizes.yaml",
+    "oof_auc": 0.7622,
+    "oof_brier": 0.1989,
+    "n_fit_rows": 536,
+    "n_presence_rows": 253
+  },
+  "strict_gate": "oof_auc > baseline AND oof_brier < baseline",
+  "verdict": "FAIL",
+  "comparison": "artifacts/models/jack_mackerel_encounter_catchability/catchability_cv_comparison.json"
+}

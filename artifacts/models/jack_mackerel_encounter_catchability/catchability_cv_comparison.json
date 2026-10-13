@@ -1,0 +1,37 @@
+{
+  "baseline": {
+    "model_config": "configs/models/jack_mackerel_encounter_all_sizes.yaml",
+    "model_kind": "encounter_binomial",
+    "n_fit_rows": 536,
+    "n_presence_rows": 253,
+    "oof_auc": 0.7622,
+    "oof_brier": 0.1989
+  },
+  "candidates": [
+    {
+      "model_config": "artifacts/models/jack_mackerel_encounter_catchability/catchability_delta_solar_scores.json",
+      "model_kind": "delta_hurdle_catchability",
+      "n_fit_rows": 536,
+      "n_presence_rows": 253,
+      "oof_auc": "NA",
+      "oof_brier": "NA",
+      "beats_baseline_auc": false,
+      "beats_baseline_brier": false,
+      "passes_strict_gate": false
+    },
+    {
+      "model_config": "artifacts/models/jack_mackerel_encounter_catchability/catchability_depth_light_scores.json",
+      "model_kind": "delta_hurdle_catchability",
+      "n_fit_rows": 536,
+      "n_presence_rows": 253,
+      "oof_auc": "NA",
+      "oof_brier": "NA",
+      "beats_baseline_auc": false,
+      "beats_baseline_brier": false,
+      "passes_strict_gate": false
+    }
+  ],
+  "strict_gate": "candidate must beat baseline on BOTH oof_auc AND oof_brier",
+  "any_pass": false,
+  "verdict": "FAIL"
+}
