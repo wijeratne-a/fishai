@@ -82,6 +82,11 @@ report <- list(
   n_failed_folds = cv$n_failed_folds,
   fold_failures = cv$fold_failures,
   oof_auc = auc,
+  oof_brier = if (oof_complete && any(oof$z == 1L) && any(oof$z == 0L)) {
+    brier_score(oof$z, oof$p)
+  } else {
+    NA_real_
+  },
   oof_tss = tss,
   oof_boyce = boyce,
   oof_boyce_method = "cbi_continuous_moving_window",
