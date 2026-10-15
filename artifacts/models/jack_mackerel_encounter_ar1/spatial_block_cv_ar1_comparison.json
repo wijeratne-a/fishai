@@ -1,0 +1,82 @@
+{
+  "experiment": "jack_mackerel_ar1_spatiotemporal",
+  "product_label": "jack mackerel encounter probability (all sizes)",
+  "spatial_block_cv": {
+    "n_folds": 4,
+    "block_size_km": 60,
+    "seed": 20260928
+  },
+  "baseline_gate": {
+    "oof_auc": 0.7624,
+    "oof_brier": 0.1986
+  },
+  "baseline_reproduced": {
+    "oof_auc": 0.7624,
+    "oof_brier": 0.1986,
+    "n_fit_rows": 539,
+    "n_presence_rows": 254,
+    "elpd": -431.2439
+  },
+  "resolution_attempts": [
+    {
+      "resolution_id": "a_daily_ar1_baseline_mesh",
+      "label": "Daily dense time; AR(1); mesh cutoff 9 km (1161 vertices)",
+      "spatiotemporal": "ar1",
+      "mesh": {
+        "cutoff_km": 9,
+        "range_guess_km": 60,
+        "approx_vertices": 1161
+      },
+      "time_aggregate": "daily",
+      "n_time_indices": 225,
+      "cv_status": "incomplete",
+      "folds_completed": 0,
+      "oom_observed": false,
+      "notes": "Multiple fold-1 attempts exceeded 7h CPU without checkpoint; no OOM (RSS ~5GB)."
+    },
+    {
+      "resolution_id": "b_daily_ar1_coarse_mesh",
+      "label": "Daily dense time; AR(1); mesh cutoff 18 km (159 vertices)",
+      "spatiotemporal": "ar1",
+      "mesh": {
+        "cutoff_km": 18,
+        "range_guess_km": 60,
+        "approx_vertices": 159
+      },
+      "time_aggregate": "daily",
+      "n_time_indices": 225,
+      "cv_status": "incomplete",
+      "folds_completed": 0,
+      "oom_observed": false,
+      "notes": ">100 min on fold 1 without checkpoint before pre-emption; no OOM."
+    },
+    {
+      "resolution_id": "c_weekly_ar1_baseline_mesh",
+      "label": "Weekly dense time; AR(1); mesh cutoff 9 km",
+      "spatiotemporal": "ar1",
+      "mesh": {
+        "cutoff_km": 9,
+        "range_guess_km": 60,
+        "approx_vertices": 1161
+      },
+      "time_aggregate": "weekly",
+      "n_time_indices": 66,
+      "cv_status": "partial",
+      "folds_completed": 1,
+      "fold_loglik": {
+        "1": -79.8244
+      },
+      "oom_observed": false,
+      "notes": "Fold 1 completed (~80 min); fold 2+ still multi-hour per fold on 15GB no-swap VM."
+    }
+  ],
+  "ar1_resolution_fit": {},
+  "ar1_oof_auc": null,
+  "ar1_oof_brier": null,
+  "gate": {
+    "rule": "PASS only if AR(1) spec OOF AUC > 0.7624 AND OOF Brier < 0.1986",
+    "pass": false,
+    "verdict": "INFRASTRUCTURE BLOCKER: no AR(1) resolution completed 4-fold spatial-block CV on 15GB RAM (no OOM; compute limit). Resolutions tried: a (daily/9km), b (daily/18km), c (weekly/9km, 1/4 folds)."
+  },
+  "generated_at": "2026-10-15 00:13:11.313577"
+}

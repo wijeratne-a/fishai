@@ -56,9 +56,9 @@ fishai_engine_config:
       ~ temp_3m_z + sal_3m_z + mld_z + sst_grad_z + dist_front_z + log_depth_z
     spatial: [on]
     spatiotemporal: [ar1]
-    time_varying:
-      formula: "~ 1"
-      type: rw0
+    # Baseline keeps rw0 with spatial off; AR(1) spatiotemporal carries temporal
+    # structure (linear fixed effects unchanged).
+    time_varying: null
     priors:
       pc_matern:
         range_gt_mult_max_edge: 2

@@ -103,7 +103,9 @@ if (nzchar(.lib_extra)) {
   origin <- as.Date(cfg$data$time_idx_origin %||% "1990-01-01")
   tt <- as.POSIXct(dat$time, tz = "UTC")
   days <- as.integer(as.Date(tt) - origin)
-  dat$time_idx <- as.integer(floor(days / 7L)) + 1L
+  week_raw <- as.integer(floor(days / 7L)) + 1L
+  ord <- sort(unique(week_raw))
+  dat$time_idx <- match(week_raw, ord)
   dat
 }
 
