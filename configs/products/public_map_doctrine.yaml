@@ -1,0 +1,23 @@
+# Public egg-encounter map doctrine. Publisher fails closed on any breach.
+min_resolution_km: 10
+min_vessels_commercial_aggregate: 3
+# IUCN/ESA-style withhold list. Sardine and anchovy are not on it.
+# A species listed here is published only as UNKNOWN (threatened_species_mask).
+threatened_species: []
+allowed_public_species:
+  - sardine
+  - anchovy
+display_evidence:
+  HINDCAST_GLORYS: Historical Pattern
+  NOWCAST_UNVALIDATED: Current Nowcast
+  FORECAST: Forecast
+  DEGRADED: Unknown
+  UNKNOWN: Unknown
+user_facing_title: "Egg encounter and spawning-habitat map"
+prohibited_claims:
+  - live fish
+  - adult fish
+  - fish tracking
+  - harvest
+  - where to fish
+  - catch advice

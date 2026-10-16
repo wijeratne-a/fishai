@@ -1,0 +1,40 @@
+[
+  {
+    "cell_id": "g10_20",
+    "species": "sardine",
+    "valid_day": "2016-07-01",
+    "p_encounter": 0.18,
+    "p_lo90": 0.08,
+    "p_hi90": 0.31,
+    "ood_level": 0,
+    "evidence_state": "HINDCAST_GLORYS",
+    "unknown_reason": null,
+    "lead_days": 0,
+    "forecast_age_hours": null,
+    "source_run_time": null,
+    "fallback_used": false,
+    "valid_time": "2016-07-01T00:00:00Z",
+    "dry_run": true,
+    "product_label": "egg encounter (eggs sampled near 3 m depth along ship tracks)",
+    "reference_volume_m3": 12.4
+  },
+  {
+    "cell_id": "g10_21",
+    "species": "anchovy",
+    "valid_day": "2016-07-01",
+    "p_encounter": null,
+    "p_lo90": null,
+    "p_hi90": null,
+    "ood_level": 2,
+    "evidence_state": "UNKNOWN",
+    "unknown_reason": "ood_level_ge_2",
+    "lead_days": 0,
+    "forecast_age_hours": null,
+    "source_run_time": null,
+    "fallback_used": false,
+    "valid_time": "2016-07-01T00:00:00Z",
+    "dry_run": true,
+    "product_label": "egg encounter (eggs sampled near 3 m depth along ship tracks)",
+    "reference_volume_m3": 11.1
+  }
+]
