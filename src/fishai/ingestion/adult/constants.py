@@ -60,7 +60,15 @@ OBSERVATION_SOURCE_NEARSHORE: Final = "swfsc_cps_nearshore_set_catch"
 ADULT_MIN_LENGTH_MM: Final = {
     "Sardinops sagax": 160.0,
     "Engraulis mordax": 98.0,
+    "Scomber japonicus": 274.0,
 }
+
+MACKEREL_SCIENTIFIC_NAME: Final = "Scomber japonicus"
+
+MACKEREL_PROCESSED_DIR: Final = REPO_ROOT / "data" / "processed" / "adult_pacific_mackerel"
+MACKEREL_EVENTS_PATH: Final = MACKEREL_PROCESSED_DIR / "adult_mackerel_events.parquet"
+MACKEREL_TRAINING_TABLE_PATH: Final = MACKEREL_PROCESSED_DIR / "adult_mackerel_training_table.parquet"
+MACKEREL_MODEL_READY_DIR: Final = MACKEREL_PROCESSED_DIR / "model_ready"
 
 EVIDENCE_IMPLIED_ZERO: Final = "implied_zero_enumerated_frame"
 

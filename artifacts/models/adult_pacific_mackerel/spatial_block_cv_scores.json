@@ -1,0 +1,24 @@
+{
+  "species": "Pacific mackerel encounter probability (all sizes)",
+  "model_config": "/workspace/configs/models/adult_pacific_mackerel_encounter.yaml",
+  "n_fit_rows": 565,
+  "n_presences": 132,
+  "n_absences": 433,
+  "adult_length_cutoff_mm": null,
+  "length_gate": "none (all sizes)",
+  "model_spec_note": "spatial off; linear covariates (CV remediation)",
+  "elpd": -674.1443,
+  "elpd_eligible": true,
+  "fold_loglik": [
+    -69.5722,
+    -116.9419,
+    -325.4517,
+    -162.1784
+  ],
+  "n_failed_folds": 0,
+  "auc": 0.5692,
+  "tss": 0.0521,
+  "boyce": 0.4667,
+  "oof_complete": true,
+  "fold_assignment_path": "/workspace/artifacts/spatial_block_cv/adult_pacific_mackerel_fold_assignment.csv"
+}

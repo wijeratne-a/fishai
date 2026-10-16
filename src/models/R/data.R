@@ -191,6 +191,9 @@ load_model_data <- function(
   }
 
   dat$y <- dat[[resp_col]]
+  if (identical(cfg$response$type %||% "", "encounter_binomial")) {
+    dat$y <- as.integer(as.numeric(dat$y) > 0)
+  }
   dat$log_effort <- log(dat[[effort_col]])
   attr(dat, "fishai_data_qc") <- qc
   if (length(taxon_eligible_ids)) {

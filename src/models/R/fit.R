@@ -106,6 +106,78 @@ fit_delta_engine <- function(dat, mesh, cfg) {
   )
 }
 
+#' Fit binomial encounter GLMM (single component; no positive-mass hurdle).
+#' @export
+fit_encounter_binomial_engine <- function(dat, mesh, cfg) {
+  model <- cfg$model
+  rhs <- model$formula_shared %||% model$formula_encounter
+  if (!grepl("^~", rhs)) {
+    rhs <- paste("~", rhs)
+  }
+  frm <- stats::as.formula(paste("y", rhs))
+
+  pc <- model$priors$pc_matern %||% list()
+  range_gt <- (pc$range_gt_mult_max_edge %||% 2) * (cfg$mesh$cutoff_km %||% 9)
+  pri <- sdmTMB::sdmTMBpriors(
+    matern_s = sdmTMB::pc_matern(
+      range_gt = range_gt,
+      sigma_lt = pc$sigma_lt %||% 2
+    )
+  )
+
+  spatial <- model$spatial
+  if (is.list(spatial)) {
+    spatial <- spatial[[1L]] %||% "on"
+  }
+  spatiotemporal <- model$spatiotemporal
+  if (is.list(spatiotemporal)) {
+    spatiotemporal <- spatiotemporal[[1L]] %||% "off"
+  }
+
+  extra <- NULL
+  if (!is.null(cfg$model$extra_time_slices)) {
+    extra <- cfg$model$extra_time_slices
+  }
+
+  fit_args <- list(
+    formula = frm,
+    data = dat,
+    mesh = mesh,
+    time = "time_idx",
+    family = stats::binomial(link = "logit"),
+    offset = "log_effort",
+    spatial = spatial,
+    spatiotemporal = spatiotemporal,
+    extra_time = extra,
+    priors = pri,
+    control = do.call(
+      sdmTMB::sdmTMBcontrol,
+      c(list(newton_loops = 1L, multiphase = TRUE), model$control %||% list())
+    ),
+    silent = TRUE
+  )
+  if (!is.null(model$time_varying)) {
+    fit_args$time_varying <- stats::as.formula(model$time_varying$formula %||% "~ 1")
+    fit_args$time_varying_type <- model$time_varying$type %||% "rw0"
+  }
+  fit <- do.call(sdmTMB::sdmTMB, fit_args)
+
+  structure(
+    list(fit = fit, delta_type = NA_character_),
+    class = "fishai_fit"
+  )
+}
+
+#' Dispatch training fit from config ``model.family``.
+#' @export
+fit_engine <- function(dat, mesh, cfg) {
+  fam <- cfg$model$family %||% "delta_gamma"
+  if (identical(fam, "binomial")) {
+    return(fit_encounter_binomial_engine(dat, mesh, cfg))
+  }
+  fit_delta_engine(dat, mesh, cfg)
+}
+
 #' @export
 fit_uses_log_effort_offset <- function(fit_obj) {
   fit <- fit_obj$fit
